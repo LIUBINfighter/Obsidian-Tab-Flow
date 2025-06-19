@@ -212,11 +212,12 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 	// 根据主题设置乐谱颜色（仅深色模式下设置为白色，浅色保持默认）
 	const pluginThemeMode = pluginInstance.themeMode;
 	if (pluginThemeMode === 'dark') {
-		settings.display.resources.mainGlyphColor = alphaTab.model.Color.fromJson("#FFFFFF");
-		settings.display.resources.staffLineColor = alphaTab.model.Color.fromJson("#FFFFFF");
-		settings.display.resources.barSeparatorColor = alphaTab.model.Color.fromJson("#FFFFFF");
-		settings.display.resources.barNumberColor = alphaTab.model.Color.fromJson("#FFFFFF");
-		settings.display.resources.scoreInfoColor = alphaTab.model.Color.fromJson("#FFFFFF");
+		const white = alphaTab.model.Color.fromJson("#FFFFFF") ?? new alphaTab.model.Color(255,255,255,255);
+		settings.display.resources.mainGlyphColor = white;
+		settings.display.resources.staffLineColor = white;
+		settings.display.resources.barSeparatorColor = white;
+		settings.display.resources.barNumberColor = white;
+		settings.display.resources.scoreInfoColor = white;
 	}
 
 	// Player and cursor settings - 启用光标跟随功能
