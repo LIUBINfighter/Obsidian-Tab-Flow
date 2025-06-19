@@ -8,6 +8,7 @@ import { TracksSidebar } from "../components/TracksSidebar";
 import { PlayerStateChangedEventArgs } from "../types"; // 从 types.ts 引入类型
 import { CursorScrollManager } from "../scrolling/CursorScrollManager";
 import { ScrollDebugger } from "../utils/scrollDebug";
+import { handlePrintPdf, handleExportGpFile } from "../events/handleExportActions";
 
 export const VIEW_TYPE_TAB = "tab-view";
 
@@ -79,6 +80,15 @@ export class TabView extends FileView {
 				// 替换为内部错误显示
 				this.showError("AlphaTab 管理器尚未初始化。");
 			}
+		});
+
+		// 新增：打印PDF按钮
+		this.addAction("print", "打印 PDF", () => {
+			handlePrintPdf(this.atManager);
+		});
+		// 新增：导出GP按钮
+		this.addAction("guitar", "导出 GP 文件", () => {
+			handleExportGpFile(this.atManager);
 		});
 
 		// 暂时注释掉 MIDI 下载按钮
