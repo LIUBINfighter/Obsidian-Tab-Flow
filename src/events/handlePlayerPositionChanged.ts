@@ -22,20 +22,20 @@ export function handlePlayerPositionChanged(
 		ui.isScrollFollowEnabled();
 
 	// 详细的调试信息
-	console.debug(`[TabView] 位置变化事件:`, {
-		currentTime: args.currentTime,
-		currentTick: args.currentTick,
-		playerState: api?.playerState,
-		enableCursor: api?.settings?.player?.enableCursor,
-		scrollFollowEnabled: ui.isScrollFollowEnabled(),
-		shouldScroll
-	});
+	// console.debug(`[TabView] 位置变化事件:`, {
+	// 	currentTime: args.currentTime,
+	// 	currentTick: args.currentTick,
+	// 	playerState: api?.playerState,
+	// 	enableCursor: api?.settings?.player?.enableCursor,
+	// 	scrollFollowEnabled: ui.isScrollFollowEnabled(),
+	// 	shouldScroll
+	// });
 
 	if (shouldScroll) {
 		try {
 			// 使用 AlphaTab 的 scrollToCursor 方法进行自动滚动
 			api.scrollToCursor();
-			console.debug(`[TabView] ✅ 滚动命令已发送 - 光标位置: ${args.currentTick}/${args.endTick}`);
+			// console.debug(`[TabView] ✅ 滚动命令已发送 - 光标位置: ${args.currentTick}/${args.endTick}`);
 		} catch (error) {
 			console.warn("[TabView] ❌ 滚动到光标位置失败:", error);
 		}
