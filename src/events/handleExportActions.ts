@@ -5,12 +5,13 @@ import * as alphaTab from "@coderline/alphatab";
 function getExportFileName(atManager: ITabManager): string {
     // 1. 优先元数据标签 \title
     const score = atManager?.api?.score;
-    if (score && score.metadata && typeof score.metadata.title === 'string' && score.metadata.title.trim()) {
-        return score.metadata.title.trim();
+    if (score && typeof score.title === 'string' && score.title.trim()) {
+        return score.title.trim();
     }
     // 2. 其次文件名（不带后缀）
-    // 通过 atManager.pluginInstance?.app?.workspace?.getActiveFile() 获取当前文件
-    const app = atManager?.getApp?.() || atManager?.pluginInstance?.app;
+    // 通过 atManager.getPluginInstance()?.app?.workspace?.getActiveFile() 获取当前文件
+    const pluginInstance = atManager?.getPluginInstance?.();
+    const app = atManager?.getApp?.() || pluginInstance?.app;
     let fileName = "";
     if (app && typeof app.workspace?.getActiveFile === 'function') {
         const file = app.workspace.getActiveFile();
