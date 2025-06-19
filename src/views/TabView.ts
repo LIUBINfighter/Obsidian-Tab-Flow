@@ -53,7 +53,7 @@ export class TabView extends FileView {
 		this.fileModifyHandler = (file: TFile) => {
 			// 检查修改的文件是否是当前打开的文件
 			if (this.currentFile && file && file.path === this.currentFile.path) {
-				console.log(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
+				// console.log(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
 				this.reloadFile();
 			}
 		};
@@ -295,13 +295,13 @@ export class TabView extends FileView {
 	// 注册文件变更监听
 	private registerFileWatcher() {
 		this.app.vault.on("modify", this.fileModifyHandler);
-		console.log("[TabView] 已注册文件监听");
+		// console.log("[TabView] 已注册文件监听");
 	}
 
 	// 注销文件变更监听
 	private unregisterFileWatcher() {
 		this.app.vault.off("modify", this.fileModifyHandler);
-		console.log("[TabView] 已注销文件监听");
+		// console.log("[TabView] 已注销文件监听");
 	}
 
 	// 重新加载当前文件内容
@@ -331,7 +331,7 @@ export class TabView extends FileView {
 				
 				// 重新渲染内容
 				await this.atManager.initializeAndLoadFromTex(fileContent);
-				console.log(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
+				// console.log(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
 			} catch (error) {
 				console.error("[TabView] 重新加载文件失败", error);
 				this.uiManager.showErrorInOverlay(
@@ -460,7 +460,7 @@ export class TabView extends FileView {
 		// 注销文件监听
 		this.unregisterFileWatcher();
 		
-		console.log(`[TabView] Unloading file: ${file.name}`);
+		// console.log(`[TabView] Unloading file: ${file.name}`);
 		if (this.atManager) {
 			this.atManager.destroy();
 			// @ts-ignore
@@ -482,7 +482,7 @@ export class TabView extends FileView {
 		this.unregisterFileWatcher();
 		
 		// 当视图本身被关闭和销毁时
-		console.log("[TabView] Final onunload triggered.");
+		// console.log("[TabView] Final onunload triggered.");
 		if (this.atManager) {
 			this.atManager.destroy();
 			// @ts-ignore
