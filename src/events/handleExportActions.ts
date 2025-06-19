@@ -24,32 +24,7 @@ function getExportFileName(atManager: ITabManager): string {
 }
 
 export function handlePrintPdf(atManager: ITabManager) {
-    if (!atManager?.api) {
-        new Notice("AlphaTab API 未初始化，无法打印。");
-        return;
-    }
-    // hack: 伪造window.document及相关引用，最大程度兼容AlphaTab print
-    if (typeof window !== "undefined") {
-        if (!window.document) {
-            window.document = {
-                createElement: () => ({ style: {}, appendChild: () => {}, setAttribute: () => {} }),
-                body: { appendChild: () => {} },
-                getElementsByTagName: () => [{ appendChild: () => {} }],
-                querySelector: () => null,
-            } as any;
-        }
-        if (!window.parent) window.parent = window;
-        if (!window.top) window.top = window;
-        // 兼容 AlphaTab 内部 window.parent.document、window.top.document
-        if (!window.parent.document) window.parent.document = window.document;
-        if (!window.top.document) window.top.document = window.document;
-    }
-    try {
-        atManager.api.print();
-    } catch (e) {
-        new Notice("当前环境不支持直接打印为PDF。请在浏览器中打开后再打印。");
-        console.error(e);
-    }
+    new Notice("当前环境暂不支持直接打印为 PDF。请在浏览器中打开后再打印。");
 }
 
 export function handleExportGpFile(atManager: ITabManager) {
