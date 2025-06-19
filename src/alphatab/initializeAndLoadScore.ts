@@ -186,7 +186,7 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 
 		if (actualSmuflFontFilesLoaded) {
 			// @ts-ignore
-			settings.core.smuflFontSources = smuflFontData; // Provide to AlphaTab
+			settings.core.smuflFontSources = new Map(Object.entries(smuflFontData)); // Provide to AlphaTab
 			console.log(
 				"[ITabManager] Settings: core.smuflFontSources populated. Keys:",
 				Object.keys(smuflFontData)
@@ -305,7 +305,8 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 		// 通过 ITabManager 的私有方法绑定事件
 		(manager as any).bindEvents();
 	} catch (e: any) {
-		/* ... error handling ... */
+		console.error("[ITabManager] AlphaTabApi 初始化失败:", e);
+        eventHandlers.onError?.({ message: "AlphaTabApi 初始化失败: " + (e?.message || e) });
 	} finally {
 		/* ... cleanup ... */
 	}
