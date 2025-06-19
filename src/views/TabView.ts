@@ -82,8 +82,8 @@ export class TabView extends FileView {
 			}
 		});
 
-		// 新增：打印PDF按钮
-		this.addAction("print", "打印 PDF", () => {
+		// 新增：打印PDF按钮，icon更换为file-down
+		this.addAction("file-down", "打印 PDF", () => {
 			handlePrintPdf(this.atManager);
 		});
 		// 新增：导出GP按钮
