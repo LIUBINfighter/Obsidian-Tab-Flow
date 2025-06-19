@@ -65,6 +65,18 @@ const metaHighlighter = ViewPlugin.fromClass(
     { decorations: v => v.decorations }
 );
 
+// 光标主题扩展
+const cursorTheme = EditorView.theme({
+  ".cm-cursor": {
+    borderLeft: "2px solid #ffcc00"
+  }
+}, { dark: true });
+const cursorThemeLight = EditorView.theme({
+  ".cm-cursor": {
+    borderLeft: "2px solid #1976d2"
+  }
+}, { dark: false });
+
 export class TexEditorView extends TextFileView {
     plugin: AlphaTabPlugin;
     private editor: EditorView;
@@ -128,7 +140,8 @@ export class TexEditorView extends TextFileView {
                 }
             }),
             barHighlighter,
-            metaHighlighter
+            metaHighlighter,
+            this.plugin.themeMode === "dark" ? cursorTheme : cursorThemeLight
         ];
 
         const state = EditorState.create({
@@ -224,8 +237,11 @@ export class TexEditorView extends TextFileView {
             }
             /* 自定义元数据标签高亮 */
             .cm-meta {
-                color: var(--comment-color);
+                color: #2196f3;
                 font-style: italic;
+                border-radius: 3px;
+                padding: 0 2px;
+                background: none;
             }
         `;
         document.head.appendChild(style);
