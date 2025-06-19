@@ -485,4 +485,32 @@ export class TabView extends FileView {
 		}
 		super.onunload();
 	}
+
+	// 主题切换时刷新 AlphaTab 颜色
+	public refreshTheme(mode: 'dark' | 'light') {
+		if (!this.atManager || !this.atManager.api) return;
+		const settings = this.atManager.getSettings();
+		if (!settings) return;
+		if (mode === 'dark') {
+			// 使用更灰的白色 #E0E0E0
+			const grayWhite = alphaTab.model.Color.fromJson("#E0E0E0") ?? new alphaTab.model.Color(255,224,224,224);
+			settings.display.resources.mainGlyphColor = grayWhite;
+			settings.display.resources.staffLineColor = grayWhite;
+			settings.display.resources.barSeparatorColor = grayWhite;
+			settings.display.resources.barNumberColor = grayWhite;
+			settings.display.resources.scoreInfoColor = grayWhite;
+		} else {
+			// 恢复为 AlphaTab 默认色（黑色）
+			const black = alphaTab.model.Color.fromJson("#000000") ?? new alphaTab.model.Color(255,0,0,0);
+			settings.display.resources.mainGlyphColor = black;
+			settings.display.resources.staffLineColor = black;
+			settings.display.resources.barSeparatorColor = black;
+			settings.display.resources.barNumberColor = black;
+			settings.display.resources.scoreInfoColor = black;
+		}
+		// 重新渲染
+		if (typeof this.atManager.render === 'function') {
+			this.atManager.render();
+		}
+	}
 }

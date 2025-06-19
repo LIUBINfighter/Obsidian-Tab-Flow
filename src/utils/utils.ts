@@ -50,3 +50,17 @@ export function getCurrentThemeMode(): 'dark' | 'light' {
     // 默认返回 dark
     return 'dark';
 }
+
+/**
+ * 监听 Obsidian 主题切换（深色/浅色），回调返回最新模式
+ * @param callback (mode: 'dark' | 'light') => void
+ */
+export function watchThemeModeChange(callback: (mode: 'dark' | 'light') => void) {
+    const observer = new MutationObserver(() => {
+        callback(getCurrentThemeMode());
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    // 立即触发一次
+    callback(getCurrentThemeMode());
+    return observer;
+}
