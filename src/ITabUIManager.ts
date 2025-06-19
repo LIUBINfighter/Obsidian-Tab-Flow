@@ -143,11 +143,11 @@ export class ITabUIManager {
 		});
 		this.atControlsRef.appendChild(this.controls.countInButton.getElement());
 		// 光标跟随滚动按钮
-		this.controls.scrollFollowButton = new ToggleButton({
-			text: '跟随光标',
-			active: true // 默认启用
-		});
-		this.atControlsRef.appendChild(this.controls.scrollFollowButton.getElement());
+		// this.controls.scrollFollowButton = new ToggleButton({
+		// 	text: '跟随光标',
+		// 	active: true // 默认启用
+		// });
+		// this.atControlsRef.appendChild(this.controls.scrollFollowButton.getElement());
 	}
 
 	// getter 统一访问控件实例
