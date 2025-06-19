@@ -137,15 +137,15 @@ export class ITabUIManager {
 		this.atControlsRef.appendChild(this.countInButton.getElement());
 		
 		// 保存按钮
-		this.savePdfButton = new ToggleButton({
-			text: "保存PDF"
-		});
-		this.atControlsRef.appendChild(this.savePdfButton.getElement());
+		// this.savePdfButton = new ToggleButton({
+		// 	text: "保存PDF"
+		// });
+		// this.atControlsRef.appendChild(this.savePdfButton.getElement());
 		
-		this.savePngButton = new ToggleButton({
-			text: "保存PNG"
-		});
-		this.atControlsRef.appendChild(this.savePngButton.getElement());
+		// this.savePngButton = new ToggleButton({
+		// 	text: "保存PNG"
+		// });
+		// this.atControlsRef.appendChild(this.savePngButton.getElement());
 		
 		// 光标跟随滚动按钮
 		// this.scrollFollowButton = new ToggleButton({
