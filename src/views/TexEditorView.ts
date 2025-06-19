@@ -1,12 +1,69 @@
 import { TextFileView, WorkspaceLeaf, Notice } from "obsidian";
 import AlphaTabPlugin from "../main";
-import { EditorState, Extension } from "@codemirror/state";
-import { EditorView, keymap, placeholder } from "@codemirror/view";
+import { EditorState, Extension, RangeSetBuilder } from "@codemirror/state";
+import { EditorView, keymap, placeholder, Decoration, DecorationSet, ViewPlugin, ViewUpdate } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { syntaxHighlighting, defaultHighlightStyle } from "@codemirror/language";
 import { TemplateManagerModal } from "../components/TemplateManagerModal";
 
 export const VIEW_TYPE_TEX_EDITOR = "tex-editor-view";
+
+// 添加自定义 ViewPlugin: 高亮 '|' 并基于出现次数应用不同样式
+const barHighlighter = ViewPlugin.fromClass(
+    class {
+        decorations: DecorationSet;
+        constructor(view: EditorView) {
+            this.decorations = this.getDecos(view);
+        }
+        update(update: ViewUpdate) {
+            if (update.docChanged) {
+                this.decorations = this.getDecos(update.view);
+            }
+        }
+        getDecos(view: EditorView): DecorationSet {
+            const builder = new RangeSetBuilder<Decoration>();
+            const text = view.state.doc.toString();
+            let count = 0;
+            for (let i = 0; i < text.length; i++) {
+                if (text[i] === '|') {
+                    count++;
+                    const cls = (count - 1) % 5 === 0 ? 'cm-bar-strong' : 'cm-bar';
+                    builder.add(i, i + 1, Decoration.mark({ class: cls }));
+                }
+            }
+            return builder.finish();
+        }
+    },
+    { decorations: v => v.decorations }
+);
+
+// 添加自定义 ViewPlugin: 高亮元数据标签
+const metaHighlighter = ViewPlugin.fromClass(
+    class {
+        decorations: DecorationSet;
+        constructor(view: EditorView) {
+            this.decorations = this.getDecos(view);
+        }
+        update(update: ViewUpdate) {
+            if (update.docChanged) {
+                this.decorations = this.getDecos(update.view);
+            }
+        }
+        getDecos(view: EditorView): DecorationSet {
+            const builder = new RangeSetBuilder<Decoration>();
+            const text = view.state.doc.toString();
+            const regex = /\\(?:title|subtitle|composer|arranger|lyricist|copyright|album|artist|tempo|ts|key|tuning|capo|track|staff|clef)[^\n]*/g;
+            let match: RegExpExecArray | null;
+            while ((match = regex.exec(text)) !== null) {
+                const start = match.index;
+                const end = start + match[0].length;
+                builder.add(start, end, Decoration.mark({ class: 'cm-meta' }));
+            }
+            return builder.finish();
+        }
+    },
+    { decorations: v => v.decorations }
+);
 
 export class TexEditorView extends TextFileView {
     plugin: AlphaTabPlugin;
@@ -69,7 +126,9 @@ export class TexEditorView extends TextFileView {
                         }, 2000);
                     }
                 }
-            })
+            }),
+            barHighlighter,
+            metaHighlighter
         ];
 
         const state = EditorState.create({
@@ -155,6 +214,18 @@ export class TexEditorView extends TextFileView {
             }
             .tex-editor-cm-container .cm-content {
                 padding: 12px;
+            }
+            /* 自定义 | 高亮样式 */
+            .cm-bar {
+                background-color: rgba(255, 255, 0, 0.4);
+            }
+            .cm-bar-strong {
+                background-color: rgba(255, 165, 0, 0.6);
+            }
+            /* 自定义元数据标签高亮 */
+            .cm-meta {
+                color: var(--comment-color);
+                font-style: italic;
             }
         `;
         document.head.appendChild(style);
