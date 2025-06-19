@@ -4,7 +4,7 @@ import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
 import { TexEditorView, VIEW_TYPE_TEX_EDITOR } from "./views/TexEditorView";
 import * as path from "path";
 import * as fs from "fs";
-import { registerStyles, isGuitarProFile } from "./utils/utils";
+import { registerStyles, isGuitarProFile, getCurrentThemeMode } from "./utils/utils";
 
 interface AlphaTabPluginSettings {
 	// 插件设置，可以根据需要扩展
@@ -18,6 +18,7 @@ const DEFAULT_SETTINGS: AlphaTabPluginSettings = {
 export default class AlphaTabPlugin extends Plugin {
 	settings: AlphaTabPluginSettings;
 	actualPluginDir: string | null = null; // 新增属性
+	themeMode: 'dark' | 'light' = 'dark'; // 新增全局变量
 
 	async onload() {
 		await this.loadSettings();
@@ -56,6 +57,8 @@ export default class AlphaTabPlugin extends Plugin {
 
 		// 加载自定义样式
 		registerStyles(this);
+		// 获取当前主题模式并赋值到全局变量
+		this.themeMode = getCurrentThemeMode();
 
 		// 注册吉他谱文件扩展名的查看器
 		this.registerView(VIEW_TYPE_TAB, (leaf) => {
