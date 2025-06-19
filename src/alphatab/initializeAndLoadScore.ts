@@ -208,7 +208,17 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 	// Display settings
 	settings.display.scale = 0.8;
 	settings.display.layoutMode = alphaTab.LayoutMode.Page;
-	
+
+	// 根据主题设置乐谱颜色（仅深色模式下设置为白色，浅色保持默认）
+	const pluginThemeMode = pluginInstance.themeMode;
+	if (pluginThemeMode === 'dark') {
+		settings.display.resources.mainGlyphColor = alphaTab.model.Color.fromJson("#FFFFFF");
+		settings.display.resources.staffLineColor = alphaTab.model.Color.fromJson("#FFFFFF");
+		settings.display.resources.barSeparatorColor = alphaTab.model.Color.fromJson("#FFFFFF");
+		settings.display.resources.barNumberColor = alphaTab.model.Color.fromJson("#FFFFFF");
+		settings.display.resources.scoreInfoColor = alphaTab.model.Color.fromJson("#FFFFFF");
+	}
+
 	// Player and cursor settings - 启用光标跟随功能
 	settings.player.enablePlayer = true; // 确保播放器启用
 	settings.player.enableCursor = true; // 启用播放光标
