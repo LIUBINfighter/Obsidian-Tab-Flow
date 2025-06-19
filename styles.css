@@ -564,6 +564,80 @@
     border: 1px solid var(--background-modifier-error);
 }
 
+/* 模板管理模态框样式 */
+.template-list {
+    margin: 16px 0 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.template-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    background: var(--background-secondary);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.template-item.is-selected {
+    background: var(--background-modifier-active-hover);
+    border-color: var(--interactive-accent);
+}
+.template-name {
+    flex: 1;
+    font-weight: 500;
+    color: var(--text-normal);
+}
+.template-preview {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    font-family: var(--font-monospace, 'Courier New', monospace);
+    font-size: 14px;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow: auto;
+}
+.template-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+.template-form label {
+    font-size: 13px;
+    color: var(--text-faint);
+}
+.template-name-input,
+.template-content-input {
+    width: 100%;
+    font-size: 14px;
+    padding: 6px 8px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background: var(--background-primary);
+    color: var(--text-normal);
+}
+.template-content-input {
+    font-family: var(--font-monospace, 'Courier New', monospace);
+    resize: vertical;
+}
+.template-form-btns {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+.template-form-btns button {
+    min-width: 72px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .tex-editor-layout {
