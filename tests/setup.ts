@@ -227,7 +227,7 @@ document.createElement = vi.fn().mockImplementation((tagName) => {
   return element;
 });
 
-// Mock head operations
+// Mock head and body operations
 const mockHead = createMockElement('head');
 mockHead.appendChild = vi.fn((child: any) => {
   mockHead.children.push(child);
@@ -242,8 +242,33 @@ mockHead.removeChild = vi.fn((child: any) => {
   }
   return child;
 });
+
+const mockBody = createMockElement('body');
+mockBody.appendChild = vi.fn((child: any) => {
+  if (!child || typeof child !== 'object') {
+    console.warn('appendChild: invalid child', child);
+    return child;
+  }
+  mockBody.children.push(child);
+  if (child) child.parentElement = mockBody;
+  return child;
+});
+mockBody.removeChild = vi.fn((child: any) => {
+  const index = mockBody.children.indexOf(child);
+  if (index > -1) {
+    mockBody.children.splice(index, 1);
+    if (child) child.parentElement = null;
+  }
+  return child;
+});
+
 Object.defineProperty(document, 'head', {
   value: mockHead,
+  writable: true
+});
+
+Object.defineProperty(document, 'body', {
+  value: mockBody,
   writable: true
 });
 
@@ -266,32 +291,132 @@ const mockObsidian = {
   },
   FileView: class MockFileView {
     leaf: any;
-    containerEl: any = { 
-      addClasses: vi.fn(),
-      find: vi.fn().mockReturnValue({ setText: vi.fn() }),
-      createDiv: vi.fn().mockReturnValue(createMockElement('div')),
-      createEl: vi.fn().mockImplementation((tag: string, opts?: any) => createMockElement(tag, opts)),
-      appendChild: vi.fn(),
-      addEventListener: vi.fn(),
-      style: {},
-      classList: { add: vi.fn(), remove: vi.fn() }
-    };
-    contentEl: any = {
-      empty: vi.fn(),
-      createDiv: vi.fn().mockReturnValue(createMockElement('div')),
-      createEl: vi.fn().mockImplementation((tag: string, opts?: any) => createMockElement(tag, opts)),
-      appendChild: vi.fn(),
-      addEventListener: vi.fn(),
-      style: {},
-      classList: { add: vi.fn(), remove: vi.fn() }
-    };
+    file: any = null;
+    containerEl: any;
+    contentEl: any;
+    app: any; // 添加 app 属性
+    
     constructor(leaf: any) {
       this.leaf = leaf;
+      this.app = new mockObsidian.App(); // 初始化 app 属性
+      
+      // 创建完全可控的 containerEl mock，基于文档建议
+      this.containerEl = {
+        className: '',
+        innerHTML: '',
+        style: {},
+        tagName: 'DIV',
+        children: [],
+        addClasses: vi.fn((classes: string[]) => {
+          // Mock addClasses method for Obsidian FileView
+          classes.forEach(cls => {
+            if (!this.containerEl.className.includes(cls)) {
+              this.containerEl.className += this.containerEl.className ? ` ${cls}` : cls;
+            }
+          });
+        }),
+        addClass: vi.fn((className: string) => {
+          if (!this.containerEl.className.includes(className)) {
+            this.containerEl.className += this.containerEl.className ? ` ${className}` : className;
+          }
+        }),
+        removeClass: vi.fn((className: string) => {
+          this.containerEl.className = this.containerEl.className.replace(new RegExp(`\\b${className}\\b`, 'g'), '').trim();
+        }),
+        empty: vi.fn(() => {
+          this.containerEl.innerHTML = '';
+          this.containerEl.children.length = 0;
+        }),
+        setText: vi.fn((text: string) => {
+          this.containerEl.innerHTML = text;
+        }),
+        createEl: vi.fn().mockImplementation((tag: string, opts?: any) => createMockElement(tag, opts)),
+        createDiv: vi.fn().mockReturnValue(createMockElement('div')),
+        appendChild: vi.fn((child: any) => {
+          this.containerEl.children.push(child);
+          if (child) child.parentElement = this.containerEl;
+          return child;
+        }),
+        removeChild: vi.fn((child: any) => {
+          const index = this.containerEl.children.indexOf(child);
+          if (index > -1) {
+            this.containerEl.children.splice(index, 1);
+            if (child) child.parentElement = null;
+          }
+          return child;
+        }),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        querySelector: vi.fn(),
+        querySelectorAll: vi.fn(),
+        find: vi.fn().mockReturnValue({ setText: vi.fn() }),
+        classList: {
+          add: vi.fn(),
+          remove: vi.fn(),
+          contains: vi.fn(),
+          toggle: vi.fn()
+        }
+      };
+      
+      // 创建完全可控的 contentEl mock
+      this.contentEl = {
+        className: '',
+        innerHTML: '',
+        style: {},
+        tagName: 'DIV',
+        children: [],
+        empty: vi.fn(() => {
+          this.contentEl.innerHTML = '';
+          this.contentEl.children.length = 0;
+        }),
+        setText: vi.fn((text: string) => {
+          this.contentEl.innerHTML = text;
+        }),
+        createEl: vi.fn().mockImplementation((tag: string, opts?: any) => createMockElement(tag, opts)),
+        createDiv: vi.fn().mockReturnValue(createMockElement('div')),
+        appendChild: vi.fn((child: any) => {
+          this.contentEl.children.push(child);
+          if (child) child.parentElement = this.contentEl;
+          return child;
+        }),
+        addClasses: vi.fn((classes: string[]) => {
+          classes.forEach(cls => {
+            if (!this.contentEl.className.includes(cls)) {
+              this.contentEl.className += this.contentEl.className ? ` ${cls}` : cls;
+            }
+          });
+        }),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        querySelector: vi.fn(),
+        querySelectorAll: vi.fn(),
+        classList: {
+          add: vi.fn(),
+          remove: vi.fn(),
+          contains: vi.fn(),
+          toggle: vi.fn()
+        }
+      };
     }
+    
     onLoadFile = vi.fn();
     onUnloadFile = vi.fn();
-    getViewType = vi.fn();
-    getDisplayText = vi.fn();
+    getViewType = vi.fn(() => 'tab-view'); // 实现 getViewType 方法
+    getDisplayText = vi.fn(() => '吉他谱'); // 实现 getDisplayText 方法
+    getViewData = vi.fn();
+    setViewData = vi.fn();
+    clear = vi.fn();
+    addAction = vi.fn((icon: string, title: string, callback: Function) => {
+      // Mock addAction method for Obsidian FileView - adds action buttons to view
+      return {
+        icon,
+        title,
+        callback
+      };
+    });
+    load = vi.fn();
+    unload = vi.fn();
+    onunload = vi.fn(); // 添加 onunload 方法
   },
   TextFileView: class MockTextFileView {
     leaf: any;
@@ -389,6 +514,18 @@ vi.stubGlobal('Notice', mockObsidian.Notice);
 vi.stubGlobal('Modal', mockObsidian.Modal);
 vi.stubGlobal('App', mockObsidian.App);
 
+// Mock the entire "obsidian" module
+vi.mock('obsidian', () => ({
+  Plugin: mockObsidian.Plugin,
+  FileView: mockObsidian.FileView,
+  TextFileView: mockObsidian.TextFileView,
+  WorkspaceLeaf: mockObsidian.WorkspaceLeaf,
+  TFile: mockObsidian.TFile,
+  Notice: mockObsidian.Notice,
+  Modal: mockObsidian.Modal,
+  App: mockObsidian.App
+}));
+
 // Mock AlphaTab
 const mockAlphaTab = {
   Settings: class MockSettings {
@@ -413,19 +550,34 @@ const mockAlphaTab = {
   AlphaTabApi: class MockAlphaTabApi {
     score: any = null;
     settings: any;
+    playerState: string = 'paused';
+    isReadyForPlayback: boolean = false;
+    container: any = null;
     
     constructor(element: any, settings: any) {
       this.settings = settings || new mockAlphaTab.Settings();
+      this.container = element;
     }
     
     load = vi.fn();
     tex = vi.fn();
     render = vi.fn();
-    renderTracks = vi.fn(); // 添加缺失的renderTracks方法
+    renderTracks = vi.fn((tracks: any) => {
+      // Mock renderTracks method - 接受tracks参数并模拟渲染
+      console.log('Mock renderTracks called with:', tracks);
+      return Promise.resolve();
+    });
     playPause = vi.fn();
     stop = vi.fn();
     destroy = vi.fn();
-    on = vi.fn();
+    on = vi.fn((event: string, callback: Function) => {
+      // Mock event listener registration
+      if (!this._eventHandlers) this._eventHandlers = {};
+      if (!this._eventHandlers[event]) this._eventHandlers[event] = [];
+      this._eventHandlers[event].push(callback);
+    });
+    scrollToCursor = vi.fn();
+    _eventHandlers: any = {};
   },
   model: {
     Score: class MockScore {
