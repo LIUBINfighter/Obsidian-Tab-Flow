@@ -69,6 +69,51 @@ export class AlphaTabSettingTab extends PluginSettingTab {
             cls: "setting-item-description"
         });
         
+        // 添加资产下载 URL 信息
+        const version = this.plugin.manifest.version;
+        const assetsUrl = `https://github.com/LIUBINfightere/interactive-tabs/releases/download/${version}/assets.zip`;
+        
+        new Setting(containerEl)
+            .setName("资源下载链接")
+            .setDesc("如果自动下载失败，您可以手动下载资源文件并解压到插件目录")
+            .addButton(button => button
+                .setButtonText("复制链接")
+                .onClick(() => {
+                    navigator.clipboard.writeText(assetsUrl).then(() => {
+                        new Notice("下载链接已复制到剪贴板");
+                    }).catch(err => {
+                        new Notice("复制链接失败: " + err);
+                    });
+                })
+            )
+            // .addButton(button => button
+            //     .setButtonText("浏览器打开")
+            //     .onClick(() => {
+            //         window.open(assetsUrl, '_blank');
+            //     })
+            // );
+            
+        const urlContainer = containerEl.createDiv({ cls: "setting-item-description" });
+        urlContainer.createEl("strong", { text: "下载地址: " });
+        const urlEl = urlContainer.createEl("span", { text: assetsUrl });
+        urlEl.style.wordBreak = "break-all";
+        
+        // 添加手动安装说明
+        containerEl.createEl("div", {
+            text: "手动安装步骤:",
+            cls: "setting-item-description"
+        });
+        
+        const installSteps = containerEl.createEl("ol", { cls: "setting-item-description" });
+        [
+            "下载上面链接中的 assets.zip 文件",
+            "解压 assets.zip 文件（确保解压后有 assets 文件夹）",
+            "将解压出的 assets 文件夹复制到本插件目录中",
+            "重启 Obsidian 以应用更改"
+        ].forEach(step => {
+            installSteps.createEl("li", { text: step });
+        });
+        
         // 添加功能设置
         containerEl.createEl("h3", { text: "功能设置" });
         

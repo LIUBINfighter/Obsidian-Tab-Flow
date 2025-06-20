@@ -353,7 +353,7 @@ export default class AlphaTabPlugin extends Plugin {
 			
 			// 构建资产包URL - 使用当前插件版本号
 			const version = this.manifest.version;
-			const assetsUrl = `https://github.com/yourusername/interactive-tabs/releases/download/${version}/assets.zip`;
+			const assetsUrl = `https://github.com/LIUBINfightere/interactive-tabs/releases/download/${version}/assets.zip`;
 			
 			// 显示下载进度通知
 			const notice = new Notice("正在下载 AlphaTab 资源文件...", 0);
