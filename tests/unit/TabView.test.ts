@@ -335,6 +335,9 @@ describe('TabView', () => {
     });
     
     it('should register file watcher on load', async () => {
+      // Ensure tabView has access to the mocked app
+      (tabView as any).app = mockPlugin.app;
+      
       // Create a proper spy on the vault.on method
       const onSpy = vi.spyOn(mockPlugin.app.vault, 'on');
       
@@ -345,6 +348,9 @@ describe('TabView', () => {
     });
 
     it('should unregister file watcher', () => {
+      // Ensure tabView has access to the mocked app
+      (tabView as any).app = mockPlugin.app;
+      
       // Create a proper spy on the vault.off method
       const offSpy = vi.spyOn(mockPlugin.app.vault, 'off');
       
