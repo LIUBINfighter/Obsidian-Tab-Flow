@@ -1,18 +1,21 @@
 // Mock implementation for obsidian package
 
-// Create mock element with Obsidian HTMLElement extensions
+// Enhanced mock element to support style and classList behaviors
 const createMockElement = (tagName: string, options: any = {}) => {
   const element = {
     tagName: tagName.toUpperCase(),
     textContent: '',
     innerHTML: '',
-    style: {},
+    style: {
+      display: '',
+    },
     className: '',
     classList: {
-      add: () => {},
-      remove: () => {},
-      contains: () => false,
-      toggle: () => {}
+      classes: new Set<string>(),
+      add: function (cls: string) { this.classes.add(cls); },
+      remove: function (cls: string) { this.classes.delete(cls); },
+      contains: function (cls: string) { return this.classes.has(cls); },
+      toggle: function (cls: string) { this.classes.has(cls) ? this.classes.delete(cls) : this.classes.add(cls); }
     },
     setAttribute: () => {},
     getAttribute: () => null,
