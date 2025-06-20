@@ -72,7 +72,8 @@ export class ITabUIManager {
 		onPlayPause: () => void,
 		onStop: () => void,
 		onZoomChange?: (v: number) => void,
-		onMetronomeToggle?: (active: boolean) => void
+		onMetronomeToggle?: (active: boolean) => void,
+		onCountInToggle?: (active: boolean) => void
 	) {
 		this.atControlsRef.empty();
 		// 时间显示元素
@@ -155,7 +156,12 @@ export class ITabUIManager {
 		// 前置四拍按钮
 		this.controls.countInButton = new ToggleButton({
 			text: '前置四拍',
-			active: false
+			active: false,
+			onClick: (active: boolean) => {
+				if (typeof onCountInToggle === 'function') {
+					onCountInToggle(active);
+				}
+			}
 		});
 		this.atControlsRef.appendChild(this.controls.countInButton.getElement());
 		// 光标跟随滚动按钮
