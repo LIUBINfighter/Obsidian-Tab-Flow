@@ -62,7 +62,13 @@ describe('Utils', () => {
     });
 
     it('should prioritize theme-dark when both classes are present', () => {
-      document.body.classList.add('theme-light', 'theme-dark');
+      console.log('Initial className:', document.body.className);
+      document.body.classList.add('theme-light');
+      console.log('After adding theme-light:', document.body.className);
+      document.body.classList.add('theme-dark');
+      console.log('After adding theme-dark:', document.body.className);
+      console.log('Contains theme-dark:', document.body.classList.contains('theme-dark'));
+      console.log('Contains theme-light:', document.body.classList.contains('theme-light'));
       expect(getCurrentThemeMode()).toBe('dark');
     });
   });

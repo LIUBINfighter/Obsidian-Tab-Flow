@@ -34,15 +34,34 @@ const createMockElement = (tagName: string, options: any = {}): any => {
     childNodes: [],
     classList: {
       add: vi.fn((className: string) => {
-        if (!element.className.includes(className)) {
-          element.className = element.className ? `${element.className} ${className}` : className;
+        const classes = element.className ? element.className.split(' ').filter(Boolean) : [];
+        if (!classes.includes(className)) {
+          classes.push(className);
+          element.className = classes.join(' ');
         }
       }),
       remove: vi.fn((className: string) => {
-        element.className = element.className.replace(new RegExp(`\\b${className}\\b`, 'g'), '').trim();
+        const classes = element.className ? element.className.split(' ').filter(Boolean) : [];
+        const index = classes.indexOf(className);
+        if (index > -1) {
+          classes.splice(index, 1);
+          element.className = classes.join(' ');
+        }
       }),
-      contains: vi.fn((className: string): boolean => element.className.includes(className)),
-      toggle: vi.fn()
+      contains: vi.fn((className: string): boolean => {
+        const classes = element.className ? element.className.split(' ').filter(Boolean) : [];
+        return classes.includes(className);
+      }),
+      toggle: vi.fn((className: string) => {
+        const classes = element.className ? element.className.split(' ').filter(Boolean) : [];
+        const index = classes.indexOf(className);
+        if (index > -1) {
+          classes.splice(index, 1);
+        } else {
+          classes.push(className);
+        }
+        element.className = classes.join(' ');
+      })
     },
     setAttribute: vi.fn((name: string, value: string) => {
       if (name === 'id') element.id = value;
@@ -133,8 +152,7 @@ const createMockElement = (tagName: string, options: any = {}): any => {
     disabled: false,
     hidden: false,
     children: [],
-    parentElement: null,
-    querySelector: vi.fn((selector: string) => {
+    parentElement: null,    querySelector: vi.fn((selector: string) => {
       // 简单的选择器匹配实现
       if (selector === 'label' && element.tagName === 'DIV') {
         return element.children.find((child: any) => child.tagName === 'LABEL') || null;
@@ -145,6 +163,9 @@ const createMockElement = (tagName: string, options: any = {}): any => {
       if (selector === 'option' && element.tagName === 'SELECT') {
         return element.children[0] || null;
       }
+      if (selector === '.at-main-ui') {
+        return createMockElement('div', { cls: 'at-main-ui' });
+      }
       return null;
     }),
     querySelectorAll: vi.fn((selector: string) => {
@@ -153,6 +174,18 @@ const createMockElement = (tagName: string, options: any = {}): any => {
         return element.children.filter((child: any) => child.tagName === 'OPTION');
       }
       return [];
+    }),
+    // 添加 remove 方法，修复 FontManager 测试
+    remove: vi.fn(() => {
+      if (element.parentElement) {
+        element.parentElement.removeChild(element);
+      } else if (element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+      // 从 registry 中移除
+      if (element.id) {
+        elementRegistry.delete(element.id);
+      }
     }),
     ...options
   };
@@ -322,8 +355,39 @@ mockBody.removeChild = vi.fn((child: any) => {
 // 添加 Node 类型兼容性，修复 MutationObserver 问题
 mockBody.nodeType = 1; // ELEMENT_NODE
 mockBody.nodeName = 'BODY';
+mockBody.firstChild = null;
+mockBody.lastChild = null;
+mockBody.nextSibling = null;
+mockBody.previousSibling = null;
+mockBody.contains = vi.fn().mockReturnValue(true);
+mockBody.hasChildNodes = vi.fn().mockReturnValue(false);
+mockBody.isConnected = true;
+mockBody.isDefaultNamespace = vi.fn().mockReturnValue(true);
+mockBody.isEqualNode = vi.fn().mockReturnValue(false);
+mockBody.isSameNode = vi.fn().mockReturnValue(false);
+mockBody.lookupNamespaceURI = vi.fn().mockReturnValue(null);
+mockBody.lookupPrefix = vi.fn().mockReturnValue(null);
+mockBody.normalize = vi.fn();
+mockBody.compareDocumentPosition = vi.fn().mockReturnValue(0);
+mockBody.getRootNode = vi.fn().mockReturnValue(document);
+
 mockHead.nodeType = 1; // ELEMENT_NODE
 mockHead.nodeName = 'HEAD';
+mockHead.firstChild = null;
+mockHead.lastChild = null;
+mockHead.nextSibling = null;
+mockHead.previousSibling = null;
+mockHead.contains = vi.fn().mockReturnValue(true);
+mockHead.hasChildNodes = vi.fn().mockReturnValue(false);
+mockHead.isConnected = true;
+mockHead.isDefaultNamespace = vi.fn().mockReturnValue(true);
+mockHead.isEqualNode = vi.fn().mockReturnValue(false);
+mockHead.isSameNode = vi.fn().mockReturnValue(false);
+mockHead.lookupNamespaceURI = vi.fn().mockReturnValue(null);
+mockHead.lookupPrefix = vi.fn().mockReturnValue(null);
+mockHead.normalize = vi.fn();
+mockHead.compareDocumentPosition = vi.fn().mockReturnValue(0);
+mockHead.getRootNode = vi.fn().mockReturnValue(document);
 
 Object.defineProperty(document, 'head', {
   value: mockHead,
@@ -336,10 +400,14 @@ Object.defineProperty(document, 'body', {
 });
 
 // Mock Obsidian Plugin API
-const mockObsidian = {
-  Plugin: class MockPlugin {
+const mockObsidian = {  Plugin: class MockPlugin {
     app: any;
-    manifest: any = { id: 'test-plugin', dir: '.obsidian/plugins/test-plugin' };
+    manifest: any = { 
+      id: 'test-plugin', 
+      dir: '.obsidian/plugins/test-plugin',
+      name: 'Test Plugin',
+      version: '1.0.0'
+    };
     loadData = vi.fn().mockResolvedValue({});
     saveData = vi.fn().mockResolvedValue(undefined);
     addCommand = vi.fn();
@@ -461,9 +529,14 @@ const mockObsidian = {
         }
       };
     }
-    
-    onLoadFile = vi.fn();
-    onUnloadFile = vi.fn();
+      onLoadFile = vi.fn((file: any) => {
+      this.file = file; // 确保设置 file 属性
+      return Promise.resolve();
+    });
+    onUnloadFile = vi.fn(() => {
+      this.file = null; // 清空 file 属性
+      return Promise.resolve();
+    });
     getViewType = vi.fn(() => 'tab-view'); // 实现 getViewType 方法
     // 移除 getDisplayText 的 Mock，让子类自己实现
     // getDisplayText = vi.fn(() => '吉他谱'); // 这个会覆盖子类的实现！
@@ -537,20 +610,41 @@ const mockObsidian = {
     close = vi.fn();
     onOpen = vi.fn();
     onClose = vi.fn();
-  },
-  App: class MockApp {
-    vault = {
+  },  App: class MockApp {    vault = {
       adapter: {
-        exists: vi.fn(),
-        getResourcePath: vi.fn(),
-        basePath: '/mock/path'
+        exists: vi.fn().mockResolvedValue(true),
+        getResourcePath: vi.fn().mockReturnValue('/mock/vault/path'),
+        basePath: '/mock/vault/path'
       },
-      read: vi.fn(),
-      readBinary: vi.fn(),
-      create: vi.fn(),
-      getAbstractFileByPath: vi.fn(),
-      on: vi.fn(),
-      off: vi.fn()
+      read: vi.fn().mockResolvedValue('mock file content'),
+      readBinary: vi.fn().mockResolvedValue(new ArrayBuffer(1024)),
+      create: vi.fn().mockResolvedValue(undefined),
+      getAbstractFileByPath: vi.fn().mockReturnValue(null),
+      on: vi.fn((event: string, callback: Function) => {
+        // Store event listeners for later triggering
+        if (!this.vault._eventListeners) this.vault._eventListeners = {};
+        if (!this.vault._eventListeners[event]) this.vault._eventListeners[event] = [];
+        this.vault._eventListeners[event].push(callback);
+        return { event, callback };
+      }),
+      off: vi.fn((event: string, callback: Function) => {
+        // Remove event listeners
+        if (this.vault._eventListeners && this.vault._eventListeners[event]) {
+          const index = this.vault._eventListeners[event].indexOf(callback);
+          if (index > -1) {
+            this.vault._eventListeners[event].splice(index, 1);
+          }
+        }
+      }),
+      trigger: vi.fn((event: string, ...args: any[]) => {
+        // Trigger event listeners
+        if (this.vault._eventListeners && this.vault._eventListeners[event]) {
+          this.vault._eventListeners[event].forEach((callback: Function) => {
+            callback(...args);
+          });
+        }
+      }),
+      _eventListeners: {} as Record<string, Function[]>
     };
     workspace = {
       getLeaf: vi.fn().mockReturnValue({
@@ -679,15 +773,32 @@ vi.stubGlobal('alphaTab', mockAlphaTab);
 
 // Mock fs and path modules
 vi.mock('fs', () => ({
-  existsSync: vi.fn(),
-  readFileSync: vi.fn(),
+  existsSync: vi.fn().mockImplementation((filePath: string) => {
+    // Mock 插件目录和 manifest.json 存在
+    if (filePath.includes('manifest.json')) {
+      return true;
+    }
+    if (filePath.includes('assets') || filePath.includes('alphatab')) {
+      return true;
+    }
+    return false;
+  }),
+  readFileSync: vi.fn().mockImplementation((filePath: string, encoding?: string) => {
+    if (filePath.includes('manifest.json')) {
+      return JSON.stringify({ id: 'test-plugin', name: 'Test Plugin', version: '1.0.0' });
+    }
+    if (encoding === 'utf8') {
+      return 'mock file content';
+    }
+    return Buffer.from('mock file content');
+  }),
   writeFileSync: vi.fn()
 }));
 
 vi.mock('path', () => ({
-  join: vi.fn((...paths) => paths.join('/')),
+  join: vi.fn((...paths) => paths.filter(p => p).join('/')),
   dirname: vi.fn((p) => p.split('/').slice(0, -1).join('/')),
-  resolve: vi.fn((...paths) => '/' + paths.join('/'))
+  resolve: vi.fn((...paths) => '/' + paths.filter(p => p).join('/'))
 }));
 
 // Mock CodeMirror
@@ -713,3 +824,53 @@ vi.mock('@codemirror/view', () => ({
   Decoration: { mark: vi.fn() },
   ViewPlugin: { fromClass: vi.fn() }
 }));
+
+// Utility function to create mock files for testing
+const createMockFile = (path: string = 'test.tex', content: string = 'mock content'): any => ({
+  path,
+  name: path.split('/').pop() || path,
+  basename: path.split('/').pop()?.split('.')[0] || 'test',
+  extension: path.split('.').pop() || 'tex',
+  stat: { 
+    mtime: Date.now(), 
+    ctime: Date.now(), 
+    size: content.length 
+  },
+  vault: null // Will be set when needed
+});
+
+// Export for use in tests
+(global as any).createMockFile = createMockFile;
+
+// Mock MutationObserver for better test compatibility
+global.MutationObserver = class MockMutationObserver {
+  private callback: Function;
+  private options: any;
+  
+  constructor(callback: Function) {
+    this.callback = callback;
+  }
+  
+  observe(target: any, options: any) {
+    this.options = options;
+    // Store the observer on the target for triggering later
+    if (!target._mutationObservers) target._mutationObservers = [];
+    target._mutationObservers.push(this);
+  }
+  
+  disconnect() {
+    // Mock disconnect
+  }
+  
+  takeRecords() {
+    return [];
+  }
+  
+  trigger(mutations: any[] = []) {
+    this.callback(mutations);
+  }
+};
+
+// Extend document.body to make it compatible with real DOM Node
+Object.setPrototypeOf(mockBody, Node.prototype);
+Object.setPrototypeOf(mockHead, Node.prototype);
