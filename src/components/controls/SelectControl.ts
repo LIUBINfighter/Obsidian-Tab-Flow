@@ -1,4 +1,4 @@
-interface SelectControlOptions {
+export interface SelectControlOptions {
     label: string;
     options: Array<{ value: string; text: string }>;
     defaultValue?: string;

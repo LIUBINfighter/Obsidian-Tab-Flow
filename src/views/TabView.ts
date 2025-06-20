@@ -6,6 +6,9 @@ import { ITabManager, ITabManagerOptions } from "../ITabManager";
 import * as ITabEventHandlers from "../ITabEventHandlers";
 import { TracksSidebar } from "../components/TracksSidebar";
 import { PlayerStateChangedEventArgs } from "../types"; // 从 types.ts 引入类型
+import { CursorScrollManager } from "../scrolling/CursorScrollManager";
+import { ScrollDebugger } from "../utils/scrollDebug";
+import { handlePrintPdf, handleExportGpFile } from "../events/handleExportActions";
 
 export const VIEW_TYPE_TAB = "tab-view";
 
@@ -40,6 +43,7 @@ export class TabView extends FileView {
 	private tabDisplay!: TabDisplay;
 	private pluginInstance: any; // 主插件实例
 	private fileModifyHandler: (file: TFile) => void; // 文件修改处理器
+	private cursorScrollManager: CursorScrollManager; // 光标滚动管理器
 
 	constructor(leaf: WorkspaceLeaf, plugin: any) {
 		super(leaf);
@@ -49,7 +53,7 @@ export class TabView extends FileView {
 		this.fileModifyHandler = (file: TFile) => {
 			// 检查修改的文件是否是当前打开的文件
 			if (this.currentFile && file && file.path === this.currentFile.path) {
-				console.log(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
+				// console.log(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
 				this.reloadFile();
 			}
 		};
@@ -57,6 +61,15 @@ export class TabView extends FileView {
 		this.containerEl.addClasses([
 			"itab"
 		]);
+
+		// 初始化光标滚动管理器
+		this.cursorScrollManager = new CursorScrollManager({
+			enabled: true,
+			smoothScroll: true,
+			offsetY: -25,  // 负值在顶部预留空间，与Vue版本保持一致
+			scrollSpeed: 500,  // 增加滚动时间，使动画更平滑
+			autoScrollOnPlay: true
+		});
 
 		// 添加视图操作按钮
 		this.addAction("music", "选择音轨", () => {
@@ -69,8 +82,23 @@ export class TabView extends FileView {
 			}
 		});
 
+		// 新增：打印PDF按钮，icon更换为file-down
+		this.addAction("file-down", "打印 PDF", () => {
+			handlePrintPdf(this.atManager);
+		});
+		// 新增：导出GP按钮
+		this.addAction("guitar", "导出 GP 文件", () => {
+			handleExportGpFile(this.atManager);
+		});
+
 		// 暂时注释掉 MIDI 下载按钮
 		// this.addAction("download", "下载 MIDI", this.downloadMidi.bind(this));
+
+		// 添加滚动调试按钮（开发用）
+		// this.addAction("search", "滚动调试", () => {
+		// 	ScrollDebugger.debugScrollSettings(this.atManager?.api, "[手动调试]");
+		// 	ScrollDebugger.testManualScroll(this.atManager?.api);
+		// });
 	}
 
 	getViewType(): string {
@@ -121,8 +149,34 @@ export class TabView extends FileView {
 		this.uiManager = new ITabUIManager({ container: this.tabDisplay.getContentElement() });
 		this.uiManager.renderControlBar(
 			() => this.atManager?.playPause(), // Play/Pause 点击回调
-			() => this.atManager?.stop() // Stop 点击回调
+			() => this.atManager?.stop(), // Stop 点击回调
+			(zoom: number) => {
+				if (this.atManager && this.atManager.api) {
+					this.atManager.api.settings.display.scale = zoom;
+					this.atManager.api.updateSettings();
+					this.atManager.api.render();
+				}
+			},
+			(active: boolean) => {
+				if (this.atManager && this.atManager.api) {
+					this.atManager.api.metronomeVolume = active ? 1 : 0;
+					this.uiManager.setMetronomeActive(active);
+				}
+			},
+			(active: boolean) => {
+				if (this.atManager && this.atManager.api) {
+					this.atManager.api.countInVolume = active ? 1 : 0;
+					this.uiManager.setCountInActive(active);
+				}
+			}
 		);
+		// 初始化节拍器按钮状态
+		if (this.atManager && this.atManager.api) {
+			const metronomeActive = !!this.atManager.api.metronomeVolume;
+			this.uiManager.setMetronomeActive(metronomeActive);
+			const countInActive = !!this.atManager.api.countInVolume;
+			this.uiManager.setCountInActive(countInActive);
+		}
 		this.uiManager.showLoadingOverlay("正在初始化 AlphaTab..."); // "Initializing AlphaTab..."
 
 		// 修复 mainElement 尺寸问题
@@ -197,11 +251,29 @@ export class TabView extends FileView {
 					this.uiManager
 				);
 			},
+			onPlayerPositionChanged: (args) => {
+				ITabEventHandlers.handlePlayerPositionChanged(
+					args,
+					this.uiManager,
+					this.atManager.api
+				);
+				// 使用光标滚动管理器处理滚动
+				this.cursorScrollManager.handlePlayerPositionChanged(args);
+			},
 		};
 		this.atManager = new ITabManager(managerOptions);
 		this.atManager.setDarkMode(
 			document.body.className.includes("theme-dark")
 		);
+
+		// 设置光标滚动管理器的引用
+		this.cursorScrollManager.setUI(this.uiManager);
+		this.cursorScrollManager.setApi(this.atManager.api);
+
+		// 延迟执行滚动调试，确保API完全初始化
+		setTimeout(() => {
+			ScrollDebugger.debugScrollSettings(this.atManager.api, "[TabView]");
+		}, 1000);
 
 		// 3. 使用 ITabManager 加载乐谱
 		// 确保 pluginInstance.actualPluginDir 已被 main.ts 正确设置!
@@ -244,18 +316,50 @@ export class TabView extends FileView {
 			// 原有的二进制文件加载方式
 			await this.atManager.initializeAndLoadScore(file);
 		}
+
+		// 布局切换事件绑定
+		if (this.uiManager.layoutControl) {
+			// @ts-ignore
+			this.uiManager.layoutControl.selectElement.addEventListener('change', (e: Event) => {
+				if (!this.atManager || !this.atManager.api) return;
+				const value = (e.target as HTMLSelectElement).value;
+				let mode = null;
+				if (value === '页面') mode = alphaTab.LayoutMode.Page;
+				else if (value === '水平') mode = alphaTab.LayoutMode.Horizontal;
+				// 移除对 Vertical 的支持，AlphaTab 不支持该模式
+				// else if (value === '垂直') mode = alphaTab.LayoutMode.Vertical;
+				if (mode !== null) {
+					this.atManager.api.settings.display.layoutMode = mode;
+					this.atManager.api.updateSettings();
+					this.atManager.api.render();
+				}
+			});
+		}
+
+		// 速度控制事件绑定
+		if (this.uiManager.speedControl) {
+			// @ts-ignore
+			this.uiManager.speedControl.selectElement.addEventListener('change', (e: Event) => {
+				if (!this.atManager || !this.atManager.api) return;
+				const value = (e.target as HTMLSelectElement).value;
+				const speed = parseFloat(value);
+				if (!isNaN(speed)) {
+					this.atManager.api.playbackSpeed = speed;
+				}
+			});
+		}
 	}
 
 	// 注册文件变更监听
 	private registerFileWatcher() {
 		this.app.vault.on("modify", this.fileModifyHandler);
-		console.log("[TabView] 已注册文件监听");
+		// console.log("[TabView] 已注册文件监听");
 	}
 
 	// 注销文件变更监听
 	private unregisterFileWatcher() {
 		this.app.vault.off("modify", this.fileModifyHandler);
-		console.log("[TabView] 已注销文件监听");
+		// console.log("[TabView] 已注销文件监听");
 	}
 
 	// 重新加载当前文件内容
@@ -285,7 +389,7 @@ export class TabView extends FileView {
 				
 				// 重新渲染内容
 				await this.atManager.initializeAndLoadFromTex(fileContent);
-				console.log(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
+				// console.log(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
 			} catch (error) {
 				console.error("[TabView] 重新加载文件失败", error);
 				this.uiManager.showErrorInOverlay(
@@ -414,7 +518,7 @@ export class TabView extends FileView {
 		// 注销文件监听
 		this.unregisterFileWatcher();
 		
-		console.log(`[TabView] Unloading file: ${file.name}`);
+		// console.log(`[TabView] Unloading file: ${file.name}`);
 		if (this.atManager) {
 			this.atManager.destroy();
 			// @ts-ignore
@@ -436,7 +540,7 @@ export class TabView extends FileView {
 		this.unregisterFileWatcher();
 		
 		// 当视图本身被关闭和销毁时
-		console.log("[TabView] Final onunload triggered.");
+		// console.log("[TabView] Final onunload triggered.");
 		if (this.atManager) {
 			this.atManager.destroy();
 			// @ts-ignore
@@ -448,5 +552,33 @@ export class TabView extends FileView {
 			this.tabDisplay = null;
 		}
 		super.onunload();
+	}
+
+	// 主题切换时刷新 AlphaTab 颜色
+	public refreshTheme(mode: 'dark' | 'light') {
+		if (!this.atManager || !this.atManager.api) return;
+		const settings = this.atManager.getSettings();
+		if (!settings) return;
+		if (mode === 'dark') {
+			// 使用更灰的白色 #E0E0E0
+			const grayWhite = alphaTab.model.Color.fromJson("#E0E0E0") ?? new alphaTab.model.Color(255,224,224,224);
+			settings.display.resources.mainGlyphColor = grayWhite;
+			settings.display.resources.staffLineColor = grayWhite;
+			settings.display.resources.barSeparatorColor = grayWhite;
+			settings.display.resources.barNumberColor = grayWhite;
+			settings.display.resources.scoreInfoColor = grayWhite;
+		} else {
+			// 恢复为 AlphaTab 默认色（黑色）
+			const black = alphaTab.model.Color.fromJson("#000000") ?? new alphaTab.model.Color(255,0,0,0);
+			settings.display.resources.mainGlyphColor = black;
+			settings.display.resources.staffLineColor = black;
+			settings.display.resources.barSeparatorColor = black;
+			settings.display.resources.barNumberColor = black;
+			settings.display.resources.scoreInfoColor = black;
+		}
+		// 重新渲染
+		if (typeof this.atManager.render === 'function') {
+			this.atManager.render();
+		}
 	}
 }

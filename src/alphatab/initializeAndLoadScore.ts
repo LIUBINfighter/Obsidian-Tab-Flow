@@ -1,6 +1,6 @@
 /*
 这一段是在obsidian中使用AlphaTabApi的核心。
-“环境 hack” 主要是对 process、module、alphaTab.Environment.webPlatform 做兼容性处理
+"环境 hack" 主要是对 process、module、alphaTab.Environment.webPlatform 做兼容性处理
 确保 AlphaTab 能在 Obsidian 的 Electron/Web 环境下正常运行。
 
 AlphaTabApi 的初始化即 manager.api = new alphaTab.AlphaTabApi(...)，紧跟在 hack 代码之后。
@@ -186,7 +186,7 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 
 		if (actualSmuflFontFilesLoaded) {
 			// @ts-ignore
-			settings.core.smuflFontSources = smuflFontData; // Provide to AlphaTab
+			settings.core.smuflFontSources = new Map(Object.entries(smuflFontData)); // Provide to AlphaTab
 			console.log(
 				"[ITabManager] Settings: core.smuflFontSources populated. Keys:",
 				Object.keys(smuflFontData)
@@ -208,8 +208,41 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 	// Display settings
 	settings.display.scale = 0.8;
 	settings.display.layoutMode = alphaTab.LayoutMode.Page;
+
+	// 根据主题设置乐谱颜色（仅深色模式下设置为白色，浅色保持默认）
+	const pluginThemeMode = pluginInstance.themeMode;
+	if (pluginThemeMode === 'dark') {
+		const white = alphaTab.model.Color.fromJson("#FFFFFF") ?? new alphaTab.model.Color(255,255,255,255);
+		settings.display.resources.mainGlyphColor = white;
+		settings.display.resources.staffLineColor = white;
+		settings.display.resources.barSeparatorColor = white;
+		settings.display.resources.barNumberColor = white;
+		settings.display.resources.scoreInfoColor = white;
+	}
+
+	// Player and cursor settings - 启用光标跟随功能
+	settings.player.enablePlayer = true; // 确保播放器启用
+	settings.player.enableCursor = true; // 启用播放光标
+	settings.player.enableAnimatedBeatCursor = true; // 启用动画节拍光标
+	
+	// 重要：找到正确的滚动容器
+	// 应该是包含滚动条的视口元素，而不是主渲染元素
+	const viewportElement = manager.getEventHandlers().viewportElement;
+	if (viewportElement) {
+		settings.player.scrollElement = viewportElement; // 设置滚动元素为视口容器
+		console.log("[ITabManager] 滚动元素设置为viewport:", viewportElement);
+	} else {
+		settings.player.scrollElement = mainElement; // 回退到主元素
+		console.log("[ITabManager] 滚动元素回退到main:", mainElement);
+	}
+	
+	settings.player.scrollMode = alphaTab.ScrollMode.OffScreen; // 改为仅在光标离开屏幕时滚动
+	settings.player.scrollOffsetY = -25; // 负值在顶部预留空间，参考Vue版本
+	settings.player.scrollSpeed = 800; // 增加滚动时间，使动画更平滑
+	settings.player.nativeBrowserSmoothScroll = true; // 使用浏览器原生平滑滚动
+	
 	console.log(
-		"[ITabManager] Settings: Using default SMuFL font configuration"
+		"[ITabManager] Settings: Using default SMuFL font configuration with cursor following enabled"
 	);
 
 	const initialThemeColors = manager.getDarkMode(); /* ... theme colors ... */
@@ -272,7 +305,8 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 		// 通过 ITabManager 的私有方法绑定事件
 		(manager as any).bindEvents();
 	} catch (e: any) {
-		/* ... error handling ... */
+		console.error("[ITabManager] AlphaTabApi 初始化失败:", e);
+        eventHandlers.onError?.({ message: "AlphaTabApi 初始化失败: " + (e?.message || e) });
 	} finally {
 		/* ... cleanup ... */
 	}

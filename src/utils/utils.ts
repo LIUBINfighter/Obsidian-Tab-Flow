@@ -36,3 +36,31 @@ export function isGuitarProFile(extension: string | undefined): boolean {
 		extension.toLowerCase()
 	);
 }
+
+/**
+ * 检查当前 Obsidian 是否为深色模式
+ * @returns 'dark' | 'light'
+ */
+export function getCurrentThemeMode(): 'dark' | 'light' {
+    if (document.body.classList.contains('theme-dark')) {
+        return 'dark';
+    } else if (document.body.classList.contains('theme-light')) {
+        return 'light';
+    }
+    // 默认返回 dark
+    return 'dark';
+}
+
+/**
+ * 监听 Obsidian 主题切换（深色/浅色），回调返回最新模式
+ * @param callback (mode: 'dark' | 'light') => void
+ */
+export function watchThemeModeChange(callback: (mode: 'dark' | 'light') => void) {
+    const observer = new MutationObserver(() => {
+        callback(getCurrentThemeMode());
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    // 立即触发一次
+    callback(getCurrentThemeMode());
+    return observer;
+}
