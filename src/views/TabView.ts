@@ -326,7 +326,8 @@ export class TabView extends FileView {
 				let mode = null;
 				if (value === '页面') mode = alphaTab.LayoutMode.Page;
 				else if (value === '水平') mode = alphaTab.LayoutMode.Horizontal;
-				else if (value === '垂直') mode = alphaTab.LayoutMode.Vertical;
+				// 移除对 Vertical 的支持，AlphaTab 不支持该模式
+				// else if (value === '垂直') mode = alphaTab.LayoutMode.Vertical;
 				if (mode !== null) {
 					this.atManager.api.settings.display.layoutMode = mode;
 					this.atManager.api.updateSettings();
