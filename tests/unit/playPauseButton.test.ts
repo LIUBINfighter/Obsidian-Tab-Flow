@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PlayPauseButton, PlayPauseButtonOptions } from '../../../src/components/controls/playPauseButton';
+import { PlayPauseButton, PlayPauseButtonOptions } from '../../src/components/controls/playPauseButton';
 
 describe('PlayPauseButton', () => {
   let mockParent: any;
