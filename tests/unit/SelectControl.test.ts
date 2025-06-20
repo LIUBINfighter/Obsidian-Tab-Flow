@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SelectControl } from '../../../src/components/controls/SelectControl';
+import { SelectControl } from '../../src/components/controls/SelectControl';
 
 describe('SelectControl', () => {
   let mockOptions: {
@@ -88,7 +88,11 @@ describe('SelectControl', () => {
     it('should return HTMLElement', () => {
       const control = new SelectControl(mockOptions);
       const element = control.render();
-      expect(element).toBeInstanceOf(HTMLElement);
+      // 检查元素是否具有HTMLElement的基本特征
+      expect(element).toBeTruthy();
+      expect(element.tagName).toBe('DIV');
+      expect(typeof element.appendChild).toBe('function');
+      expect(typeof element.querySelector).toBe('function');
     });
 
     it('should return the same element on multiple calls', () => {

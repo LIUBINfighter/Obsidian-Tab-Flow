@@ -60,8 +60,31 @@ const createMockElement = (tagName: string, options: any = {}): any => {
       }
       return child;
     }),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
+    addEventListener: vi.fn((type: string, listener: any) => {
+      if (!element._eventListeners) element._eventListeners = {};
+      if (!element._eventListeners[type]) element._eventListeners[type] = [];
+      element._eventListeners[type].push(listener);
+    }),
+    removeEventListener: vi.fn((type: string, listener: any) => {
+      if (element._eventListeners && element._eventListeners[type]) {
+        const index = element._eventListeners[type].indexOf(listener);
+        if (index > -1) {
+          element._eventListeners[type].splice(index, 1);
+        }
+      }
+    }),
+    dispatchEvent: vi.fn((event: Event) => {
+      // 模拟事件分发
+      const eventType = event.type;
+      const listeners = element._eventListeners || {};
+      const eventListeners = listeners[eventType] || [];
+      eventListeners.forEach((listener: any) => {
+        if (typeof listener === 'function') {
+          listener(event);
+        }
+      });
+      return true;
+    }),
     createEl: vi.fn().mockImplementation((tag: string, opts: any = {}) => {
       const child = createMockElement(tag, opts);
       if (opts.cls) child.className = opts.cls;
@@ -104,8 +127,26 @@ const createMockElement = (tagName: string, options: any = {}): any => {
     hidden: false,
     children: [],
     parentElement: null,
-    querySelector: vi.fn(),
-    querySelectorAll: vi.fn().mockReturnValue([]),
+    querySelector: vi.fn((selector: string) => {
+      // 简单的选择器匹配实现
+      if (selector === 'label' && element.tagName === 'DIV') {
+        return element.children.find((child: any) => child.tagName === 'LABEL') || null;
+      }
+      if (selector === 'select' && element.tagName === 'DIV') {
+        return element.children.find((child: any) => child.tagName === 'SELECT') || null;
+      }
+      if (selector === 'option' && element.tagName === 'SELECT') {
+        return element.children[0] || null;
+      }
+      return null;
+    }),
+    querySelectorAll: vi.fn((selector: string) => {
+      // 简单的选择器匹配实现
+      if (selector === 'option' && element.tagName === 'SELECT') {
+        return element.children.filter((child: any) => child.tagName === 'OPTION');
+      }
+      return [];
+    }),
     ...options
   };
   return element;
@@ -158,7 +199,32 @@ document.querySelectorAll = vi.fn().mockImplementation((selector) => {
 });
 
 document.createElement = vi.fn().mockImplementation((tagName) => {
-  return createMockElement(tagName);
+  const element = createMockElement(tagName);
+  
+  // 为select元素添加特殊属性
+  if (tagName.toLowerCase() === 'select') {
+    element.value = '';
+    Object.defineProperty(element, 'value', {
+      get: () => element._value || '',
+      set: (val) => { element._value = val; },
+      enumerable: true,
+      configurable: true
+    });
+  }
+  
+  // 为option元素添加特殊属性
+  if (tagName.toLowerCase() === 'option') {
+    element.value = '';
+    element.selected = false;
+    Object.defineProperty(element, 'value', {
+      get: () => element._value || '',
+      set: (val) => { element._value = val; },
+      enumerable: true,
+      configurable: true
+    });
+  }
+  
+  return element;
 });
 
 // Mock head operations
