@@ -5,6 +5,7 @@ export interface CursorScrollOptions {
 	enabled: boolean;
 	smoothScroll: boolean;
 	offsetY: number;
+	offsetX: number; // 水平滚动偏移
 	scrollSpeed: number;
 	autoScrollOnPlay: boolean;
 	alwaysScrollToBottom: boolean;
@@ -25,7 +26,8 @@ export class CursorScrollManager {
 		this.options = {
 			enabled: true,
 			smoothScroll: true,
-			offsetY: -25, // 负值在顶部预留空间，与Vue版本保持一致
+			offsetY: -25, // 负值在顶部预留空间
+			offsetX: 25,
 			scrollSpeed: 500,
 			autoScrollOnPlay: true,
 			alwaysScrollToBottom: false,
@@ -59,6 +61,7 @@ export class CursorScrollManager {
 		this.api.settings.player.enableCursor = this.options.enabled;
 		this.api.settings.player.scrollSpeed = this.options.scrollSpeed;
 		this.api.settings.player.scrollOffsetY = this.options.offsetY;
+		this.api.settings.player.scrollOffsetX = this.options.offsetX; // 新增同步水平偏移
 		this.api.settings.player.nativeBrowserSmoothScroll = this.options.smoothScroll;
 	}
 
