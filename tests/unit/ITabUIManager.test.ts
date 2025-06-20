@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ITabUIManager, type ITabUIManagerOptions } from '@/ITabUIManager';
+import { ITabUIManager, type ITabUIManagerOptions } from '../../src/ITabUIManager';
 
 describe('ITabUIManager', () => {
   let uiManager: ITabUIManager;
@@ -96,7 +96,7 @@ describe('ITabUIManager', () => {
     });
 
     it('should disable stop button initially', () => {
-      expect(uiManager.stopButton.getElement().disabled).toBe(true);
+      expect(uiManager.stopButton?.getElement().disabled).toBe(true);
     });
   });
 
@@ -169,15 +169,15 @@ describe('ITabUIManager', () => {
       
       uiManager.setPlayPauseButtonText(newText);
       
-      expect(uiManager.playPauseButton.getText()).toBe(newText);
+      expect(uiManager.playPauseButton?.getText()).toBe(newText);
     });
 
     it('should enable/disable stop button', () => {
       uiManager.setStopButtonEnabled(true);
-      expect(uiManager.stopButton.getElement().disabled).toBe(false);
+      expect(uiManager.stopButton?.getElement().disabled).toBe(false);
       
       uiManager.setStopButtonEnabled(false);
-      expect(uiManager.stopButton.getElement().disabled).toBe(true);
+      expect(uiManager.stopButton?.getElement().disabled).toBe(true);
     });
   });
 
@@ -193,7 +193,7 @@ describe('ITabUIManager', () => {
       uiManager.updateTimePosition(currentTime, totalTime);
       
       const expectedText = `${currentTime} / ${totalTime}`;
-      expect(uiManager.timePositionDisplay.getText()).toBe(expectedText);
+      expect(uiManager.timePositionDisplay?.getText()).toBe(expectedText);
     });
   });
 
@@ -204,18 +204,18 @@ describe('ITabUIManager', () => {
 
     it('should set metronome button active state', () => {
       uiManager.setMetronomeActive(true);
-      expect(uiManager.metronomeButton.isActive()).toBe(true);
+      expect(uiManager.metronomeButton?.isActive()).toBe(true);
       
       uiManager.setMetronomeActive(false);
-      expect(uiManager.metronomeButton.isActive()).toBe(false);
+      expect(uiManager.metronomeButton?.isActive()).toBe(false);
     });
 
     it('should set count-in button active state', () => {
       uiManager.setCountInActive(true);
-      expect(uiManager.countInButton.isActive()).toBe(true);
+      expect(uiManager.countInButton?.isActive()).toBe(true);
       
       uiManager.setCountInActive(false);
-      expect(uiManager.countInButton.isActive()).toBe(false);
+      expect(uiManager.countInButton?.isActive()).toBe(false);
     });
   });
 
@@ -230,6 +230,107 @@ describe('ITabUIManager', () => {
         uiManager.setMetronomeActive(true);
         uiManager.setCountInActive(true);
       }).not.toThrow();
+    });
+  });
+
+  describe('New Features Control Tests', () => {
+    it('should handle zoom control integration', () => {
+      const onZoomChange = vi.fn();
+      
+      uiManager.renderControlBar(vi.fn(), vi.fn(), onZoomChange);
+      
+      expect(uiManager.zoomControl).toBeDefined();
+      
+      // Test zoom control onChange callback
+      const zoomControl = uiManager.zoomControl;
+      if (zoomControl) {
+        // Simulate zoom change to 1.5x
+        const mockEvent = { target: { value: '1.5' } } as any;
+        // Since we can't directly access the onChange, we test through the getter
+        expect(zoomControl.getValue()).toBeDefined();
+      }
+    });
+
+    it('should handle speed control integration', () => {
+      uiManager.renderControlBar(vi.fn(), vi.fn());
+      
+      expect(uiManager.speedControl).toBeDefined();
+      
+      const speedControl = uiManager.speedControl;
+      if (speedControl) {
+        // Test that speed control has correct default value
+        expect(speedControl.getValue()).toBe('1');
+      }
+    });
+
+    it('should handle layout control integration', () => {
+      uiManager.renderControlBar(vi.fn(), vi.fn());
+      
+      expect(uiManager.layoutControl).toBeDefined();
+      
+      const layoutControl = uiManager.layoutControl;
+      if (layoutControl) {
+        // Test that layout control has correct default value
+        expect(layoutControl.getValue()).toBe('页面');
+      }
+    });
+
+    it('should handle metronome control integration', () => {
+      const onMetronomeToggle = vi.fn();
+      
+      uiManager.renderControlBar(vi.fn(), vi.fn(), undefined, onMetronomeToggle);
+      
+      expect(uiManager.metronomeButton).toBeDefined();
+      
+      // Test initial state
+      expect(uiManager.metronomeButton?.isActive()).toBe(false);
+      
+      // Test state change
+      uiManager.setMetronomeActive(true);
+      expect(uiManager.metronomeButton?.isActive()).toBe(true);
+    });
+
+    it('should handle count-in control integration', () => {
+      const onCountInToggle = vi.fn();
+      
+      uiManager.renderControlBar(vi.fn(), vi.fn(), undefined, undefined, onCountInToggle);
+      
+      expect(uiManager.countInButton).toBeDefined();
+      
+      // Test initial state
+      expect(uiManager.countInButton?.isActive()).toBe(false);
+      
+      // Test state change
+      uiManager.setCountInActive(true);
+      expect(uiManager.countInButton?.isActive()).toBe(true);
+    });
+
+    it('should handle all new features in single control bar', () => {
+      const onZoomChange = vi.fn();
+      const onMetronomeToggle = vi.fn();
+      const onCountInToggle = vi.fn();
+      
+      uiManager.renderControlBar(
+        vi.fn(),
+        vi.fn(),
+        onZoomChange,
+        onMetronomeToggle,
+        onCountInToggle
+      );
+      
+      // Verify all controls are created
+      expect(uiManager.layoutControl).toBeDefined();
+      expect(uiManager.zoomControl).toBeDefined();
+      expect(uiManager.speedControl).toBeDefined();
+      expect(uiManager.metronomeButton).toBeDefined();
+      expect(uiManager.countInButton).toBeDefined();
+      
+      // Verify default states
+      expect(uiManager.layoutControl?.getValue()).toBe('页面');
+      expect(uiManager.zoomControl?.getValue()).toBe('1');
+      expect(uiManager.speedControl?.getValue()).toBe('1');
+      expect(uiManager.metronomeButton?.isActive()).toBe(false);
+      expect(uiManager.countInButton?.isActive()).toBe(false);
     });
   });
 });

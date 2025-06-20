@@ -30,11 +30,66 @@ const createMockElement = (tagName: string, options: any = {}) => {
     hidden: false,
     children: [],
     parentElement: null,
-    querySelector: () => null,
+    querySelector: (selector: string) => {
+      if (selector === 'select' && tagName.toUpperCase() === 'DIV') {
+        return createMockSelectElement();
+      }
+      return null;
+    },
     querySelectorAll: () => [],
+    // Special properties for select elements
+    ...(tagName.toLowerCase() === 'select' ? {
+      options: [],
+      value: options.value || '',
+      selectedIndex: 0
+    } : {}),
     ...options
   };
   return element;
+};
+
+// Special mock for select elements
+const createMockSelectElement = () => {
+  const selectElement = {
+    tagName: 'SELECT',
+    textContent: '',
+    innerHTML: '',
+    style: {},
+    className: '',
+    options: [] as any[],
+    value: '',
+    selectedIndex: 0,
+    setAttribute: () => {},
+    getAttribute: () => null,
+    removeAttribute: () => {},
+    appendChild: function(child: any) {
+      if (child.tagName === 'OPTION') {
+        // Mock the options collection behavior
+        this.options.push(child);
+        // Update length property
+        Object.defineProperty(this.options, 'length', {
+          value: this.options.length,
+          writable: true
+        });
+      }
+    },
+    removeChild: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => {},
+    children: [],
+    parentElement: null,
+    querySelector: () => null,
+    querySelectorAll: () => []
+  };
+  
+  // Ensure options has length property
+  Object.defineProperty(selectElement.options, 'length', {
+    value: 0,
+    writable: true
+  });
+  
+  return selectElement;
 };
 
 export class Plugin {

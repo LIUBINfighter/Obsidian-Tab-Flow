@@ -185,4 +185,93 @@ describe('SelectControl', () => {
       expect(options?.[1].value).toBe('unicode🎵');
     });
   });
+
+  describe('Layout Control Specific Tests', () => {
+    it('should create layout control with correct options', () => {
+      const layoutOptions = {
+        label: '布局：',
+        options: [
+          { value: '页面', text: '页面' },
+          { value: '水平', text: '水平' }
+        ],
+        defaultValue: '页面'
+      };
+      
+      const layoutControl = new SelectControl(layoutOptions);
+      const element = layoutControl.render();
+      const select = element.querySelector('select') as HTMLSelectElement;
+      
+      expect(select).toBeTruthy();
+      expect(layoutControl.getValue()).toBe('页面');
+      
+      // Test that the select element has the correct structure
+      const options = select.querySelectorAll('option');
+      expect(options.length).toBe(2);
+      expect(options[0].value).toBe('页面');
+      expect(options[1].value).toBe('水平');
+    });
+  });
+
+  describe('Zoom Control Specific Tests', () => {
+    it('should create zoom control with correct options', () => {
+      const zoomOptions = {
+        label: '缩放：',
+        options: [
+          { value: '0.5', text: '0.5x' },
+          { value: '0.75', text: '0.75x' },
+          { value: '1', text: '1x' },
+          { value: '1.25', text: '1.25x' },
+          { value: '1.5', text: '1.5x' },
+          { value: '2', text: '2x' }
+        ],
+        defaultValue: '1'
+      };
+      
+      const zoomControl = new SelectControl(zoomOptions);
+      const element = zoomControl.render();
+      const select = element.querySelector('select') as HTMLSelectElement;
+      
+      expect(select).toBeTruthy();
+      expect(zoomControl.getValue()).toBe('1');
+      
+      // Test that the select element has the correct structure
+      const options = select.querySelectorAll('option');
+      expect(options.length).toBe(6);
+      expect(options[0].value).toBe('0.5');
+      expect(options[2].value).toBe('1');
+      expect(options[5].value).toBe('2');
+    });
+  });
+
+  describe('Speed Control Specific Tests', () => {
+    it('should create speed control with correct options', () => {
+      const speedOptions = {
+        label: '速度：',
+        options: [
+          { value: '0.25', text: '0.25x' },
+          { value: '0.5', text: '0.5x' },
+          { value: '0.75', text: '0.75x' },
+          { value: '1', text: '1x' },
+          { value: '1.25', text: '1.25x' },
+          { value: '1.5', text: '1.5x' },
+          { value: '2', text: '2x' }
+        ],
+        defaultValue: '1'
+      };
+      
+      const speedControl = new SelectControl(speedOptions);
+      const element = speedControl.render();
+      const select = element.querySelector('select') as HTMLSelectElement;
+      
+      expect(select).toBeTruthy();
+      expect(speedControl.getValue()).toBe('1');
+      
+      // Test that the select element has the correct structure
+      const options = select.querySelectorAll('option');
+      expect(options.length).toBe(7);
+      expect(options[0].value).toBe('0.25');
+      expect(options[3].value).toBe('1');
+      expect(options[6].value).toBe('2');
+    });
+  });
 });

@@ -356,4 +356,92 @@ describe('ToggleButton', () => {
       expect(mockOnClick).toHaveBeenCalledTimes(2); // Should still be 2
     });
   });
+
+  describe('Metronome Button Specific Tests', () => {
+    it('should create metronome button with correct text', () => {
+      const metronomeButton = new ToggleButton({
+        text: '节拍器',
+        active: false,
+        onClick: mockOnClick
+      });
+
+      expect(metronomeButton.getElement().textContent).toBe('节拍器');
+      expect(metronomeButton.isActive()).toBe(false);
+    });
+
+    it('should handle metronome toggle functionality', () => {
+      const metronomeCallback = vi.fn();
+      const metronomeButton = new ToggleButton({
+        text: '节拍器',
+        active: false,
+        onClick: (active: boolean) => {
+          // Simulate metronome volume change
+          metronomeCallback(active ? 1 : 0);
+        }
+      });
+
+      // Get the click handler that was registered
+      const element = metronomeButton.getElement();
+      const addEventListenerSpy = element.addEventListener as any;
+      const clickHandler = addEventListenerSpy.mock.calls.find(
+        (call: any) => call[0] === 'click'
+      )?.[1];
+
+      expect(clickHandler).toBeDefined();
+
+      if (clickHandler) {
+        // First click - should activate
+        clickHandler();
+        expect(metronomeCallback).toHaveBeenCalledWith(1); // Volume on
+        
+        // Second click - should deactivate
+        clickHandler();
+        expect(metronomeCallback).toHaveBeenCalledWith(0); // Volume off
+      }
+    });
+  });
+
+  describe('Count-In Button Specific Tests', () => {
+    it('should create count-in button with correct text', () => {
+      const countInButton = new ToggleButton({
+        text: '前置四拍',
+        active: false,
+        onClick: mockOnClick
+      });
+
+      expect(countInButton.getElement().textContent).toBe('前置四拍');
+      expect(countInButton.isActive()).toBe(false);
+    });
+
+    it('should handle count-in toggle functionality', () => {
+      const countInCallback = vi.fn();
+      const countInButton = new ToggleButton({
+        text: '前置四拍',
+        active: false,
+        onClick: (active: boolean) => {
+          // Simulate count-in volume change
+          countInCallback(active ? 1 : 0);
+        }
+      });
+
+      // Get the click handler that was registered
+      const element = countInButton.getElement();
+      const addEventListenerSpy = element.addEventListener as any;
+      const clickHandler = addEventListenerSpy.mock.calls.find(
+        (call: any) => call[0] === 'click'
+      )?.[1];
+
+      expect(clickHandler).toBeDefined();
+
+      if (clickHandler) {
+        // First click - should activate
+        clickHandler();
+        expect(countInCallback).toHaveBeenCalledWith(1); // Volume on
+        
+        // Second click - should deactivate
+        clickHandler();
+        expect(countInCallback).toHaveBeenCalledWith(0); // Volume off
+      }
+    });
+  });
 });
