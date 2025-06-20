@@ -460,7 +460,8 @@ const mockObsidian = {
     onLoadFile = vi.fn();
     onUnloadFile = vi.fn();
     getViewType = vi.fn(() => 'tab-view'); // 实现 getViewType 方法
-    getDisplayText = vi.fn(() => '吉他谱'); // 实现 getDisplayText 方法
+    // 移除 getDisplayText 的 Mock，让子类自己实现
+    // getDisplayText = vi.fn(() => '吉他谱'); // 这个会覆盖子类的实现！
     getViewData = vi.fn();
     setViewData = vi.fn();
     clear = vi.fn();

@@ -108,26 +108,10 @@ describe('TabView', () => {
 
   describe('Display Text', () => {
     it('should return file basename when no score loaded', () => {
-      // 直接操作 tabView 实例的属性
       (tabView as any).currentFile = mockFile;
       (tabView as any).atManager = null; // 确保没有 atManager
       
-      // 详细调试输出
-      console.log('currentFile:', (tabView as any).currentFile);
-      console.log('currentFile?.basename:', (tabView as any).currentFile?.basename);
-      console.log('atManager:', (tabView as any).atManager);
-      console.log('atManager && atManager.score:', (tabView as any).atManager && (tabView as any).atManager.score);
-      
-      // 直接测试表达式的每个部分
-      const currentFile = (tabView as any).currentFile;
-      const atManager = (tabView as any).atManager;
-      console.log('currentFile?.basename test:', currentFile?.basename);
-      console.log('fallback test:', currentFile?.basename || "吉他谱");
-      
-      const result = tabView.getDisplayText();
-      console.log('getDisplayText result:', result);
-      
-      expect(result).toBe('test');
+      expect(tabView.getDisplayText()).toBe('test');
     });
 
     it('should return score title and artist when available', () => {
