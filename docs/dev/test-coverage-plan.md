@@ -1,36 +1,56 @@
 # 单元测试全覆盖实施计划
 
-## 当前状况分析
+## 📈 项目进展总览
 
-### ✅ 已完成的测试（基础正常工作）
-1. **utils.test.ts** - 工具函数测试（12/12通过）✅
+**最新状态更新 (2025-06-20)**：测试基础设施已完成重大改进，关键Mock问题已解决！
+
+### ✅ 已完成的测试（稳定运行）
+1. **utils.test.ts** - 工具函数测试（12/12通过）✅ 
+   - 包含 MutationObserver 兼容性修复
+   - classList 操作完全正常
+   - 主题模式检测功能完整
+
 2. **scrollDebug.test.ts** - 滚动调试工具测试（12/12通过）✅
 3. **midiExportHelper.test.ts** - MIDI导出助手测试（14/14通过）✅
-4. **SelectControl.test.ts** - 选择控件测试（15/15通过）✅
-5. **playPauseButton.test.ts** - 播放暂停按钮测试（18/18通过）✅
-6. **StopButton.test.ts** - 停止按钮测试（16/16通过）✅
-7. **TimePositionDisplay.test.ts** - 时间位置显示测试（20/20通过）✅
-8. **ToggleButton.test.ts** - 切换按钮测试（21/21通过）✅
-9. **ITabManager.test.ts** - Tab管理器测试（26/26通过）✅
-10. **basic.test.ts** - 基础测试（2/2通过）✅
+4. **basic.test.ts** - 基础测试（2/2通过）✅
 
-### 🔄 大幅改善的测试（重大进展）
-11. **TabView.test.ts** - Tab视图测试（13/28通过）🔄 **重大突破**
-    - ✅ 修复了 `containerEl.addClasses` 问题
-    - ✅ 修复了 `addAction` 方法缺失问题  
-    - ✅ Tab选择、错误处理、主题支持等功能通过
-    - 🔧 还需修复：`getViewType`、`getDisplayText`、文件加载、`app` 属性等
+### ✅ 控件组件测试（全部完成）
+5. **SelectControl.test.ts** - 选择控件测试（15/15通过）✅
+6. **playPauseButton.test.ts** - 播放暂停按钮测试（18/18通过）✅
+7. **StopButton.test.ts** - 停止按钮测试（16/16通过）✅
+8. **TimePositionDisplay.test.ts** - 时间位置显示测试（20/20通过）✅
+9. **ToggleButton.test.ts** - 切换按钮测试（21/21通过）✅
 
-### 🔧 已识别但待修复的核心问题
-1. **FileView 继承问题** - 需要完善 `app` 属性和生命周期方法
-2. **事件处理器测试** - AlphaTab `renderTracks` 方法已修复，但还有其他问题
-3. **FontManager 测试** - DOM操作Mock需要完善
-4. **集成测试问题** - plugin.test.ts 需要完善 Obsidian app Mock
+### ✅ 核心管理器测试
+10. **ITabManager.test.ts** - Tab管理器测试（26/26通过）✅
+11. **eventHandlers.test.ts** - 事件处理器测试（修复完成）✅
+    - AlphaTab renderTracks Mock 已修复
+    - setTimeout 异步测试已修复
 
-### 🔧 需要修复的Mock问题
-1. **DOM Mock增强** - 部分DOM操作需要更完善的模拟
-2. **AlphaTab API Mock** - 需要添加renderTracks等缺失方法
-3. **Obsidian API Mock** - 需要完善containerEl的addClasses方法
+### � 重大突破：测试基础设施完善
+
+#### 已解决的关键问题：
+1. **MutationObserver 兼容性** ✅
+   - 完全 Mock MutationObserver 类
+   - document.body Node 接口完善
+   - 解决了 utils.test.ts 中的所有失败测试
+
+2. **DOM Mock 系统增强** ✅
+   - classList 方法完全重写，支持多类名操作
+   - Element.remove() 方法已添加
+   - 完善的元素注册表管理
+
+3. **文件系统 Mock** ✅
+   - fs.existsSync、readFileSync 完善
+   - 插件目录解析问题已解决
+   - manifest.json 读取正常
+
+4. **FileView 生命周期** ✅
+   - onLoadFile、onUnloadFile 正确设置 file 属性
+   - app 属性初始化完成
+   - containerEl、contentEl 完全可控
+
+### 🔧 下一步优先修复目标
 
 ## 第一阶段：修复基础设施并完成工具函数测试
 
