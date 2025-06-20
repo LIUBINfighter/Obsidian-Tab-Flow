@@ -4,9 +4,13 @@
 
 ### ✅ 已完成的测试（基础正常工作）
 1. **utils.test.ts** - 工具函数测试（12/12通过）✅
-2. **scrollDebug.test.ts** - 滚动调试工具测试 ✅
+2. **scrollDebug.test.ts** - 滚动调试工具测试（12/12通过）✅
 3. **midiExportHelper.test.ts** - MIDI导出助手测试 ✅
 4. **SelectControl.test.ts** - 选择控件测试（15/15通过）✅
+5. **playPauseButton.test.ts** - 播放暂停按钮测试（18/18通过）✅
+6. **StopButton.test.ts** - 停止按钮测试（16/16通过）✅
+7. **TimePositionDisplay.test.ts** - 时间位置显示测试（20/20通过）✅
+8. **ToggleButton.test.ts** - 切换按钮测试（21/21通过）✅
 
 ### 🔧 需要修复的Mock问题
 1. **DOM Mock增强** - 部分DOM操作需要更完善的模拟
@@ -21,11 +25,12 @@
 3. 修复TabView测试中的containerEl.addClasses问题
 
 ### 优先级2：完成基础工具和组件测试
-1. **控件组件**
-   - playPauseButton.test.ts
-   - StopButton.test.ts  
-   - TimePositionDisplay.test.ts
-   - ToggleButton.test.ts
+
+1. **控件组件** ✅ 全部完成
+   - ~~playPauseButton.test.ts~~ ✅（18/18通过）
+   - ~~StopButton.test.ts~~ ✅（16/16通过）
+   - ~~TimePositionDisplay.test.ts~~ ✅（20/20通过）
+   - ~~ToggleButton.test.ts~~ ✅（21/21通过）
 
 2. **工具函数补充**
    - utils.test.ts (补充registerStyles函数测试)
