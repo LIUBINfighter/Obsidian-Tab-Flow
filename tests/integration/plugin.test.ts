@@ -1,6 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AlphaTabPlugin from '../../src/main';
 
+// Mock utils module to prevent styles.css warnings in tests
+vi.mock('../../src/utils/utils', () => ({
+  registerStyles: vi.fn(),
+  isGuitarProFile: vi.fn().mockReturnValue(true),
+  getCurrentThemeMode: vi.fn().mockReturnValue('dark'),
+  watchThemeModeChange: vi.fn()
+}));
+
 describe('AlphaTabPlugin Integration', () => {
   let plugin: AlphaTabPlugin;
   let mockApp: any;
