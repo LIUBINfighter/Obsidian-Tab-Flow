@@ -78,14 +78,18 @@ describe('AlphaTabPlugin Integration', () => {
     });
 
     it('should handle plugin directory detection failure', async () => {
-      // Mock fs.existsSync to return false
-      vi.doMock('fs', () => ({
-        existsSync: vi.fn().mockReturnValue(false)
-      }));
+      // Mock fs module directly in the test setup
+      const originalExistsSync = require('fs').existsSync;
+      require('fs').existsSync = vi.fn().mockReturnValue(false);
 
-      await expect(plugin.onload()).rejects.toThrow(
-        'AlphaTab 插件根目录查找失败，请检查插件安装路径。'
-      );
+      try {
+        await expect(plugin.onload()).rejects.toThrow(
+          'AlphaTab 插件根目录查找失败，请检查插件安装路径。'
+        );
+      } finally {
+        // Restore original function
+        require('fs').existsSync = originalExistsSync;
+      }
     });
 
     it('should cleanup on unload', () => {

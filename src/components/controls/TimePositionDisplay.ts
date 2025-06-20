@@ -18,4 +18,13 @@ export class TimePositionDisplay {
     setText(text: string) {
         this.el.setText(text);
     }
+
+    // 为测试添加兼容方法
+    getElement(): HTMLSpanElement {
+        return this.el;
+    }
+
+    getText(): string {
+        return this.el.textContent || '';
+    }
 }

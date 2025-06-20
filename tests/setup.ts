@@ -132,6 +132,21 @@ const createMockElement = (tagName: string, options: any = {}): any => {
       const child = createMockElement(tag, opts);
       if (opts.cls) child.className = opts.cls;
       if (opts.text) child.textContent = opts.text;
+      if (opts.attr) {
+        for (const [key, value] of Object.entries(opts.attr)) {
+          child.setAttribute(key, value as string);
+          // 特殊处理 style 属性
+          if (key === 'style' && typeof value === 'string') {
+            const styles = value.split(';').filter(s => s.trim());
+            styles.forEach(style => {
+              const [prop, val] = style.split(':').map(s => s.trim());
+              if (prop && val) {
+                (child.style as any)[prop] = val;
+              }
+            });
+          }
+        }
+      }
       element.appendChild(child);
       return child;
     }),
@@ -182,6 +197,9 @@ const createMockElement = (tagName: string, options: any = {}): any => {
       }
       if (selector === '.at-main-ui') {
         return createMockElement('div', { cls: 'at-main-ui' });
+      }
+      if (selector === '.at-wrap') {
+        return element.children.find((child: any) => child.className && child.className.includes('at-wrap')) || null;
       }
       return null;
     }),

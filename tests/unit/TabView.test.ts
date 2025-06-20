@@ -156,6 +156,9 @@ describe('TabView', () => {
   });
 
   describe('File Loading', () => {
+    let mockAtManager: any;
+    let mockUIManager: any;
+    
     beforeEach(() => {
       // Mock contentEl
       const mockContentEl = {
@@ -169,8 +172,25 @@ describe('TabView', () => {
       };
       (tabView as any).contentEl = mockContentEl;
       
+      // Mock atManager
+      mockAtManager = {
+        initializeAndLoadScore: vi.fn().mockResolvedValue(undefined),
+        initializeAndLoadFromTex: vi.fn().mockResolvedValue(undefined)
+      };
+      (tabView as any).atManager = mockAtManager;
+      
+      // Mock uiManager
+      mockUIManager = {
+        showLoadingOverlay: vi.fn(),
+        showErrorInOverlay: vi.fn()
+      };
+      (tabView as any).uiManager = mockUIManager;
+      
       // Mock registerFileWatcher
       (tabView as any).registerFileWatcher = vi.fn();
+      
+      // Ensure actualPluginDir is set to prevent early return
+      mockPlugin.actualPluginDir = '/mock/plugin/dir';
     });
 
     it('should handle GP file loading', async () => {
@@ -180,6 +200,7 @@ describe('TabView', () => {
       
       expect((tabView as any).currentFile).toBe(gpFile);
       expect((tabView as any).registerFileWatcher).toHaveBeenCalled();
+      expect(mockAtManager.initializeAndLoadScore).toHaveBeenCalledWith(gpFile);
     });
 
     it('should handle AlphaTex file loading', async () => {
@@ -189,20 +210,19 @@ describe('TabView', () => {
       await tabView.onLoadFile(texFile);
       
       expect(mockPlugin.app.vault.read).toHaveBeenCalledWith(texFile);
+      expect(mockAtManager.initializeAndLoadFromTex).toHaveBeenCalledWith(':4 c d e f | g a b c5');
     });
 
     it('should handle empty AlphaTex file', async () => {
       const texFile = { ...mockFile, extension: 'alphatex' };
       mockPlugin.app.vault.read.mockResolvedValue('');
       
-      // Mock showError method
-      const showErrorSpy = vi.fn();
-      (tabView as any).showError = showErrorSpy;
-      
       await tabView.onLoadFile(texFile);
       
-      // Should not call showError for empty file, but should show overlay message
       expect(mockPlugin.app.vault.read).toHaveBeenCalledWith(texFile);
+      expect(mockUIManager.showErrorInOverlay).toHaveBeenCalledWith(
+        expect.stringContaining('文件内容为空')
+      );
     });
 
     it('should handle AlphaTex parsing errors', async () => {
@@ -223,9 +243,14 @@ describe('TabView', () => {
   });
 
   describe('File Watching', () => {
+    beforeEach(() => {
+      // Ensure app.vault methods are properly mocked
+      mockPlugin.app.vault.on = vi.fn();
+      mockPlugin.app.vault.off = vi.fn();
+    });
+    
     it('should register file watcher on load', async () => {
-      const onSpy = vi.fn();
-      mockPlugin.app.vault.on = onSpy;
+      const onSpy = mockPlugin.app.vault.on;
       
       (tabView as any).registerFileWatcher();
       
@@ -233,8 +258,7 @@ describe('TabView', () => {
     });
 
     it('should unregister file watcher', () => {
-      const offSpy = vi.fn();
-      mockPlugin.app.vault.off = offSpy;
+      const offSpy = mockPlugin.app.vault.off;
       
       (tabView as any).unregisterFileWatcher();
       
@@ -258,6 +282,7 @@ describe('TabView', () => {
       (tabView as any).currentFile = mockFile;
       
       const differentFile = { ...mockFile, path: 'different.gp5' };
+      
       const handler = (tabView as any).fileModifyHandler;
       handler(differentFile);
       
