@@ -13,6 +13,9 @@ describe('Event Handlers', () => {
   let consoleSpy: any;
 
   beforeEach(() => {
+    // Mock 定时器
+    vi.useFakeTimers();
+    
     mockUIManager = {
       showLoadingOverlay: vi.fn(),
       hideLoadingOverlay: vi.fn(),
@@ -24,6 +27,7 @@ describe('Event Handlers', () => {
 
     mockAPI = {
       render: vi.fn(),
+      renderTracks: vi.fn(), // 添加 renderTracks 方法
       score: { title: 'Test Score' }
     };
 
@@ -40,6 +44,7 @@ describe('Event Handlers', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.useRealTimers(); // 恢复真实定时器
   });
 
   describe('handleAlphaTabError', () => {
@@ -135,6 +140,9 @@ describe('Event Handlers', () => {
 
       expect(mockTracksModal.setTracks).toHaveBeenCalledWith(mockScore.tracks);
       expect(mockTracksModal.setRenderTracks).toHaveBeenCalledWith([mockScore.tracks[0]]);
+      
+      // 推进假定时器 1000ms
+      vi.advanceTimersByTime(1000);
       expect(mockAPI.render).toHaveBeenCalled();
     });
 
