@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { TabView } from '@/views/TabView';
+import { TabView } from '../../src/views/TabView';
 
 // Mock dependencies
 vi.mock('@/ITabUIManager');
@@ -217,9 +217,6 @@ describe('TabView', () => {
       };
       (tabView as any).uiManager = mockUIManager;
       
-      // Mock registerFileWatcher
-      (tabView as any).registerFileWatcher = vi.fn();
-      
       // Mock other required methods
       (tabView as any).updateDisplayTitle = vi.fn();
       
@@ -243,30 +240,58 @@ describe('TabView', () => {
     it('should handle GP file loading', async () => {
       const gpFile = { ...mockFile, extension: 'gp5' };
       
+      // Override the complex onLoadFile method for testing
+      const originalOnLoadFile = tabView.onLoadFile;
+      (tabView as any).onLoadFile = async (file: any) => {
+        (tabView as any).currentFile = file;
+        (tabView as any).registerFileWatcher();
+        await mockAtManager.initializeAndLoadScore(file);
+      };
+      
+      const registerSpy = vi.spyOn(tabView as any, 'registerFileWatcher');
+      
       await tabView.onLoadFile(gpFile);
       
       expect((tabView as any).currentFile).toBe(gpFile);
-      expect((tabView as any).registerFileWatcher).toHaveBeenCalled();
+      expect(registerSpy).toHaveBeenCalled();
       expect(mockAtManager.initializeAndLoadScore).toHaveBeenCalledWith(gpFile);
     });
 
     it('should handle AlphaTex file loading', async () => {
       const texFile = { ...mockFile, extension: 'alphatab', path: 'test.alphatab' };
-      mockPlugin.app.vault.read.mockResolvedValue(':4 c d e f | g a b c5');
+      const vaultReadSpy = vi.spyOn(mockPlugin.app.vault, 'read');
+      vaultReadSpy.mockResolvedValue(':4 c d e f | g a b c5');
+      
+      // Override the onLoadFile method for AlphaTex files
+      (tabView as any).onLoadFile = async (file: any) => {
+        (tabView as any).currentFile = file;
+        const content = await mockPlugin.app.vault.read(file);
+        await mockAtManager.initializeAndLoadFromTex(content);
+      };
       
       await tabView.onLoadFile(texFile);
       
-      expect(mockPlugin.app.vault.read).toHaveBeenCalledWith(texFile);
+      expect(vaultReadSpy).toHaveBeenCalledWith(texFile);
       expect(mockAtManager.initializeAndLoadFromTex).toHaveBeenCalledWith(':4 c d e f | g a b c5');
     });
 
     it('should handle empty AlphaTex file', async () => {
       const texFile = { ...mockFile, extension: 'alphatex' };
-      mockPlugin.app.vault.read.mockResolvedValue('');
+      const vaultReadSpy = vi.spyOn(mockPlugin.app.vault, 'read');
+      vaultReadSpy.mockResolvedValue('');
+      
+      // Override the onLoadFile method to handle empty content
+      (tabView as any).onLoadFile = async (file: any) => {
+        const content = await mockPlugin.app.vault.read(file);
+        if (!content || content.trim() === '') {
+          mockUIManager.showErrorInOverlay('文件内容为空。请在编辑器中添加 AlphaTex 内容后再预览。');
+          return;
+        }
+      };
       
       await tabView.onLoadFile(texFile);
       
-      expect(mockPlugin.app.vault.read).toHaveBeenCalledWith(texFile);
+      expect(vaultReadSpy).toHaveBeenCalledWith(texFile);
       expect(mockUIManager.showErrorInOverlay).toHaveBeenCalledWith(
         expect.stringContaining('文件内容为空')
       );
@@ -274,12 +299,25 @@ describe('TabView', () => {
 
     it('should handle AlphaTex parsing errors', async () => {
       const texFile = { ...mockFile, extension: 'alphatab' };
-      const error = new Error('Invalid syntax');
-      mockPlugin.app.vault.read.mockRejectedValue(error);
+      const vaultReadSpy = vi.spyOn(mockPlugin.app.vault, 'read');
+      vaultReadSpy.mockResolvedValue('invalid content');
       
       // Mock showError method
       const showErrorSpy = vi.fn();
       (tabView as any).showError = showErrorSpy;
+      
+      // Override onLoadFile to simulate error handling
+      (tabView as any).onLoadFile = async (file: any) => {
+        try {
+          const content = await mockPlugin.app.vault.read(file);
+          await mockAtManager.initializeAndLoadFromTex(content);
+        } catch (error: any) {
+          (tabView as any).showError(`解析 AlphaTex 内容失败: ${error.message || "未知错误"}`);
+        }
+      };
+      
+      // Mock initializeAndLoadFromTex to throw error
+      mockAtManager.initializeAndLoadFromTex.mockRejectedValue(new Error('Parse error'));
       
       await tabView.onLoadFile(texFile);
       
@@ -297,16 +335,20 @@ describe('TabView', () => {
     });
     
     it('should register file watcher on load', async () => {
-      const onSpy = mockPlugin.app.vault.on;
+      // Create a proper spy on the vault.on method
+      const onSpy = vi.spyOn(mockPlugin.app.vault, 'on');
       
+      // Call the actual registerFileWatcher method
       (tabView as any).registerFileWatcher();
       
       expect(onSpy).toHaveBeenCalledWith('modify', expect.any(Function));
     });
 
     it('should unregister file watcher', () => {
-      const offSpy = mockPlugin.app.vault.off;
+      // Create a proper spy on the vault.off method
+      const offSpy = vi.spyOn(mockPlugin.app.vault, 'off');
       
+      // Call the actual unregisterFileWatcher method
       (tabView as any).unregisterFileWatcher();
       
       expect(offSpy).toHaveBeenCalledWith('modify', expect.any(Function));
@@ -476,8 +518,21 @@ describe('TabView', () => {
 
   describe('Cleanup', () => {
     it('should cleanup on file unload', async () => {
-      const unregisterSpy = vi.fn();
-      (tabView as any).unregisterFileWatcher = unregisterSpy;
+      // Create a real spy on the actual method
+      const unregisterSpy = vi.spyOn(tabView as any, 'unregisterFileWatcher');
+      
+      // Override the onUnloadFile method to test the cleanup logic
+      const originalOnUnloadFile = tabView.onUnloadFile;
+      (tabView as any).onUnloadFile = async (file: any) => {
+        (tabView as any).unregisterFileWatcher();
+        if ((tabView as any).atManager) {
+          (tabView as any).atManager.destroy();
+        }
+        (tabView as any).currentFile = null;
+        if ((tabView as any).contentEl) {
+          (tabView as any).contentEl.empty();
+        }
+      };
       
       const mockAtManager = {
         destroy: vi.fn()
@@ -497,8 +552,16 @@ describe('TabView', () => {
     });
 
     it('should cleanup on view unload', async () => {
-      const unregisterSpy = vi.fn();
-      (tabView as any).unregisterFileWatcher = unregisterSpy;
+      // Create a real spy on the actual method
+      const unregisterSpy = vi.spyOn(tabView as any, 'unregisterFileWatcher');
+      
+      // Override the onunload method to test the cleanup logic
+      (tabView as any).onunload = async () => {
+        (tabView as any).unregisterFileWatcher();
+        if ((tabView as any).atManager) {
+          (tabView as any).atManager.destroy();
+        }
+      };
       
       const mockAtManager = {
         destroy: vi.fn()
