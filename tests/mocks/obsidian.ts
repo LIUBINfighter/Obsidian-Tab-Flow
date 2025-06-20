@@ -102,6 +102,25 @@ export class Notice {
   }
 }
 
+export class Modal {
+  app: any;
+  contentEl: any;
+  titleEl: any;
+  modalEl: any;
+  
+  constructor(app: any) {
+    this.app = app;
+    this.contentEl = { createEl: () => ({}), empty: () => {} };
+    this.titleEl = { setText: () => {} };
+    this.modalEl = { addClass: () => {} };
+  }
+  
+  open() {}
+  close() {}
+  onOpen() {}
+  onClose() {}
+}
+
 export class App {
   vault = {
     adapter: {
