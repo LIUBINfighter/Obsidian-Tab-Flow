@@ -94,9 +94,9 @@ export class ITabUIManager {
 			label: '布局：',
 			options: [
 				{ value: '页面', text: '页面' },
-				{ value: '水平', text: '水平' },
-				{ value: '垂直', text: '垂直' }
-			]
+				{ value: '水平', text: '水平' }
+			],
+			defaultValue: '页面'
 		});
 		layoutDiv.appendChild(this.controls.layoutControl.render());
 		// 缩放控制下拉框
