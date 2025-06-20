@@ -156,8 +156,19 @@ export class TabView extends FileView {
 					this.atManager.api.updateSettings();
 					this.atManager.api.render();
 				}
+			},
+			(active: boolean) => {
+				if (this.atManager && this.atManager.api) {
+					this.atManager.api.metronomeVolume = active ? 1 : 0;
+					this.uiManager.setMetronomeActive(active);
+				}
 			}
 		);
+		// 初始化节拍器按钮状态
+		if (this.atManager && this.atManager.api) {
+			const metronomeActive = !!this.atManager.api.metronomeVolume;
+			this.uiManager.setMetronomeActive(metronomeActive);
+		}
 		this.uiManager.showLoadingOverlay("正在初始化 AlphaTab..."); // "Initializing AlphaTab..."
 
 		// 修复 mainElement 尺寸问题

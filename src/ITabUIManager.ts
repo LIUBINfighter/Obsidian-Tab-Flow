@@ -68,7 +68,12 @@ export class ITabUIManager {
 		}
 	}
 
-	renderControlBar(onPlayPause: () => void, onStop: () => void, onZoomChange?: (v: number) => void) {
+	renderControlBar(
+		onPlayPause: () => void,
+		onStop: () => void,
+		onZoomChange?: (v: number) => void,
+		onMetronomeToggle?: (active: boolean) => void
+	) {
 		this.atControlsRef.empty();
 		// 时间显示元素
 		const timePositionDiv = this.createElement('timePositionDiv', this.atControlsRef, 'div', { cls: 'time-position' });
@@ -139,7 +144,12 @@ export class ITabUIManager {
 		// 节拍器按钮
 		this.controls.metronomeButton = new ToggleButton({
 			text: '节拍器',
-			active: false
+			active: false,
+			onClick: (active: boolean) => {
+				if (onMetronomeToggle) {
+					onMetronomeToggle(active);
+				}
+			}
 		});
 		this.atControlsRef.appendChild(this.controls.metronomeButton.getElement());
 		// 前置四拍按钮
