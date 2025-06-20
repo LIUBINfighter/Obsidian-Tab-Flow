@@ -27,6 +27,8 @@ const createMockElement = (tagName: string, options: any = {}): any => {
     innerHTML: '',
     style: {},
     className: options.cls || '',
+    nodeType: 1, // ELEMENT_NODE - 添加 Node 类型兼容性
+    nodeName: tagName.toUpperCase(),
     classList: {
       add: vi.fn((className: string) => {
         element.className = element.className ? `${element.className} ${className}` : className;
@@ -224,21 +226,71 @@ document.createElement = vi.fn().mockImplementation((tagName) => {
     });
   }
   
+  // 为style元素添加特殊处理
+  if (tagName.toLowerCase() === 'style') {
+    element.textContent = '';
+    element.innerHTML = '';
+    element.sheet = {
+      insertRule: vi.fn(),
+      deleteRule: vi.fn(),
+      cssRules: []
+    };
+    // 当设置 textContent 时，自动注册到 registry
+    const originalTextContentSetter = Object.getOwnPropertyDescriptor(element, 'textContent')?.set;
+    Object.defineProperty(element, 'textContent', {
+      get: () => element._textContent || '',
+      set: (value) => {
+        element._textContent = value;
+        element.innerHTML = value;
+        // 如果有 id，注册到 registry
+        if (element.id) {
+          elementRegistry.set(element.id, element);
+        }
+      },
+      enumerable: true,
+      configurable: true
+    });
+  }
+  
+  // 为link元素添加特殊处理
+  if (tagName.toLowerCase() === 'link') {
+    element.rel = '';
+    element.href = '';
+    element.crossOrigin = '';
+    element.as = '';
+  }
+  
   return element;
 });
 
 // Mock head and body operations
 const mockHead = createMockElement('head');
 mockHead.appendChild = vi.fn((child: any) => {
+  if (!child || typeof child !== 'object') {
+    console.warn('head.appendChild: invalid child', child);
+    return child;
+  }
   mockHead.children.push(child);
-  if (child) child.parentElement = mockHead;
+  if (child) {
+    child.parentElement = mockHead;
+    // 如果是 style 元素且有 id，注册到 registry
+    if (child.tagName === 'STYLE' && child.id) {
+      elementRegistry.set(child.id, child);
+    }
+  }
   return child;
 });
 mockHead.removeChild = vi.fn((child: any) => {
   const index = mockHead.children.indexOf(child);
   if (index > -1) {
     mockHead.children.splice(index, 1);
-    if (child) child.parentElement = null;
+    if (child) {
+      child.parentElement = null;
+      // 从 registry 中移除
+      if (child.tagName === 'STYLE' && child.id) {
+        elementRegistry.delete(child.id);
+      }
+    }
   }
   return child;
 });
@@ -261,6 +313,12 @@ mockBody.removeChild = vi.fn((child: any) => {
   }
   return child;
 });
+
+// 添加 Node 类型兼容性，修复 MutationObserver 问题
+mockBody.nodeType = 1; // ELEMENT_NODE
+mockBody.nodeName = 'BODY';
+mockHead.nodeType = 1; // ELEMENT_NODE
+mockHead.nodeName = 'HEAD';
 
 Object.defineProperty(document, 'head', {
   value: mockHead,
