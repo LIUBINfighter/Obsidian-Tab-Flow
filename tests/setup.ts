@@ -66,10 +66,27 @@ const createMockElement = (tagName: string, options: any = {}): any => {
     setAttribute: vi.fn((name: string, value: string) => {
       if (name === 'id') element.id = value;
       if (name === 'class') element.className = value;
+      if (name === 'href') element.href = value;
+      if (name === 'rel') element.rel = value;
+      if (name === 'as') element.as = value;
+      if (name === 'crossorigin') element.crossOrigin = value;
+      if (name === 'type') element.type = value;
+      // Store all attributes in a generic way
+      if (!element._attributes) element._attributes = {};
+      element._attributes[name] = value;
     }),
     getAttribute: vi.fn((name: string) => {
       if (name === 'id') return element.id;
       if (name === 'class') return element.className;
+      if (name === 'href') return element.href;
+      if (name === 'rel') return element.rel;
+      if (name === 'as') return element.as;
+      if (name === 'crossorigin') return element.crossOrigin;
+      if (name === 'type') return element.type;
+      // Check generic attributes store
+      if (element._attributes && element._attributes[name]) {
+        return element._attributes[name];
+      }
       return null;
     }),
     removeAttribute: vi.fn(),
@@ -186,6 +203,8 @@ const createMockElement = (tagName: string, options: any = {}): any => {
       if (element.id) {
         elementRegistry.delete(element.id);
       }
+      // 标记元素为已移除，这样 getElementById 就不会再返回它
+      element._removed = true;
     }),
     ...options
   };
@@ -200,15 +219,27 @@ const originalCreateElement = document.createElement;
 
 // Store created elements by ID for persistence
 const elementRegistry = new Map<string, any>();
+const removedElements = new Set<string>(); // Track removed elements
+const linkElements = new Set<any>(); // Track link elements
+
+// Export for testing
+(global as any).linkElements = linkElements;
+(global as any).removedElements = removedElements;
 
 document.getElementById = vi.fn().mockImplementation((id) => {
   // Check registry first
   if (elementRegistry.has(id)) {
-    return elementRegistry.get(id);
+    const element = elementRegistry.get(id);
+    // If element was removed, delete from registry and return null
+    if (element._removed) {
+      elementRegistry.delete(id);
+      return null;
+    }
+    return element;
   }
   
   // Create special elements as needed
-  if (id === 'alphatab-font-faces') {
+  if (id === 'alphatab-font-faces' || id === 'alphatab-manual-font-styles') {
     const styleEl = createMockElement('style', { id });
     elementRegistry.set(id, styleEl);
     return styleEl;
@@ -218,22 +249,35 @@ document.getElementById = vi.fn().mockImplementation((id) => {
 });
 
 document.querySelector = vi.fn().mockImplementation((selector) => {
-  if (selector.includes('style#alphatab-font-faces')) {
-    return document.getElementById('alphatab-font-faces');
+  if (selector.includes('style#alphatab-font-faces') || selector === '#alphatab-manual-font-styles') {
+    return document.getElementById('alphatab-manual-font-styles');
   }
   if (selector.includes('link[rel="preload"]')) {
-    return createMockElement('link');
+    // Return the first matching link element
+    for (const link of linkElements) {
+      if (link.rel === 'preload') {
+        return link;
+      }
+    }
+    return null;
   }
   return originalQuerySelector?.call(document, selector) || null;
 });
 
 document.querySelectorAll = vi.fn().mockImplementation((selector) => {
-  if (selector.includes('style#alphatab-font-faces')) {
-    const existing = document.getElementById('alphatab-font-faces');
+  if (selector.includes('style#alphatab-font-faces') || selector === '#alphatab-manual-font-styles') {
+    const existing = document.getElementById('alphatab-manual-font-styles');
     return existing ? [existing] : [];
   }
   if (selector.includes('link[rel="preload"]')) {
-    return [];
+    // Return all matching link elements
+    const matches = [];
+    for (const link of linkElements) {
+      if (link.rel === 'preload' && link.as === 'font') {
+        matches.push(link);
+      }
+    }
+    return matches;
   }
   return originalQuerySelectorAll?.call(document, selector) || [];
 });
@@ -250,6 +294,11 @@ document.createElement = vi.fn().mockImplementation((tagName) => {
       enumerable: true,
       configurable: true
     });
+  }
+  
+  // 为link元素添加特殊处理
+  if (tagName.toLowerCase() === 'link') {
+    linkElements.add(element);
   }
   
   // 为option元素添加特殊属性
