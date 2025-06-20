@@ -13,9 +13,10 @@ export class FontManager {
 		this.removeInjectedFontFaces();
 		
 		const sources: string[] = [];
-		
-		// Build font sources with proper format detection
-		Object.entries(fontData).forEach(([extension, url]) => {
+				// Build font sources with proper format detection
+		Object.entries(fontData).forEach(([filename, url]) => {
+			// Extract extension from filename
+			const extension = filename.split('.').pop() || '';
 			const format = this.getFormatFromExtension(extension);
 			if (format) {
 				sources.push(`url('${url}') format('${format}')`);
