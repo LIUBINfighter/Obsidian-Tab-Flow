@@ -308,6 +308,19 @@ export class TabView extends FileView {
 				}
 			});
 		}
+
+		// 速度控制事件绑定
+		if (this.uiManager.speedControl) {
+			// @ts-ignore
+			this.uiManager.speedControl.selectElement.addEventListener('change', (e: Event) => {
+				if (!this.atManager || !this.atManager.api) return;
+				const value = (e.target as HTMLSelectElement).value;
+				const speed = parseFloat(value);
+				if (!isNaN(speed)) {
+					this.atManager.api.playbackSpeed = speed;
+				}
+			});
+		}
 	}
 
 	// 注册文件变更监听
