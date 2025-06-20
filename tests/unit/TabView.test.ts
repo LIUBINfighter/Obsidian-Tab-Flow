@@ -158,36 +158,83 @@ describe('TabView', () => {
   describe('File Loading', () => {
     let mockAtManager: any;
     let mockUIManager: any;
+    let mockTracksSidebar: any;
+    let mockTabDisplay: any;
     
     beforeEach(() => {
-      // Mock contentEl
+      // Mock contentEl with comprehensive structure
       const mockContentEl = {
         empty: vi.fn(),
         createDiv: vi.fn().mockReturnValue({
           createDiv: vi.fn().mockReturnValue({
             empty: vi.fn(),
-            style: {}
-          })
+            style: {},
+            querySelector: vi.fn(),
+            appendChild: vi.fn()
+          }),
+          querySelector: vi.fn(),
+          appendChild: vi.fn()
         })
       };
       (tabView as any).contentEl = mockContentEl;
       
+      // Mock all the required classes
+      mockTracksSidebar = {
+        setTracks: vi.fn(),
+        setRenderTracks: vi.fn(),
+        toggle: vi.fn()
+      };
+      (tabView as any).tracksSidebar = mockTracksSidebar;
+      
+      mockTabDisplay = {
+        getContentElement: vi.fn().mockReturnValue({
+          empty: vi.fn(),
+          style: { minWidth: '300px', minHeight: '150px' }
+        })
+      };
+      (tabView as any).tabDisplay = mockTabDisplay;
+      
       // Mock atManager
       mockAtManager = {
         initializeAndLoadScore: vi.fn().mockResolvedValue(undefined),
-        initializeAndLoadFromTex: vi.fn().mockResolvedValue(undefined)
+        initializeAndLoadFromTex: vi.fn().mockResolvedValue(undefined),
+        setDarkMode: vi.fn(),
+        api: {}
       };
       (tabView as any).atManager = mockAtManager;
       
       // Mock uiManager
       mockUIManager = {
         showLoadingOverlay: vi.fn(),
-        showErrorInOverlay: vi.fn()
+        showErrorInOverlay: vi.fn(),
+        renderControlBar: vi.fn(),
+        atMainRef: { 
+          clientWidth: 500, 
+          clientHeight: 300,
+          style: { minWidth: '300px', minHeight: '150px' }
+        },
+        atViewportRef: {}
       };
       (tabView as any).uiManager = mockUIManager;
       
       // Mock registerFileWatcher
       (tabView as any).registerFileWatcher = vi.fn();
+      
+      // Mock other required methods
+      (tabView as any).updateDisplayTitle = vi.fn();
+      
+      // Mock the constructor dependencies to prevent UI creation
+      vi.doMock('@/components/TracksSidebar', () => ({
+        TracksSidebar: vi.fn().mockImplementation(() => mockTracksSidebar)
+      }));
+      
+      vi.doMock('@/ITabUIManager', () => ({
+        ITabUIManager: vi.fn().mockImplementation(() => mockUIManager)
+      }));
+      
+      vi.doMock('@/ITabManager', () => ({
+        ITabManager: vi.fn().mockImplementation(() => mockAtManager)
+      }));
       
       // Ensure actualPluginDir is set to prevent early return
       mockPlugin.actualPluginDir = '/mock/plugin/dir';
