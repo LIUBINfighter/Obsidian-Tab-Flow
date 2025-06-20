@@ -68,7 +68,7 @@ export class ITabUIManager {
 		}
 	}
 
-	renderControlBar(onPlayPause: () => void, onStop: () => void) {
+	renderControlBar(onPlayPause: () => void, onStop: () => void, onZoomChange?: (v: number) => void) {
 		this.atControlsRef.empty();
 		// 时间显示元素
 		const timePositionDiv = this.createElement('timePositionDiv', this.atControlsRef, 'div', { cls: 'time-position' });
@@ -104,14 +104,20 @@ export class ITabUIManager {
 		this.controls.zoomControl = new SelectControl({
 			label: '缩放：',
 			options: [
-				{ value: '0.5x', text: '0.5x' },
-				{ value: '0.75x', text: '0.75x' },
-				{ value: '1x', text: '1x' },
-				{ value: '1.25x', text: '1.25x' },
-				{ value: '1.5x', text: '1.5x' },
-				{ value: '2x', text: '2x' }
+				{ value: '0.5', text: '0.5x' },
+				{ value: '0.75', text: '0.75x' },
+				{ value: '1', text: '1x' },
+				{ value: '1.25', text: '1.25x' },
+				{ value: '1.5', text: '1.5x' },
+				{ value: '2', text: '2x' }
 			],
-			defaultValue: '1x'
+			defaultValue: '1',
+			onChange: (v: string) => {
+				if (onZoomChange) {
+					const num = parseFloat(v);
+					if (!isNaN(num)) onZoomChange(num);
+				}
+			}
 		});
 		zoomDiv.appendChild(this.controls.zoomControl.render());
 		// 速度控制下拉框

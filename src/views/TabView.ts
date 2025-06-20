@@ -149,7 +149,14 @@ export class TabView extends FileView {
 		this.uiManager = new ITabUIManager({ container: this.tabDisplay.getContentElement() });
 		this.uiManager.renderControlBar(
 			() => this.atManager?.playPause(), // Play/Pause 点击回调
-			() => this.atManager?.stop() // Stop 点击回调
+			() => this.atManager?.stop(), // Stop 点击回调
+			(zoom: number) => {
+				if (this.atManager && this.atManager.api) {
+					this.atManager.api.settings.display.scale = zoom;
+					this.atManager.api.updateSettings();
+					this.atManager.api.render();
+				}
+			}
 		);
 		this.uiManager.showLoadingOverlay("正在初始化 AlphaTab..."); // "Initializing AlphaTab..."
 
