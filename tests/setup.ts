@@ -29,9 +29,14 @@ const createMockElement = (tagName: string, options: any = {}): any => {
     className: options.cls || '',
     nodeType: 1, // ELEMENT_NODE - 添加 Node 类型兼容性
     nodeName: tagName.toUpperCase(),
+    ownerDocument: document, // 添加 ownerDocument 属性
+    parentNode: null,
+    childNodes: [],
     classList: {
       add: vi.fn((className: string) => {
-        element.className = element.className ? `${element.className} ${className}` : className;
+        if (!element.className.includes(className)) {
+          element.className = element.className ? `${element.className} ${className}` : className;
+        }
       }),
       remove: vi.fn((className: string) => {
         element.className = element.className.replace(new RegExp(`\\b${className}\\b`, 'g'), '').trim();

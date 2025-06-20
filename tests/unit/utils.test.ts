@@ -2,6 +2,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { isGuitarProFile, getCurrentThemeMode, watchThemeModeChange } from '../../src/utils/utils';
 
 describe('Utils', () => {
+  // 添加清理逻辑
+  beforeEach(() => {
+    // 清理 document.body 的主题类
+    document.body.classList.remove('theme-dark', 'theme-light');
+  });
+
+  afterEach(() => {
+    // 清理 document.body 的主题类
+    document.body.classList.remove('theme-dark', 'theme-light');
+  });
+
   describe('isGuitarProFile', () => {
     it('should return true for valid Guitar Pro extensions', () => {
       const validExtensions = ['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7'];
