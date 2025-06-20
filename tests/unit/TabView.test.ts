@@ -112,12 +112,22 @@ describe('TabView', () => {
       (tabView as any).currentFile = mockFile;
       (tabView as any).atManager = null; // 确保没有 atManager
       
-      // 调试输出
+      // 详细调试输出
       console.log('currentFile:', (tabView as any).currentFile);
+      console.log('currentFile?.basename:', (tabView as any).currentFile?.basename);
       console.log('atManager:', (tabView as any).atManager);
-      console.log('getDisplayText result:', tabView.getDisplayText());
+      console.log('atManager && atManager.score:', (tabView as any).atManager && (tabView as any).atManager.score);
       
-      expect(tabView.getDisplayText()).toBe('test');
+      // 直接测试表达式的每个部分
+      const currentFile = (tabView as any).currentFile;
+      const atManager = (tabView as any).atManager;
+      console.log('currentFile?.basename test:', currentFile?.basename);
+      console.log('fallback test:', currentFile?.basename || "吉他谱");
+      
+      const result = tabView.getDisplayText();
+      console.log('getDisplayText result:', result);
+      
+      expect(result).toBe('test');
     });
 
     it('should return score title and artist when available', () => {
