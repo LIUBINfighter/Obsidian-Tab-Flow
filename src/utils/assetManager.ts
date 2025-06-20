@@ -1,7 +1,8 @@
-import { Notice, Plugin, requestUrl } from "obsidian";
+import { Notice, requestUrl } from "obsidian";
 import * as path from "path";
 import * as fs from "fs";
-import JSZip from "jszip";
+import * as JSZip from "jszip";
+import AlphaTabPlugin from "../main";
 
 // 关键资产列表，这些是插件正常运行所必需的
 export const REQUIRED_ASSETS = [
@@ -14,7 +15,7 @@ export const REQUIRED_ASSETS = [
 ];
 
 // 资产包的下载URL
-const ASSETS_PACKAGE_URL = "https://github.com/yourusername/interactive-tabs/releases/download/latest/assets.zip";
+const ASSETS_PACKAGE_URL = (version: string) => `https://github.com/LIUBINfightere/interactive-tabs/releases/download/${version}/assets.zip`;
 
 /**
  * 检查插件目录中是否存在所有必需的资产文件
@@ -42,7 +43,7 @@ export function checkRequiredAssets(pluginDir: string): boolean {
  * @param plugin 插件实例
  * @returns 是否成功下载和解压资产
  */
-export async function checkAndDownloadAssets(plugin: Plugin): Promise<boolean> {
+export async function checkAndDownloadAssets(plugin: AlphaTabPlugin): Promise<boolean> {
     if (!plugin.actualPluginDir) {
         console.error("[AlphaTab] Plugin directory not found");
         return false;
@@ -64,9 +65,13 @@ export async function checkAndDownloadAssets(plugin: Plugin): Promise<boolean> {
             fs.mkdirSync(assetsDir, { recursive: true });
         }
 
+        // 构建资产包URL - 使用当前插件版本号
+        const version = plugin.manifest.version;
+        const assetsUrl = ASSETS_PACKAGE_URL(version);
+
         // 下载资产包
         const response = await requestUrl({
-            url: ASSETS_PACKAGE_URL,
+            url: assetsUrl,
             method: "GET",
             headers: {
                 "Content-Type": "application/zip"
@@ -82,10 +87,10 @@ export async function checkAndDownloadAssets(plugin: Plugin): Promise<boolean> {
         // 解压所有文件到插件目录
         const extractionPromises: Promise<void>[] = [];
         
-        zip.forEach((relativePath, zipEntry) => {
-            if (!zipEntry.dir) {
-                const extractPromise = zipEntry.async("nodebuffer").then(content => {
-                    const targetPath = path.join(plugin.actualPluginDir, relativePath);
+        zip.forEach((relativePath: string, zipEntry: JSZip.JSZipObject) => {
+            if (!zipEntry.dir && plugin.actualPluginDir) {
+                const extractPromise = zipEntry.async("arraybuffer").then((content: ArrayBuffer) => {
+                    const targetPath = path.join(plugin.actualPluginDir as string, relativePath);
                     const targetDir = path.dirname(targetPath);
                     
                     // 确保目标目录存在
@@ -94,7 +99,7 @@ export async function checkAndDownloadAssets(plugin: Plugin): Promise<boolean> {
                     }
                     
                     // 写入文件
-                    fs.writeFileSync(targetPath, content);
+                    fs.writeFileSync(targetPath, Buffer.from(content));
                     console.log(`[AlphaTab] Extracted: ${relativePath}`);
                 });
                 
@@ -128,7 +133,7 @@ export async function checkAndDownloadAssets(plugin: Plugin): Promise<boolean> {
  * 手动触发资产下载
  * @param plugin 插件实例
  */
-export async function forceDownloadAssets(plugin: Plugin): Promise<void> {
+export async function forceDownloadAssets(plugin: AlphaTabPlugin): Promise<void> {
     const result = await checkAndDownloadAssets(plugin);
     if (result) {
         new Notice("AlphaTab 资源文件已更新，请重启 Obsidian 以应用更改", 5000);
