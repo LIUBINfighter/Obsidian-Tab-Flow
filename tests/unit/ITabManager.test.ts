@@ -133,6 +133,9 @@ describe('ITabManager', () => {
     });
 
     it('should handle missing plugin manifest directory', () => {
+      // Mock console.error to suppress expected error output in tests
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
       const invalidOptions = {
         ...mockOptions,
         pluginInstance: { manifest: {} }
@@ -146,6 +149,12 @@ describe('ITabManager', () => {
       expect(errorSpy).toHaveBeenCalledWith({
         message: "插件清单信息不完整，无法构建资源路径。"
       });
+      
+      // Verify that the error was logged (but suppressed in test output)
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[AlphaTab] CRITICAL - pluginInstance.manifest.dir is not available.');
+      
+      // Restore console.error
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -385,6 +394,9 @@ describe('ITabManager', () => {
     });
 
     it('should handle AlphaTex loading errors', async () => {
+      // Mock console.error to suppress expected error output in tests
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
       const error = new Error('Invalid AlphaTex syntax');
       manager.api!.tex = vi.fn().mockImplementation(() => {
         throw error;
@@ -393,6 +405,12 @@ describe('ITabManager', () => {
       const texContent = 'invalid tex content';
       
       await expect(manager.loadFromAlphaTexString(texContent)).rejects.toThrow(error);
+      
+      // Verify that the error was logged (but suppressed in test output)
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[ITabManager] 从 AlphaTex 字符串加载失败:', error);
+      
+      // Restore console.error
+      consoleErrorSpy.mockRestore();
     });
   });
 });

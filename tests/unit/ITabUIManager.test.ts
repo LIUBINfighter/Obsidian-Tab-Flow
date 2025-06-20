@@ -131,16 +131,16 @@ describe('ITabUIManager', () => {
       expect(uiManager.atOverlayRef.classList.contains('error')).toBe(true);
     });
 
-    it('should auto-hide error overlay after timeout', (done) => {
+    it('should auto-hide error overlay after timeout', async () => {
       const timeout = 100; // Short timeout for testing
       
       uiManager.showErrorInOverlay('Error', timeout);
       
-      setTimeout(() => {
-        expect(uiManager.atOverlayRef.style.display).toBe('none');
-        expect(uiManager.atOverlayRef.classList.contains('error')).toBe(false);
-        done();
-      }, timeout + 50);
+      // Wait for the timeout to complete
+      await new Promise(resolve => setTimeout(resolve, timeout + 50));
+      
+      expect(uiManager.atOverlayRef.style.display).toBe('none');
+      expect(uiManager.atOverlayRef.classList.contains('error')).toBe(false);
     });
 
     it('should not auto-hide when timeout is 0', () => {
