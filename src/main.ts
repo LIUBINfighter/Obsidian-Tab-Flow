@@ -1,18 +1,34 @@
 // main.ts
-import { Notice, Plugin, TFile } from "obsidian";
+import { App, Notice, Plugin, TFile, PluginSettingTab, requestUrl } from "obsidian";
 import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
 import { TexEditorView, VIEW_TYPE_TEX_EDITOR } from "./views/TexEditorView";
 import * as path from "path";
 import * as fs from "fs";
 import { registerStyles, isGuitarProFile, getCurrentThemeMode, watchThemeModeChange } from "./utils/utils";
+import { AlphaTabSettingTab } from "./settings/AlphaTabSettingTab";
+import * as JSZip from "jszip";
+
+// 定义 App 类型的扩展，添加 setting 属性
+declare module "obsidian" {
+    interface App {
+        setting: {
+            open: () => void;
+            openTabById: (id: string) => void;
+        };
+    }
+}
 
 interface AlphaTabPluginSettings {
 	// 插件设置，可以根据需要扩展
 	mySetting: string;
+	assetsDownloaded: boolean; // 添加资产下载状态标记
+	lastAssetsCheck: number; // 上次检查资产的时间戳
 }
 
 const DEFAULT_SETTINGS: AlphaTabPluginSettings = {
 	mySetting: "default",
+	assetsDownloaded: false,
+	lastAssetsCheck: 0
 };
 
 export default class AlphaTabPlugin extends Plugin {
@@ -54,6 +70,31 @@ export default class AlphaTabPlugin extends Plugin {
 
 		this.actualPluginDir = actualPluginDir;
 		// console.log(`[AlphaTab Debug] Using plugin directory: ${actualPluginDir}`);
+
+		// 添加设置选项卡
+		this.addSettingTab(new AlphaTabSettingTab(this.app, this));
+
+		// 检查是否有必要的资产文件，如果没有则显示通知提醒用户
+		if (!this.checkRequiredAssets()) {
+			// 在 2 秒后显示通知，让用户有时间先看到 Obsidian 界面
+			setTimeout(() => {
+				const notice = new Notice(
+					"AlphaTab 吉他谱插件需要下载额外资源文件才能正常工作。请前往插件设置下载资源文件。",
+					10000
+				);
+				
+				// 添加点击事件，点击通知可以直接打开设置
+				// @ts-ignore - 访问私有属性以添加点击事件
+				if (notice.noticeEl) {
+					// @ts-ignore
+					notice.noticeEl.addEventListener("click", () => {
+						// 打开插件设置
+						this.app.setting?.open();
+						this.app.setting?.openTabById(this.manifest.id);
+					});
+				}
+			}, 2000);
+		}
 
 		// 加载自定义样式
 		registerStyles(this);
@@ -202,7 +243,8 @@ export default class AlphaTabPlugin extends Plugin {
 			})
 		);
 
-		// console.log("AlphaTab Plugin Loaded");
+		// 日志
+		console.log("AlphaTab Plugin Loaded");
 	}
 
 	onunload() {
@@ -222,5 +264,160 @@ export default class AlphaTabPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	/**
+	 * 检查并下载必要的资产文件
+	 */
+	async checkAssets(): Promise<void> {
+		// 如果不需要检查资产（例如，最近已经检查过）
+		const currentTime = Date.now();
+		const timeThreshold = 24 * 60 * 60 * 1000; // 24小时，单位毫秒
+		
+		if (
+			this.settings.assetsDownloaded && 
+			currentTime - this.settings.lastAssetsCheck < timeThreshold
+		) {
+			console.log("[AlphaTab] 跳过资产检查，上次检查时间:", new Date(this.settings.lastAssetsCheck));
+			return;
+		}
+		
+		if (!this.actualPluginDir) {
+			console.error("[AlphaTab] 插件目录未找到");
+			return;
+		}
+		
+		// 检查资产是否已存在
+		const assetsExists = this.checkRequiredAssets();
+		if (assetsExists) {
+			console.log("[AlphaTab] 所有必需资产已存在");
+			// 更新最后检查时间
+			this.settings.lastAssetsCheck = currentTime;
+			await this.saveSettings();
+			return;
+		}
+		
+		// 显示下载提示
+		new Notice("AlphaTab 插件需要下载额外资源文件...", 3000);
+		
+		// 下载资产包
+		const success = await this.downloadAssets();
+		if (success) {
+			this.settings.assetsDownloaded = true;
+			this.settings.lastAssetsCheck = currentTime;
+			await this.saveSettings();
+			new Notice("AlphaTab 资源文件已下载完成", 3000);
+		} else {
+			new Notice("AlphaTab 资源文件下载失败，部分功能可能无法正常使用", 5000);
+		}
+	}
+	
+	/**
+	 * 检查必需的资产文件是否存在
+	 */
+	checkRequiredAssets(): boolean {
+		try {
+			if (!this.actualPluginDir) return false;
+			
+			// 定义必需的资产文件列表
+			const requiredAssets = [
+				"assets/alphatab/alphaTab.worker.mjs",
+				"assets/alphatab/alphatab.js",
+				"assets/alphatab/soundfont/sonivox.sf2",
+				"assets/alphatab/font/Bravura.woff2",
+				"assets/alphatab/font/Bravura.woff",
+				"assets/alphatab/font/bravura_metadata.json"
+			];
+			
+			for (const asset of requiredAssets) {
+				const assetPath = path.join(this.actualPluginDir, asset);
+				if (!fs.existsSync(assetPath)) {
+					console.log(`[AlphaTab] 缺少必需资产: ${asset}`);
+					return false;
+				}
+			}
+			
+			return true;
+		} catch (error) {
+			console.error("[AlphaTab] 检查资产时出错:", error);
+			return false;
+		}
+	}
+	
+	/**
+	 * 下载并解压资产文件
+	 */
+	async downloadAssets(): Promise<boolean> {
+		try {
+			if (!this.actualPluginDir) return false;
+			
+			// 构建资产包URL - 使用当前插件版本号
+			const version = this.manifest.version;
+			const assetsUrl = `https://github.com/yourusername/interactive-tabs/releases/download/${version}/assets.zip`;
+			
+			// 显示下载进度通知
+			const notice = new Notice("正在下载 AlphaTab 资源文件...", 0);
+			
+			
+			try {
+				// 使用 requestUrl 下载资产包
+				const response = await requestUrl({
+					url: assetsUrl,
+					method: "GET"
+				});
+				
+				if (!response || !response.arrayBuffer) {
+					notice.hide();
+					new Notice("下载资源文件失败：无法获取响应内容", 5000);
+					return false;
+				}
+				
+				// 将响应转换为ArrayBuffer
+				const arrayBuffer = response.arrayBuffer;
+				
+				// 使用JSZip解压资产
+				const zip = await JSZip.loadAsync(arrayBuffer);
+				
+				// 解压所有文件到插件目录
+				const extractionPromises: Promise<void>[] = [];
+				
+				zip.forEach((relativePath: string, zipEntry: JSZip.JSZipObject) => {
+					if (!zipEntry.dir && this.actualPluginDir) {
+						const extractPromise = zipEntry.async("arraybuffer").then((content: ArrayBuffer) => {
+							const targetPath = path.join(this.actualPluginDir as string, relativePath);
+							const targetDir = path.dirname(targetPath);
+							
+							// 确保目标目录存在
+							if (!fs.existsSync(targetDir)) {
+								fs.mkdirSync(targetDir, { recursive: true });
+							}
+							
+							// 写入文件
+							fs.writeFileSync(targetPath, Buffer.from(content));
+							console.log(`[AlphaTab] 解压文件: ${relativePath}`);
+						});
+						
+						extractionPromises.push(extractPromise);
+					}
+				});
+				
+				// 等待所有文件解压完成
+				await Promise.all(extractionPromises);
+				
+				// 关闭通知
+				notice.hide();
+				new Notice("AlphaTab 资源文件下载并解压成功", 3000);
+				
+				return true;
+			} catch (downloadError) {
+				notice.hide();
+				console.error("[AlphaTab] 下载或解压资产时出错:", downloadError);
+				new Notice(`下载资源文件失败: ${downloadError.message}`, 5000);
+				return false;
+			}
+		} catch (error) {
+			console.error("[AlphaTab] 下载或解压资产时出错:", error);
+			return false;
+		}
 	}
 }

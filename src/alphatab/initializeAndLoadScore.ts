@@ -53,7 +53,6 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 	settings.core.enableLazyLoading = true;
 	settings.core.logLevel = alphaTab.LogLevel.Debug;
 	manager.setSettings(settings);
-
 	// === Worker 支持 begin ===
 	settings.core.useWorkers = true; // 启用 Worker
 
@@ -71,7 +70,9 @@ export async function initializeAndLoadScore(manager: ITabManager, file: TFile) 
 		settings.core.workerFile = null;
 		settings.core.useWorkers = false;
 		console.error("[AlphaTab] Worker script not found. Worker disabled.");
-		eventHandlers.onError?.({ message: "AlphaTab Worker脚本文件丢失，性能可能会受影响。" });
+		eventHandlers.onError?.({ 
+			message: "AlphaTab Worker脚本文件丢失，性能可能会受影响。请检查插件是否完整安装或重启Obsidian。" 
+		});
 	}
 	// === Worker 支持 end ===
 
