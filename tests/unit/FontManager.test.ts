@@ -22,7 +22,7 @@ describe('FontManager', () => {
 
       expect(result).toBe(true);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       expect(styleElement).toBeTruthy();
       expect(styleElement?.tagName).toBe('STYLE');
     });
@@ -35,7 +35,7 @@ describe('FontManager', () => {
 
       FontManager.injectFontFaces(fontData, fontFamilies);
 
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       
       expect(cssText).toContain('@font-face');
@@ -54,7 +54,7 @@ describe('FontManager', () => {
 
       FontManager.injectFontFaces(fontData, fontFamilies);
 
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       
       expect(cssText).toContain('format("woff2")');
@@ -71,7 +71,7 @@ describe('FontManager', () => {
 
       FontManager.injectFontFaces(fontData, fontFamilies);
 
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       
       expect(cssText).toContain('font-family: "Font1"');
@@ -89,7 +89,7 @@ describe('FontManager', () => {
       FontManager.injectFontFaces(fontData1, ['Font1']);
       FontManager.injectFontFaces(fontData2, ['Font2']);
 
-      const styleElements = document.querySelectorAll(`#${FontManager.FONT_STYLE_ID}`);
+      const styleElements = document.querySelectorAll(`#${FontManager.FONT_STYLE_ELEMENT_ID}`);
       expect(styleElements.length).toBe(1);
       
       const cssText = styleElements[0].textContent || '';
@@ -118,11 +118,11 @@ describe('FontManager', () => {
       };
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      expect(document.getElementById(FontManager.FONT_STYLE_ID)).toBeTruthy();
+      expect(document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID)).toBeTruthy();
       
       FontManager.removeInjectedFontFaces();
       
-      expect(document.getElementById(FontManager.FONT_STYLE_ID)).toBeFalsy();
+      expect(document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID)).toBeFalsy();
     });
 
     it('should handle case when no font styles exist', () => {
@@ -176,7 +176,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('format("woff2")');
     });
@@ -188,7 +188,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('format("woff")');
     });
@@ -200,7 +200,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('format("opentype")');
     });
@@ -212,7 +212,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('format("truetype")');
     });
@@ -224,7 +224,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('format("embedded-opentype")');
     });
@@ -236,7 +236,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('format("svg")');
     });
@@ -248,7 +248,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['TestFont']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('format("truetype")');
     });
@@ -262,7 +262,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['Font Family With Spaces']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('font-family: "Font Family With Spaces"');
     });
@@ -274,7 +274,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['Font-Name_123']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       expect(cssText).toContain('font-family: "Font-Name_123"');
     });
@@ -286,7 +286,7 @@ describe('FontManager', () => {
       
       FontManager.injectFontFaces(fontData, ['Bravura']);
       
-      const styleElement = document.getElementById(FontManager.FONT_STYLE_ID);
+      const styleElement = document.getElementById(FontManager.FONT_STYLE_ELEMENT_ID);
       const cssText = styleElement?.textContent || '';
       
       // Basic CSS syntax checks
