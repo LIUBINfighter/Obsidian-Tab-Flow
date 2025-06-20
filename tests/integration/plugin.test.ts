@@ -113,7 +113,9 @@ describe('AlphaTabPlugin Integration', () => {
       // 确保插件已加载
       await plugin.onload();
       
-      const detachSpy = vi.spyOn(mockApp.workspace, 'detachLeavesOfType');
+      // 在调用 onunload 之前重新设置 mock 并创建 spy
+      plugin.app.workspace.detachLeavesOfType = vi.fn();
+      const detachSpy = vi.spyOn(plugin.app.workspace, 'detachLeavesOfType');
       
       // 调用卸载
       plugin.onunload();
