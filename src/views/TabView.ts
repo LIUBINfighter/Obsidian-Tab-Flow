@@ -290,6 +290,24 @@ export class TabView extends FileView {
 			// 原有的二进制文件加载方式
 			await this.atManager.initializeAndLoadScore(file);
 		}
+
+		// 布局切换事件绑定
+		if (this.uiManager.layoutControl) {
+			// @ts-ignore
+			this.uiManager.layoutControl.selectElement.addEventListener('change', (e: Event) => {
+				if (!this.atManager || !this.atManager.api) return;
+				const value = (e.target as HTMLSelectElement).value;
+				let mode = null;
+				if (value === '页面') mode = alphaTab.LayoutMode.Page;
+				else if (value === '水平') mode = alphaTab.LayoutMode.Horizontal;
+				else if (value === '垂直') mode = alphaTab.LayoutMode.Vertical;
+				if (mode !== null) {
+					this.atManager.api.settings.display.layoutMode = mode;
+					this.atManager.api.updateSettings();
+					this.atManager.api.render();
+				}
+			});
+		}
 	}
 
 	// 注册文件变更监听
