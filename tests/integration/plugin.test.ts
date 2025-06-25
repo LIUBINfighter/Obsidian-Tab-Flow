@@ -1,6 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AlphaTabPlugin from '../../src/main';
 
+// Mock obsidian module to include PluginSettingTab
+vi.mock('obsidian', async () => {
+  // Get the actual mocked export from obsidian.ts mock file
+  const mockObsidian = await import('../mocks/obsidian');
+  return {
+    ...mockObsidian,
+    default: {
+      ...mockObsidian.default,
+      PluginSettingTab: mockObsidian.PluginSettingTab
+    },
+    PluginSettingTab: mockObsidian.PluginSettingTab
+  };
+});
+
 // Mock utils module to prevent styles.css warnings in tests
 vi.mock('../../src/utils/utils', () => ({
   registerStyles: vi.fn(),

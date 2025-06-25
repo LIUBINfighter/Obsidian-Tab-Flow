@@ -96,6 +96,15 @@ export class Plugin {
   app: any;
   manifest: any = { dir: '/mock/plugin/dir' };
   
+  constructor(app?: any, manifest?: any) {
+    if (app) {
+      this.app = app;
+    }
+    if (manifest) {
+      this.manifest = manifest;
+    }
+  }
+  
   loadData = () => Promise.resolve({});
   saveData = () => Promise.resolve();
   addCommand = () => {};
@@ -179,33 +188,43 @@ export class Modal {
   onClose() {}
 }
 
-export class App {
-  vault = {
-    adapter: {
-      exists: () => Promise.resolve(false),
-      getResourcePath: () => '/mock/path',
-      basePath: '/mock/path'
-    },
-    read: () => Promise.resolve(''),
-    readBinary: () => Promise.resolve(new ArrayBuffer(0)),
-    create: () => Promise.resolve(),
-    getAbstractFileByPath: () => null,
-    on: () => {},
-    off: () => {}
-  };
+export class PluginSettingTab {
+  app: any;
+  plugin: any;
+  containerEl: any;
   
-  workspace = {
-    getLeaf: () => new WorkspaceLeaf(),
-    setActiveLeaf: () => {},
-    revealLeaf: () => {},
-    splitActiveLeaf: () => new WorkspaceLeaf(),
-    on: () => {},
-    iterateAllLeaves: () => {},
-    detachLeavesOfType: () => {}
-  };
+  constructor(app: any, plugin: any) {
+    this.app = app;
+    this.plugin = plugin;
+    this.containerEl = createMockElement('div');
+  }
+  
+  display() {}
+  hide() {}
 }
 
-// Re-export everything as default
+// Mock Vault Adapter
+export class MockAdapter {
+  getBasePath() {
+    return '/mock/vault/root';
+  }
+  // 可根据需要添加更多方法
+}
+
+// Mock Vault
+export class MockVault {
+  adapter = new MockAdapter();
+}
+
+// Mock App
+export class MockApp {
+  vault = new MockVault();
+  // 可根据需要添加更多属性和方法
+}
+
+// 让 App 继承 MockApp
+export class App extends MockApp {}
+
 export default {
   Plugin,
   FileView,
@@ -213,5 +232,10 @@ export default {
   WorkspaceLeaf,
   TFile,
   Notice,
-  App
+  Modal,
+  PluginSettingTab,
+  App,
+  MockApp,
+  MockVault,
+  MockAdapter
 };
