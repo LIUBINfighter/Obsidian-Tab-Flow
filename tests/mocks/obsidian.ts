@@ -94,7 +94,10 @@ const createMockSelectElement = () => {
 
 export class Plugin {
   app: any;
-  manifest: any = { dir: '/mock/plugin/dir' };
+  manifest: any = { 
+    dir: '/mock/plugin/dir', 
+    id: 'interactive-tabs'
+  };
   
   constructor(app?: any, manifest?: any) {
     if (app) {
@@ -205,10 +208,36 @@ export class PluginSettingTab {
 
 // Mock Vault Adapter
 export class MockAdapter {
-  getBasePath() {
-    return '/mock/vault/root';
+  basePath: string;
+  
+  constructor() {
+    this.basePath = '/mock/vault/path';
   }
-  // 可根据需要添加更多方法
+  
+  getBasePath() {
+    return this.basePath;
+  }
+  
+  // 模拟文件系统检查，让 manifest.json 验证通过
+  exists(path: string): boolean {
+    // 如果是请求 manifest.json，返回 true
+    if (path.includes('manifest.json')) {
+      return true;
+    }
+    return false;
+  }
+  
+  // 模拟读取 manifest.json 文件
+  read(path: string): Promise<string> {
+    if (path.includes('manifest.json')) {
+      return Promise.resolve(JSON.stringify({
+        id: 'interactive-tabs',
+        name: 'Interactive Tabs',
+        version: '1.0.0'
+      }));
+    }
+    return Promise.reject(new Error('File not found'));
+  }
 }
 
 // Mock Vault
@@ -219,7 +248,6 @@ export class MockVault {
 // Mock App
 export class MockApp {
   vault = new MockVault();
-  // 可根据需要添加更多属性和方法
 }
 
 // 让 App 继承 MockApp

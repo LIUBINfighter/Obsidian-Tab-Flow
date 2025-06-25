@@ -1,6 +1,42 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import AlphaTabPlugin from '../../src/main';
 
+// Mock Node.js fs module
+vi.mock('fs', () => ({
+  existsSync: vi.fn((path: string) => {
+    // 模拟 manifest.json 文件存在
+    if (path.includes('manifest.json')) {
+      return true;
+    }
+    // 模拟其他资源文件存在
+    if (path.includes('assets') || path.includes('alphatab')) {
+      return true;
+    }
+    return false;
+  }),
+  readFileSync: vi.fn((path: string) => {
+    if (path.includes('manifest.json')) {
+      return JSON.stringify({
+        id: 'interactive-tabs',
+        name: 'Interactive Tabs',
+        version: '1.0.0'
+      });
+    }
+    return '';
+  }),
+  mkdirSync: vi.fn(),
+  copyFileSync: vi.fn(),
+  readdirSync: vi.fn(() => [])
+}));
+
+// Mock path module
+vi.mock('path', () => ({
+  join: vi.fn((...args: string[]) => args.join('/')),
+  dirname: vi.fn((path: string) => path.split('/').slice(0, -1).join('/')),
+  basename: vi.fn((path: string) => path.split('/').pop() || ''),
+  resolve: vi.fn((...args: string[]) => args.join('/'))
+}));
+
 // Mock obsidian module to include PluginSettingTab
 vi.mock('obsidian', async () => {
   // Get the actual mocked export from obsidian.ts mock file
