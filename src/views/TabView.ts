@@ -91,6 +91,11 @@ export class TabView extends FileView {
 			handleExportGpFile(this.atManager);
 		});
 
+		// 新增：谱表模式切换按钮
+		this.addAction("sheet-music", "切换谱表模式", () => {
+			this.cycleStaveProfile();
+		});
+
 		// 暂时注释掉 MIDI 下载按钮
 		// this.addAction("download", "下载 MIDI", this.downloadMidi.bind(this));
 
@@ -168,6 +173,9 @@ export class TabView extends FileView {
 					this.atManager.api.countInVolume = active ? 1 : 0;
 					this.uiManager.setCountInActive(active);
 				}
+			},
+			(profile) => { // 谱表模式切换回调
+				this.handleStaveProfileChange(profile);
 			}
 		);
 		// 初始化节拍器按钮状态
@@ -580,5 +588,62 @@ export class TabView extends FileView {
 		if (typeof this.atManager.render === 'function') {
 			this.atManager.render();
 		}
+	}
+
+	/**
+	 * 处理谱表模式切换
+	 * @param profile 新的谱表配置模式
+	 */
+	private handleStaveProfileChange(profile: alphaTab.StaveProfile): void {
+		if (!this.atManager || !this.atManager.api) {
+			console.warn("[TabView] AlphaTab API 未初始化，无法切换谱表模式");
+			return;
+		}
+
+		try {
+			// 更新 AlphaTab 设置中的谱表配置
+			this.atManager.api.settings.display.staveProfile = profile;
+			
+			// 应用设置更改
+			this.atManager.api.updateSettings();
+			
+			// 重新渲染乐谱以应用新的谱表模式
+			this.atManager.api.render();
+
+			// 获取模式名称用于显示通知
+			let modeName: string;
+			switch (profile) {
+				case alphaTab.StaveProfile.ScoreTab:
+					modeName = "五线谱+六线谱";
+					break;
+				case alphaTab.StaveProfile.Score:
+					modeName = "仅五线谱";
+					break;
+				case alphaTab.StaveProfile.Tab:
+					modeName = "仅六线谱";
+					break;
+				case alphaTab.StaveProfile.TabMixed:
+					modeName = "混合六线谱";
+					break;
+				default:
+					modeName = "默认模式";
+			}
+
+			// 显示模式切换通知
+			this.showNotice(`已切换至 ${modeName} 模式`);
+			
+			console.log(`[TabView] 谱表模式已切换至: ${modeName} (${profile})`);
+		} catch (error) {
+			console.error("[TabView] 切换谱表模式时发生错误:", error);
+			this.showError("切换谱表模式失败");
+		}
+	}
+
+	/**
+	 * 显示成功通知
+	 */
+	private showNotice(message: string): void {
+		// 暂时使用控制台输出，后续可以添加更好的通知机制
+		console.log(`[TabView] 通知: ${message}`);
 	}
 }

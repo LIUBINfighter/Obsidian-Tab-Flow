@@ -4,6 +4,8 @@ import { TimePositionDisplay } from "./components/controls/TimePositionDisplay";
 import { StopButton } from "./components/controls/StopButton";
 import { SelectControl } from "./components/controls/SelectControl";
 import { ToggleButton } from "./components/controls/ToggleButton";
+import { StaveProfileButton } from "./components/controls/StaveProfileButton";
+import * as alphaTab from "@coderline/alphatab";
 
 // 负责 AlphaTab 相关 UI 元素的创建与管理
 
@@ -21,6 +23,7 @@ interface IControls {
 	metronomeButton?: ToggleButton;
 	countInButton?: ToggleButton;
 	scrollFollowButton?: ToggleButton;
+	staveProfileButton?: StaveProfileButton;
 }
 
 export class ITabUIManager {
@@ -73,7 +76,8 @@ export class ITabUIManager {
 		onStop: () => void,
 		onZoomChange?: (v: number) => void,
 		onMetronomeToggle?: (active: boolean) => void,
-		onCountInToggle?: (active: boolean) => void
+		onCountInToggle?: (active: boolean) => void,
+		onStaveProfileChange?: (profile: alphaTab.StaveProfile) => void
 	) {
 		this.atControlsRef.empty();
 		// 时间显示元素
@@ -164,6 +168,18 @@ export class ITabUIManager {
 			}
 		});
 		this.atControlsRef.appendChild(this.controls.countInButton.getElement());
+		
+		// 谱表模式切换按钮
+		this.controls.staveProfileButton = new StaveProfileButton(this.atControlsRef, {
+			onClick: (profile: alphaTab.StaveProfile) => {
+				if (onStaveProfileChange) {
+					onStaveProfileChange(profile);
+				}
+			},
+			initialProfile: alphaTab.StaveProfile.Default,
+			className: 'stave-profile-control'
+		});
+		
 		// 光标跟随滚动按钮
 		// this.controls.scrollFollowButton = new ToggleButton({
 		// 	text: '跟随光标',
@@ -182,6 +198,7 @@ export class ITabUIManager {
 	get metronomeButton() { return this.controls.metronomeButton; }
 	get countInButton() { return this.controls.countInButton; }
 	get scrollFollowButton() { return this.controls.scrollFollowButton; }
+	get staveProfileButton() { return this.controls.staveProfileButton; }
 
 	showLoadingOverlay(message: string) {
 		this.atOverlayContentRef.setText(message);
