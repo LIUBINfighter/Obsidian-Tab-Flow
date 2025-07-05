@@ -1,17 +1,18 @@
-import { Plugin, TFile } from 'obsidian';
+import { Plugin, TFile } from "obsidian";
 import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
-import { ResourceLoaderService, AlphaTabResources } from './services/ResourceLoaderService';
+import {
+	ResourceLoaderService,
+	AlphaTabResources,
+} from "./services/ResourceLoaderService";
 import * as path from "path";
-
 
 interface MyPluginSettings {
 	mySetting: string;
-};
+}
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+	mySetting: "default",
 };
-
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -21,14 +22,14 @@ export default class MyPlugin extends Plugin {
 		await this.loadSettings();
 
 		// 获取插件目录
-		const pluginDir = this.manifest.dir || '';
+		const pluginDir = this.manifest.dir || "";
 
 		// 使用 ResourceLoaderService 加载资源
 		const resourceLoader = new ResourceLoaderService(this.app);
 		this.resources = await resourceLoader.load(pluginDir);
 
 		this.registerView(VIEW_TYPE_TAB, (leaf) => {
-			return new TabView(leaf, this, this.resources)
+			return new TabView(leaf, this, this.resources);
 		});
 
 		this.registerExtensions(
@@ -42,18 +43,33 @@ export default class MyPlugin extends Plugin {
 					item.setTitle("Create a new AlphaTab file")
 						.setIcon("plus")
 						.onClick(async () => {
-							const parent = file instanceof TFile ? this.app.vault.getAbstractFileByPath(path.dirname(file.path)) : file;
+							const parent =
+								file instanceof TFile
+									? this.app.vault.getAbstractFileByPath(
+											path.dirname(file.path)
+									  )
+									: file;
 							const baseName = "New guitar tab";
 							let filename = `${baseName}.alphatab`;
 							let i = 1;
-							const parentPath = parent && 'path' in parent ? (parent as {path: string}).path : "";
-							while (await this.app.vault.adapter.exists(path.join(parentPath, filename))) {
+							const parentPath =
+								parent && "path" in parent
+									? (parent as { path: string }).path
+									: "";
+							while (
+								await this.app.vault.adapter.exists(
+									path.join(parentPath, filename)
+								)
+							) {
 								filename = `${baseName} ${i}.alphatab`;
 								i++;
 							}
 							const newFilePath = path.join(parentPath, filename);
 							await this.app.vault.create(newFilePath, "");
-							const newFile = this.app.vault.getAbstractFileByPath(newFilePath);
+							const newFile =
+								this.app.vault.getAbstractFileByPath(
+									newFilePath
+								);
 							if (newFile instanceof TFile) {
 								const leaf = this.app.workspace.getLeaf(false);
 								await leaf.openFile(newFile);
@@ -61,10 +77,7 @@ export default class MyPlugin extends Plugin {
 						});
 				});
 
-				if (
-					file instanceof TFile &&
-					isGuitarProFile(file.extension)
-				) {
+				if (file instanceof TFile && isGuitarProFile(file.extension)) {
 					menu.addItem((item) => {
 						item.setTitle("Open as Guitar Tab (AlphaTab)")
 							.setIcon("music")
@@ -103,7 +116,11 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData()
+		);
 	}
 
 	async saveSettings() {
