@@ -45,9 +45,9 @@ export class TabView extends FileView {
             console.log('[TabView] Player state:', playerState);
             
             if (typeof playerState === 'number') {
-                // PlayerState.Ready = 2, 或者任何非0状态都可能表示已初始化
-                // @ts-ignore
-                return playerState >= 1;
+                // PlayerState 枚举值：0 = Paused, 1 = Playing, 2 = Paused
+                // 任何非负状态都表示播放器已初始化
+                return playerState >= 0;
             }
             
             // 备用检查：如果有 readyForPlayback 属性
@@ -59,7 +59,7 @@ export class TabView extends FileView {
             console.log('[TabView] Audio not ready yet');
             return false;
         } catch (error) {
-            console.warn('[TabView] 检查音频状态时出错:', error);
+            console.error('[TabView] Error checking audio status:', error);
             return false;
         }
     }
