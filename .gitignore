@@ -14,6 +14,9 @@ data.json
 # vscode
 .vscode 
 
+# repomix
+.repomix
+
 # Intellij
 *.iml
 .idea
