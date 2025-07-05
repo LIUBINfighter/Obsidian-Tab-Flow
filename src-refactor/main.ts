@@ -35,14 +35,25 @@ export default class MyPlugin extends Plugin {
 			console.log(`[AlphaTab] Loading AlphaTab from: ${alphaTabPath}`);
 			console.log(`[AlphaTab] Loading SoundFont from: ${soundFontPath}`);
 
+			// 检查文件是否存在
+			if (!await this.app.vault.adapter.exists(bravuraPath)) {
+				throw new Error(`Bravura font file not found at: ${bravuraPath}`);
+			}
+			if (!await this.app.vault.adapter.exists(alphaTabPath)) {
+				throw new Error(`AlphaTab file not found at: ${alphaTabPath}`);
+			}
+			if (!await this.app.vault.adapter.exists(soundFontPath)) {
+				throw new Error(`SoundFont file not found at: ${soundFontPath}`);
+			}
+
 			const bravura = await this.app.vault.adapter.readBinary(bravuraPath);
-			const bravuraBlob = new Blob([new Uint8Array(bravura)]);
+			const bravuraBlob = new Blob([new Uint8Array(bravura)], { type: 'font/woff2' });
 			const bravuraUri = URL.createObjectURL(bravuraBlob);
 
 			// NOTE: obsidian loads plugins in a similar way, they read the file and eval it.
 			// Following this practice we load the alphaTab file from the plugin dir and create a blob URI for usage.
 			const alphaTabWorkerData = await this.app.vault.adapter.readBinary(alphaTabPath);
-			const alphaTabWorkerUri = URL.createObjectURL(new Blob([new Uint8Array(alphaTabWorkerData)]));
+			const alphaTabWorkerUri = URL.createObjectURL(new Blob([new Uint8Array(alphaTabWorkerData)], { type: 'application/javascript' }));
 
 			const soundFontFile = await this.app.vault.adapter.readBinary(soundFontPath);
 			this.resources = {
@@ -52,6 +63,8 @@ export default class MyPlugin extends Plugin {
 			};
 			
 			console.log('[AlphaTab] 所有资源文件加载成功');
+			console.log(`[AlphaTab] Bravura URI: ${bravuraUri}`);
+			console.log(`[AlphaTab] AlphaTab Worker URI: ${alphaTabWorkerUri}`);
 		} catch (error) {
 			console.error('[AlphaTab] 无法加载必需的资源文件:', error);
 			console.error('[AlphaTab] Plugin directory:', pluginDir);

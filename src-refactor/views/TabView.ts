@@ -108,16 +108,43 @@ export class TabView extends FileView {
                 }
             }
         });
+        
+        // 添加错误处理
+        api.error.on((error) => {
+            console.error('[AlphaTab] Error occurred:', error);
+        });
+        
+        // 添加渲染事件监听
+        api.renderStarted.on((isResize) => {
+            console.log('[AlphaTab] Render started, isResize:', isResize);
+        });
+        
+        api.renderFinished.on((result) => {
+            console.log('[AlphaTab] Render finished');
+        });
+        
         this._api = api;
     }
 
     onunload(): void {
+        console.log("[TabView] Starting cleanup process");
+        
         // 注销文件监听
         this.unregisterFileWatcher();
         
-        // 销毁 AlphaTab API
+        // 销毁 AlphaTab API - 根据文档，这会清理所有内部资源
         if (this._api) {
-            this._api.destroy();
+            try {
+                // destroy() 方法会：
+                // 1. 设置 _isDestroyed 标志
+                // 2. 清理播放器资源
+                // 3. 清理 UI Facade 资源  
+                // 4. 清理渲染器资源
+                this._api.destroy();
+                console.log("[TabView] AlphaTab API destroyed successfully");
+            } catch (error) {
+                console.error("[TabView] Error destroying AlphaTab API:", error);
+            }
         }
         
         // 清理样式
@@ -125,16 +152,35 @@ export class TabView extends FileView {
             this._styles.remove();
         }
         
+        // 清理引用
         this.currentFile = null;
+        
         console.log("[TabView] View unloaded and resources cleaned up");
     }
 
     async onLoadFile(file: TFile): Promise<void> {
         this.currentFile = file;
-        this._api.loadSoundFont(new Uint8Array(this.resources.soundFontData));
+        
+        try {
+            // 确保 API 已初始化
+            if (!this._api) {
+                throw new Error('AlphaTab API not initialized');
+            }
+            
+            console.log(`[TabView] Loading file: ${file.name}`);
+            
+            // 加载音色库
+            this._api.loadSoundFont(new Uint8Array(this.resources.soundFontData));
 
-        const inputFile = await this.app.vault.readBinary(file);
-        this._api.load(new Uint8Array(inputFile));
+            // 读取并加载文件
+            const inputFile = await this.app.vault.readBinary(file);
+            this._api.load(new Uint8Array(inputFile));
+            
+            console.log(`[TabView] File loaded successfully: ${file.name}`);
+        } catch (error) {
+            console.error('[TabView] Failed to load file:', error);
+            // 在这里可以添加用户通知
+        }
     }
 
     // 注册文件变更监听
