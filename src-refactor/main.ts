@@ -30,7 +30,7 @@ export default class MyPlugin extends Plugin {
 			const bravuraPath = path.join(pluginDir, "assets-refactor", "Bravura.woff2");
 			const alphaTabPath = path.join(pluginDir, "assets-refactor", "alphaTab.min.js");
 			const soundFontPath = path.join(pluginDir, "assets-refactor", "sonivox.sf3");
-			
+
 			console.log(`[AlphaTab] Loading Bravura from: ${bravuraPath}`);
 			console.log(`[AlphaTab] Loading AlphaTab from: ${alphaTabPath}`);
 			console.log(`[AlphaTab] Loading SoundFont from: ${soundFontPath}`);
@@ -47,13 +47,15 @@ export default class MyPlugin extends Plugin {
 			}
 
 			const bravura = await this.app.vault.adapter.readBinary(bravuraPath);
-			const bravuraBlob = new Blob([new Uint8Array(bravura)], { type: 'font/woff2' });
-			const bravuraUri = URL.createObjectURL(bravuraBlob);
+			// 使用 Data URL 而不是 Blob URL 来避免 Obsidian 沙箱环境的网络访问限制
+			// 修复：使用分块处理避免栈溢出
+			const bravuraBase64 = this.arrayBufferToBase64(bravura);
+			const bravuraUri = `data:font/woff2;base64,${bravuraBase64}`;
 
-			// NOTE: obsidian loads plugins in a similar way, they read the file and eval it.
-			// Following this practice we load the alphaTab file from the plugin dir and create a blob URI for usage.
+			// 读取 alphaTab.min.js 并转换为 Data URL
 			const alphaTabWorkerData = await this.app.vault.adapter.readBinary(alphaTabPath);
-			const alphaTabWorkerUri = URL.createObjectURL(new Blob([new Uint8Array(alphaTabWorkerData)], { type: 'application/javascript' }));
+			const alphaTabBase64 = this.arrayBufferToBase64(alphaTabWorkerData);
+			const alphaTabWorkerUri = `data:application/javascript;base64,${alphaTabBase64}`;
 
 			const soundFontFile = await this.app.vault.adapter.readBinary(soundFontPath);
 			this.resources = {
@@ -61,10 +63,10 @@ export default class MyPlugin extends Plugin {
 				alphaTabWorkerUri: alphaTabWorkerUri,
 				soundFontData: new Uint8Array(soundFontFile)
 			};
-			
+
 			console.log('[AlphaTab] 所有资源文件加载成功');
-			console.log(`[AlphaTab] Bravura URI: ${bravuraUri}`);
-			console.log(`[AlphaTab] AlphaTab Worker URI: ${alphaTabWorkerUri}`);
+			console.log(`[AlphaTab] Bravura URI (Data URL): ${bravuraUri.substring(0, 100)}...`);
+			console.log(`[AlphaTab] AlphaTab Worker URI (Data URL): ${alphaTabWorkerUri.substring(0, 100)}...`);
 		} catch (error) {
 			console.error('[AlphaTab] 无法加载必需的资源文件:', error);
 			console.error('[AlphaTab] Plugin directory:', pluginDir);
@@ -92,7 +94,7 @@ export default class MyPlugin extends Plugin {
 							let i = 1;
 							
 							// 修复类型错误：确保 parent 存在且有 path 属性
-							const parentPath = parent && 'path' in parent ? (parent as any).path : "";
+							const parentPath = parent && 'path' in parent ? (parent as {path: string}).path : "";
 							
 							while (await this.app.vault.adapter.exists(path.join(parentPath, filename))) {
 								filename = `${baseName} ${i}.alphatab`;
@@ -143,19 +145,9 @@ export default class MyPlugin extends Plugin {
 	}
 
 	onunload() {
-		// 清理资源 URL
-		if (this.resources) {
-			if (this.resources.alphaTabWorkerUri) {
-				URL.revokeObjectURL(this.resources.alphaTabWorkerUri);
-			}
-			if (this.resources.bravuraUri) {
-				URL.revokeObjectURL(this.resources.bravuraUri);
-			}
-		}
-		
+		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
 		// 清理所有相关的视图
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_TAB);
-		
 		console.log("AlphaTab Plugin Unloaded");
 	}
 
@@ -165,6 +157,23 @@ export default class MyPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	/**
+	 * 将 ArrayBuffer 安全地转换为 Base64 字符串
+	 * 使用分块处理避免栈溢出
+	 */
+	private arrayBufferToBase64(buffer: ArrayBuffer): string {
+		const bytes = new Uint8Array(buffer);
+		const chunkSize = 0x8000; // 32KB chunks
+		let binaryString = '';
+		
+		for (let i = 0; i < bytes.length; i += chunkSize) {
+			const chunk = bytes.slice(i, i + chunkSize);
+			binaryString += String.fromCharCode(...chunk);
+		}
+		
+		return btoa(binaryString);
 	}
 }
 
