@@ -8,7 +8,7 @@
 		"d": "npm i @coderline/alphatab@1.5.0 && node ./scripts/merge-styles.js && node esbuild.config.mjs",
 		"dr": "npm i @coderline/alphatab@1.6.0 && node ./scripts/merge-styles.js && node esbuild.config.mjs --refactor",
 		"b": "npm i @coderline/alphatab@1.5.0 && node ./scripts/merge-styles.js && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"br": "npm i @coderline/alphatab@1.6.0 && node ./scripts/merge-styles.js && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"br": "npm i @coderline/alphatab@1.6.0 && node ./scripts/merge-styles.js && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production --refactor",
 		"v": "node version-bump.mjs && git add manifest.json versions.json",
 		"mix": "node ./scripts/mix-code.js",
 		"t": "vitest",
