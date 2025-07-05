@@ -95,6 +95,8 @@ Copyright (c) 2025 Jay Bridge and other contributors. All rights reserved.
 
 Licensed under the MPL 2.0 License.
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LIUBINfighter/interactive-tabs)
+
 <!-- ## Packages Using -->
 
 <!-- AlphaTab.js -->
