@@ -1,7 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
-const stylesDir = path.join(process.cwd(), './styles');
+// parse optional directory flag for styles
+const args = process.argv.slice(2);
+const dirFlagIndex = args.indexOf('--dir');
+const dirArg = dirFlagIndex !== -1 ? args[dirFlagIndex + 1] : './styles';
+const stylesDir = path.resolve(process.cwd(), dirArg);
 const outputFile = path.join(process.cwd(), './styles.css');
 
 if (!fs.existsSync(stylesDir)) {
@@ -13,7 +17,9 @@ const cssFiles = fs.readdirSync(stylesDir)
     .filter(f => f.endsWith('.css'))
     .sort();
 
-let merged = '';
+// prepend comment indicating current npm script
+const lifecycle = process.env.npm_lifecycle_event || '';
+let merged = lifecycle ? `/* build: ${lifecycle} */\n` : '';
 for (const file of cssFiles) {
     const filePath = path.join(stylesDir, file);
     merged += `/* --- ${file} --- */\n`;
