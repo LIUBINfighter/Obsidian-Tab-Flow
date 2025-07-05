@@ -5,7 +5,8 @@
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
-		"dev": "node ./scripts/merge-styles.js && node esbuild.config.mjs",
+		"dev": "npm i @coderline/alphatab@1.5.0 && node ./scripts/merge-styles.js && node esbuild.config.mjs",
+		"ref": "npm i @coderline/alphatab@1.6.0 && node ./scripts/merge-styles.js && node esbuild.config.mjs --refactor",
 		"build": "node ./scripts/merge-styles.js && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"mix": "node ./scripts/mix-code.js",
@@ -32,11 +33,12 @@
 		"tslib": "2.4.0",
 		"typescript": "4.7.4",
 		"vitest": "^1.6.0"
-	},	"dependencies": {
+	},
+	"dependencies": {
 		"@codemirror/commands": "^6.8.1",
 		"@codemirror/language": "^6.11.1",
 		"@codemirror/rangeset": "^0.19.2",
-		"@coderline/alphatab": "^1.5.0",
+		"@coderline/alphatab": "^1.6.0",
 		"@types/mime-types": "^3.0.0",
 		"jszip": "^3.10.1",
 		"mime-types": "^3.0.1"
