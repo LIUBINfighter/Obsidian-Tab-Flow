@@ -16,6 +16,7 @@ data.json
 
 # repomix
 .repomix
+repomix-output.txt
 
 # Intellij
 *.iml
