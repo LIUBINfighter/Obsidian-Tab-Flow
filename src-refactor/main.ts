@@ -1,16 +1,17 @@
 import { Plugin, TFile } from 'obsidian';
-import { AlphaTabResources, TabView, VIEW_TYPE_TAB } from "./views/TabView";
+import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
+import { ResourceLoaderService, AlphaTabResources } from './services/ResourceLoaderService';
 import * as path from "path";
 
-// Remember to rename these classes and interfaces!
 
 interface MyPluginSettings {
 	mySetting: string;
-}
+};
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: 'default'
-}
+};
+
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -19,59 +20,12 @@ export default class MyPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
-		// 获取正确的插件目录路径
-		// 修复：this.manifest.dir 已经是完整路径，不需要额外的 vaultRoot 拼接
+		// 获取插件目录
 		const pluginDir = this.manifest.dir || '';
-		
-		console.log(`[AlphaTab] Plugin directory: ${pluginDir}`);
 
-		try {
-			// 使用 assets-refactor 目录中的压缩资源
-			const bravuraPath = path.join(pluginDir, "assets-refactor", "Bravura.woff2");
-			const alphaTabPath = path.join(pluginDir, "assets-refactor", "alphaTab.min.js");
-			const soundFontPath = path.join(pluginDir, "assets-refactor", "sonivox.sf3");
-
-			console.log(`[AlphaTab] Loading Bravura from: ${bravuraPath}`);
-			console.log(`[AlphaTab] Loading AlphaTab from: ${alphaTabPath}`);
-			console.log(`[AlphaTab] Loading SoundFont from: ${soundFontPath}`);
-
-			// 检查文件是否存在
-			if (!await this.app.vault.adapter.exists(bravuraPath)) {
-				throw new Error(`Bravura font file not found at: ${bravuraPath}`);
-			}
-			if (!await this.app.vault.adapter.exists(alphaTabPath)) {
-				throw new Error(`AlphaTab file not found at: ${alphaTabPath}`);
-			}
-			if (!await this.app.vault.adapter.exists(soundFontPath)) {
-				throw new Error(`SoundFont file not found at: ${soundFontPath}`);
-			}
-
-			const bravura = await this.app.vault.adapter.readBinary(bravuraPath);
-			// 使用 Data URL 而不是 Blob URL 来避免 Obsidian 沙箱环境的网络访问限制
-			// 修复：使用分块处理避免栈溢出
-			const bravuraBase64 = this.arrayBufferToBase64(bravura);
-			const bravuraUri = `data:font/woff2;base64,${bravuraBase64}`;
-
-			// 读取 alphaTab.min.js 并转换为 Data URL
-			const alphaTabWorkerData = await this.app.vault.adapter.readBinary(alphaTabPath);
-			const alphaTabBase64 = this.arrayBufferToBase64(alphaTabWorkerData);
-			const alphaTabWorkerUri = `data:application/javascript;base64,${alphaTabBase64}`;
-
-			const soundFontFile = await this.app.vault.adapter.readBinary(soundFontPath);
-			this.resources = {
-				bravuraUri,
-				alphaTabWorkerUri: alphaTabWorkerUri,
-				soundFontData: new Uint8Array(soundFontFile)
-			};
-
-			console.log('[AlphaTab] 所有资源文件加载成功');
-			console.log(`[AlphaTab] Bravura URI (Data URL): ${bravuraUri.substring(0, 100)}...`);
-			console.log(`[AlphaTab] AlphaTab Worker URI (Data URL): ${alphaTabWorkerUri.substring(0, 100)}...`);
-		} catch (error) {
-			console.error('[AlphaTab] 无法加载必需的资源文件:', error);
-			console.error('[AlphaTab] Plugin directory:', pluginDir);
-			throw new Error('AlphaTab 插件资源文件加载失败，请检查插件安装路径。');
-		}
+		// 使用 ResourceLoaderService 加载资源
+		const resourceLoader = new ResourceLoaderService(this.app);
+		this.resources = await resourceLoader.load(pluginDir);
 
 		this.registerView(VIEW_TYPE_TAB, (leaf) => {
 			return new TabView(leaf, this, this.resources)
@@ -92,10 +46,7 @@ export default class MyPlugin extends Plugin {
 							const baseName = "New guitar tab";
 							let filename = `${baseName}.alphatab`;
 							let i = 1;
-							
-							// 修复类型错误：确保 parent 存在且有 path 属性
 							const parentPath = parent && 'path' in parent ? (parent as {path: string}).path : "";
-							
 							while (await this.app.vault.adapter.exists(path.join(parentPath, filename))) {
 								filename = `${baseName} ${i}.alphatab`;
 								i++;
@@ -157,23 +108,6 @@ export default class MyPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-
-	/**
-	 * 将 ArrayBuffer 安全地转换为 Base64 字符串
-	 * 使用分块处理避免栈溢出
-	 */
-	private arrayBufferToBase64(buffer: ArrayBuffer): string {
-		const bytes = new Uint8Array(buffer);
-		const chunkSize = 0x8000; // 32KB chunks
-		let binaryString = '';
-		
-		for (let i = 0; i < bytes.length; i += chunkSize) {
-			const chunk = bytes.slice(i, i + chunkSize);
-			binaryString += String.fromCharCode(...chunk);
-		}
-		
-		return btoa(binaryString);
 	}
 }
 

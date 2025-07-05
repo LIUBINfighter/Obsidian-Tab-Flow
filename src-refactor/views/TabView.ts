@@ -377,29 +377,4 @@ export class TabView extends FileView {
         this.currentFile = null;
         await super.onUnloadFile(file);
     }
-
-    // /**
-    //  * 使用 FontManager 进行多策略字体加载
-    //  * 结合 alphaTab 1.6.0 的新特性和成熟的回退机制
-    //  */
-    // private injectFontStyles(): void {
-    //     console.log('[TabView] Starting comprehensive font loading...');
-    //     
-    //     // 准备字体数据 - 使用我们的 Data URL
-    //     const fontData = {
-    //         'Bravura.woff2': this.resources.bravuraUri
-    //     };
-    //     
-    //     // 定义需要的字体族名 - 覆盖 alphaTab 可能使用的所有变体
-    //     const fontFamilies = [
-    //         'alphaTab',      // alphaTab 内部使用的字体名
-    //         'Bravura',       // 标准 SMuFL 字体名
-    //         'alphatab'       // 小写变体，以防万一
-    //     ];
-    //     
-    //     // 使用 FontManager 的综合加载策略
-    //     FontManager.loadFontsWithFallback(fontData, fontFamilies);
-    //     
-    //     console.log('[TabView] Font loading initiated with multiple strategies');
-    // }
 }
