@@ -1,9 +1,5 @@
-import { Plugin, TFile } from "obsidian";
-import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
-import {
-	initAlphaTabResources,
-	AlphaTabResources,
-} from "./initAlphaTabResources";
+import { Plugin, TFile } from 'obsidian';
+import { AlphaTabResources, TabView, VIEW_TYPE_TAB } from "./views/TabView";
 import * as path from "path";
 
 // Remember to rename these classes and interfaces!
@@ -13,40 +9,57 @@ interface MyPluginSettings {
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: "default",
-};
+	mySetting: 'default'
+}
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
 	resources!: AlphaTabResources;
-	private isResourcesLoaded = false;
 
 	async onload() {
 		await this.loadSettings();
 
+		// 获取正确的插件目录路径
+		// 修复：this.manifest.dir 已经是完整路径，不需要额外的 vaultRoot 拼接
+		const pluginDir = this.manifest.dir || '';
+		
+		console.log(`[AlphaTab] Plugin directory: ${pluginDir}`);
+
 		try {
-			this.resources = await initAlphaTabResources(
-				this,
-				"assets-refactor"
-			);
-			this.isResourcesLoaded = true;
-		} catch (error) {
-			console.error("Failed to load plugin resources:", error);
-			// 提供默认的空资源作为后备
+			// 使用 assets-refactor 目录中的压缩资源
+			const bravuraPath = path.join(pluginDir, "assets-refactor", "Bravura.woff2");
+			const alphaTabPath = path.join(pluginDir, "assets-refactor", "alphaTab.min.js");
+			const soundFontPath = path.join(pluginDir, "assets-refactor", "sonivox.sf3");
+			
+			console.log(`[AlphaTab] Loading Bravura from: ${bravuraPath}`);
+			console.log(`[AlphaTab] Loading AlphaTab from: ${alphaTabPath}`);
+			console.log(`[AlphaTab] Loading SoundFont from: ${soundFontPath}`);
+
+			const bravura = await this.app.vault.adapter.readBinary(bravuraPath);
+			const bravuraBlob = new Blob([new Uint8Array(bravura)]);
+			const bravuraUri = URL.createObjectURL(bravuraBlob);
+
+			// NOTE: obsidian loads plugins in a similar way, they read the file and eval it.
+			// Following this practice we load the alphaTab file from the plugin dir and create a blob URI for usage.
+			const alphaTabWorkerData = await this.app.vault.adapter.readBinary(alphaTabPath);
+			const alphaTabWorkerUri = URL.createObjectURL(new Blob([new Uint8Array(alphaTabWorkerData)]));
+
+			const soundFontFile = await this.app.vault.adapter.readBinary(soundFontPath);
 			this.resources = {
-				bravuraUri: "",
-				alphaTabWorkerUri: "",
-				soundFontData: new Uint8Array(),
+				bravuraUri,
+				alphaTabWorkerUri: alphaTabWorkerUri,
+				soundFontData: new Uint8Array(soundFontFile)
 			};
+			
+			console.log('[AlphaTab] 所有资源文件加载成功');
+		} catch (error) {
+			console.error('[AlphaTab] 无法加载必需的资源文件:', error);
+			console.error('[AlphaTab] Plugin directory:', pluginDir);
+			throw new Error('AlphaTab 插件资源文件加载失败，请检查插件安装路径。');
 		}
 
 		this.registerView(VIEW_TYPE_TAB, (leaf) => {
-			if (!this.isResourcesLoaded) {
-				console.warn(
-					"Resources not loaded, TabView may not function properly"
-				);
-			}
-			return new TabView(leaf, this, this.resources);
+			return new TabView(leaf, this, this.resources)
 		});
 
 		this.registerExtensions(
@@ -60,39 +73,21 @@ export default class MyPlugin extends Plugin {
 					item.setTitle("Create a new AlphaTab file")
 						.setIcon("plus")
 						.onClick(async () => {
-							const parent =
-								file instanceof TFile
-									? this.app.vault.getAbstractFileByPath(
-											path.dirname(file.path)
-									  )
-									: file;
-							if (!parent) {
-								console.error(
-									"Could not determine parent directory"
-								);
-								return;
-							}
-
+							const parent = file instanceof TFile ? this.app.vault.getAbstractFileByPath(path.dirname(file.path)) : file;
 							const baseName = "New guitar tab";
 							let filename = `${baseName}.alphatab`;
 							let i = 1;
-							while (
-								await this.app.vault.adapter.exists(
-									path.join(parent.path, filename)
-								)
-							) {
+							
+							// 修复类型错误：确保 parent 存在且有 path 属性
+							const parentPath = parent && 'path' in parent ? (parent as any).path : "";
+							
+							while (await this.app.vault.adapter.exists(path.join(parentPath, filename))) {
 								filename = `${baseName} ${i}.alphatab`;
 								i++;
 							}
-							const newFilePath = path.join(
-								parent.path,
-								filename
-							);
+							const newFilePath = path.join(parentPath, filename);
 							await this.app.vault.create(newFilePath, "");
-							const newFile =
-								this.app.vault.getAbstractFileByPath(
-									newFilePath
-								);
+							const newFile = this.app.vault.getAbstractFileByPath(newFilePath);
 							if (newFile instanceof TFile) {
 								const leaf = this.app.workspace.getLeaf(false);
 								await leaf.openFile(newFile);
@@ -100,7 +95,10 @@ export default class MyPlugin extends Plugin {
 						});
 				});
 
-				if (file instanceof TFile && isGuitarProFile(file.extension)) {
+				if (
+					file instanceof TFile &&
+					isGuitarProFile(file.extension)
+				) {
 					menu.addItem((item) => {
 						item.setTitle("Open as Guitar Tab (AlphaTab)")
 							.setIcon("music")
@@ -132,7 +130,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	onunload() {
-		// 清理 blob URLs
+		// 清理资源 URL
 		if (this.resources) {
 			if (this.resources.alphaTabWorkerUri) {
 				URL.revokeObjectURL(this.resources.alphaTabWorkerUri);
@@ -141,17 +139,15 @@ export default class MyPlugin extends Plugin {
 				URL.revokeObjectURL(this.resources.bravuraUri);
 			}
 		}
-
-		// 分离所有相关的视图
+		
+		// 清理所有相关的视图
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_TAB);
+		
+		console.log("AlphaTab Plugin Unloaded");
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
