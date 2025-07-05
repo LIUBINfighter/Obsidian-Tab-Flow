@@ -8,7 +8,7 @@ import * as convert from "color-convert";
 export type AlphaTabResources = {
 	bravuraUri: string;
 	alphaTabWorkerUri: string;
-	soundFontData: Uint8Array;
+	soundFontUri: string;
 };
 
 export class TabView extends FileView {
@@ -246,6 +246,7 @@ export class TabView extends FileView {
 				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
 				enableCursor: true, // 启用播放光标
 				enableAnimatedBeatCursor: true, // 启用动画节拍光标
+				soundFont: this.resources.soundFontUri, // 使用URL加载SoundFont
 			},
 			display: {
 				resources: {
@@ -349,12 +350,6 @@ export class TabView extends FileView {
 			}
 
 			console.log(`[TabView] Loading file: ${file.name}`);
-
-			// 首先加载音色库 - 这是音频功能的前提
-			console.log("[TabView] Loading SoundFont...");
-			this._api.loadSoundFont(
-				new Uint8Array(this.resources.soundFontData)
-			);
 
 			// 读取并加载文件
 			const inputFile = await this.app.vault.readBinary(file);
