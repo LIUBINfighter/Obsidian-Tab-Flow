@@ -5,7 +5,11 @@ import {
 	AlphaTabResources,
 } from "./services/ResourceLoaderService";
 import * as path from "path";
-import { SettingTab, TabFlowSettings, DEFAULT_SETTINGS } from "./settings/SettingTab";
+import {
+	SettingTab,
+	TabFlowSettings,
+	DEFAULT_SETTINGS,
+} from "./settings/SettingTab";
 
 export default class MyPlugin extends Plugin {
 	settings: TabFlowSettings;
@@ -43,7 +47,7 @@ export default class MyPlugin extends Plugin {
 								file instanceof TFile
 									? this.app.vault.getAbstractFileByPath(
 											path.dirname(file.path)
-									  )
+									)
 									: file;
 							const baseName = "New guitar tab";
 							let filename = `${baseName}.alphatab`;
@@ -130,4 +134,3 @@ export function isGuitarProFile(extension: string | undefined): boolean {
 		extension.toLowerCase()
 	);
 }
-

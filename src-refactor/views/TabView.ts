@@ -397,4 +397,3 @@ export class TabView extends FileView {
 		await super.onUnloadFile(file);
 	}
 }
-

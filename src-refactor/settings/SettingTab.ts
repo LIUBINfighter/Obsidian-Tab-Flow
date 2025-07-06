@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, Notice } from "obsidian";
+import { App, Plugin, PluginSettingTab, Setting, Notice } from "obsidian";
 import * as path from "path";
 import * as fs from "fs";
 import MyPlugin from "../main";
@@ -26,11 +26,13 @@ export class SettingTab extends PluginSettingTab {
 
 		// 顶部标签页样式
 		const tabs = containerEl.createDiv({ cls: "itabs-settings-tabs" });
-		const tabContents = containerEl.createDiv({ cls: "itabs-settings-contents" });
+		const tabContents = containerEl.createDiv({
+			cls: "itabs-settings-contents",
+		});
 
 		const tabList = [
 			{ id: "general", name: "资产管理" },
-			{ id: "about", name: "关于" }
+			{ id: "about", name: "关于" },
 		];
 
 		let activeTab = "general";
@@ -57,13 +59,18 @@ export class SettingTab extends PluginSettingTab {
 							)
 							.setCta()
 							.onClick(async () => {
-								button.setButtonText("正在下载...").setDisabled(true);
+								button
+									.setButtonText("正在下载...")
+									.setDisabled(true);
 
-								const success = await this.plugin.downloadAssets?.();
+								const success =
+									await this.plugin.downloadAssets?.();
 
 								if (success) {
-									this.plugin.settings.assetsDownloaded = true;
-									this.plugin.settings.lastAssetsCheck = Date.now();
+									this.plugin.settings.assetsDownloaded =
+										true;
+									this.plugin.settings.lastAssetsCheck =
+										Date.now();
 									await this.plugin.saveSettings();
 									new Notice(
 										"AlphaTab 资源文件已下载完成，请重新启动 Obsidian 以应用更改",
@@ -106,7 +113,9 @@ export class SettingTab extends PluginSettingTab {
 
 				new Setting(tabContents)
 					.setName("资源下载链接")
-					.setDesc("如果自动下载失败，您可以手动下载资源文件并解压到插件目录")
+					.setDesc(
+						"如果自动下载失败，您可以手动下载资源文件并解压到插件目录"
+					)
 					.addButton((button) =>
 						button.setButtonText("复制链接").onClick(() => {
 							navigator.clipboard
@@ -124,13 +133,17 @@ export class SettingTab extends PluginSettingTab {
 					cls: "setting-item-description",
 				});
 				urlContainer.createEl("strong", { text: "下载地址: " });
-				const urlEl = urlContainer.createEl("span", { text: assetsUrl });
+				const urlEl = urlContainer.createEl("span", {
+					text: assetsUrl,
+				});
 				urlEl.style.wordBreak = "break-all";
 
 				if (this.plugin.actualPluginDir) {
 					new Setting(tabContents)
 						.setName("打开资产目录")
-						.setDesc("打开插件的 assets-refactor 目录，方便手动管理资源文件")
+						.setDesc(
+							"打开插件的 assets-refactor 目录，方便手动管理资源文件"
+						)
 						.addButton((button) =>
 							button.setButtonText("打开目录").onClick(() => {
 								const assetsPath = path.join(
@@ -139,14 +152,18 @@ export class SettingTab extends PluginSettingTab {
 								);
 								try {
 									if (!fs.existsSync(assetsPath)) {
-										fs.mkdirSync(assetsPath, { recursive: true });
+										fs.mkdirSync(assetsPath, {
+											recursive: true,
+										});
 									}
 									const fileUrl = `file://${assetsPath}`;
 									window.open(fileUrl);
 									new Notice("已尝试打开资产目录");
 								} catch (error) {
 									console.error("打开资产目录失败:", error);
-									new Notice(`打开目录失败: ${error.message}`);
+									new Notice(
+										`打开目录失败: ${error.message}`
+									);
 								}
 							})
 						);
@@ -190,17 +207,24 @@ export class SettingTab extends PluginSettingTab {
 				});
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });
-				tabContents.createEl("p", { text: "AlphaTab 插件 by YourName." });
+				tabContents.createEl("p", {
+					text: "AlphaTab 插件 by YourName.",
+				});
 			}
 		};
 
-		tabList.forEach(tab => {
+		tabList.forEach((tab) => {
 			const tabEl = tabs.createEl("button", {
 				text: tab.name,
-				cls: ["itabs-settings-tab", tab.id === activeTab ? "active" : ""]
+				cls: [
+					"itabs-settings-tab",
+					tab.id === activeTab ? "active" : "",
+				],
 			});
 			tabEl.onclick = () => {
-				tabs.querySelectorAll("button").forEach(btn => btn.removeClass("active"));
+				tabs.querySelectorAll("button").forEach((btn) =>
+					btn.removeClass("active")
+				);
 				tabEl.addClass("active");
 				activeTab = tab.id;
 				renderTab(tab.id);
