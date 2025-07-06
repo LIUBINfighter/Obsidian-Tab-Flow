@@ -141,11 +141,11 @@ export class TabView extends FileView {
 		// 注册文件变更监听
 		this.registerFileWatcher();
 
-		// 工具栏
-		const toolbar = this.contentEl.createDiv();
+		// --- 封装 debug-bar ---
+		const debugBar = this.contentEl.createDiv({ cls: "debug-bar" });
 
-		// 播放/暂停按钮
-		const playPause = toolbar.createEl("button");
+		// 工具栏按钮和状态
+		const playPause = debugBar.createEl("button");
 		playPause.innerText = "播放/暂停";
 		playPause.onclick = () => {
 			if (!this._api) {
@@ -173,8 +173,7 @@ export class TabView extends FileView {
 			}
 		};
 
-		// 停止按钮
-		const stopBtn = toolbar.createEl("button");
+		const stopBtn = debugBar.createEl("button");
 		stopBtn.innerText = "停止";
 		stopBtn.onclick = () => {
 			if (!this._api) {
@@ -196,8 +195,7 @@ export class TabView extends FileView {
 			}
 		};
 
-		// 检查音频文件加载状态
-		const audioStatus = toolbar.createEl("span");
+		const audioStatus = debugBar.createEl("span");
 		audioStatus.style.marginLeft = "1em";
 		audioStatus.style.fontSize = "0.9em";
 		audioStatus.innerText = "音频：未加载";
@@ -229,6 +227,7 @@ export class TabView extends FileView {
 				audioStatus.style.color = "orange";
 			}
 		};
+		// --- end 封装 debug-bar ---
 
 		const element = this.contentEl.createDiv({ cls: cls });
 		const style = window.getComputedStyle(element);
@@ -398,3 +397,4 @@ export class TabView extends FileView {
 		await super.onUnloadFile(file);
 	}
 }
+

@@ -1,1 +1,6 @@
 /* build: dev:refactor */
+/* --- debug.css --- */
+.debug-bar {
+	/* display: none !important; */
+}
+
