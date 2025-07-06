@@ -5,21 +5,17 @@ import {
 	AlphaTabResources,
 } from "./services/ResourceLoaderService";
 import * as path from "path";
-
-interface MyPluginSettings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: "default",
-};
+import { SettingTab, TabFlowSettings, DEFAULT_SETTINGS } from "./settings/SettingTab";
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+	settings: TabFlowSettings;
 	resources!: AlphaTabResources;
 
 	async onload() {
 		await this.loadSettings();
+
+		// 注册设置面板
+		this.addSettingTab(new SettingTab(this.app, this));
 
 		// 获取插件目录
 		const pluginDir = this.manifest.dir || "";
@@ -134,3 +130,4 @@ export function isGuitarProFile(extension: string | undefined): boolean {
 		extension.toLowerCase()
 	);
 }
+

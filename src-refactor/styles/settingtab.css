@@ -1,10 +1,3 @@
-/* build: dev:refactor */
-/* --- debug.css --- */
-.debug-bar {
-	/* display: none !important; */
-}
-
-/* --- settingtab.css --- */
 .itabs-settings-tabs {
 	display: flex;
 	border-bottom: 1px solid var(--background-modifier-border);
@@ -37,4 +30,3 @@
 .itabs-settings-contents {
 	padding: 1em 0;
 }
-
