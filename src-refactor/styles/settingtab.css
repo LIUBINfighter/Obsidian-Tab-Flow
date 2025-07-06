@@ -30,3 +30,35 @@
 .itabs-settings-contents {
 	padding: 1em 0;
 }
+
+.setting-item-description {
+	color: var(--text-muted);
+	font-size: 0.95em;
+	margin-bottom: 0.5em;
+}
+
+pre.setting-item-description {
+	background-color: var(--background-secondary);
+	padding: 10px;
+	border-radius: 5px;
+	overflow-x: auto;
+	font-family: monospace;
+	margin-top: 8px;
+	margin-bottom: 16px;
+}
+
+pre.setting-item-description code {
+	white-space: pre;
+	font-size: 0.85em;
+}
+
+ol.setting-item-description,
+ul.setting-item-description {
+	margin-left: 1.5em;
+	margin-bottom: 0.5em;
+}
+
+ol.setting-item-description li,
+ul.setting-item-description li {
+	margin-bottom: 0.2em;
+}
