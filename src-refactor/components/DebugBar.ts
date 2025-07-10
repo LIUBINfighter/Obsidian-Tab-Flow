@@ -108,7 +108,9 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     debugBar.appendChild(metronomeLabel);
     const metronomeToggle = document.createElement("input");
     metronomeToggle.type = "checkbox";
-    metronomeToggle.checked = true;
+    metronomeToggle.checked = false;
+    // 初始同步 API
+    if (api) api.metronomeVolume = 0;
     metronomeToggle.onchange = () => {
         if (!api) return;
         dispatchUIEvent(api, { domain: "player", type: "setMetronome", payload: { type: "setMetronome", value: metronomeToggle.checked } });
@@ -122,7 +124,9 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     debugBar.appendChild(countInLabel);
     const countInToggle = document.createElement("input");
     countInToggle.type = "checkbox";
-    countInToggle.checked = true;
+    countInToggle.checked = false;
+    // 初始同步 API
+    if (api) api.countInVolume = 0;
     countInToggle.onchange = () => {
         if (!api) return;
         dispatchUIEvent(api, { domain: "player", type: "setCountIn", payload: { type: "setCountIn", value: countInToggle.checked } });
