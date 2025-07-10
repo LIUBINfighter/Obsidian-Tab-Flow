@@ -156,19 +156,31 @@ export class TabView extends FileView {
 			// 动态 import 兼容 ESM/CJS
 			import("../components/TracksModal").then(mod => {
 				const TracksModal = mod.TracksModal;
-				const modal = new TracksModal(this.app!, this._api.score.tracks, (selectedTracks) => {
-					if (selectedTracks && selectedTracks.length > 0) {
-						if (typeof this._api.setRenderTracks === 'function') {
-							this._api.setRenderTracks(selectedTracks);
-						} else if (typeof this._api.updateRenderTracks === 'function') {
-							this._api.updateRenderTracks(selectedTracks);
-						} else {
-							new Notice("当前 AlphaTab API 不支持音轨切换");
-						}
-						this._api.render();
-					}
+				import("../events/trackEvents").then(eventMod => {
+					const handleTrackEvent = eventMod.handleTrackEvent;
+					const modal = new TracksModal(
+						this.app!,
+						this._api.score.tracks,
+						(selectedTracks) => {
+							if (selectedTracks && selectedTracks.length > 0) {
+								if (typeof this._api.renderTracks === 'function') {
+									this._api.renderTracks(selectedTracks);
+								} else if (typeof this._api.setRenderTracks === 'function') {
+									this._api.setRenderTracks(selectedTracks);
+								} else if (typeof this._api.updateRenderTracks === 'function') {
+									this._api.updateRenderTracks(selectedTracks);
+								} else {
+									new Notice("当前 AlphaTab API 不支持音轨切换");
+								}
+								if (typeof this._api.render === 'function') {
+									this._api.render();
+								}
+							}
+						},
+						(payload) => handleTrackEvent(this._api, payload)
+					);
+					modal.open();
 				});
-				modal.open();
 			}).catch(e => {
 				new Notice("无法加载 TracksModal 组件: " + e.message);
 			});

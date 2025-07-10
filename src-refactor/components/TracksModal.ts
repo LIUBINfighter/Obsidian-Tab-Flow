@@ -1,24 +1,74 @@
 import { Modal, Setting, App, Notice } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
+import type { TrackEventPayload } from "../events/trackEvents";
+
 
 export class TracksModal extends Modal {
-    private tracks: alphaTab.model.Track[];
     private selectedTracks: Set<alphaTab.model.Track>;
-    private onChange?: (tracks: alphaTab.model.Track[]) => void;
 
-    constructor(app: App, tracks: alphaTab.model.Track[], onChange?: (tracks: alphaTab.model.Track[]) => void) {
+    constructor(
+        app: App,
+        private tracks: alphaTab.model.Track[],
+        private onChange?: (tracks: alphaTab.model.Track[]) => void,
+        private onTrackEvent?: (payload: TrackEventPayload) => void
+    ) {
         super(app);
-        this.tracks = tracks;
-        this.onChange = onChange;
         this.selectedTracks = new Set(tracks.length > 0 ? [tracks[0]] : []);
         this.modalEl.addClass("tracks-modal");
     }
 
     onOpen() {
         this.contentEl.empty();
-        this.titleEl.setText("选择要显示的音轨");
+        this.titleEl.setText("");
+        // 创建标题栏容器
+        const titleBar = document.createElement("div");
+        titleBar.style.display = "flex";
+        titleBar.style.alignItems = "center";
+        titleBar.style.justifyContent = "space-between";
+        titleBar.style.marginBottom = "1em";
+        titleBar.style.position = "sticky";
+        titleBar.style.top = "0";
+        titleBar.style.background = "var(--background-primary, #fff)";
+        titleBar.style.zIndex = "10";
+        // 标题
+        const titleText = document.createElement("span");
+        titleText.textContent = "选择要显示的音轨";
+        titleText.style.fontWeight = "bold";
+        // 按钮容器
+        const btnGroup = document.createElement("div");
+        btnGroup.style.display = "flex";
+        btnGroup.style.gap = "0.5em";
+        // 应用按钮
+        const applyBtn = document.createElement("button");
+        applyBtn.textContent = "应用";
+        applyBtn.className = "mod-cta";
+        applyBtn.onclick = () => {
+            this.onSelectTrack();
+            this.close();
+        };
+        // 取消按钮
+        const cancelBtn = document.createElement("button");
+        cancelBtn.textContent = "取消";
+        cancelBtn.onclick = () => {
+            this.close();
+        };
+        btnGroup.appendChild(applyBtn);
+        btnGroup.appendChild(cancelBtn);
+        titleBar.appendChild(titleText);
+        titleBar.appendChild(btnGroup);
+        this.titleEl.appendChild(titleBar);
+
+        // 创建滚动容器
+        const scrollContainer = document.createElement("div");
+        scrollContainer.style.overflowY = "auto";
+        scrollContainer.style.maxHeight = "50vh";
+        scrollContainer.style.paddingRight = "4px";
+        // 可根据需要调整 maxHeight
+
+        this.contentEl.appendChild(scrollContainer);
+
         this.tracks.forEach((track) => {
-            const trackSetting = new Setting(this.contentEl)
+            const trackSetting = new Setting(scrollContainer)
                 .setName(track.name)
                 .setDesc(track.shortName || `Track ${track.index + 1}`);
 
@@ -36,26 +86,26 @@ export class TracksModal extends Modal {
             });
 
             // 静音/独奏按钮
+            // 独奏按钮
             trackSetting.addExtraButton(btn => {
                 btn.setIcon(track.playbackInfo.isSolo ? "headphones" : "headphones")
                     .setTooltip("独奏")
                     .onClick(() => {
-                        track.playbackInfo.isSolo = !track.playbackInfo.isSolo;
-                        if (typeof (track as any).api?.changeTrackSolo === "function") {
-                            (track as any).api.changeTrackSolo([track], track.playbackInfo.isSolo);
-                        }
-                        btn.setIcon(track.playbackInfo.isSolo ? "headphones" : "headphones");
+                        const newSolo = !track.playbackInfo.isSolo;
+                        track.playbackInfo.isSolo = newSolo;
+                        this.onTrackEvent?.({ type: "solo", track, value: newSolo });
+                        btn.setIcon(newSolo ? "headphones" : "headphones");
                     });
             });
+            // 静音按钮
             trackSetting.addExtraButton(btn => {
                 btn.setIcon(track.playbackInfo.isMute ? "volume-x" : "volume-2")
                     .setTooltip("静音")
                     .onClick(() => {
-                        track.playbackInfo.isMute = !track.playbackInfo.isMute;
-                        if (typeof (track as any).api?.changeTrackMute === "function") {
-                            (track as any).api.changeTrackMute([track], track.playbackInfo.isMute);
-                        }
-                        btn.setIcon(track.playbackInfo.isMute ? "volume-x" : "volume-2");
+                        const newMute = !track.playbackInfo.isMute;
+                        track.playbackInfo.isMute = newMute;
+                        this.onTrackEvent?.({ type: "mute", track, value: newMute });
+                        btn.setIcon(newMute ? "volume-x" : "volume-2");
                     });
             });
 
@@ -82,9 +132,7 @@ export class TracksModal extends Modal {
             // 事件同步
             const updateVolume = (newVolume: number) => {
                 newVolume = Math.max(0, Math.min(16, newVolume));
-                if (typeof (track as any).api?.changeTrackVolume === "function") {
-                    (track as any).api.changeTrackVolume([track], newVolume / track.playbackInfo.volume);
-                }
+                this.onTrackEvent?.({ type: "volume", track, value: newVolume });
                 track.playbackInfo.volume = newVolume;
                 volumeSlider.value = String(newVolume);
                 volumeValue.textContent = String(newVolume);
@@ -124,11 +172,11 @@ export class TracksModal extends Modal {
             transposeInput.value = "0";
             transposeInput.style.width = "3em";
             const updateTranspose = (newVal: number) => {
-                newVal = Math.max(-12, Math.min(12, newVal));
-                (track as any).transposeFull = newVal;
-                transposeSlider.value = String(newVal);
-                transposeValue.textContent = String(newVal);
-                transposeInput.value = String(newVal);
+                const v = Math.max(-12, Math.min(12, newVal));
+                this.onTrackEvent?.({ type: "transpose", track, value: v });
+                transposeSlider.value = String(v);
+                transposeValue.textContent = String(v);
+                transposeInput.value = String(v);
             };
             transposeSlider.oninput = (e) => {
                 updateTranspose(Number((e.target as HTMLInputElement).value));
@@ -164,11 +212,11 @@ export class TracksModal extends Modal {
             transposeAudioInput.value = "0";
             transposeAudioInput.style.width = "3em";
             const updateTransposeAudio = (newVal: number) => {
-                newVal = Math.max(-12, Math.min(12, newVal));
-                (track as any).transposeAudio = newVal;
-                transposeAudioSlider.value = String(newVal);
-                transposeAudioValue.textContent = String(newVal);
-                transposeAudioInput.value = String(newVal);
+                const v = Math.max(-12, Math.min(12, newVal));
+                this.onTrackEvent?.({ type: "transposeAudio", track, value: v });
+                transposeAudioSlider.value = String(v);
+                transposeAudioValue.textContent = String(v);
+                transposeAudioInput.value = String(v);
             };
             transposeAudioSlider.oninput = (e) => {
                 updateTransposeAudio(Number((e.target as HTMLInputElement).value));
@@ -183,21 +231,7 @@ export class TracksModal extends Modal {
             trackSetting.settingEl.appendChild(transposeAudioDiv);
         });
 
-        new Setting(this.contentEl)
-            .addButton((button) =>
-                button
-                    .setButtonText("应用")
-                    .setCta()
-                    .onClick(() => {
-                        this.onSelectTrack();
-                        this.close();
-                    })
-            )
-            .addButton((button) =>
-                button.setButtonText("取消").onClick(() => {
-                    this.close();
-                })
-            );
+        // 底部不再添加按钮
     }
 
     private onSelectTrack() {
@@ -205,20 +239,7 @@ export class TracksModal extends Modal {
             (a, b) => a.index - b.index
         );
         // 处理音轨移调、音量等批量应用
-        selectTracks.forEach(track => {
-            // 处理音频移调
-            if (typeof (track as any).api?.changeTrackTranspositionPitch === "function" && (track as any).transposeAudio !== undefined) {
-                (track as any).api.changeTrackTranspositionPitch([track], (track as any).transposeAudio);
-            }
-            // 处理全局移调
-            if ((track as any).transposeFull !== undefined && (track as any).api?.settings?.notation?.transpositionPitches) {
-                const pitches = (track as any).api.settings.notation.transpositionPitches;
-                while (pitches.length < track.index + 1) pitches.push(0);
-                pitches[track.index] = (track as any).transposeFull;
-                (track as any).api.updateSettings();
-                (track as any).api.render();
-            }
-        });
+        // 这里不再批量处理，交由外部业务逻辑处理
         this.onChange?.(selectTracks);
     }
 
