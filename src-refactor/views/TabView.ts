@@ -5,6 +5,7 @@ export const VIEW_TYPE_TAB = "tab-view";
 import * as alphaTab from "@coderline/alphatab";
 import * as convert from "color-convert";
 import { registerApiEventHandlers } from "../events/apiEventHandlers";
+import { CursorScrollManager } from "../scrolling/CursorScrollManager";
 
 export type AlphaTabResources = {
 	bravuraUri: string;
@@ -19,6 +20,7 @@ export class TabView extends FileView {
 	private _fontStyle: HTMLStyleElement | null = null; // 新增属性
 	private currentFile: TFile | null = null;
 	private fileModifyHandler: (file: TFile) => void;
+	private cursorScrollManager: CursorScrollManager; // 光标滚动管理器
 
 	/**
 	 * 检查音频是否已加载
@@ -27,7 +29,7 @@ export class TabView extends FileView {
 		try {
 			// 基本检查：API 和 player 是否存在
 			if (!this._api?.player) {
-				console.log("[TabView] Player not available");
+				console.debug("[TabView] Player not available");
 				return false;
 			}
 
@@ -38,14 +40,14 @@ export class TabView extends FileView {
 				// @ts-ignore
 				typeof this._api.player.pause === "function"
 			) {
-				console.log("[TabView] Player methods available - audio ready");
+				console.debug("[TabView] Player methods available - audio ready");
 				return true;
 			}
 
 			// 检查 player 状态
 			// @ts-ignore
 			const playerState = this._api.player.state;
-			console.log("[TabView] Player state:", playerState);
+			console.debug("[TabView] Player state:", playerState);
 
 			if (typeof playerState === "number") {
 				// PlayerState 枚举值：0 = Paused, 1 = Playing, 2 = Paused
@@ -59,7 +61,7 @@ export class TabView extends FileView {
 				return true;
 			}
 
-			console.log("[TabView] Audio not ready yet");
+			console.debug("[TabView] Audio not ready yet");
 			return false;
 		} catch (error) {
 			console.error("[TabView] Error checking audio status:", error);
@@ -74,6 +76,17 @@ export class TabView extends FileView {
 	) {
 		super(leaf);
 
+		// 初始化光标滚动管理器
+		this.cursorScrollManager = new CursorScrollManager({
+			enabled: true,
+			smoothScroll: true,
+			offsetY: -25,  // 负值在顶部预留空间，与Vue版本保持一致
+			offsetX: 25,
+			scrollSpeed: 500,  // 增加滚动时间，使动画更平滑
+			autoScrollOnPlay: true,
+			alwaysScrollToBottom: false
+		});
+
 		// 初始化文件修改监听处理器
 		this.fileModifyHandler = (file: TFile) => {
 			// 检查修改的文件是否是当前打开的文件
@@ -82,7 +95,7 @@ export class TabView extends FileView {
 				file &&
 				file.path === this.currentFile.path
 			) {
-				console.log(
+				console.debug(
 					`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`
 				);
 				this.reloadFile();
@@ -110,7 +123,7 @@ export class TabView extends FileView {
 		this._fontStyle.id = `alphatab-font-style-${TabView.instanceId}`;
 		this._fontStyle.innerHTML = fontFaceRule;
 		this.containerEl.ownerDocument.head.appendChild(this._fontStyle);
-		console.log(`[TabView] Injected @font-face rule for alphaTab font.`);
+		console.debug(`[TabView] Injected @font-face rule for alphaTab font.`);
 		// --- END: 新增字体注入逻辑 ---
 
 		const cls = `alphatab-${TabView.instanceId++}`;
@@ -181,6 +194,10 @@ export class TabView extends FileView {
 				},
 			},
 		});
+
+		// 设置光标滚动管理器的 API 引用
+		this.cursorScrollManager.setApi(this._api);
+		console.debug("[TabView] ✅ CursorScrollManager 已设置 API 引用");
 
 		// 3. 渲染 DebugBar
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -254,17 +271,17 @@ export class TabView extends FileView {
 
 		// 添加渲染事件监听
 		this._api.renderStarted.on((isResize) => {
-			console.log("[AlphaTab] Render started, isResize:", isResize);
+			console.debug("[AlphaTab] Render started, isResize:", isResize);
 		});
 
 		this._api.renderFinished.on((result) => {
-			console.log("[AlphaTab] Render finished");
+			console.debug("[AlphaTab] Render finished");
 		});
 
 		// --- START: 补充播放器事件监听 ---
 		// 播放器就绪
 		this._api.playerReady.on(() => {
-			console.log("[AlphaTab] Player ready");
+			console.debug("[AlphaTab] Player ready");
 			// 滚动到当前光标位置
 			if (typeof this._api.scrollToCursor === 'function') {
 				this._api.scrollToCursor();
@@ -272,7 +289,7 @@ export class TabView extends FileView {
 		});
 		// 播放状态改变
 		this._api.playerStateChanged.on((args) => {
-			console.log("[AlphaTab] Player state changed:", args.state);
+			console.debug("[AlphaTab] Player state changed:", args.state);
 			// 播放时自动滚动到当前位置
 			if (args.state === alphaTab.synth.PlayerState.Playing) {
 				if (typeof this._api.scrollToCursor === 'function') {
@@ -282,22 +299,19 @@ export class TabView extends FileView {
 		});
 		// 播放位置改变
 		this._api.playerPositionChanged.on((args) => {
-			console.log(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`);
-			// 每次位置变化时滚动
-			if (typeof this._api.scrollToCursor === 'function') {
-				this._api.scrollToCursor();
-			}
+			// console.debug(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`);
+			// 使用光标滚动管理器处理滚动
+			this.cursorScrollManager.handlePlayerPositionChanged(args);
 		});
 		// 播放结束
 		this._api.playerFinished.on(() => {
-			console.log("[AlphaTab] Playback finished");
+			console.debug("[AlphaTab] Playback finished");
 		});
 		// MIDI 事件播放
 		this._api.midiEventsPlayed.on((evt) => {
 			evt.events.forEach((midi) => {
-				if (midi.isMetronome) {
-					console.log("[AlphaTab] Metronome tick:", midi.metronomeNumerator);
-				}
+				// 简化 MIDI 事件处理，移除不存在的属性
+				console.debug("[AlphaTab] MIDI event:", midi);
 			});
 		});
 		// --- END: 补充播放器事件监听 ---
@@ -309,23 +323,28 @@ export class TabView extends FileView {
 	}
 
 	onunload(): void {
-		console.log("[TabView] Starting cleanup process");
+		console.debug("[TabView] Starting cleanup process");
 
 		// --- START: 新增字体样式清理逻辑 ---
 		if (this._fontStyle) {
 			this._fontStyle.remove();
-			console.log("[TabView] Removed injected @font-face style.");
+			console.debug("[TabView] Removed injected @font-face style.");
 		}
 		// --- END: 新增字体样式清理逻辑 ---
 
 		// 注销文件监听
 		this.unregisterFileWatcher();
 
+		// 清理光标滚动管理器
+		if (this.cursorScrollManager) {
+			this.cursorScrollManager.setApi(null);
+		}
+
 		// 销毁 AlphaTab API - 根据文档，这会清理所有内部资源
 		if (this._api) {
 			try {
 				this._api.destroy();
-				console.log("[TabView] AlphaTab API destroyed successfully");
+				console.debug("[TabView] AlphaTab API destroyed successfully");
 			} catch (error) {
 				console.error(
 					"[TabView] Error destroying AlphaTab API:",
@@ -342,7 +361,7 @@ export class TabView extends FileView {
 		// 清理引用
 		this.currentFile = null;
 
-		console.log("[TabView] View unloaded and resources cleaned up");
+		console.debug("[TabView] View unloaded and resources cleaned up");
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
@@ -354,13 +373,13 @@ export class TabView extends FileView {
 				throw new Error("AlphaTab API not initialized");
 			}
 
-			console.log(`[TabView] Loading file: ${file.name}`);
+			console.debug(`[TabView] Loading file: ${file.name}`);
 
 			// 读取并加载文件
 			const inputFile = await this.app.vault.readBinary(file);
 			this._api.load(new Uint8Array(inputFile));
 
-			console.log(`[TabView] File loaded successfully: ${file.name}`);
+			console.debug(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error("[TabView] Failed to load file:", error);
 			new Notice(`加载乐谱文件失败: ${error.message || "未知错误"}`);
@@ -370,13 +389,13 @@ export class TabView extends FileView {
 	// 注册文件变更监听
 	private registerFileWatcher(): void {
 		this.app.vault.on("modify", this.fileModifyHandler);
-		console.log("[TabView] 已注册文件监听");
+		console.debug("[TabView] 已注册文件监听");
 	}
 
 	// 注销文件变更监听
 	private unregisterFileWatcher(): void {
 		this.app.vault.off("modify", this.fileModifyHandler);
-		console.log("[TabView] 已注销文件监听");
+		console.debug("[TabView] 已注销文件监听");
 	}
 
 	// 重新加载当前文件内容
@@ -388,7 +407,7 @@ export class TabView extends FileView {
 		try {
 			const inputFile = await this.app.vault.readBinary(this.currentFile);
 			this._api.load(new Uint8Array(inputFile));
-			console.log(
+			console.debug(
 				`[TabView] 已重新加载文件: ${this.currentFile.basename}`
 			);
 		} catch (error) {
@@ -398,7 +417,7 @@ export class TabView extends FileView {
 
 	// Override onUnloadFile to ensure proper cleanup when file is closed
 	override async onUnloadFile(file: TFile): Promise<void> {
-		console.log(`[TabView] Unloading file: ${file.name}`);
+		console.debug(`[TabView] Unloading file: ${file.name}`);
 		this.currentFile = null;
 		await super.onUnloadFile(file);
 	}

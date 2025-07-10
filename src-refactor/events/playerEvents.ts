@@ -45,8 +45,23 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
     case "setLayoutMode":
       if (api.settings && api.settings.display) {
         api.settings.display.layoutMode = payload.value;
+        // 自动适配 scrollElement
+        let scrollElement: HTMLElement | null = null;
+        if (typeof document !== 'undefined') {
+          // 你可以根据实际 DOM 结构调整选择器
+          scrollElement = document.querySelector('.at-viewport') as HTMLElement;
+        }
+        if (api.settings.player) {
+          api.settings.player.scrollElement = scrollElement || undefined;
+        }
         api.updateSettings();
         api.render();
+        // 切换后强制滚动到当前光标
+        setTimeout(() => {
+          if (typeof api.scrollToCursor === 'function') {
+            api.scrollToCursor();
+          }
+        }, 100);
       }
       break;
     default:

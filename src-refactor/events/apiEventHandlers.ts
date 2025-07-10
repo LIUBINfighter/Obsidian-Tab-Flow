@@ -35,20 +35,20 @@ export function registerApiEventHandlers(
     api.error.on((err) => console.error("[AlphaTab] Error occurred:", err));
 
     // 渲染事件
-    api.renderStarted.on((isResize) => console.log("[AlphaTab] Render started, isResize:", isResize));
-    api.renderFinished.on(() => console.log("[AlphaTab] Render finished"));
+    api.renderStarted.on((isResize) => console.debug("[AlphaTab] Render started, isResize:", isResize));
+    api.renderFinished.on(() => console.debug("[AlphaTab] Render finished"));
 
     // 播放器事件
-    api.playerReady.on(() => console.log("[AlphaTab] Player ready"));
-    api.playerStateChanged.on((args) => console.log("[AlphaTab] Player state changed:", args.state));
-    api.playerPositionChanged.on((args) => console.log(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`));
-    api.playerFinished.on(() => console.log("[AlphaTab] Playback finished"));
+    // api.playerReady.on(() => console.debug("[AlphaTab] Player ready"));
+    // api.playerStateChanged.on((args) => console.debug("[AlphaTab] Player state changed:", args.state));
+    // api.playerPositionChanged.on((args) => console.debug(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`));
+    // api.playerFinished.on(() => console.debug("[AlphaTab] Playback finished"));
     api.midiEventsPlayed.on((evt) => {
         // 低级 MIDI 事件，可选处理
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         evt.events.forEach((midi: any) => {
             if (midi.isMetronome) {
-                console.log("[AlphaTab] Metronome tick:", midi.metronomeNumerator);
+                console.debug("[AlphaTab] Metronome tick:", midi.metronomeNumerator);
             }
         });
     });
