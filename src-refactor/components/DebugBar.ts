@@ -147,6 +147,72 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     };
     debugBar.appendChild(zoomSlider);
 
+    // 导出相关按钮
+    const exportLabel = document.createElement("label");
+    exportLabel.innerText = "导出:";
+    exportLabel.style.marginLeft = "1em";
+    debugBar.appendChild(exportLabel);
+
+    // 动态加载导出事件注册器
+    let exportHandlers: any = null;
+    function ensureExportHandlers() {
+        if (!exportHandlers) {
+            // 动态 require，避免循环依赖
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const { registerExportEventHandlers } = require("../events/exportEvents");
+            exportHandlers = registerExportEventHandlers({
+                api,
+                getFileName: () => {
+                    if (api.score && api.score.title) return api.score.title;
+                    return "Untitled";
+                },
+                onExportStart: (type: string) => {
+                    console.debug(`[Export] 开始导出: ${type}`);
+                },
+                onExportFinish: (type: string, success: boolean, msg?: string) => {
+                    if (success) {
+                        console.debug(`[Export] 导出${type}成功`);
+                    } else {
+                        console.debug(`[Export] 导出${type}失败: ${msg || "未知错误"}`);
+                    }
+                }
+            });
+        }
+        return exportHandlers;
+    }
+
+    // 音频导出按钮
+    const audioBtn = document.createElement("button");
+    audioBtn.innerText = "导出音频";
+    audioBtn.onclick = () => {
+        ensureExportHandlers().exportAudio();
+    };
+    debugBar.appendChild(audioBtn);
+
+    // MIDI 导出按钮
+    const midiBtn = document.createElement("button");
+    midiBtn.innerText = "导出MIDI";
+    midiBtn.onclick = () => {
+        ensureExportHandlers().exportMidi();
+    };
+    debugBar.appendChild(midiBtn);
+
+    // GP 导出按钮
+    const gpBtn = document.createElement("button");
+    gpBtn.innerText = "导出GP";
+    gpBtn.onclick = () => {
+        ensureExportHandlers().exportGp();
+    };
+    debugBar.appendChild(gpBtn);
+
+    // PDF 打印按钮
+    const pdfBtn = document.createElement("button");
+    pdfBtn.innerText = "打印PDF";
+    pdfBtn.onclick = () => {
+        ensureExportHandlers().exportPdf();
+    };
+    debugBar.appendChild(pdfBtn);
+
     // 音频状态（由外部负责更新）
     const audioStatus = document.createElement("span");
     audioStatus.style.marginLeft = "1em";
