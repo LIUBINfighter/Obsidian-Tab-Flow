@@ -100,11 +100,11 @@ export class TabView extends FileView {
 	onload(): void {
 		// --- START: 新增字体注入逻辑 ---
 		const fontFaceRule = `
-            @font-face {
-                font-family: 'alphaTab';
-                src: url(${this.resources.bravuraUri});
-            }
-        `;
+			@font-face {
+				font-family: 'alphaTab';
+				src: url(${this.resources.bravuraUri});
+			}
+		`;
 		this._fontStyle = this.containerEl.ownerDocument.createElement("style");
 		this._fontStyle.id = `alphatab-font-style-${TabView.instanceId}`;
 		this._fontStyle.innerHTML = fontFaceRule;
@@ -116,35 +116,65 @@ export class TabView extends FileView {
 
 		const styles = this.containerEl.createEl("style");
 		styles.innerHTML = `
-        .${cls} .at-cursor-bar {
-            background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-            opacity: 0.2
-        }
+		.${cls} .at-cursor-bar {
+			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
+			opacity: 0.2
+		}
 
-        .${cls} .at-selection div {
-            background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-            opacity: 0.4
-        }
+		.${cls} .at-selection div {
+			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
+			opacity: 0.4
+		}
 
-        .${cls} .at-cursor-beat {
-            background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-            width: 3px;
-        }
+		.${cls} .at-cursor-beat {
+			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
+			width: 3px;
+		}
 
-        .${cls} .at-highlight * {
-            fill: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-            stroke: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-        }
-        `;
+		.${cls} .at-highlight * {
+			fill: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
+			stroke: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
+		}
+		`;
 		this._styles = styles;
 
 		// 注册文件变更监听
 		this.registerFileWatcher();
 
+
 		// --- 封装 debug-bar ---
 		const debugBar = this.contentEl.createDiv({ cls: "debug-bar" });
 
-		// 工具栏按钮和状态
+		// TrackModal 按钮
+		const tracksBtn = debugBar.createEl("button");
+		tracksBtn.innerText = "选择音轨";
+		tracksBtn.onclick = () => {
+			if (!this._api || !this._api.score || !Array.isArray(this._api.score.tracks)) {
+				new Notice("乐谱未加载，无法选择音轨");
+				return;
+			}
+			// 动态 import 兼容 ESM/CJS
+			import("../components/TracksModal").then(mod => {
+				const TracksModal = mod.TracksModal;
+				const modal = new TracksModal(this.app!, this._api.score.tracks, (selectedTracks) => {
+					if (selectedTracks && selectedTracks.length > 0) {
+						if (typeof this._api.setRenderTracks === 'function') {
+							this._api.setRenderTracks(selectedTracks);
+						} else if (typeof this._api.updateRenderTracks === 'function') {
+							this._api.updateRenderTracks(selectedTracks);
+						} else {
+							new Notice("当前 AlphaTab API 不支持音轨切换");
+						}
+						this._api.render();
+					}
+				});
+				modal.open();
+			}).catch(e => {
+				new Notice("无法加载 TracksModal 组件: " + e.message);
+			});
+		};
+
+		// 播放/暂停按钮
 		const playPause = debugBar.createEl("button");
 		playPause.innerText = "播放/暂停";
 		playPause.onclick = () => {
@@ -152,27 +182,19 @@ export class TabView extends FileView {
 				new Notice("AlphaTab API 未初始化");
 				return;
 			}
-
-			console.log(
-				"[TabView] Play button clicked, checking audio status..."
-			);
 			const audioReady = this.isAudioLoaded();
-			console.log("[TabView] Audio ready:", audioReady);
-
 			if (!audioReady) {
 				new Notice("音频资源未加载，无法播放。请等待音频加载完成。");
 				return;
 			}
-
 			try {
 				this._api.playPause();
-				console.log("[TabView] PlayPause command sent");
 			} catch (error) {
-				console.error("[TabView] PlayPause failed:", error);
 				new Notice(`播放失败: ${error.message || "未知错误"}`);
 			}
 		};
 
+		// 停止按钮
 		const stopBtn = debugBar.createEl("button");
 		stopBtn.innerText = "停止";
 		stopBtn.onclick = () => {
@@ -180,21 +202,104 @@ export class TabView extends FileView {
 				new Notice("AlphaTab API 未初始化");
 				return;
 			}
-
 			if (!this.isAudioLoaded()) {
 				new Notice("音频资源未加载，无法停止");
 				return;
 			}
-
 			try {
 				this._api.stop();
-				console.log("[TabView] Stop command sent");
 			} catch (error) {
-				console.error("[TabView] Stop failed:", error);
 				new Notice(`停止失败: ${error.message || "未知错误"}`);
 			}
 		};
 
+		// 速度选择
+		const speedLabel = debugBar.createEl("label");
+		speedLabel.innerText = "速度:";
+		speedLabel.style.marginLeft = "1em";
+		const speedSelect = debugBar.createEl("select");
+		["0.5", "0.75", "1.0", "1.25", "1.5", "2.0"].forEach(val => {
+			const opt = speedSelect.createEl("option");
+			opt.value = val;
+			opt.innerText = val + "x";
+			if (val === "1.0") opt.selected = true;
+		});
+		speedSelect.onchange = () => {
+			if (!this._api) return;
+			const speed = parseFloat(speedSelect.value);
+			if (!isNaN(speed)) {
+				this._api.playbackSpeed = speed;
+			}
+		};
+
+		// 谱表模式切换
+		const staveLabel = debugBar.createEl("label");
+		staveLabel.innerText = "谱表:";
+		staveLabel.style.marginLeft = "1em";
+		const staveSelect = debugBar.createEl("select");
+		const staveProfiles = [
+			{ name: "五线+六线", value: alphaTab.StaveProfile.ScoreTab },
+			{ name: "仅五线谱", value: alphaTab.StaveProfile.Score },
+			{ name: "仅六线谱", value: alphaTab.StaveProfile.Tab },
+			{ name: "混合六线谱", value: alphaTab.StaveProfile.TabMixed },
+		];
+		staveProfiles.forEach((item, idx) => {
+			const opt = staveSelect.createEl("option");
+			opt.value = String(item.value);
+			opt.innerText = item.name;
+			if (idx === 0) opt.selected = true;
+		});
+		staveSelect.onchange = () => {
+			if (!this._api) return;
+			const val = parseInt(staveSelect.value);
+			this._api.settings.display.staveProfile = val;
+			this._api.updateSettings();
+			this._api.render();
+		};
+
+		// Metronome 节拍器开关
+		const metronomeLabel = debugBar.createEl("label");
+		metronomeLabel.innerText = "节拍器:";
+		metronomeLabel.style.marginLeft = "1em";
+		const metronomeToggle = debugBar.createEl("input");
+		metronomeToggle.type = "checkbox";
+		metronomeToggle.checked = true;
+		metronomeToggle.onchange = () => {
+			if (!this._api) return;
+			this._api.metronomeVolume = metronomeToggle.checked ? 1 : 0;
+		};
+
+		// Count-in 预备拍开关
+		const countInLabel = debugBar.createEl("label");
+		countInLabel.innerText = "预备拍:";
+		countInLabel.style.marginLeft = "1em";
+		const countInToggle = debugBar.createEl("input");
+		countInToggle.type = "checkbox";
+		countInToggle.checked = true;
+		countInToggle.onchange = () => {
+			if (!this._api) return;
+			this._api.countInVolume = countInToggle.checked ? 1 : 0;
+		};
+
+		// Zoom 缩放滑块
+		const zoomLabel = debugBar.createEl("label");
+		zoomLabel.innerText = "缩放:";
+		zoomLabel.style.marginLeft = "1em";
+		const zoomSlider = debugBar.createEl("input");
+		zoomSlider.type = "range";
+		zoomSlider.min = "0.5";
+		zoomSlider.max = "2.0";
+		zoomSlider.step = "0.05";
+		zoomSlider.value = "1.0";
+		zoomSlider.style.width = "80px";
+		zoomSlider.oninput = () => {
+			if (!this._api) return;
+			this._api.settings.display.scale = parseFloat(zoomSlider.value);
+			this._api.updateSettings();
+			this._api.render();
+		};
+
+		// 音频状态
 		const audioStatus = debugBar.createEl("span");
 		audioStatus.style.marginLeft = "1em";
 		audioStatus.style.fontSize = "0.9em";
@@ -202,23 +307,17 @@ export class TabView extends FileView {
 
 		// 监听音频加载事件
 		const updateAudioStatus = () => {
-			console.log("[TabView] Updating audio status...");
-
 			if (!this._api) {
 				audioStatus.innerText = "音频：API未初始化";
 				audioStatus.style.color = "red";
 				return;
 			}
-
 			if (!this._api.player) {
 				audioStatus.innerText = "音频：播放器未初始化";
 				audioStatus.style.color = "red";
 				return;
 			}
-
 			const audioReady = this.isAudioLoaded();
-			console.log("[TabView] Audio ready status:", audioReady);
-
 			if (audioReady) {
 				audioStatus.innerText = "音频：已加载";
 				audioStatus.style.color = "green";
