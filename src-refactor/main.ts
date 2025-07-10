@@ -110,8 +110,7 @@ export default class MyPlugin extends Plugin {
 
 	onunload() {
 		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
-		// 清理所有相关的视图
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_TAB);
+		// 不再在 onunload 时主动 detach leaves，避免插件更新导致视图位置丢失
 		console.log("AlphaTab Plugin Unloaded");
 	}
 
