@@ -1,9 +1,4 @@
 /* build: dev:refactor */
-/* --- Debug.css --- */
-.debug-bar {
-	/* display: none !important; */
-}
-
 /* --- SettingTab.css --- */
 .itabs-settings-tabs {
 	display: flex;
@@ -126,5 +121,10 @@ ul.setting-item-description li {
 .tracks-modal input[type="number"] {
   width: 3em;
   text-align: center;
+}
+
+/* --- debug.css --- */
+.debug-bar {
+	/* display: none !important; */
 }
 

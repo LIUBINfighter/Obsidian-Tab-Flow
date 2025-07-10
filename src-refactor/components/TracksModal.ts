@@ -1,6 +1,8 @@
 import { Modal, Setting, App, Notice } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
-import type { TrackEventPayload } from "../events/trackEvents";
+import type { TrackEventPayload, TrackEventType } from "../events/trackEvents";
+import type { UIEventType } from "../events/types";
+import { dispatchUIEvent } from "../events/dispatch";
 
 
 export class TracksModal extends Modal {
@@ -93,7 +95,9 @@ export class TracksModal extends Modal {
                     .onClick(() => {
                         const newSolo = !track.playbackInfo.isSolo;
                         track.playbackInfo.isSolo = newSolo;
-                        this.onTrackEvent?.({ type: "solo", track, value: newSolo });
+                        this.onTrackEvent
+                          ? this.onTrackEvent({ type: "solo", track, value: newSolo })
+                          : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "solo", payload: { type: "solo", track, value: newSolo } });
                         btn.setIcon(newSolo ? "headphones" : "headphones");
                     });
             });
@@ -104,7 +108,9 @@ export class TracksModal extends Modal {
                     .onClick(() => {
                         const newMute = !track.playbackInfo.isMute;
                         track.playbackInfo.isMute = newMute;
-                        this.onTrackEvent?.({ type: "mute", track, value: newMute });
+                        this.onTrackEvent
+                          ? this.onTrackEvent({ type: "mute", track, value: newMute })
+                          : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "mute", payload: { type: "mute", track, value: newMute } });
                         btn.setIcon(newMute ? "volume-x" : "volume-2");
                     });
             });
@@ -132,7 +138,9 @@ export class TracksModal extends Modal {
             // 事件同步
             const updateVolume = (newVolume: number) => {
                 newVolume = Math.max(0, Math.min(16, newVolume));
-                this.onTrackEvent?.({ type: "volume", track, value: newVolume });
+                this.onTrackEvent
+                  ? this.onTrackEvent({ type: "volume", track, value: newVolume })
+                  : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "volume", payload: { type: "volume", track, value: newVolume } });
                 track.playbackInfo.volume = newVolume;
                 volumeSlider.value = String(newVolume);
                 volumeValue.textContent = String(newVolume);
@@ -173,7 +181,9 @@ export class TracksModal extends Modal {
             transposeInput.style.width = "3em";
             const updateTranspose = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
-                this.onTrackEvent?.({ type: "transpose", track, value: v });
+                this.onTrackEvent
+                  ? this.onTrackEvent({ type: "transpose", track, value: v })
+                  : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "transpose", payload: { type: "transpose", track, value: v } });
                 transposeSlider.value = String(v);
                 transposeValue.textContent = String(v);
                 transposeInput.value = String(v);
@@ -213,7 +223,9 @@ export class TracksModal extends Modal {
             transposeAudioInput.style.width = "3em";
             const updateTransposeAudio = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
-                this.onTrackEvent?.({ type: "transposeAudio", track, value: v });
+                this.onTrackEvent
+                  ? this.onTrackEvent({ type: "transposeAudio", track, value: v })
+                  : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "transposeAudio", payload: { type: "transposeAudio", track, value: v } });
                 transposeAudioSlider.value = String(v);
                 transposeAudioValue.textContent = String(v);
                 transposeAudioInput.value = String(v);

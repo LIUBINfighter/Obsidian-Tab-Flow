@@ -142,182 +142,81 @@ export class TabView extends FileView {
 		this.registerFileWatcher();
 
 
-		// --- 封装 debug-bar ---
-		const debugBar = this.contentEl.createDiv({ cls: "debug-bar" });
+		// 1. 创建主内容容器和样式（只保留一次声明）
+		const element = this.contentEl.createDiv({ cls: cls });
+		const style = window.getComputedStyle(element);
 
-		// TrackModal 按钮
-		const tracksBtn = debugBar.createEl("button");
-		tracksBtn.innerText = "选择音轨";
-		tracksBtn.onclick = () => {
-			if (!this._api || !this._api.score || !Array.isArray(this._api.score.tracks)) {
-				new Notice("乐谱未加载，无法选择音轨");
-				return;
-			}
-			// 动态 import 兼容 ESM/CJS
-			import("../components/TracksModal").then(mod => {
-				const TracksModal = mod.TracksModal;
-				import("../events/trackEvents").then(eventMod => {
-					const handleTrackEvent = eventMod.handleTrackEvent;
-					const modal = new TracksModal(
-						this.app!,
-						this._api.score.tracks,
-						(selectedTracks) => {
-							if (selectedTracks && selectedTracks.length > 0) {
-								if (typeof this._api.renderTracks === 'function') {
-									this._api.renderTracks(selectedTracks);
-								} else if (typeof this._api.setRenderTracks === 'function') {
-									this._api.setRenderTracks(selectedTracks);
-								} else if (typeof this._api.updateRenderTracks === 'function') {
-									this._api.updateRenderTracks(selectedTracks);
-								} else {
-									new Notice("当前 AlphaTab API 不支持音轨切换");
-								}
-								if (typeof this._api.render === 'function') {
-									this._api.render();
-								}
+		// 2. 初始化 AlphaTabApi（只保留一次声明）
+		this._api = new alphaTab.AlphaTabApi(element, {
+			core: {
+				scriptFile: this.resources.alphaTabWorkerUri,
+				smuflFontSources: new Map(),
+				fontDirectory: "",
+			},
+			player: {
+				enablePlayer: true,
+				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
+				enableCursor: true,
+				enableAnimatedBeatCursor: true,
+				soundFont: this.resources.soundFontUri,
+			},
+			display: {
+				resources: {
+					mainGlyphColor: style.getPropertyValue("--color-base-100"),
+					secondaryGlyphColor: style.getPropertyValue("--color-base-60"),
+					staffLineColor: style.getPropertyValue("--color-base-40"),
+					barSeparatorColor: style.getPropertyValue("--color-base-40"),
+					barNumberColor:
+						"#" +
+						convert.hsl.hex([
+							parseFloat(style.getPropertyValue("--accent-h")),
+							parseFloat(style.getPropertyValue("--accent-s")),
+							parseFloat(style.getPropertyValue("--accent-l")),
+						]),
+					scoreInfoColor: style.getPropertyValue("--color-base-100"),
+				},
+			},
+		});
+
+		// 3. 渲染 DebugBar
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const { createDebugBar } = require("../components/DebugBar");
+		const debugBar = createDebugBar({
+			api: this._api,
+			isAudioLoaded: this.isAudioLoaded.bind(this),
+			onTrackModal: () => {
+				if (!this._api || !this._api.score || !Array.isArray(this._api.score.tracks)) {
+					new Notice("乐谱未加载，无法选择音轨");
+					return;
+				}
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				const { TracksModal } = require("../components/TracksModal");
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				const { handleTrackEvent } = require("../events/trackEvents");
+				const modal = new TracksModal(
+					this.app,
+					this._api.score.tracks,
+					(selectedTracks) => {
+						if (selectedTracks && selectedTracks.length > 0) {
+							if (typeof this._api.renderTracks === 'function') {
+								this._api.renderTracks(selectedTracks);
+							} else {
+								new Notice("当前 AlphaTab API 不支持音轨切换");
 							}
-						},
-						(payload) => handleTrackEvent(this._api, payload)
-					);
-					modal.open();
-				});
-			}).catch(e => {
-				new Notice("无法加载 TracksModal 组件: " + e.message);
-			});
-		};
-
-		// 播放/暂停按钮
-		const playPause = debugBar.createEl("button");
-		playPause.innerText = "播放/暂停";
-		playPause.onclick = () => {
-			if (!this._api) {
-				new Notice("AlphaTab API 未初始化");
-				return;
+							if (typeof this._api.render === 'function') {
+								this._api.render();
+							}
+						}
+					},
+					(payload) => handleTrackEvent(this._api, payload)
+				);
+				modal.open();
 			}
-			const audioReady = this.isAudioLoaded();
-			if (!audioReady) {
-				new Notice("音频资源未加载，无法播放。请等待音频加载完成。");
-				return;
-			}
-			try {
-				this._api.playPause();
-			} catch (error) {
-				new Notice(`播放失败: ${error.message || "未知错误"}`);
-			}
-		};
-
-		// 停止按钮
-		const stopBtn = debugBar.createEl("button");
-		stopBtn.innerText = "停止";
-		stopBtn.onclick = () => {
-			if (!this._api) {
-				new Notice("AlphaTab API 未初始化");
-				return;
-			}
-			if (!this.isAudioLoaded()) {
-				new Notice("音频资源未加载，无法停止");
-				return;
-			}
-			try {
-				this._api.stop();
-			} catch (error) {
-				new Notice(`停止失败: ${error.message || "未知错误"}`);
-			}
-		};
-
-		// 速度选择
-		const speedLabel = debugBar.createEl("label");
-		speedLabel.innerText = "速度:";
-		speedLabel.style.marginLeft = "1em";
-		const speedSelect = debugBar.createEl("select");
-		["0.5", "0.75", "1.0", "1.25", "1.5", "2.0"].forEach(val => {
-			const opt = speedSelect.createEl("option");
-			opt.value = val;
-			opt.innerText = val + "x";
-			if (val === "1.0") opt.selected = true;
 		});
-		speedSelect.onchange = () => {
-			if (!this._api) return;
-			const speed = parseFloat(speedSelect.value);
-			if (!isNaN(speed)) {
-				this._api.playbackSpeed = speed;
-			}
-		};
+		this.contentEl.appendChild(debugBar);
 
-		// 谱表模式切换
-		const staveLabel = debugBar.createEl("label");
-		staveLabel.innerText = "谱表:";
-		staveLabel.style.marginLeft = "1em";
-		const staveSelect = debugBar.createEl("select");
-		const staveProfiles = [
-			{ name: "五线+六线", value: alphaTab.StaveProfile.ScoreTab },
-			{ name: "仅五线谱", value: alphaTab.StaveProfile.Score },
-			{ name: "仅六线谱", value: alphaTab.StaveProfile.Tab },
-			{ name: "混合六线谱", value: alphaTab.StaveProfile.TabMixed },
-		];
-		staveProfiles.forEach((item, idx) => {
-			const opt = staveSelect.createEl("option");
-			opt.value = String(item.value);
-			opt.innerText = item.name;
-			if (idx === 0) opt.selected = true;
-		});
-		staveSelect.onchange = () => {
-			if (!this._api) return;
-			const val = parseInt(staveSelect.value);
-			this._api.settings.display.staveProfile = val;
-			this._api.updateSettings();
-			this._api.render();
-		};
-
-		// Metronome 节拍器开关
-		const metronomeLabel = debugBar.createEl("label");
-		metronomeLabel.innerText = "节拍器:";
-		metronomeLabel.style.marginLeft = "1em";
-		const metronomeToggle = debugBar.createEl("input");
-		metronomeToggle.type = "checkbox";
-		metronomeToggle.checked = true;
-		metronomeToggle.onchange = () => {
-			if (!this._api) return;
-			this._api.metronomeVolume = metronomeToggle.checked ? 1 : 0;
-		};
-
-		// Count-in 预备拍开关
-		const countInLabel = debugBar.createEl("label");
-		countInLabel.innerText = "预备拍:";
-		countInLabel.style.marginLeft = "1em";
-		const countInToggle = debugBar.createEl("input");
-		countInToggle.type = "checkbox";
-		countInToggle.checked = true;
-		countInToggle.onchange = () => {
-			if (!this._api) return;
-			this._api.countInVolume = countInToggle.checked ? 1 : 0;
-		};
-
-		// Zoom 缩放滑块
-		const zoomLabel = debugBar.createEl("label");
-		zoomLabel.innerText = "缩放:";
-		zoomLabel.style.marginLeft = "1em";
-		const zoomSlider = debugBar.createEl("input");
-		zoomSlider.type = "range";
-		zoomSlider.min = "0.5";
-		zoomSlider.max = "2.0";
-		zoomSlider.step = "0.05";
-		zoomSlider.value = "1.0";
-		zoomSlider.style.width = "80px";
-		zoomSlider.oninput = () => {
-			if (!this._api) return;
-			this._api.settings.display.scale = parseFloat(zoomSlider.value);
-			this._api.updateSettings();
-			this._api.render();
-		};
-
-		// 音频状态
-		const audioStatus = debugBar.createEl("span");
-		audioStatus.style.marginLeft = "1em";
-		audioStatus.style.fontSize = "0.9em";
-		audioStatus.innerText = "音频：未加载";
-
-		// 监听音频加载事件
+		// 4. 音频状态更新逻辑
+		const audioStatus = (debugBar as any).audioStatus as HTMLSpanElement;
 		const updateAudioStatus = () => {
 			if (!this._api) {
 				audioStatus.innerText = "音频：API未初始化";
@@ -338,78 +237,26 @@ export class TabView extends FileView {
 				audioStatus.style.color = "orange";
 			}
 		};
-		// --- end 封装 debug-bar ---
-
-		const element = this.contentEl.createDiv({ cls: cls });
-		const style = window.getComputedStyle(element);
-
-		const api = new alphaTab.AlphaTabApi(element, {
-			core: {
-				scriptFile: this.resources.alphaTabWorkerUri,
-				// --- START: 修改 alphaTab 配置 ---
-				smuflFontSources: new Map(), // 传一个空的 Map，禁用 Worker 字体加载
-				fontDirectory: "", // 禁用旧的自动探测
-				// --- END: 修改 alphaTab 配置 ---
-			},
-			player: {
-				enablePlayer: true, // 启用播放器
-				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
-				enableCursor: true, // 启用播放光标
-				enableAnimatedBeatCursor: true, // 启用动画节拍光标
-				soundFont: this.resources.soundFontUri, // 使用URL加载SoundFont
-			},
-			display: {
-				resources: {
-					mainGlyphColor: style.getPropertyValue("--color-base-100"),
-					secondaryGlyphColor:
-						style.getPropertyValue("--color-base-60"),
-					staffLineColor: style.getPropertyValue("--color-base-40"),
-					barSeparatorColor:
-						style.getPropertyValue("--color-base-40"),
-					barNumberColor:
-						"#" +
-						convert.hsl.hex([
-							parseFloat(style.getPropertyValue("--accent-h")),
-							parseFloat(style.getPropertyValue("--accent-s")),
-							parseFloat(style.getPropertyValue("--accent-l")),
-						]),
-					scoreInfoColor: style.getPropertyValue("--color-base-100"),
-				},
-			},
-		});
+		// 5. 监听音频相关事件
+		this._api.soundFontLoaded.on(updateAudioStatus);
+		this._api.playerReady.on(updateAudioStatus);
+		this._api.scoreLoaded.on(updateAudioStatus);
 
 		// 添加错误处理
-		api.error.on((error) => {
+		this._api.error.on((error) => {
 			console.error("[AlphaTab] Error occurred:", error);
 		});
 
 		// 添加渲染事件监听
-		api.renderStarted.on((isResize) => {
+		this._api.renderStarted.on((isResize) => {
 			console.log("[AlphaTab] Render started, isResize:", isResize);
 		});
 
-		api.renderFinished.on((result) => {
+		this._api.renderFinished.on((result) => {
 			console.log("[AlphaTab] Render finished");
 		});
 
-		// 添加音频相关事件监听
-		api.soundFontLoaded.on(() => {
-			console.log("[AlphaTab] SoundFont loaded");
-			updateAudioStatus();
-		});
-
-		api.playerReady.on(() => {
-			console.log("[AlphaTab] Player ready");
-			updateAudioStatus();
-		});
-
-		api.scoreLoaded.on((score) => {
-			console.log("[AlphaTab] Score loaded");
-			updateAudioStatus();
-		});
-
-		this._api = api;
-		// 初始化时也检查一次
+		// 初始化时也检查一次音频状态
 		setTimeout(updateAudioStatus, 500);
 	}
 
