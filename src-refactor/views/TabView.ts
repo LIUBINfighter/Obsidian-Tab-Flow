@@ -4,6 +4,7 @@ export const VIEW_TYPE_TAB = "tab-view";
 
 import * as alphaTab from "@coderline/alphatab";
 import * as convert from "color-convert";
+import { registerApiEventHandlers } from "../events/apiEventHandlers";
 
 export type AlphaTabResources = {
 	bravuraUri: string;
@@ -217,7 +218,7 @@ export class TabView extends FileView {
 		this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 
 		// 4. 音频状态更新逻辑
-		const audioStatus = (debugBar as any).audioStatus as HTMLSpanElement;
+		const audioStatus = (debugBar as HTMLDivElement & { audioStatus: HTMLSpanElement }).audioStatus;
 		const updateAudioStatus = () => {
 			if (!this._api) {
 				audioStatus.innerText = "音频：API未初始化";
@@ -239,9 +240,9 @@ export class TabView extends FileView {
 			}
 		};
 		// 5. 监听音频相关事件
-		this._api.soundFontLoaded.on(updateAudioStatus);
-		this._api.playerReady.on(updateAudioStatus);
-		this._api.scoreLoaded.on(updateAudioStatus);
+		// this._api.soundFontLoaded.on(updateAudioStatus);
+		// this._api.playerReady.on(updateAudioStatus);
+		// this._api.scoreLoaded.on(updateAudioStatus);
 
 		// 添加错误处理
 		this._api.error.on((error) => {
@@ -256,6 +257,35 @@ export class TabView extends FileView {
 		this._api.renderFinished.on((result) => {
 			console.log("[AlphaTab] Render finished");
 		});
+
+		// --- START: 补充播放器事件监听 ---
+		// 播放器就绪
+		this._api.playerReady.on(() => {
+			console.log("[AlphaTab] Player ready");
+		});
+		// 播放状态改变
+		this._api.playerStateChanged.on((args) => {
+			console.log("[AlphaTab] Player state changed:", args.state);
+		});
+		// 播放位置改变
+		this._api.playerPositionChanged.on((args) => {
+			console.log(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`);
+		});
+		// 播放结束
+		this._api.playerFinished.on(() => {
+			console.log("[AlphaTab] Playback finished");
+		});
+		// MIDI 事件播放
+		this._api.midiEventsPlayed.on((evt) => {
+			evt.events.forEach((midi) => {
+				if (midi.isMetronome) {
+					console.log("[AlphaTab] Metronome tick:", midi.metronomeNumerator);
+				}
+			});
+		});
+		// --- END: 补充播放器事件监听 ---
+		// 使用统一的事件注册入口
+		registerApiEventHandlers(this._api, audioStatus, this.isAudioLoaded.bind(this));
 
 		// 初始化时也检查一次音频状态
 		setTimeout(updateAudioStatus, 500);
