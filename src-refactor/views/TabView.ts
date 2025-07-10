@@ -213,7 +213,8 @@ export class TabView extends FileView {
 				modal.open();
 			}
 		});
-		this.contentEl.appendChild(debugBar);
+		// 保证 debugBar 在最前面
+		this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 
 		// 4. 音频状态更新逻辑
 		const audioStatus = (debugBar as any).audioStatus as HTMLSpanElement;
