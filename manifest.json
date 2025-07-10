@@ -1,6 +1,6 @@
 {
-	"id": "interactive-tabs",
-	"name": "Interactive Tabs",
+	"id": "tab-flow",
+	"name": "Tab Flow",
 	"version": "0.0.5",
 	"minAppVersion": "1.8.0",
 	"description": "",
