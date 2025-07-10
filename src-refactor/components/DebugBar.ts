@@ -15,6 +15,31 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     const debugBar = document.createElement("div");
     debugBar.className = "debug-bar";
 
+
+    // 布局模式切换按钮
+    const layoutLabel = document.createElement("label");
+    layoutLabel.innerText = "布局:";
+    layoutLabel.style.marginLeft = "1em";
+    debugBar.appendChild(layoutLabel);
+    const layoutSelect = document.createElement("select");
+    const layoutModes = [
+        { name: "页面", value: (window as any).alphaTab?.LayoutMode?.Page ?? 0 },
+        { name: "横向", value: (window as any).alphaTab?.LayoutMode?.Horizontal ?? 1 },
+    ];
+    layoutModes.forEach((item, idx) => {
+        const opt = document.createElement("option");
+        opt.value = String(item.value);
+        opt.innerText = item.name;
+        if (idx === 0) opt.selected = true;
+        layoutSelect.appendChild(opt);
+    });
+    layoutSelect.onchange = () => {
+        if (!api) return;
+        const val = parseInt(layoutSelect.value);
+        dispatchUIEvent(api, { domain: "player", type: "setLayoutMode", payload: { type: "setLayoutMode", value: val } });
+    };
+    debugBar.appendChild(layoutSelect);
+
     // TrackModal 按钮
     const tracksBtn = document.createElement("button");
     tracksBtn.innerText = "选择音轨";

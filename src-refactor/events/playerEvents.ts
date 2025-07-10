@@ -7,7 +7,8 @@ export type PlayerEventType =
   | "setStaveProfile"
   | "setMetronome"
   | "setCountIn"
-  | "setZoom";
+  | "setZoom"
+  | "setLayoutMode";
 
 export interface PlayerEventPayload {
   type: PlayerEventType;
@@ -40,6 +41,13 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
       api.settings.display.scale = payload.value;
       api.updateSettings();
       api.render();
+      break;
+    case "setLayoutMode":
+      if (api.settings && api.settings.display) {
+        api.settings.display.layoutMode = payload.value;
+        api.updateSettings();
+        api.render();
+      }
       break;
     default:
       break;

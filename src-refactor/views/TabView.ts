@@ -160,6 +160,9 @@ export class TabView extends FileView {
 				enableCursor: true,
 				enableAnimatedBeatCursor: true,
 				soundFont: this.resources.soundFontUri,
+				scrollMode: alphaTab.ScrollMode.Continuous, // 启用连续滚动
+				scrollSpeed: 300, // 滚动动画时长（毫秒）
+				nativeBrowserSmoothScroll: false, // 使用自定义平滑滚动
 			},
 			display: {
 				resources: {
@@ -262,14 +265,28 @@ export class TabView extends FileView {
 		// 播放器就绪
 		this._api.playerReady.on(() => {
 			console.log("[AlphaTab] Player ready");
+			// 滚动到当前光标位置
+			if (typeof this._api.scrollToCursor === 'function') {
+				this._api.scrollToCursor();
+			}
 		});
 		// 播放状态改变
 		this._api.playerStateChanged.on((args) => {
 			console.log("[AlphaTab] Player state changed:", args.state);
+			// 播放时自动滚动到当前位置
+			if (args.state === alphaTab.synth.PlayerState.Playing) {
+				if (typeof this._api.scrollToCursor === 'function') {
+					this._api.scrollToCursor();
+				}
+			}
 		});
 		// 播放位置改变
 		this._api.playerPositionChanged.on((args) => {
 			console.log(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`);
+			// 每次位置变化时滚动
+			if (typeof this._api.scrollToCursor === 'function') {
+				this._api.scrollToCursor();
+			}
 		});
 		// 播放结束
 		this._api.playerFinished.on(() => {
