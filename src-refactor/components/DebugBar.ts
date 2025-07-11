@@ -1,17 +1,19 @@
 import { Notice } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
-import { dispatchUIEvent } from "../events/dispatch";
+// import { dispatchUIEvent } from "../events/dispatch";
 import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
 import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
+
 
 export interface DebugBarOptions {
     api: alphaTab.AlphaTabApi;
     isAudioLoaded: () => boolean;
     onTrackModal: () => void;
+    eventBus: { publish: (event: string, payload?: unknown) => void };
 }
 
 export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
-    const { api, isAudioLoaded, onTrackModal } = options;
+    const { api, isAudioLoaded, onTrackModal, eventBus } = options;
     const debugBar = document.createElement("div");
     debugBar.className = "debug-bar";
 
@@ -66,7 +68,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
             new Notice("音频资源未加载，无法播放。请等待音频加载完成。");
             return;
         }
-        dispatchUIEvent(api, { domain: "player", type: "playPause", payload: { type: "playPause" } });
+        eventBus.publish("命令:播放暂停");
     };
     debugBar.appendChild(playPause);
 

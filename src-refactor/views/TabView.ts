@@ -5,6 +5,7 @@ export const VIEW_TYPE_TAB = "tab-view";
 import * as alphaTab from "@coderline/alphatab";
 import * as convert from "color-convert";
 import { registerApiEventHandlers } from "../events/apiEventHandlers";
+import { EventBus } from "../utils/EventBus";
 
 export type AlphaTabResources = {
 	bravuraUri: string;
@@ -19,6 +20,7 @@ export class TabView extends FileView {
 	private _fontStyle: HTMLStyleElement | null = null; // 新增属性
 	private currentFile: TFile | null = null;
 	private fileModifyHandler: (file: TFile) => void;
+	private eventBus: EventBus;
 
 	/**
 	 * 检查音频是否已加载
@@ -69,10 +71,14 @@ export class TabView extends FileView {
 
 	constructor(
 		leaf: WorkspaceLeaf,
-		private plugin: Plugin,
-		private resources: AlphaTabResources
+		plugin: Plugin,
+		resources: AlphaTabResources,
+		eventBus?: EventBus
 	) {
 		super(leaf);
+		this.plugin = plugin;
+		this.resources = resources;
+		this.eventBus = eventBus ?? new EventBus();
 
 		// 初始化文件修改监听处理器
 		this.fileModifyHandler = (file: TFile) => {
@@ -220,6 +226,14 @@ export class TabView extends FileView {
 					(payload) => handleTrackEvent(this._api, payload)
 				);
 				modal.open();
+			},
+			eventBus: this.eventBus
+		});
+
+		// 事件总线：播放命令
+		this.eventBus.subscribe("命令:播放暂停", () => {
+			if (this._api) {
+				this._api.playPause();
 			}
 		});
 		// 保证 debugBar 在最前面
