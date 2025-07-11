@@ -56,6 +56,12 @@ export class AlphaTabService {
     }
 
     private registerCommandHandlers() {
+        // 选择音轨事件（弹出轨道选择 Modal）
+        this.eventBus.subscribe("命令:选择音轨", () => {
+            // 这里建议通过事件流让 TabView 或主插件弹出 TracksModal
+            // 例如 eventBus.publish("UI:显示TracksModal")，此处仅做占位
+            console.debug("[AlphaTabService] 收到选择音轨命令，建议由上层 UI 处理弹窗");
+        });
         this.eventBus.subscribe("命令:播放暂停", () => this.api.playPause());
         this.eventBus.subscribe("命令:停止", () => this.api.stop());
         this.eventBus.subscribe("命令:设置速度", (speed: number) => { this.api.playbackSpeed = speed; });

@@ -53,7 +53,9 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     // TrackModal 按钮
     const tracksBtn = document.createElement("button");
     tracksBtn.innerText = "选择音轨";
-    tracksBtn.onclick = onTrackModal;
+    tracksBtn.onclick = () => {
+        eventBus.publish("命令:选择音轨");
+    };
     debugBar.appendChild(tracksBtn);
 
     // 播放/暂停按钮

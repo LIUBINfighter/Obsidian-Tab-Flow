@@ -14,17 +14,17 @@ export type AlphaTabResources = {
 };
 
 export class TabView extends FileView {
-    private static instanceId = 0;
-    private _styles: HTMLStyleElement;
-    private _fontStyle: HTMLStyleElement | null = null; // 新增属性
-    private currentFile: TFile | null = null;
-    private fileModifyHandler: (file: TFile) => void;
-    private eventBus: EventBus;
-    private alphaTabService: AlphaTabService;
-    // 为了兼容旧代码
-    private _api!: alphaTab.AlphaTabApi;
-    private plugin: Plugin;
-    private resources: AlphaTabResources;
+	private static instanceId = 0;
+	private _styles: HTMLStyleElement;
+	private _fontStyle: HTMLStyleElement | null = null; // 新增属性
+	private currentFile: TFile | null = null;
+	private fileModifyHandler: (file: TFile) => void;
+	private eventBus: EventBus;
+	private alphaTabService: AlphaTabService;
+	// 为了兼容旧代码
+	private _api!: alphaTab.AlphaTabApi;
+	private plugin: Plugin;
+	private resources: AlphaTabResources;
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -144,30 +144,45 @@ export class TabView extends FileView {
 
 		// 1. 创建主内容容器和样式
 		const element = this.contentEl.createDiv({ cls: cls });        // 2. 初始化 AlphaTabService
-        this.alphaTabService = new AlphaTabService(
-            element,
-            this.resources,
-            this.eventBus
-        );
-        
-        // 为兼容性设置 _api 引用
-        this._api = this.alphaTabService.getApi();
+		this.alphaTabService = new AlphaTabService(
+			element,
+			this.resources,
+			this.eventBus
+		);
+		
+		// 为兼容性设置 _api 引用
+		this._api = this.alphaTabService.getApi();
 
 		// 3. 渲染 DebugBar
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const { createDebugBar } = require("../components/DebugBar");
-		const debugBar = createDebugBar({            api: this.alphaTabService.getApi(), // 仅用于兼容老接口
+		const debugBar = createDebugBar({
+			api: this.alphaTabService.getApi(), // 仅用于兼容老接口
 			isAudioLoaded: this.isAudioLoaded.bind(this),
-			onTrackModal: () => {
-				// 你可以在这里通过 eventBus 发送事件，或直接用 alphaTabService
-				// ...原有逻辑...
-			},
+			onTrackModal: () => {}, // 已弃用
 			eventBus: this.eventBus
 		});
 		this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 
-		// 4. 音频状态更新逻辑（可通过 eventBus 订阅“状态:音频就绪”等事件）
-		// ...可补充...
+		// 4. 订阅“命令:选择音轨”事件，弹出 TracksModal
+		this.eventBus.subscribe("命令:选择音轨", () => {
+			// 动态加载 TracksModal
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			const { TracksModal } = require("../components/TracksModal");
+			const api = this.alphaTabService.getApi();
+			const tracks = api.score?.tracks || [];
+			if (!tracks.length) {
+				new Notice("没有可用的音轨");
+				return;
+			}
+			const modal = new TracksModal(this.app, tracks, (selectedTracks) => {
+				if (selectedTracks && selectedTracks.length > 0) {
+					// 只渲染选中的音轨
+					api.renderTracks(selectedTracks);
+				}
+			});
+			modal.open();
+		});
 	}
 
 	onunload(): void {
