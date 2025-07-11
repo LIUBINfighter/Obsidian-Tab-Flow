@@ -1,4 +1,4 @@
-# Obsidian Interactive Tabs
+# Obsidian Tab Flow
 
 Play and create your guitar tabs in Obsidian!
 

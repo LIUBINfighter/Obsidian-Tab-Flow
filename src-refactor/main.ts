@@ -5,21 +5,36 @@ import {
 	AlphaTabResources,
 } from "./services/ResourceLoaderService";
 import * as path from "path";
+import {
+	SettingTab,
+	TabFlowSettings,
+	DEFAULT_SETTINGS,
+} from "./settings/SettingTab";
 
-interface MyPluginSettings {
-	mySetting: string;
-}
-
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: "default",
-};
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+	settings: TabFlowSettings;
 	resources!: AlphaTabResources;
+	actualPluginDir?: string;
+
+	checkRequiredAssets(): boolean {
+		// 简单实现，实际可根据 assets-refactor 目录和文件判断
+		return !!this.settings.assetsDownloaded;
+	}
+
+	async downloadAssets(): Promise<boolean> {
+		// 这里应实现真实下载逻辑，暂返回 true
+		this.settings.assetsDownloaded = true;
+		this.settings.lastAssetsCheck = Date.now();
+		await this.saveSettings();
+		return true;
+}
 
 	async onload() {
 		await this.loadSettings();
+
+		// 注册设置面板
+		this.addSettingTab(new SettingTab(this.app, this));
 
 		// 获取插件目录
 		const pluginDir = this.manifest.dir || "";
@@ -47,7 +62,7 @@ export default class MyPlugin extends Plugin {
 								file instanceof TFile
 									? this.app.vault.getAbstractFileByPath(
 											path.dirname(file.path)
-									  )
+									)
 									: file;
 							const baseName = "New guitar tab";
 							let filename = `${baseName}.alphatab`;
@@ -110,8 +125,7 @@ export default class MyPlugin extends Plugin {
 
 	onunload() {
 		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
-		// 清理所有相关的视图
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_TAB);
+		// 不再在 onunload 时主动 detach leaves，避免插件更新导致视图位置丢失
 		console.log("AlphaTab Plugin Unloaded");
 	}
 

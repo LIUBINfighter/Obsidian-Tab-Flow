@@ -29,14 +29,14 @@ export class ResourceLoaderService {
 			);
 
 			// 并行加载字体和脚本资源
-			const [bravuraData, alphaTabData] =
-				await Promise.all([
-					this.app.vault.adapter.readBinary(bravuraPath),
-					this.app.vault.adapter.readBinary(alphaTabPath),
-				]);
+			const [bravuraData, alphaTabData] = await Promise.all([
+				this.app.vault.adapter.readBinary(bravuraPath),
+				this.app.vault.adapter.readBinary(alphaTabPath),
+			]);
 
 			// 对于SoundFont，我们不预加载，而是提供URL供alphaTab自行加载
-			const soundFontUri = this.app.vault.adapter.getResourcePath(soundFontPath);
+			const soundFontUri =
+				this.app.vault.adapter.getResourcePath(soundFontPath);
 
 			const bravuraUri = `data:font/woff2;base64,${this.arrayBufferToBase64(
 				bravuraData
@@ -49,9 +49,10 @@ export class ResourceLoaderService {
 				"[ResourceLoaderService] All resources loaded successfully."
 			);
 			console.log(
-				"[ResourceLoaderService] SoundFont URI: ", soundFontUri
+				"[ResourceLoaderService] SoundFont URI: ",
+				soundFontUri
 			);
-			
+
 			return {
 				bravuraUri,
 				alphaTabWorkerUri,
