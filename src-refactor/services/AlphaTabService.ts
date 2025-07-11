@@ -1,4 +1,6 @@
+
 import * as alphaTab from "@coderline/alphatab";
+import { App } from "obsidian";
 import { EventBus } from "../utils/EventBus";
 import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
 import * as convert from "color-convert";
@@ -7,12 +9,15 @@ export class AlphaTabService {
     private api: alphaTab.AlphaTabApi;
     private scrollProxy: ScrollConfigProxy;
     private eventBus: EventBus;
+    private app: App;
 
     constructor(
+        app: App,
         element: HTMLElement,
         resources: { alphaTabWorkerUri: string; soundFontUri: string; bravuraUri: string },
         eventBus: EventBus
     ) {
+        this.app = app;
         this.eventBus = eventBus;
 
         // 获取当前元素的计算样式用于暗色适配
@@ -80,7 +85,7 @@ export class AlphaTabService {
                 return;
             }
             const modal = new TracksModal(
-                null, // app 传 null，避免 window.app 类型报错
+                this.app, // 传递真实 app 实例
                 tracks,
                 (selectedTracks: any[]) => {
                     if (selectedTracks && selectedTracks.length > 0) {

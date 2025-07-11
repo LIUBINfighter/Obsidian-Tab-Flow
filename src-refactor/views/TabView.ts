@@ -143,8 +143,10 @@ export class TabView extends FileView {
 		this.registerFileWatcher();
 
 		// 1. 创建主内容容器和样式
-		const element = this.contentEl.createDiv({ cls: cls });        // 2. 初始化 AlphaTabService
+		const element = this.contentEl.createDiv({ cls: cls });
+		// 2. 初始化 AlphaTabService（注意参数顺序，app 必须为第一个参数）
 		this.alphaTabService = new AlphaTabService(
+			this.app,
 			element,
 			this.resources,
 			this.eventBus
