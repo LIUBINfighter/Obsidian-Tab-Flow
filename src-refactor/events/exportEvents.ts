@@ -26,13 +26,20 @@ export function registerExportEventHandlers(
     async function exportAudio() {
         try {
             onExportStart?.("audio");
-            const exporter = await api.exportAudio({ sampleRate: 44100 });
+            const exporter = await api.exportAudio({
+                sampleRate: 44100,
+                useSyncPoints: false,
+                masterVolume: 1,
+                metronomeVolume: 0,
+                trackVolume: [],
+                trackTranspositionPitches: [],
+            });
             const chunks: Uint8Array[] = [];
             let done = false;
             while (!done) {
                 const chunk = await exporter.render(1000); // 渲染1秒
-                if (chunk.data) chunks.push(chunk.data);
-                done = chunk.done;
+                if (chunk.value) chunks.push(chunk.value);
+                done = !!chunk.done;
             }
             exporter.destroy();
             // 合并所有 chunk

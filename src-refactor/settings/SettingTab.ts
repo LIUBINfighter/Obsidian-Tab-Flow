@@ -5,6 +5,8 @@ import MyPlugin from "../main";
 
 export interface TabFlowSettings {
 	mySetting: string;
+	assetsDownloaded?: boolean;
+	lastAssetsCheck?: number;
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -201,9 +203,9 @@ export class SettingTab extends PluginSettingTab {
 ├── manifest.json      # 插件清单
 ├── styles.css         # 样式文件
 └── assets-refactor/   # 资源目录
-    ├── alphaTab.min.js
-    ├── Bravura.woff2
-    └── sonivox.sf3`,
+	├── alphaTab.min.js
+	├── Bravura.woff2
+	└── sonivox.sf3`,
 				});
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });

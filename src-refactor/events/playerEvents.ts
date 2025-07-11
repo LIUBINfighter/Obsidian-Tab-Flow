@@ -57,8 +57,8 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
           // 你可以根据实际 DOM 结构调整选择器
           scrollElement = document.querySelector('.at-viewport') as HTMLElement;
         }
-        if (api.settings.player) {
-          api.settings.player.scrollElement = scrollElement || undefined;
+        if (api.settings.player && scrollElement) {
+          api.settings.player.scrollElement = scrollElement;
         }
         api.updateSettings();
         api.render();
