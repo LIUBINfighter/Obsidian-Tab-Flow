@@ -14,10 +14,10 @@ export class AlphaTabService {
         eventBus: EventBus
     ) {
         this.eventBus = eventBus;
-        
+
         // 获取当前元素的计算样式用于暗色适配
         const style = window.getComputedStyle(element);
-        
+
         this.api = new alphaTab.AlphaTabApi(element, {
             core: { scriptFile: resources.alphaTabWorkerUri, smuflFontSources: new Map(), fontDirectory: "" },
             player: {
@@ -65,22 +65,27 @@ export class AlphaTabService {
             const api = this.getApi();
             const tracks = api.score?.tracks || [];
             if (!tracks.length) {
-                // 这里不能直接用 Notice，需确保 AlphaTabService 有 app 实例或通过事件流通知 UI
                 // 这里只做简单兼容
-                if (typeof window !== "undefined" && window.Notice) {
-                    new window.Notice("没有可用的音轨");
+                // Notice 需从 obsidian 导入
+                // @ts-ignore
+                let Notice: any = undefined;
+                try {
+                    Notice = (require("obsidian") as { Notice: any }).Notice;
+                } catch {}
+                if (Notice) {
+                    new Notice("没有可用的音轨");
                 } else {
                     console.warn("没有可用的音轨");
                 }
                 return;
             }
             const modal = new TracksModal(
-                window.app || null, 
-                tracks, 
-                (selectedTracks) => {
+                null, // app 传 null，避免 window.app 类型报错
+                tracks,
+                (selectedTracks: any[]) => {
                     if (selectedTracks && selectedTracks.length > 0) {
                         // 只渲染选中的音轨
-                        api.renderTracks(selectedTracks);
+                        api.renderTracks(selectedTracks as any);
                     }
                 },
                 api,
@@ -130,23 +135,23 @@ export class AlphaTabService {
         });
         
         // 轨道事件处理 - 用于状态同步和日志记录
-        this.eventBus.subscribe("track:solo", (data: { track: any, value: boolean }) => {
+        this.eventBus.subscribe("track:solo", (data: { track: Record<string, unknown>, value: boolean }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 独奏状态: ${data.value}`);
         });
         
-        this.eventBus.subscribe("track:mute", (data: { track: any, value: boolean }) => {
+        this.eventBus.subscribe("track:mute", (data: { track: Record<string, unknown>, value: boolean }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 静音状态: ${data.value}`);
         });
         
-        this.eventBus.subscribe("track:volume", (data: { track: any, value: number }) => {
+        this.eventBus.subscribe("track:volume", (data: { track: Record<string, unknown>, value: number }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 音量: ${data.value}`);
         });
         
-        this.eventBus.subscribe("track:transpose", (data: { track: any, value: number }) => {
+        this.eventBus.subscribe("track:transpose", (data: { track: Record<string, unknown>, value: number }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 移调: ${data.value}`);
         });
         
-        this.eventBus.subscribe("track:transposeAudio", (data: { track: any, value: number }) => {
+        this.eventBus.subscribe("track:transposeAudio", (data: { track: Record<string, unknown>, value: number }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 音频移调: ${data.value}`);
         });
     }

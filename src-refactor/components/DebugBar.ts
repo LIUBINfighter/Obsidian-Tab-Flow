@@ -2,7 +2,6 @@ import { Notice } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
 // import { dispatchUIEvent } from "../events/dispatch";
 import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
-import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
 
 
 export interface DebugBarOptions {
