@@ -75,11 +75,35 @@ export function registerExportEventHandlers(
         }
     }
 
-    // 2. MIDI 导出
+    // 2. MIDI 导出（带自定义文件名）
     function exportMidi() {
         try {
             onExportStart?.("midi");
-            api.downloadMidi();
+            const fileName = (getFileName?.() || "Untitled") + ".mid";
+            // 尝试用 downloadMidi 的重载（如果支持文件名参数）
+            if (api && typeof api.downloadMidi === "function") {
+                // 检查 downloadMidi 是否支持文件名参数
+                try {
+                    // @ts-ignore
+                    api.downloadMidi(fileName);
+                } catch {
+                    // 如果不支持参数则直接调用
+                    api.downloadMidi();
+                }
+            } else if (api && typeof (api as any).exportMidi === "function") {
+                // 某些 alphaTab 版本有 exportMidi 方法
+                // @ts-ignore
+                const midiData = api.exportMidi();
+                const a = document.createElement('a');
+                a.download = fileName;
+                a.href = URL.createObjectURL(new Blob([midiData], { type: "audio/midi" }));
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                // 兜底
+                api.downloadMidi();
+            }
             onExportFinish?.("midi", true);
         } catch (e: any) {
             onExportFinish?.("midi", false, e?.message || String(e));

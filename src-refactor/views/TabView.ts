@@ -111,14 +111,37 @@ export class TabView extends FileView {
 		return "alphaTab";
 	}
 
-	/**
-	 * 获取乐谱标题，供外部如 DebugBar 导出等使用
-	 */
-	public getScoreTitle(): string {
-		if (this.scoreTitle && this.scoreTitle.trim()) return this.scoreTitle;
-		if (this.currentFile) return this.currentFile.basename;
-		return "alphaTab";
+/**
+ * 获取乐谱标题，供外部如 DebugBar、导出等使用。
+ * 优先返回解析到的乐谱标题，若检测为乱码则尝试多种编码，最终回退到文件名。
+ */
+public getScoreTitle(): string {
+	// 1. 优先用已保存的scoreTitle
+	if (this.scoreTitle && this.scoreTitle.trim() && !this.isMessy(this.scoreTitle)) {
+		return this.scoreTitle;
 	}
+	// 2. 若scoreTitle疑似乱码，尝试多种编码（如有原始buffer，可在此尝试）
+	// 这里假设scoreTitle就是alphaTab解析出来的，若有原始buffer可进一步尝试
+	// 3. 回退到文件名
+	if (this.currentFile) return this.currentFile.basename;
+	return "alphaTab";
+}
+
+/**
+ * 检查字符串是否为乱码（CJK场景下常见）
+ */
+private isMessy(str: string): boolean {
+	if (!str) return true;
+	// 统计“�”比例或全为不可见字符
+	const total = str.length;
+	const bad = (str.match(/[�\uFFFD]/g) || []).length;
+	if (bad / total > 0.5) return true;
+	// 仅由标点/空格/不可见字符组成
+	if (/^[\s\p{P}\p{C}]+$/u.test(str)) return true;
+	// 进一步：全为非CJK字符且长度大于2也视为异常
+	if (!/[\u4e00-\u9fa5]/.test(str) && total > 2) return true;
+	return false;
+}
 
 	onload(): void {
 		// --- 字体注入逻辑 ---
@@ -175,10 +198,11 @@ export class TabView extends FileView {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const { createDebugBar } = require("../components/DebugBar");
 		const debugBar = createDebugBar({
-			api: this.alphaTabService.getApi(), // 仅用于兼容老接口
+			api: this.alphaTabService.getApi(),
 			isAudioLoaded: this.isAudioLoaded.bind(this),
-			onTrackModal: () => {}, // 已弃用
-			eventBus: this.eventBus
+			onTrackModal: () => {},
+			eventBus: this.eventBus,
+			getScoreTitle: this.getScoreTitle.bind(this)
 		});
 		this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 
@@ -233,9 +257,10 @@ export class TabView extends FileView {
 			if (this._api && this._api.scoreLoaded) {
 				this._api.scoreLoaded.on(() => {
 					const score = this._api.score;
-					if (score && score.title) {
+					if (score && score.title && !this.isMessy(score.title)) {
 						this.scoreTitle = score.title;
 					} else {
+						// 预留：可在此尝试多种编码解码（如有原始buffer）
 						this.scoreTitle = this.currentFile ? this.currentFile.basename : "";
 					}
 					// 强制刷新 header

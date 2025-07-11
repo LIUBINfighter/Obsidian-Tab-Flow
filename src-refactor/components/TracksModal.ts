@@ -2,7 +2,6 @@ import { Modal, Setting, App } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
 import type { TrackEventPayload } from "../events/trackEvents";
 import { EventBus } from "../utils/EventBus";
-import "../styles/TrackModal.css";
 
 export class TracksModal extends Modal {
     private selectedTracks: Set<alphaTab.model.Track>;

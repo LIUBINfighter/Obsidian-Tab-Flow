@@ -9,10 +9,11 @@ export interface DebugBarOptions {
     isAudioLoaded: () => boolean;
     onTrackModal: () => void;
     eventBus: { publish: (event: string, payload?: unknown) => void };
+    getScoreTitle: () => string;
 }
 
 export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
-    const { api, isAudioLoaded, onTrackModal, eventBus } = options;
+    const { api, isAudioLoaded, onTrackModal, eventBus, getScoreTitle } = options;
     const debugBar = document.createElement("div");
     debugBar.className = "debug-bar";
 
@@ -203,6 +204,9 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
             exportHandlers = registerExportEventHandlers({
                 api,
                 getFileName: () => {
+                    // 优先用 getScoreTitle，保证 CJK 友好
+                    const title = getScoreTitle?.();
+                    if (title && title.trim()) return title;
                     if (api.score && api.score.title) return api.score.title;
                     return "Untitled";
                 },
