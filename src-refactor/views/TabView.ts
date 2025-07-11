@@ -5,7 +5,6 @@ export const VIEW_TYPE_TAB = "tab-view";
 import * as alphaTab from "@coderline/alphatab";
 import * as convert from "color-convert";
 import { registerApiEventHandlers } from "../events/apiEventHandlers";
-import { CursorScrollManager } from "../scrolling/CursorScrollManager";
 
 export type AlphaTabResources = {
 	bravuraUri: string;
@@ -20,7 +19,6 @@ export class TabView extends FileView {
 	private _fontStyle: HTMLStyleElement | null = null; // 新增属性
 	private currentFile: TFile | null = null;
 	private fileModifyHandler: (file: TFile) => void;
-	private cursorScrollManager: CursorScrollManager; // 光标滚动管理器
 
 	/**
 	 * 检查音频是否已加载
@@ -75,17 +73,6 @@ export class TabView extends FileView {
 		private resources: AlphaTabResources
 	) {
 		super(leaf);
-
-		// 初始化光标滚动管理器
-		this.cursorScrollManager = new CursorScrollManager({
-			enabled: true,
-			smoothScroll: true,
-			offsetY: -25,  // 负值在顶部预留空间，与Vue版本保持一致
-			offsetX: 25,
-			scrollSpeed: 500,  // 增加滚动时间，使动画更平滑
-			autoScrollOnPlay: true,
-			alwaysScrollToBottom: false
-		});
 
 		// 初始化文件修改监听处理器
 		this.fileModifyHandler = (file: TFile) => {
@@ -174,7 +161,9 @@ export class TabView extends FileView {
 				enableAnimatedBeatCursor: true,
 				soundFont: this.resources.soundFontUri,
 				scrollMode: alphaTab.ScrollMode.Continuous, // 启用连续滚动
-				scrollSpeed: 300, // 滚动动画时长（毫秒）
+				scrollSpeed: 500, // 滚动动画时长（毫秒）
+				scrollOffsetY: -25, // 顶部偏移，预留空间
+				scrollOffsetX: 25, // 水平偏移
 				nativeBrowserSmoothScroll: false, // 使用自定义平滑滚动
 			},
 			display: {
@@ -195,9 +184,8 @@ export class TabView extends FileView {
 			},
 		});
 
-		// 设置光标滚动管理器的 API 引用
-		this.cursorScrollManager.setApi(this._api);
-		console.debug("[TabView] ✅ CursorScrollManager 已设置 API 引用");
+		// 配置 Obsidian 环境的滚动容器
+		this.configureScrollElement();
 
 		// 3. 渲染 DebugBar
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -300,8 +288,7 @@ export class TabView extends FileView {
 		// 播放位置改变
 		this._api.playerPositionChanged.on((args) => {
 			// console.debug(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`);
-			// 使用光标滚动管理器处理滚动
-			this.cursorScrollManager.handlePlayerPositionChanged(args);
+			// AlphaTab 会自动处理滚动，无需额外处理
 		});
 		// 播放结束
 		this._api.playerFinished.on(() => {
@@ -334,11 +321,6 @@ export class TabView extends FileView {
 
 		// 注销文件监听
 		this.unregisterFileWatcher();
-
-		// 清理光标滚动管理器
-		if (this.cursorScrollManager) {
-			this.cursorScrollManager.setApi(null);
-		}
 
 		// 销毁 AlphaTab API - 根据文档，这会清理所有内部资源
 		if (this._api) {
@@ -386,6 +368,37 @@ export class TabView extends FileView {
 		}
 	}
 
+	/**
+	 * 配置 Obsidian 环境的滚动容器
+	 */
+	private configureScrollElement(): void {
+		// 查找合适的滚动容器
+		const selectors = [
+			'.workspace-leaf-content.mod-active',
+			'.view-content',
+			'.workspace-leaf-content'
+		];
+
+		let scrollElement: HTMLElement | null = null;
+		for (const selector of selectors) {
+			scrollElement = document.querySelector(selector) as HTMLElement;
+			if (scrollElement) {
+				break;
+			}
+		}
+
+		if (scrollElement) {
+			this._api.settings.player.scrollElement = scrollElement;
+			console.debug("[TabView] 设置滚动容器:", scrollElement.className);
+		} else {
+			this._api.settings.player.scrollElement = "html,body";
+			console.debug("[TabView] 使用默认滚动容器");
+		}
+
+		// 应用设置
+		this._api.updateSettings();
+	}
+
 	// 注册文件变更监听
 	private registerFileWatcher(): void {
 		this.app.vault.on("modify", this.fileModifyHandler);
@@ -420,5 +433,37 @@ export class TabView extends FileView {
 		console.debug(`[TabView] Unloading file: ${file.name}`);
 		this.currentFile = null;
 		await super.onUnloadFile(file);
+	}
+
+	/**
+	 * 滚动到乐谱底部（特殊需求）
+	 */
+	public scrollToBottom(): void {
+		if (!this._api || !this._api.score) {
+			console.warn("[TabView] 乐谱未加载，无法滚动到底部");
+			return;
+		}
+
+		try {
+			const masterBars = this._api.score.masterBars;
+			if (!masterBars || masterBars.length === 0) {
+				return;
+			}
+
+			// 设置到最后一个小节
+			const lastBar = masterBars[masterBars.length - 1];
+			const endTick = lastBar.start + lastBar.calculateDuration();
+			
+			this._api.tickPosition = endTick;
+			
+			// 延迟滚动确保位置设置生效
+			setTimeout(() => {
+				if (this._api) {
+					this._api.scrollToCursor();
+				}
+			}, 100);
+		} catch (error) {
+			console.warn("[TabView] 滚动到底部失败:", error);
+		}
 	}
 }
