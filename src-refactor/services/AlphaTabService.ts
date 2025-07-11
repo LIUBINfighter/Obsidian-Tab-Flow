@@ -56,6 +56,38 @@ export class AlphaTabService {
     }
 
     private registerCommandHandlers() {
+        // 轨道相关事件订阅（从 TabView.ts 剪切过来）
+        // 4. 订阅"命令:选择音轨"事件，弹出 TracksModal
+        this.eventBus.subscribe("命令:选择音轨", () => {
+            // 动态加载 TracksModal
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const { TracksModal } = require("../components/TracksModal");
+            const api = this.getApi();
+            const tracks = api.score?.tracks || [];
+            if (!tracks.length) {
+                // 这里不能直接用 Notice，需确保 AlphaTabService 有 app 实例或通过事件流通知 UI
+                // 这里只做简单兼容
+                if (typeof window !== "undefined" && window.Notice) {
+                    new window.Notice("没有可用的音轨");
+                } else {
+                    console.warn("没有可用的音轨");
+                }
+                return;
+            }
+            const modal = new TracksModal(
+                window.app || null, 
+                tracks, 
+                (selectedTracks) => {
+                    if (selectedTracks && selectedTracks.length > 0) {
+                        // 只渲染选中的音轨
+                        api.renderTracks(selectedTracks);
+                    }
+                },
+                api,
+                this.eventBus
+            );
+            modal.open();
+        });
         // 选择音轨事件（弹出轨道选择 Modal）
         this.eventBus.subscribe("命令:选择音轨", () => {
             // 这里建议通过事件流让 TabView 或主插件弹出 TracksModal

@@ -10,7 +10,11 @@ export interface TrackEventPayload {
     value: any;
 }
 
-export function handleTrackEvent(api: alphaTab.AlphaTabApi, payload: TrackEventPayload) {
+export function handleTrackEvent(api: alphaTab.AlphaTabApi | undefined, payload: TrackEventPayload) {
+    if (!api) {
+        console.warn('[handleTrackEvent] AlphaTabApi 未定义，事件被忽略:', payload);
+        return;
+    }
     switch (payload.type) {
         case "solo":
             api.changeTrackSolo([payload.track], !!payload.value);

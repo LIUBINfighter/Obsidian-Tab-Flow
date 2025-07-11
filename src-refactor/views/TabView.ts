@@ -164,25 +164,7 @@ export class TabView extends FileView {
 		});
 		this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 
-		// 4. 订阅“命令:选择音轨”事件，弹出 TracksModal
-		this.eventBus.subscribe("命令:选择音轨", () => {
-			// 动态加载 TracksModal
-			// eslint-disable-next-line @typescript-eslint/no-var-requires
-			const { TracksModal } = require("../components/TracksModal");
-			const api = this.alphaTabService.getApi();
-			const tracks = api.score?.tracks || [];
-			if (!tracks.length) {
-				new Notice("没有可用的音轨");
-				return;
-			}
-			const modal = new TracksModal(this.app, tracks, (selectedTracks) => {
-				if (selectedTracks && selectedTracks.length > 0) {
-					// 只渲染选中的音轨
-					api.renderTracks(selectedTracks);
-				}
-			});
-			modal.open();
-		});
+		// ...existing code...
 	}
 
 	onunload(): void {

@@ -1,9 +1,7 @@
-import { Modal, Setting, App, Notice } from "obsidian";
+import { Modal, Setting, App } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
-import type { TrackEventPayload, TrackEventType } from "../events/trackEvents";
-import type { UIEventType } from "../events/types";
-import { dispatchUIEvent } from "../events/dispatch";
-
+import type { TrackEventPayload } from "../events/trackEvents";
+import { EventBus } from "../utils/EventBus";
 
 export class TracksModal extends Modal {
     private selectedTracks: Set<alphaTab.model.Track>;
@@ -12,7 +10,8 @@ export class TracksModal extends Modal {
         app: App,
         private tracks: alphaTab.model.Track[],
         private onChange?: (tracks: alphaTab.model.Track[]) => void,
-        private onTrackEvent?: (payload: TrackEventPayload) => void
+        private api?: alphaTab.AlphaTabApi,
+        private eventBus?: EventBus
     ) {
         super(app);
         this.selectedTracks = new Set(tracks.length > 0 ? [tracks[0]] : []);
@@ -94,10 +93,11 @@ export class TracksModal extends Modal {
                     .setTooltip("独奏")
                     .onClick(() => {
                         const newSolo = !track.playbackInfo.isSolo;
-                        track.playbackInfo.isSolo = newSolo;
-                        this.onTrackEvent
-                          ? this.onTrackEvent({ type: "solo", track, value: newSolo })
-                          : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "solo", payload: { type: "solo", track, value: newSolo } });
+                        if (this.api) {
+                            this.api.changeTrackSolo([track], newSolo);
+                            // 发送事件用于状态同步
+                            this.eventBus?.publish("track:solo", { track, value: newSolo });
+                        }
                         btn.setIcon(newSolo ? "headphones" : "headphones");
                     });
             });
@@ -107,15 +107,16 @@ export class TracksModal extends Modal {
                     .setTooltip("静音")
                     .onClick(() => {
                         const newMute = !track.playbackInfo.isMute;
-                        track.playbackInfo.isMute = newMute;
-                        this.onTrackEvent
-                          ? this.onTrackEvent({ type: "mute", track, value: newMute })
-                          : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "mute", payload: { type: "mute", track, value: newMute } });
+                        if (this.api) {
+                            this.api.changeTrackMute([track], newMute);
+                            // 发送事件用于状态同步
+                            this.eventBus?.publish("track:mute", { track, value: newMute });
+                        }
                         btn.setIcon(newMute ? "volume-x" : "volume-2");
                     });
             });
 
-            // 音量滑块+数值+输入框
+            // 音量滑块+数值+输入框（通过事件总线）
             const volumeDiv = document.createElement("div");
             volumeDiv.style.display = "flex";
             volumeDiv.style.alignItems = "center";
@@ -138,10 +139,12 @@ export class TracksModal extends Modal {
             // 事件同步
             const updateVolume = (newVolume: number) => {
                 newVolume = Math.max(0, Math.min(16, newVolume));
-                this.onTrackEvent
-                  ? this.onTrackEvent({ type: "volume", track, value: newVolume })
-                  : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "volume", payload: { type: "volume", track, value: newVolume } });
-                track.playbackInfo.volume = newVolume;
+                if (this.api) {
+                    // alphaTab 期望 0-1 的音量值
+                    this.api.changeTrackVolume([track], newVolume / 16);
+                    // 发送事件用于状态同步
+                    this.eventBus?.publish("track:volume", { track, value: newVolume });
+                }
                 volumeSlider.value = String(newVolume);
                 volumeValue.textContent = String(newVolume);
                 volumeInput.value = String(newVolume);
@@ -158,7 +161,7 @@ export class TracksModal extends Modal {
             volumeDiv.appendChild(volumeInput);
             trackSetting.settingEl.appendChild(volumeDiv);
 
-            // 全局移调 滑块+数值+输入框
+            // 全局移调 滑块+数值+输入框（通过事件总线）
             const transposeDiv = document.createElement("div");
             transposeDiv.style.display = "flex";
             transposeDiv.style.alignItems = "center";
@@ -181,9 +184,11 @@ export class TracksModal extends Modal {
             transposeInput.style.width = "3em";
             const updateTranspose = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
-                this.onTrackEvent
-                  ? this.onTrackEvent({ type: "transpose", track, value: v })
-                  : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "transpose", payload: { type: "transpose", track, value: v } });
+                if (this.api) {
+                    this.api.changeTrackTranspositionPitch([track], v);
+                    // 发送事件用于状态同步
+                    this.eventBus?.publish("track:transpose", { track, value: v });
+                }
                 transposeSlider.value = String(v);
                 transposeValue.textContent = String(v);
                 transposeInput.value = String(v);
@@ -200,7 +205,7 @@ export class TracksModal extends Modal {
             transposeDiv.appendChild(transposeInput);
             trackSetting.settingEl.appendChild(transposeDiv);
 
-            // 音频移调 滑块+数值+输入框
+            // 音频移调 滑块+数值+输入框（通过事件总线）
             const transposeAudioDiv = document.createElement("div");
             transposeAudioDiv.style.display = "flex";
             transposeAudioDiv.style.alignItems = "center";
@@ -223,9 +228,12 @@ export class TracksModal extends Modal {
             transposeAudioInput.style.width = "3em";
             const updateTransposeAudio = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
-                this.onTrackEvent
-                  ? this.onTrackEvent({ type: "transposeAudio", track, value: v })
-                  : dispatchUIEvent((window as any).alphaTabApi, { domain: "track", type: "transposeAudio", payload: { type: "transposeAudio", track, value: v } });
+                if (this.api) {
+                    // TODO: 等待 alphaTab API 支持音频移调
+                    // this.api.changeTrackAudioTransposition([track], v);
+                    // 发送事件用于状态同步
+                    this.eventBus?.publish("track:transposeAudio", { track, value: v });
+                }
                 transposeAudioSlider.value = String(v);
                 transposeAudioValue.textContent = String(v);
                 transposeAudioInput.value = String(v);
