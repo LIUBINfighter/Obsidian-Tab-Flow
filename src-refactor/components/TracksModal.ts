@@ -2,6 +2,7 @@ import { Modal, Setting, App } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
 import type { TrackEventPayload } from "../events/trackEvents";
 import { EventBus } from "../utils/EventBus";
+import "../styles/TrackModal.css";
 
 export class TracksModal extends Modal {
     private selectedTracks: Set<alphaTab.model.Track>;
@@ -72,6 +73,9 @@ export class TracksModal extends Modal {
             const trackSetting = new Setting(scrollContainer)
                 .setName(track.name)
                 .setDesc(track.shortName || `Track ${track.index + 1}`);
+            
+            // 为每个轨道的setting添加CSS类
+            trackSetting.settingEl.addClass("track-item");
 
             // 选择音轨
             trackSetting.addToggle((toggle) => {
@@ -88,39 +92,66 @@ export class TracksModal extends Modal {
 
             // 静音/独奏按钮
             // 独奏按钮
-            trackSetting.addExtraButton(btn => {
-                btn.setIcon(track.playbackInfo.isSolo ? "headphones" : "headphones")
-                    .setTooltip("独奏")
-                    .onClick(() => {
-                        const newSolo = !track.playbackInfo.isSolo;
-                        if (this.api) {
-                            this.api.changeTrackSolo([track], newSolo);
-                            // 发送事件用于状态同步
-                            this.eventBus?.publish("track:solo", { track, value: newSolo });
-                        }
-                        btn.setIcon(newSolo ? "headphones" : "headphones");
-                    });
+            const soloBtn = trackSetting.addExtraButton(btn => {
+                const updateSoloUI = () => {
+                    const isSolo = track.playbackInfo.isSolo;
+                    btn.setIcon(isSolo ? "star" : "star-off")
+                        .setTooltip(isSolo ? "取消独奏" : "独奏");
+                    btn.extraSettingsEl.toggleClass("active", isSolo);
+                };
+                
+                updateSoloUI();
+                
+                btn.onClick(() => {
+                    const newSolo = !track.playbackInfo.isSolo;
+                    // 更新轨道状态
+                    track.playbackInfo.isSolo = newSolo;
+                    
+                    if (this.api) {
+                        this.api.changeTrackSolo([track], newSolo);
+                        // 发送事件用于状态同步
+                        this.eventBus?.publish("track:solo", { track, value: newSolo });
+                    }
+                    
+                    // 更新UI
+                    updateSoloUI();
+                });
+                
+                return btn;
             });
+            
             // 静音按钮
-            trackSetting.addExtraButton(btn => {
-                btn.setIcon(track.playbackInfo.isMute ? "volume-x" : "volume-2")
-                    .setTooltip("静音")
-                    .onClick(() => {
-                        const newMute = !track.playbackInfo.isMute;
-                        if (this.api) {
-                            this.api.changeTrackMute([track], newMute);
-                            // 发送事件用于状态同步
-                            this.eventBus?.publish("track:mute", { track, value: newMute });
-                        }
-                        btn.setIcon(newMute ? "volume-x" : "volume-2");
-                    });
+            const muteBtn = trackSetting.addExtraButton(btn => {
+                const updateMuteUI = () => {
+                    const isMute = track.playbackInfo.isMute;
+                    btn.setIcon(isMute ? "volume-x" : "volume-2")
+                        .setTooltip(isMute ? "取消静音" : "静音");
+                    btn.extraSettingsEl.toggleClass("active", isMute);
+                };
+                
+                updateMuteUI();
+                
+                btn.onClick(() => {
+                    const newMute = !track.playbackInfo.isMute;
+                    // 更新轨道状态
+                    track.playbackInfo.isMute = newMute;
+                    
+                    if (this.api) {
+                        this.api.changeTrackMute([track], newMute);
+                        // 发送事件用于状态同步
+                        this.eventBus?.publish("track:mute", { track, value: newMute });
+                    }
+                    
+                    // 更新UI
+                    updateMuteUI();
+                });
+                
+                return btn;
             });
 
             // 音量滑块+数值+输入框（通过事件总线）
             const volumeDiv = document.createElement("div");
-            volumeDiv.style.display = "flex";
-            volumeDiv.style.alignItems = "center";
-            volumeDiv.style.gap = "0.5em";
+            volumeDiv.className = "track-param-row";
             const volumeLabel = document.createElement("span");
             volumeLabel.textContent = "音量";
             const volumeSlider = document.createElement("input");
@@ -135,7 +166,6 @@ export class TracksModal extends Modal {
             volumeInput.min = "0";
             volumeInput.max = "16";
             volumeInput.value = String(track.playbackInfo.volume);
-            volumeInput.style.width = "3em";
             // 事件同步
             const updateVolume = (newVolume: number) => {
                 newVolume = Math.max(0, Math.min(16, newVolume));
@@ -163,9 +193,7 @@ export class TracksModal extends Modal {
 
             // 全局移调 滑块+数值+输入框（通过事件总线）
             const transposeDiv = document.createElement("div");
-            transposeDiv.style.display = "flex";
-            transposeDiv.style.alignItems = "center";
-            transposeDiv.style.gap = "0.5em";
+            transposeDiv.className = "track-param-row";
             const transposeLabel = document.createElement("span");
             transposeLabel.textContent = "全局移调";
             const transposeSlider = document.createElement("input");
@@ -181,7 +209,6 @@ export class TracksModal extends Modal {
             transposeInput.min = "-12";
             transposeInput.max = "12";
             transposeInput.value = "0";
-            transposeInput.style.width = "3em";
             const updateTranspose = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
                 if (this.api) {
@@ -207,9 +234,7 @@ export class TracksModal extends Modal {
 
             // 音频移调 滑块+数值+输入框（通过事件总线）
             const transposeAudioDiv = document.createElement("div");
-            transposeAudioDiv.style.display = "flex";
-            transposeAudioDiv.style.alignItems = "center";
-            transposeAudioDiv.style.gap = "0.5em";
+            transposeAudioDiv.className = "track-param-row";
             const transposeAudioLabel = document.createElement("span");
             transposeAudioLabel.textContent = "音频移调";
             const transposeAudioSlider = document.createElement("input");
@@ -225,7 +250,6 @@ export class TracksModal extends Modal {
             transposeAudioInput.min = "-12";
             transposeAudioInput.max = "12";
             transposeAudioInput.value = "0";
-            transposeAudioInput.style.width = "3em";
             const updateTransposeAudio = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
                 if (this.api) {
