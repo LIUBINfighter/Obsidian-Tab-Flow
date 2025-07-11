@@ -46,7 +46,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     layoutSelect.onchange = () => {
         if (!api) return;
         const val = parseInt(layoutSelect.value);
-        dispatchUIEvent(api, { domain: "player", type: "setLayoutMode", payload: { type: "setLayoutMode", value: val } });
+        eventBus.publish("命令:切换布局", val);
     };
     debugBar.appendChild(layoutSelect);
 
@@ -291,7 +291,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     });
     scrollModeSelect.onchange = () => {
         const mode = parseInt(scrollModeSelect.value) as alphaTab.ScrollMode;
-        scrollProxy.setScrollMode(mode);
+        eventBus.publish("命令:设置滚动模式", mode);
     };
     debugBar.appendChild(scrollModeSelect);
 
@@ -364,7 +364,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     scrollToCursorBtn.innerText = "滚动到光标";
     scrollToCursorBtn.title = "手动触发滚动到当前播放位置";
     scrollToCursorBtn.onclick = () => {
-        scrollProxy.triggerScrollToCursor();
+        eventBus.publish("命令:滚动到光标");
         new Notice("已滚动到当前光标位置");
     };
     debugBar.appendChild(scrollToCursorBtn);

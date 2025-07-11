@@ -82,6 +82,14 @@ export class AlphaTabService {
         this.eventBus.subscribe("命令:设置X偏移", (offset: number) => this.scrollProxy.setScrollOffsetX(offset));
         this.eventBus.subscribe("命令:设置原生滚动", (enabled: boolean) => this.scrollProxy.setNativeBrowserSmoothScroll(enabled));
         this.eventBus.subscribe("命令:滚动到光标", () => this.scrollProxy.triggerScrollToCursor());
+        // 新增：布局切换事件
+        this.eventBus.subscribe("命令:切换布局", (layoutMode: number) => {
+            if (this.api.settings && this.api.settings.display) {
+                this.api.settings.display.layoutMode = layoutMode;
+                this.api.updateSettings();
+                this.api.render();
+            }
+        });
     }
 
     private registerApiListeners() {
