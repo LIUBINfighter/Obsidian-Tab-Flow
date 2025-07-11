@@ -75,22 +75,50 @@ export class CursorScrollManager {
 			this.api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
 		}
 		
-		// 设置滚动容器 - 让 AlphaTab 自动寻找合适的滚动元素
-		// 默认 "html,body" 通常是最佳选择
-		if (!this.api.settings.player.scrollElement) {
-			this.api.settings.player.scrollElement = "html,body";
-		}
+		// 设置滚动容器 - 在 Obsidian 环境中，需要找到正确的滚动容器
+		this.setupScrollElement();
 		
 		// 应用设置更改
 		try {
 			this.api.updateSettings();
 			console.debug("[CursorScrollManager] ✅ AlphaTab设置更新成功", {
 				scrollMode: this.api.settings.player.scrollMode,
-				enabled: this.api.settings.player.enableCursor
+				enabled: this.api.settings.player.enableCursor,
+				scrollElement: this.api.settings.player.scrollElement
 			});
 		} catch (error) {
 			console.warn("[CursorScrollManager] ❌ 更新设置失败:", error);
 		}
+	}
+
+	/**
+	 * 设置正确的滚动容器
+	 */
+	private setupScrollElement(): void {
+		// 在 Obsidian 环境中，需要找到正确的滚动容器
+		// 通常是包含 AlphaTab 内容的父容器
+		
+		// 尝试找到合适的滚动容器
+		let scrollElement: HTMLElement | null = null;
+		
+		// 优先级1: 查找 .workspace-leaf-content（Obsidian 的内容容器）
+		scrollElement = document.querySelector('.workspace-leaf-content.mod-active') as HTMLElement;
+		
+		// 优先级2: 查找 .view-content（视图内容容器）
+		if (!scrollElement) {
+			scrollElement = document.querySelector('.view-content') as HTMLElement;
+		}
+		
+		// 优先级3: 使用默认的 html,body
+		if (!scrollElement) {
+			this.api!.settings.player.scrollElement = "html,body";
+			console.debug("[CursorScrollManager] 使用默认滚动元素: html,body");
+			return;
+		}
+		
+		// 设置找到的滚动元素
+		this.api!.settings.player.scrollElement = scrollElement;
+		console.debug("[CursorScrollManager] 设置滚动元素:", scrollElement.className);
 	}
 
 	public setEnabled(enabled: boolean) {
@@ -103,6 +131,8 @@ export class CursorScrollManager {
 
 	/**
 	 * 处理播放器位置变化事件
+	 * 注意：根据AlphaTab文档，当正确配置滚动设置后，AlphaTab会自动处理滚动
+	 * 这里主要处理特殊情况，如"始终滚动到底部"
 	 */
 	public handlePlayerPositionChanged(args: { 
 		currentTime: number; 
@@ -130,20 +160,18 @@ export class CursorScrollManager {
 			autoScrollOnPlay: this.options.autoScrollOnPlay,
 			isPlaying,
 			shouldAutoScroll,
-			playerState: this.api.playerState
+			playerState: this.api.playerState,
+			alwaysScrollToBottom: this.options.alwaysScrollToBottom
 		});
 
-		if (shouldAutoScroll) {
-			// 检查是否始终滚动到底部
-			if (this.options.alwaysScrollToBottom) {
-				console.debug("[CursorScrollManager] 滚动到底部");
-				this.scrollToBottom();
-			} else {
-				console.debug("[CursorScrollManager] 使用 AlphaTab 内置滚动");
-				// 优先使用 AlphaTab 内置的滚动功能，因为它已经处理了所有滚动逻辑
-				// 只有在内置滚动不工作时才使用备用方法
-				this.scrollToCursor();
-			}
+		// 只有在特殊情况下才手动介入滚动
+		if (shouldAutoScroll && this.options.alwaysScrollToBottom) {
+			console.debug("[CursorScrollManager] 执行特殊滚动：滚动到底部");
+			this.scrollToBottom();
+		} else if (shouldAutoScroll) {
+			console.debug("[CursorScrollManager] 依赖 AlphaTab 内置自动滚动");
+			// AlphaTab 已经配置了正确的滚动设置，应该会自动处理滚动
+			// 不需要手动调用 scrollToCursor()
 		} else {
 			console.debug("[CursorScrollManager] 跳过滚动 - 条件不满足");
 		}
