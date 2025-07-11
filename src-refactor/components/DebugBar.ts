@@ -84,7 +84,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
             new Notice("音频资源未加载，无法停止");
             return;
         }
-        dispatchUIEvent(api, { domain: "player", type: "stop", payload: { type: "stop" } });
+        eventBus.publish("命令:停止");
     };
     debugBar.appendChild(stopBtn);
 
@@ -105,7 +105,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
         if (!api) return;
         const speed = parseFloat(speedSelect.value);
         if (!isNaN(speed)) {
-            dispatchUIEvent(api, { domain: "player", type: "setSpeed", payload: { type: "setSpeed", value: speed } });
+            eventBus.publish("命令:设置速度", speed);
         }
     };
     debugBar.appendChild(speedSelect);
@@ -132,7 +132,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     staveSelect.onchange = () => {
         if (!api) return;
         const val = parseInt(staveSelect.value);
-        dispatchUIEvent(api, { domain: "player", type: "setStaveProfile", payload: { type: "setStaveProfile", value: val } });
+        eventBus.publish("命令:设置谱表", val);
     };
     debugBar.appendChild(staveSelect);
 
@@ -148,7 +148,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     if (api) api.metronomeVolume = 0;
     metronomeToggle.onchange = () => {
         if (!api) return;
-        dispatchUIEvent(api, { domain: "player", type: "setMetronome", payload: { type: "setMetronome", value: metronomeToggle.checked } });
+        eventBus.publish("命令:设置节拍器", metronomeToggle.checked);
     };
     debugBar.appendChild(metronomeToggle);
 
@@ -164,7 +164,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     if (api) api.countInVolume = 0;
     countInToggle.onchange = () => {
         if (!api) return;
-        dispatchUIEvent(api, { domain: "player", type: "setCountIn", payload: { type: "setCountIn", value: countInToggle.checked } });
+        eventBus.publish("命令:设置预备拍", countInToggle.checked);
     };
     debugBar.appendChild(countInToggle);
 
@@ -182,7 +182,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     zoomSlider.style.width = "80px";
     zoomSlider.oninput = () => {
         if (!api) return;
-        dispatchUIEvent(api, { domain: "player", type: "setZoom", payload: { type: "setZoom", value: parseFloat(zoomSlider.value) } });
+        eventBus.publish("命令:设置缩放", parseFloat(zoomSlider.value));
     };
     debugBar.appendChild(zoomSlider);
 
