@@ -8,11 +8,17 @@ export type PlayerEventType =
   | "setMetronome"
   | "setCountIn"
   | "setZoom"
-  | "setLayoutMode";
+  | "setLayoutMode"
+  | "setScrollMode"
+  | "setScrollSpeed"
+  | "setScrollOffsetX"
+  | "setScrollOffsetY"
+  | "setNativeBrowserSmoothScroll"
+  | "triggerScrollToCursor";
 
 export interface PlayerEventPayload {
   type: PlayerEventType;
-  value?: any;
+  value?: unknown;
 }
 
 export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEventPayload) {
@@ -24,10 +30,10 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
       api.stop();
       break;
     case "setSpeed":
-      api.playbackSpeed = payload.value;
+      api.playbackSpeed = payload.value as number;
       break;
     case "setStaveProfile":
-      api.settings.display.staveProfile = payload.value;
+      api.settings.display.staveProfile = payload.value as alphaTab.StaveProfile;
       api.updateSettings();
       api.render();
       break;
@@ -38,13 +44,13 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
       api.countInVolume = payload.value ? 1 : 0;
       break;
     case "setZoom":
-      api.settings.display.scale = payload.value;
+      api.settings.display.scale = payload.value as number;
       api.updateSettings();
       api.render();
       break;
     case "setLayoutMode":
       if (api.settings && api.settings.display) {
-        api.settings.display.layoutMode = payload.value;
+        api.settings.display.layoutMode = payload.value as alphaTab.LayoutMode;
         // 自动适配 scrollElement
         let scrollElement: HTMLElement | null = null;
         if (typeof document !== 'undefined') {
@@ -62,6 +68,41 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
             api.scrollToCursor();
           }
         }, 100);
+      }
+      break;
+    case "setScrollMode":
+      if (api.settings.player) {
+        api.settings.player.scrollMode = payload.value as alphaTab.ScrollMode;
+        api.updateSettings();
+      }
+      break;
+    case "setScrollSpeed":
+      if (api.settings.player) {
+        api.settings.player.scrollSpeed = payload.value as number;
+        api.updateSettings();
+      }
+      break;
+    case "setScrollOffsetX":
+      if (api.settings.player) {
+        api.settings.player.scrollOffsetX = payload.value as number;
+        api.updateSettings();
+      }
+      break;
+    case "setScrollOffsetY":
+      if (api.settings.player) {
+        api.settings.player.scrollOffsetY = payload.value as number;
+        api.updateSettings();
+      }
+      break;
+    case "setNativeBrowserSmoothScroll":
+      if (api.settings.player) {
+        api.settings.player.nativeBrowserSmoothScroll = payload.value as boolean;
+        api.updateSettings();
+      }
+      break;
+    case "triggerScrollToCursor":
+      if (typeof api.scrollToCursor === 'function') {
+        api.scrollToCursor();
       }
       break;
     default:

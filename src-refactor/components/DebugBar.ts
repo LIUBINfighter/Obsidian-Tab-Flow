@@ -1,8 +1,8 @@
 import { Notice } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
-import type { PlayerEventPayload, PlayerEventType } from "../events/playerEvents";
-import type { UIEventType } from "../events/types";
 import { dispatchUIEvent } from "../events/dispatch";
+import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
+import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
 
 export interface DebugBarOptions {
     api: alphaTab.AlphaTabApi;
@@ -15,6 +15,14 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     const debugBar = document.createElement("div");
     debugBar.className = "debug-bar";
 
+    // 创建滚动配置代理
+    const scrollProxy = new ScrollConfigProxy(api);
+    
+    // 监听滚动配置变更事件
+    scrollProxy.onConfigChange((event) => {
+        console.debug(`[DebugBar] 滚动配置变更: ${event.property} = ${event.newValue}`);
+        new Notice(`滚动设置已更新: ${event.property}`);
+    });
 
     // 布局模式切换按钮
     const layoutLabel = document.createElement("label");
@@ -251,6 +259,113 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
     // 提供音频状态元素给外部更新
     (debugBar as any).audioStatus = audioStatus;
+
+    // 在现有控件后添加滚动控制区域
+    // 滚动控制分隔符
+    const scrollSeparator = document.createElement("span");
+    scrollSeparator.innerText = " | ";
+    scrollSeparator.style.margin = "0 0.5em";
+    debugBar.appendChild(scrollSeparator);
+
+    // 滚动模式选择
+    const scrollModeLabel = document.createElement("label");
+    scrollModeLabel.innerText = "滚动:";
+    scrollModeLabel.style.marginLeft = "0.5em";
+    debugBar.appendChild(scrollModeLabel);
+    
+    const scrollModeSelect = document.createElement("select");
+    const scrollModes = [
+        { name: "关闭", value: alphaTab.ScrollMode.Off },
+        { name: "连续", value: alphaTab.ScrollMode.Continuous },
+        { name: "超出时", value: alphaTab.ScrollMode.OffScreen },
+    ];
+    scrollModes.forEach((item, idx) => {
+        const opt = document.createElement("option");
+        opt.value = String(item.value);
+        opt.innerText = item.name;
+        // 默认选择连续滚动
+        if (item.value === alphaTab.ScrollMode.Continuous) opt.selected = true;
+        scrollModeSelect.appendChild(opt);
+    });
+    scrollModeSelect.onchange = () => {
+        const mode = parseInt(scrollModeSelect.value) as alphaTab.ScrollMode;
+        scrollProxy.setScrollMode(mode);
+    };
+    debugBar.appendChild(scrollModeSelect);
+
+    // 滚动速度控制
+    const scrollSpeedLabel = document.createElement("label");
+    scrollSpeedLabel.innerText = "速度:";
+    scrollSpeedLabel.style.marginLeft = "0.5em";
+    debugBar.appendChild(scrollSpeedLabel);
+    
+    const scrollSpeedSlider = document.createElement("input");
+    scrollSpeedSlider.type = "range";
+    scrollSpeedSlider.min = "100";
+    scrollSpeedSlider.max = "1000";
+    scrollSpeedSlider.step = "50";
+    scrollSpeedSlider.value = "500";
+    scrollSpeedSlider.style.width = "60px";
+    scrollSpeedSlider.title = "滚动动画时长(ms)";
+    scrollSpeedSlider.oninput = () => {
+        const speed = parseInt(scrollSpeedSlider.value);
+        scrollProxy.setScrollSpeed(speed);
+        scrollSpeedLabel.innerText = `速度:${speed}ms`;
+    };
+    debugBar.appendChild(scrollSpeedSlider);
+
+    // Y轴偏移控制
+    const offsetYLabel = document.createElement("label");
+    offsetYLabel.innerText = "Y偏移:";
+    offsetYLabel.style.marginLeft = "0.5em";
+    debugBar.appendChild(offsetYLabel);
+    
+    const offsetYSlider = document.createElement("input");
+    offsetYSlider.type = "range";
+    offsetYSlider.min = "-100";
+    offsetYSlider.max = "100";
+    offsetYSlider.step = "5";
+    offsetYSlider.value = "-25";
+    offsetYSlider.style.width = "60px";
+    offsetYSlider.title = "垂直滚动偏移";
+    offsetYSlider.oninput = () => {
+        const offset = parseInt(offsetYSlider.value);
+        scrollProxy.setScrollOffsetY(offset);
+        offsetYLabel.innerText = `Y偏移:${offset}`;
+    };
+    debugBar.appendChild(offsetYSlider);
+
+    // 原生滚动开关
+    const nativeScrollLabel = document.createElement("label");
+    nativeScrollLabel.innerText = "原生滚动:";
+    nativeScrollLabel.style.marginLeft = "0.5em";
+    debugBar.appendChild(nativeScrollLabel);
+    
+    const nativeScrollToggle = document.createElement("input");
+    nativeScrollToggle.type = "checkbox";
+    nativeScrollToggle.checked = false; // 默认使用自定义滚动
+    nativeScrollToggle.title = "使用浏览器原生平滑滚动";
+    nativeScrollToggle.onchange = () => {
+        scrollProxy.setNativeBrowserSmoothScroll(nativeScrollToggle.checked);
+        // 如果启用原生滚动，禁用速度滑块
+        scrollSpeedSlider.disabled = nativeScrollToggle.checked;
+        if (nativeScrollToggle.checked) {
+            scrollSpeedLabel.style.opacity = "0.5";
+        } else {
+            scrollSpeedLabel.style.opacity = "1";
+        }
+    };
+    debugBar.appendChild(nativeScrollToggle);
+
+    // 手动滚动到光标按钮
+    const scrollToCursorBtn = document.createElement("button");
+    scrollToCursorBtn.innerText = "滚动到光标";
+    scrollToCursorBtn.title = "手动触发滚动到当前播放位置";
+    scrollToCursorBtn.onclick = () => {
+        scrollProxy.triggerScrollToCursor();
+        new Notice("已滚动到当前光标位置");
+    };
+    debugBar.appendChild(scrollToCursorBtn);
 
     return debugBar;
 }
