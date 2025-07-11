@@ -198,6 +198,7 @@ private isMessy(str: string): boolean {
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const { createDebugBar } = require("../components/DebugBar");
 		const debugBar = createDebugBar({
+			app: this.app, // 关键补充
 			api: this.alphaTabService.getApi(),
 			isAudioLoaded: this.isAudioLoaded.bind(this),
 			onTrackModal: () => {},

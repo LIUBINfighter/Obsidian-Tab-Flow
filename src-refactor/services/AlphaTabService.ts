@@ -138,24 +138,28 @@ export class AlphaTabService {
                 this.api.render();
             }
         });
-        
+        // 音频导出事件
+        this.eventBus.subscribe("命令:导出音频", async (options?: Partial<alphaTab.synth.AudioExportOptions>) => {
+            try {
+                const wavUrl = await this.exportAudioToWav(options);
+                this.eventBus.publish("状态:音频导出完成", wavUrl);
+            } catch (e) {
+                this.eventBus.publish("状态:音频导出失败", e);
+            }
+        });
         // 轨道事件处理 - 用于状态同步和日志记录
         this.eventBus.subscribe("track:solo", (data: { track: Record<string, unknown>, value: boolean }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 独奏状态: ${data.value}`);
         });
-        
         this.eventBus.subscribe("track:mute", (data: { track: Record<string, unknown>, value: boolean }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 静音状态: ${data.value}`);
         });
-        
         this.eventBus.subscribe("track:volume", (data: { track: Record<string, unknown>, value: number }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 音量: ${data.value}`);
         });
-        
         this.eventBus.subscribe("track:transpose", (data: { track: Record<string, unknown>, value: number }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 移调: ${data.value}`);
         });
-        
         this.eventBus.subscribe("track:transposeAudio", (data: { track: Record<string, unknown>, value: number }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 音频移调: ${data.value}`);
         });
@@ -192,5 +196,73 @@ export class AlphaTabService {
             this.api.updateSettings();
             console.debug("[AlphaTabService] 滚动元素已配置:", scrollElement);
         }
+    }
+    /**
+     * 导出音频并返回 WAV Blob URL
+     */
+    public async exportAudioToWav(options?: Partial<alphaTab.synth.AudioExportOptions>): Promise<string> {
+        const exportOptions = new alphaTab.synth.AudioExportOptions();
+        Object.assign(exportOptions, options);
+        const exporter = await this.api.exportAudio(exportOptions);
+        const chunks: Float32Array[] = [];
+        try {
+            while (true) {
+                const chunk = await exporter.render(500);
+                if (!chunk) break;
+                chunks.push(chunk.samples);
+            }
+        } finally {
+            exporter.destroy();
+        }
+        return this.convertSamplesToWavBlobUrl(chunks, exportOptions.sampleRate);
+    }
+
+    private convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate: number): string {
+        const samples = chunks.reduce((p, c) => p + c.length, 0);
+        const wavHeaderSize = 44;
+        const fileSize = wavHeaderSize + samples * 4;
+        // @ts-ignore
+        const buffer = alphaTab.io.ByteBuffer.withCapacity(fileSize);
+
+        // RIFF chunk
+        buffer.write(new Uint8Array([0x52, 0x49, 0x46, 0x46]), 0, 4); // RIFF
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt32LE(buffer, fileSize - 8); // file size
+        buffer.write(new Uint8Array([0x57, 0x41, 0x56, 0x45]), 0, 4); // WAVE
+
+        // format chunk
+        buffer.write(new Uint8Array([0x66, 0x6D, 0x74, 0x20]), 0, 4); // fmt 
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt32LE(buffer, 16); // block size
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt16LE(buffer, 3); // audio format (3=WAVE_FORMAT_IEEE_FLOAT)
+        const channels = 2;
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt16LE(buffer, channels); // number of channels
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt32LE(buffer, sampleRate); // sample rate
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt32LE(buffer, Float32Array.BYTES_PER_ELEMENT * channels * sampleRate); // bytes/second
+        const bitsPerSample = Float32Array.BYTES_PER_ELEMENT * 8;
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt16LE(buffer, channels * Math.floor((bitsPerSample + 7) / 8)); // block align
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt16LE(buffer, bitsPerSample); // bits per sample
+
+        // data chunk
+        buffer.write(new Uint8Array([0x64, 0x61, 0x74, 0x61]), 0, 4); // data
+        // @ts-ignore
+        alphaTab.io.IOHelper.writeInt32LE(buffer, samples * 4);
+        for (const c of chunks) {
+            const bytes = new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
+            buffer.write(bytes, 0, bytes.length);
+        }
+
+        const blob: Blob = new Blob([
+            buffer.toArray()
+        ], {
+            type: 'audio/wav'
+        });
+        return URL.createObjectURL(blob);
     }
 }

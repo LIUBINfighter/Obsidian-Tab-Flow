@@ -1,5 +1,68 @@
-/* build: build:refactor */
-/* --- SettingTab.css --- */
+/* build: dev:refactor */
+/* --- TrackModal.css --- */
+
+.tracks-modal .setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+
+.tracks-modal .track-header {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.tracks-modal .track-name {
+  font-weight: bold;
+  flex: 1 1 auto;
+}
+
+.tracks-modal .track-btns {
+  display: flex;
+  gap: 0.5em;
+}
+
+.tracks-modal .track-btns button,
+.tracks-modal .setting-item-extra-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.tracks-modal .track-btns .active,
+.tracks-modal .setting-item-extra-button.active {
+  background: var(--interactive-accent, #4caf50);
+  color: #fff;
+}
+
+.tracks-modal .track-param-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-left: 2em;
+}
+
+.tracks-modal input[type="range"] {
+  width: 120px;
+}
+
+.tracks-modal input[type="number"] {
+  width: 3em;
+  text-align: center;
+}
+
+/* --- debug.css --- */
+/* .debug-bar {
+	display: none !important;
+} */
+
+/* --- settingtab.css --- */
 .itabs-settings-tabs {
 	display: flex;
 	border-bottom: 1px solid var(--background-modifier-border);
@@ -64,67 +127,4 @@ ol.setting-item-description li,
 ul.setting-item-description li {
 	margin-bottom: 0.2em;
 }
-
-/* --- TrackModal.css --- */
-
-.tracks-modal .setting-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  margin-bottom: 1em;
-}
-
-.tracks-modal .track-header {
-  display: flex;
-  align-items: center;
-  gap: 1em;
-}
-
-.tracks-modal .track-name {
-  font-weight: bold;
-  flex: 1 1 auto;
-}
-
-.tracks-modal .track-btns {
-  display: flex;
-  gap: 0.5em;
-}
-
-.tracks-modal .track-btns button,
-.tracks-modal .setting-item-extra-button {
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 1.1em;
-  padding: 0.2em 0.5em;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.tracks-modal .track-btns .active,
-.tracks-modal .setting-item-extra-button.active {
-  background: var(--interactive-accent, #4caf50);
-  color: #fff;
-}
-
-.tracks-modal .track-param-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  margin-left: 2em;
-}
-
-.tracks-modal input[type="range"] {
-  width: 120px;
-}
-
-.tracks-modal input[type="number"] {
-  width: 3em;
-  text-align: center;
-}
-
-/* --- debug.css --- */
-/* .debug-bar {
-	display: none !important;
-} */
 

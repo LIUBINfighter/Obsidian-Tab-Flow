@@ -10,6 +10,7 @@ export interface ExportEventHandlersOptions {
     getFileName?: () => string; // 可选：自定义文件名
     onExportStart?: (type: string) => void;
     onExportFinish?: (type: string, success: boolean, message?: string) => void;
+    app?: any; // Obsidian App 实例，用于创建模态框
 }
 
 export function registerExportEventHandlers(
@@ -26,53 +27,59 @@ export function registerExportEventHandlers(
     async function exportAudio() {
         try {
             onExportStart?.("audio");
-            const exporter = await api.exportAudio({
-                sampleRate: 44100,
-                useSyncPoints: false,
-                masterVolume: 1,
-                metronomeVolume: 0,
-                trackVolume: new Map(),
-                trackTranspositionPitches: new Map(),
-            });
-            const chunks: Uint8Array[] = [];
-            let done = false;
-            while (!done) {
-                const chunk: unknown = await exporter.render(1000); // 渲染1秒
-                if (
-                    chunk &&
-                    typeof chunk === 'object' &&
-                    'value' in chunk &&
-                    (chunk as { value?: Uint8Array }).value
-                ) {
-                    chunks.push((chunk as { value: Uint8Array }).value);
+            const options = new alphaTab.synth.AudioExportOptions();
+            options.masterVolume = 1;
+            options.metronomeVolume = 0;
+            options.sampleRate = 44100;
+            const exporter = await api.exportAudio(options);
+            const chunks: Float32Array[] = [];
+            try {
+                while (true) {
+                    const chunk = await exporter.render(500);
+                    if (!chunk) break;
+                    chunks.push(chunk.samples);
                 }
-                done = !!(
-                    chunk &&
-                    typeof chunk === 'object' &&
-                    'done' in chunk &&
-                    (chunk as { done?: boolean }).done
-                );
+            } finally {
+                exporter.destroy();
             }
-            exporter.destroy();
-            // 合并所有 chunk
-            const totalLength = chunks.reduce((sum, arr) => sum + arr.length, 0);
-            const wavData = new Uint8Array(totalLength);
-            let offset = 0;
-            for (const arr of chunks) {
-                wavData.set(arr, offset);
-                offset += arr.length;
-            }
-            // 触发下载
-            const a = document.createElement('a');
-            a.download = (getFileName?.() || "audio") + ".wav";
-            a.href = URL.createObjectURL(new Blob([wavData], { type: "audio/wav" }));
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            onExportFinish?.("audio", true);
+            const blobUrl = convertSamplesToWavBlobUrl(chunks, options.sampleRate);
+            onExportFinish?.("audio", true, blobUrl);
         } catch (e: any) {
             onExportFinish?.("audio", false, e?.message || String(e));
         }
+    }
+
+    function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate: number): string {
+        const samples = chunks.reduce((p, c) => p + c.length, 0);
+        const wavHeaderSize = 44;
+        const fileSize = wavHeaderSize + samples * 4;
+        const buffer = alphaTab.io.ByteBuffer.withCapacity(fileSize);
+
+        // 写 WAV 头
+        buffer.write(new Uint8Array([0x52, 0x49, 0x46, 0x46]), 0, 4); // RIFF
+        alphaTab.io.IOHelper.writeInt32LE(buffer, fileSize - 8); // file size
+        buffer.write(new Uint8Array([0x57, 0x41, 0x56, 0x45]), 0, 4); // WAVE
+
+        buffer.write(new Uint8Array([0x66, 0x6D, 0x74, 0x20]), 0, 4); // fmt␣
+        alphaTab.io.IOHelper.writeInt32LE(buffer, 16); // block size
+        alphaTab.io.IOHelper.writeInt16LE(buffer, 3); // audio format (1=WAVE_FORMAT_IEEE_FLOAT)
+        const channels = 2;
+        alphaTab.io.IOHelper.writeInt16LE(buffer, channels); // number of channels
+        alphaTab.io.IOHelper.writeInt32LE(buffer, sampleRate); // sample rate
+        alphaTab.io.IOHelper.writeInt32LE(buffer, Float32Array.BYTES_PER_ELEMENT * channels * sampleRate); // bytes/second
+        const bitsPerSample = Float32Array.BYTES_PER_ELEMENT * 8;
+        alphaTab.io.IOHelper.writeInt16LE(buffer, channels * Math.floor((bitsPerSample + 7) / 8)); // block align
+        alphaTab.io.IOHelper.writeInt16LE(buffer, bitsPerSample); // bits per sample
+
+        buffer.write(new Uint8Array([0x64, 0x61, 0x74, 0x61]), 0, 4); // data
+        alphaTab.io.IOHelper.writeInt32LE(buffer, samples * 4);
+        for (const c of chunks) {
+            const bytes = new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
+            buffer.write(bytes, 0, bytes.length);
+        }
+
+        const blob: Blob = new Blob([buffer.toArray()], { type: 'audio/wav' });
+        return URL.createObjectURL(blob);
     }
 
     // 2. MIDI 导出（带自定义文件名）

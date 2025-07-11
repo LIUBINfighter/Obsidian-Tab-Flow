@@ -1,10 +1,11 @@
-import { Notice } from "obsidian";
+import { Notice, App } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
 // import { dispatchUIEvent } from "../events/dispatch";
 import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
 
 
 export interface DebugBarOptions {
+    app: App; // 新增
     api: alphaTab.AlphaTabApi;
     isAudioLoaded: () => boolean;
     onTrackModal: () => void;
@@ -13,7 +14,7 @@ export interface DebugBarOptions {
 }
 
 export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
-    const { api, isAudioLoaded, onTrackModal, eventBus, getScoreTitle } = options;
+    const { app, api, isAudioLoaded, onTrackModal, eventBus, getScoreTitle } = options;
     const debugBar = document.createElement("div");
     debugBar.className = "debug-bar";
 
@@ -210,10 +211,18 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
                     if (api.score && api.score.title) return api.score.title;
                     return "Untitled";
                 },
+                app, // 传递 app
                 onExportStart: (type: string) => {
                     console.debug(`[Export] 开始导出: ${type}`);
                 },
                 onExportFinish: (type: string, success: boolean, msg?: string) => {
+                    if (type === "audio" && success && msg) {
+                        // 弹出 Obsidian 原生 Modal
+                        const { AudioExportModal } = require("./AudioExportModal");
+                        const fileName = (getScoreTitle?.() || "audio") + ".wav";
+                        new AudioExportModal(app, msg, fileName).open();
+                        new Notice("音频导出完成，已弹出播放器");
+                    }
                     if (success) {
                         console.debug(`[Export] 导出${type}成功`);
                     } else {
