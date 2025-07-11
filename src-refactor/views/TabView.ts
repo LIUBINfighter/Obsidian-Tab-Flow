@@ -25,6 +25,7 @@ export class TabView extends FileView {
 	private _api!: alphaTab.AlphaTabApi;
 	private plugin: Plugin;
 	private resources: AlphaTabResources;
+	private scoreTitle: string = ""; // 新增：乐谱标题
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -101,6 +102,21 @@ export class TabView extends FileView {
 	}
 
 	getDisplayText(): string {
+		if (this.scoreTitle && this.scoreTitle.trim()) {
+			return this.scoreTitle;
+		}
+		if (this.currentFile) {
+			return this.currentFile.basename;
+		}
+		return "alphaTab";
+	}
+
+	/**
+	 * 获取乐谱标题，供外部如 DebugBar 导出等使用
+	 */
+	public getScoreTitle(): string {
+		if (this.scoreTitle && this.scoreTitle.trim()) return this.scoreTitle;
+		if (this.currentFile) return this.currentFile.basename;
 		return "alphaTab";
 	}
 
@@ -208,17 +224,29 @@ export class TabView extends FileView {
 
 	async onLoadFile(file: TFile): Promise<void> {
 		this.currentFile = file;
-
 		try {
 			console.debug(`[TabView] Loading file: ${file.name}`);
-
 			// 使用 AlphaTabService 加载文件
 			const inputFile = await this.app.vault.readBinary(file);
 			await this.alphaTabService.loadScore(new Uint8Array(inputFile));
-
+			// 监听 scoreLoaded 事件，获取乐谱标题
+			if (this._api && this._api.scoreLoaded) {
+				this._api.scoreLoaded.on(() => {
+					const score = this._api.score;
+					if (score && score.title) {
+						this.scoreTitle = score.title;
+					} else {
+						this.scoreTitle = this.currentFile ? this.currentFile.basename : "";
+					}
+					// 强制刷新 header
+					this.leaf?.setViewState({
+						type: VIEW_TYPE_TAB,
+						state: { file: this.currentFile?.path }
+					}, { history: false });
+				});
+			}
 			// 配置滚动元素 - 在乐谱加载后设置
 			this.configureScrollElement();
-
 			console.debug(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error("[TabView] Failed to load file:", error);
