@@ -217,6 +217,9 @@ export class TabView extends FileView {
 			const inputFile = await this.app.vault.readBinary(file);
 			await this.alphaTabService.loadScore(new Uint8Array(inputFile));
 
+			// 配置滚动元素 - 在乐谱加载后设置
+			this.configureScrollElement();
+
 			console.debug(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error("[TabView] Failed to load file:", error);
@@ -253,6 +256,18 @@ export class TabView extends FileView {
 
 		// 应用设置
 		this._api.updateSettings();
+		
+		// 延迟确保设置生效后启用滚动
+		setTimeout(() => {
+			if (this._api.settings.player) {
+				// 确保滚动模式是连续滚动
+				this._api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
+				// 确保启用光标
+				this._api.settings.player.enableCursor = true;
+				this._api.updateSettings();
+				console.debug("[TabView] 滚动配置已更新");
+			}
+		}, 100);
 	}
 
 	// 注册文件变更监听

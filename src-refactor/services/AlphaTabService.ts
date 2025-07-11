@@ -105,4 +105,15 @@ export class AlphaTabService {
         this.api.destroy();
         this.scrollProxy.destroy();
     }
+
+    /**
+     * 配置滚动元素
+     */
+    public configureScrollElement(scrollElement?: HTMLElement | string): void {
+        if (this.api.settings.player) {
+            this.api.settings.player.scrollElement = scrollElement || "html,body";
+            this.api.updateSettings();
+            console.debug("[AlphaTabService] 滚动元素已配置:", scrollElement);
+        }
+    }
 }
