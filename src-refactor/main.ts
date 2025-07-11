@@ -11,21 +11,23 @@ import {
 	DEFAULT_SETTINGS,
 } from "./settings/SettingTab";
 
+
 export default class MyPlugin extends Plugin {
 	settings: TabFlowSettings;
 	resources!: AlphaTabResources;
 	actualPluginDir?: string;
-	checkRequiredAssets?(): boolean {
+
+	checkRequiredAssets(): boolean {
 		// 简单实现，实际可根据 assets-refactor 目录和文件判断
 		return !!this.settings.assetsDownloaded;
 	}
-	async downloadAssets?(): Promise<boolean> {
+
+	async downloadAssets(): Promise<boolean> {
 		// 这里应实现真实下载逻辑，暂返回 true
 		this.settings.assetsDownloaded = true;
 		this.settings.lastAssetsCheck = Date.now();
 		await this.saveSettings();
 		return true;
-	}
 }
 
 	async onload() {

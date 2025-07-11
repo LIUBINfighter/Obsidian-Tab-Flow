@@ -31,15 +31,27 @@ export function registerExportEventHandlers(
                 useSyncPoints: false,
                 masterVolume: 1,
                 metronomeVolume: 0,
-                trackVolume: [],
-                trackTranspositionPitches: [],
+                trackVolume: new Map(),
+                trackTranspositionPitches: new Map(),
             });
             const chunks: Uint8Array[] = [];
             let done = false;
             while (!done) {
-                const chunk = await exporter.render(1000); // 渲染1秒
-                if (chunk.value) chunks.push(chunk.value);
-                done = !!chunk.done;
+                const chunk: unknown = await exporter.render(1000); // 渲染1秒
+                if (
+                    chunk &&
+                    typeof chunk === 'object' &&
+                    'value' in chunk &&
+                    (chunk as { value?: Uint8Array }).value
+                ) {
+                    chunks.push((chunk as { value: Uint8Array }).value);
+                }
+                done = !!(
+                    chunk &&
+                    typeof chunk === 'object' &&
+                    'done' in chunk &&
+                    (chunk as { done?: boolean }).done
+                );
             }
             exporter.destroy();
             // 合并所有 chunk
