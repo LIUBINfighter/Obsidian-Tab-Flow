@@ -220,26 +220,26 @@ export class SettingTab extends PluginSettingTab {
 					restartButton.style.display = "inline-block";
 				}
 
-				tabContents.createEl("div", {
-					text: "说明：AlphaTab 插件仅需以下关键资产文件：",
-					cls: "setting-item-description",
-				});
+				// tabContents.createEl("div", {
+				// 	text: "说明：AlphaTab 插件仅需以下关键资产文件：",
+				// 	cls: "setting-item-description",
+				// });
 
-				const assetsList = tabContents.createEl("ul", {
-					cls: "setting-item-description",
-				});
-				[
-					"alphaTab.min.js - AlphaTab 主脚本",
-					"Bravura.woff2 - 乐谱字体文件",
-					"sonivox.sf3 - 音色库文件",
-				].forEach((item) => {
-					assetsList.createEl("li", { text: item });
-				});
+				// const assetsList = tabContents.createEl("ul", {
+				// 	cls: "setting-item-description",
+				// });
+				// [
+				// 	"alphaTab.min.js - AlphaTab 主脚本",
+				// 	"Bravura.woff2 - 乐谱字体文件",
+				// 	"sonivox.sf3 - 音色库文件",
+				// ].forEach((item) => {
+				// 	assetsList.createEl("li", { text: item });
+				// });
 
-				tabContents.createEl("div", {
-					text: "这些文件总大小约为几MB，将保存在插件目录下的 assets 文件夹。",
-					cls: "setting-item-description",
-				});
+				// tabContents.createEl("div", {
+				// 	text: "这些文件总大小约为几MB，将保存在插件目录下的 assets 文件夹。",
+				// 	cls: "setting-item-description",
+				// });
 
 				const version = this.plugin.manifest?.version ?? "latest";
 				const assetsUrl = `https://github.com/LIUBINfighter/interactive-tabs/releases/download/${version}/assets.zip`;
