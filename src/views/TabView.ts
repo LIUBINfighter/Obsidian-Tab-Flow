@@ -4,8 +4,10 @@ export const VIEW_TYPE_TAB = "tab-view";
 
 import * as alphaTab from "@coderline/alphatab";
 import * as convert from "color-convert";
+
 import { EventBus } from "../utils/EventBus";
 import { AlphaTabService } from "../services/AlphaTabService";
+import { createPlayBar } from "../components/PlayBar";
 
 export type AlphaTabResources = {
 	bravuraUri: string;
@@ -143,7 +145,7 @@ private isMessy(str: string): boolean {
 	return false;
 }
 
-	onload(): void {
+		onload(): void {
 		// --- 字体注入逻辑 ---
 		const fontFaceRule = `
 			@font-face {
@@ -194,20 +196,65 @@ private isMessy(str: string): boolean {
 		// 为兼容性设置 _api 引用
 		this._api = this.alphaTabService.getApi();
 
-		// 3. 渲染 DebugBar
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const { createDebugBar } = require("../components/DebugBar");
-		const debugBar = createDebugBar({
-			app: this.app, // 关键补充
-			api: this.alphaTabService.getApi(),
-			isAudioLoaded: this.isAudioLoaded.bind(this),
-			onTrackModal: () => {},
-			eventBus: this.eventBus,
-			getScoreTitle: this.getScoreTitle.bind(this)
-		});
-		this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 
-		// ...existing code...
+			// 3. 渲染 DebugBar
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
+			const { createDebugBar } = require("../components/DebugBar");
+			const debugBar = createDebugBar({
+				app: this.app, // 关键补充
+				api: this.alphaTabService.getApi(),
+				isAudioLoaded: this.isAudioLoaded.bind(this),
+				onTrackModal: () => {},
+				eventBus: this.eventBus,
+				getScoreTitle: this.getScoreTitle.bind(this)
+			});
+			this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
+
+    // 4. 渲染底部播放栏 PlayBar
+    setTimeout(() => {
+      // 调试 DOM 结构，帮助理解层次关系
+      console.debug("[TabView] 容器层次结构分析:", {
+        containerEl: this.containerEl.className,
+        containerParent: this.containerEl.parentElement?.className,
+        contentEl: this.contentEl.className
+      });
+
+      // 在TabView中，containerEl 是整个视图容器，而 contentEl 是内容区域
+      // 我们直接在 containerEl 中添加一个相对定位的播放栏
+      
+      // 清除已有的播放栏（避免重复）
+      const existingPlayBar = document.querySelector('.play-bar');
+      if (existingPlayBar) existingPlayBar.remove();
+      
+      // 创建新的播放栏
+      const playBar = createPlayBar({
+        app: this.app,
+        onPlayPause: () => {
+          // 仅基础实现，后续可扩展
+          if (!this._api) return;
+          if (this._api.player) {
+            // @ts-ignore
+            if (this._api.player.state === 1) {
+              this._api.player.pause();
+            } else {
+              this._api.player.play();
+            }
+          }
+        },
+        isPlaying: () => {
+          if (!this._api || !this._api.player) return false;
+          // @ts-ignore
+          return this._api.player.state === 1;
+        }
+      });
+      
+      // 播放栏直接挂载到 containerEl，确保显示在视图内部
+      this.containerEl.appendChild(playBar);
+      console.debug("[TabView] 播放栏已挂载到TabView容器");
+      
+      // 调整contentEl的下边距，为播放栏腾出空间
+      this.contentEl.style.marginBottom = "48px";
+    }, 500); // 延迟确保 DOM 已完全加载		// ...existing code...
 	}
 
 	onunload(): void {

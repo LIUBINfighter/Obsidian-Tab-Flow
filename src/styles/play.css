@@ -1,0 +1,33 @@
+
+.play-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  height: 48px;
+  background: var(--background-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+  padding: 0 1.5em;
+  border-top: 1px solid var(--background-modifier-border);
+}.play-bar-btn {
+	background: none;
+	border: none;
+	color: var(--text-normal, #fff);
+	cursor: pointer;
+	padding: 0.5em 0.8em;
+	font-size: 1.2em;
+	display: flex;
+	align-items: center;
+	transition: background 0.2s;
+	border-radius: 6px;
+}
+.play-bar-btn:hover {
+	background: var(--background-modifier-hover, #444);
+}
+.play-bar-btn svg {
+	display: block;
+}
