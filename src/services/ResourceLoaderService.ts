@@ -2,70 +2,101 @@ import { App } from "obsidian";
 import * as path from "path";
 
 export interface AlphaTabResources {
-	bravuraUri: string;
-	alphaTabWorkerUri: string;
-	soundFontUri: string; // 改为URL而不是二进制数据
+	bravuraUri?: string;
+	alphaTabWorkerUri?: string;
+	soundFontUri?: string; // 改为URL而不是二进制数据
+	resourcesComplete: boolean;
 }
+
+// 资产文件常量
+export const ASSET_FILES = {
+	BRAVURA: "Bravura.woff2",
+	ALPHA_TAB: "alphaTab.min.js", 
+	SOUNDFONT: "sonivox.sf3"
+};
 
 export class ResourceLoaderService {
 	constructor(private app: App) {}
 
 	public async load(pluginDir: string): Promise<AlphaTabResources> {
-		try {
-			const bravuraPath = path.join(
-				pluginDir,
-				"assets",
-				"Bravura.woff2"
-			);
-			const alphaTabPath = path.join(
-				pluginDir,
-				"assets",
-				"alphaTab.min.js"
-			);
-			const soundFontPath = path.join(
-				pluginDir,
-				"assets",
-				"sonivox.sf3"
-			);
+		const bravuraPath = path.join(
+			pluginDir,
+			"assets",
+			ASSET_FILES.BRAVURA
+		);
+		const alphaTabPath = path.join(
+			pluginDir,
+			"assets",
+			ASSET_FILES.ALPHA_TAB
+		);
+		const soundFontPath = path.join(
+			pluginDir,
+			"assets",
+			ASSET_FILES.SOUNDFONT
+		);
 
-			// 并行加载字体和脚本资源
-			const [bravuraData, alphaTabData] = await Promise.all([
-				this.app.vault.adapter.readBinary(bravuraPath),
-				this.app.vault.adapter.readBinary(alphaTabPath),
+		// 初始化资源对象
+		const resources: AlphaTabResources = {
+			resourcesComplete: true
+		};
+
+		try {
+			// 检查每个资源文件是否存在，如果不存在则跳过
+			const [bravuraExists, alphaTabExists, soundFontExists] = await Promise.all([
+				this.fileExists(bravuraPath),
+				this.fileExists(alphaTabPath),
+				this.fileExists(soundFontPath)
 			]);
 
-			// 对于SoundFont，我们不预加载，而是提供URL供alphaTab自行加载
-			const soundFontUri =
-				this.app.vault.adapter.getResourcePath(soundFontPath);
+			// 如果有任何资源不存在，标记为不完整
+			if (!bravuraExists || !alphaTabExists || !soundFontExists) {
+				resources.resourcesComplete = false;
+				console.log("[ResourceLoaderService] Some resources are missing. Plugin will load with limited functionality.");
+				
+				if (!bravuraExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.BRAVURA}`);
+				if (!alphaTabExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.ALPHA_TAB}`);
+				if (!soundFontExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.SOUNDFONT}`);
+			}
 
-			const bravuraUri = `data:font/woff2;base64,${this.arrayBufferToBase64(
-				bravuraData
-			)}`;
-			const alphaTabWorkerUri = `data:application/javascript;base64,${this.arrayBufferToBase64(
-				alphaTabData
-			)}`;
+			// 尝试加载每个资源，如果不存在则跳过
+			if (bravuraExists) {
+				const bravuraData = await this.app.vault.adapter.readBinary(bravuraPath);
+				resources.bravuraUri = `data:font/woff2;base64,${this.arrayBufferToBase64(bravuraData)}`;
+			}
 
-			console.log(
-				"[ResourceLoaderService] All resources loaded successfully."
-			);
-			console.log(
-				"[ResourceLoaderService] SoundFont URI: ",
-				soundFontUri
-			);
+			if (alphaTabExists) {
+				const alphaTabData = await this.app.vault.adapter.readBinary(alphaTabPath);
+				resources.alphaTabWorkerUri = `data:application/javascript;base64,${this.arrayBufferToBase64(alphaTabData)}`;
+			}
 
-			return {
-				bravuraUri,
-				alphaTabWorkerUri,
-				soundFontUri,
-			};
+			if (soundFontExists) {
+				resources.soundFontUri = this.app.vault.adapter.getResourcePath(soundFontPath);
+				console.log("[ResourceLoaderService] SoundFont URI: ", resources.soundFontUri);
+			}
+
+			if (resources.resourcesComplete) {
+				console.log("[ResourceLoaderService] All resources loaded successfully.");
+			}
+
+			return resources;
 		} catch (error) {
 			console.error(
-				"[ResourceLoaderService] Failed to load essential resources:",
+				"[ResourceLoaderService] Failed to load resources:",
 				error
 			);
-			throw new Error(
-				"AlphaTab plugin resource loading failed. Please check the plugin installation."
-			);
+			// 返回不完整的资源，而不是抛出错误
+			return {
+				resourcesComplete: false
+			};
+		}
+	}
+
+	private async fileExists(filePath: string): Promise<boolean> {
+		try {
+			return await this.app.vault.adapter.exists(filePath);
+		} catch (error) {
+			console.error(`[ResourceLoaderService] Error checking if file exists: ${filePath}`, error);
+			return false;
 		}
 	}
 

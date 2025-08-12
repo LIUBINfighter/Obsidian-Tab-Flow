@@ -1,6 +1,5 @@
-import { App, Plugin, PluginSettingTab, Setting, Notice } from "obsidian";
+import { App, PluginSettingTab, Setting, Notice } from "obsidian";
 import * as path from "path";
-import * as fs from "fs";
 import MyPlugin from "../main";
 
 export interface TabFlowSettings {
@@ -21,7 +20,7 @@ export class SettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	display(): void {
+	async display(): Promise<void> {
 		const { containerEl } = this;
 
 		containerEl.empty();
@@ -39,13 +38,15 @@ export class SettingTab extends PluginSettingTab {
 
 		let activeTab = "general";
 
-		const renderTab = (tabId: string) => {
+		const renderTab = async (tabId: string) => {
 			tabContents.empty();
 			if (tabId === "general") {
 				// 资产管理页内容，参考 AlphaTabSettingTab.displayAssetsTab
 				tabContents.createEl("h3", { text: "资源文件管理" });
-
-				const assetsStatus = this.plugin.checkRequiredAssets?.()
+				
+				// 检查资产文件状态 - 异步获取
+				const assetsExist = await this.plugin.checkRequiredAssets?.();
+				const assetsStatus = assetsExist
 					? "✅ 已安装"
 					: "❌ 未安装或不完整";
 
@@ -54,11 +55,7 @@ export class SettingTab extends PluginSettingTab {
 					.setDesc(`状态: ${assetsStatus}`)
 					.addButton((button) =>
 						button
-							.setButtonText(
-								this.plugin.checkRequiredAssets?.()
-									? "重新下载"
-									: "下载资源文件"
-							)
+							.setButtonText(assetsExist ? "重新下载" : "下载资源文件")
 							.setCta()
 							.onClick(async () => {
 								button
@@ -147,20 +144,27 @@ export class SettingTab extends PluginSettingTab {
 							"打开插件的 assets 目录，方便手动管理资源文件"
 						)
 						.addButton((button) =>
-							button.setButtonText("打开目录").onClick(() => {
-								const assetsPath = path.join(
-									this.plugin.actualPluginDir as string,
-									"assets"
-								);
+							button.setButtonText("打开目录").onClick(async () => {
+								// 使用Obsidian API处理目录
+								const assetsDirRelative = path.join(".obsidian", "plugins", this.plugin.manifest.id, "assets");
+								
 								try {
-									if (!fs.existsSync(assetsPath)) {
-										fs.mkdirSync(assetsPath, {
-											recursive: true,
-										});
-									}
+									// 确保目录存在
+									await this.app.vault.adapter.mkdir(assetsDirRelative);
+									
+									// 获取路径
+									const assetsPath = path.join(
+										this.plugin.actualPluginDir as string,
+										"assets"
+									);
+									
+									// 使用协议在浏览器中打开
 									const fileUrl = `file://${assetsPath}`;
 									window.open(fileUrl);
 									new Notice("已尝试打开资产目录");
+									
+									console.log("资产目录:", assetsPath);
+									console.log("资产目录（相对）:", assetsDirRelative);
 								} catch (error) {
 									console.error("打开资产目录失败:", error);
 									new Notice(
@@ -223,16 +227,16 @@ export class SettingTab extends PluginSettingTab {
 					tab.id === activeTab ? "active" : "",
 				],
 			});
-			tabEl.onclick = () => {
+			tabEl.onclick = async () => {
 				tabs.querySelectorAll("button").forEach((btn) =>
 					btn.removeClass("active")
 				);
 				tabEl.addClass("active");
 				activeTab = tab.id;
-				renderTab(tab.id);
+				await renderTab(tab.id);
 			};
 		});
 
-		renderTab(activeTab);
+		await renderTab(activeTab);
 	}
 }

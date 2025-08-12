@@ -1,8 +1,9 @@
-import { Plugin, TFile } from "obsidian";
+import { Plugin, TFile, Notice, requestUrl } from "obsidian";
 import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
 import {
 	ResourceLoaderService,
 	AlphaTabResources,
+	ASSET_FILES
 } from "./services/ResourceLoaderService";
 import * as path from "path";
 import {
@@ -16,36 +17,236 @@ export default class MyPlugin extends Plugin {
 	settings: TabFlowSettings;
 	resources!: AlphaTabResources;
 	actualPluginDir?: string;
+	
+	// 加载和保存设置的方法
+	async loadSettings() {
+		this.settings = Object.assign(
+			{},
+			DEFAULT_SETTINGS,
+			await this.loadData()
+		);
+	}
 
-	checkRequiredAssets(): boolean {
-		// 简单实现，实际可根据 assets 目录和文件判断
-		return !!this.settings.assetsDownloaded;
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
+	
+	/**
+	 * 获取相对于vault的路径
+	 * @param absolutePath 绝对路径
+	 * @returns 相对于vault的路径
+	 */
+	getRelativePathToVault(absolutePath: string): string {
+		// 获取插件目录相对于vault的路径
+		// 通常插件目录是 vault/.obsidian/plugins/plugin-id/
+		if (!this.actualPluginDir) {
+			throw new Error("插件目录未定义");
+		}
+		
+		// 使用manifest.dir作为基础计算相对路径
+		// 替换反斜杠为正斜杠，保证跨平台兼容
+		const normalizedPluginDir = this.actualPluginDir.replace(/\\/g, '/');
+		const normalizedPath = absolutePath.replace(/\\/g, '/');
+		
+		// 打印调试信息
+		console.log("插件路径:", normalizedPluginDir);
+		console.log("目标路径:", normalizedPath);
+		
+		// 预期的结果是：.obsidian/plugins/interactive-tabs/assets/文件名
+		if (normalizedPath.startsWith(normalizedPluginDir)) {
+			// 从绝对路径中移除插件目录部分，得到相对路径
+			return normalizedPath;
+		}
+		
+		// 如果路径不匹配预期格式，尝试直接使用文件名部分
+		const fileName = path.basename(absolutePath);
+		return path.join(normalizedPluginDir, "assets", fileName);
+	}
+
+	async checkRequiredAssets(): Promise<boolean> {
+		try {
+			if (!this.actualPluginDir) {
+				console.error("[MyPlugin] Plugin directory not found");
+				return false;
+			}
+			
+			// 使用相对路径而非绝对路径
+			const assetsDirRelative = path.join(".obsidian", "plugins", this.manifest.id, "assets");
+			
+			// 检查assets目录是否存在
+			const assetsDirExists = await this.app.vault.adapter.exists(assetsDirRelative);
+			if (!assetsDirExists) {
+				console.log("[MyPlugin] Assets directory does not exist:", assetsDirRelative);
+				return false;
+			}
+			
+			// 检查三个必需的资产文件是否存在
+			const assetPromises = [
+				ASSET_FILES.ALPHA_TAB,
+				ASSET_FILES.BRAVURA,
+				ASSET_FILES.SOUNDFONT
+			].map(async file => {
+				const filePath = path.join(assetsDirRelative, file);
+				const exists = await this.app.vault.adapter.exists(filePath);
+				if (!exists) {
+					console.log(`[MyPlugin] Missing asset file: ${filePath}`);
+				} else {
+					console.log(`[MyPlugin] Found asset file: ${filePath}`);
+				}
+				return exists;
+			});
+			
+			const results = await Promise.all(assetPromises);
+			const allAssetsExist = results.every(result => result);
+			
+			return allAssetsExist;
+		} catch (error) {
+			console.error("[MyPlugin] Error checking assets:", error);
+			return false;
+		}
 	}
 
 	async downloadAssets(): Promise<boolean> {
-		// 这里应实现真实下载逻辑，暂返回 true
-		this.settings.assetsDownloaded = true;
-		this.settings.lastAssetsCheck = Date.now();
-		await this.saveSettings();
-		return true;
-}
+		try {
+			if (!this.actualPluginDir) {
+				new Notice("无法确定插件目录，下载失败");
+				return false;
+			}
+
+			console.log("当前插件路径:", this.actualPluginDir);
+			
+			// 使用Obsidian API创建资产目录
+			const assetsDir = path.join(this.actualPluginDir, "assets");
+			const assetsDirRelative = path.join(".obsidian", "plugins", this.manifest.id, "assets");
+			
+			try {
+				await this.app.vault.adapter.mkdir(assetsDirRelative);
+				console.log("资产目录创建成功:", assetsDirRelative);
+			} catch (err) {
+				console.log("创建目录时出错（可能已存在）:", err);
+			}
+
+			// 使用固定版本号0.0.5，而不是当前插件版本
+			// 因为您提到日志中显示的是从0.0.5版本下载的资产
+			const version = "0.0.5";
+			const baseUrl = `https://github.com/LIUBINfighter/Obsidian-Tab-Flow/releases/download/${version}`;
+			
+			// 定义要下载的资产
+			const assets = [
+				{ url: `${baseUrl}/${ASSET_FILES.ALPHA_TAB}`, path: path.join(assetsDir, ASSET_FILES.ALPHA_TAB) },
+				{ url: `${baseUrl}/${ASSET_FILES.BRAVURA}`, path: path.join(assetsDir, ASSET_FILES.BRAVURA) },
+				{ url: `${baseUrl}/${ASSET_FILES.SOUNDFONT}`, path: path.join(assetsDir, ASSET_FILES.SOUNDFONT) }
+			];
+
+			// 获取plugins目录的完整路径
+			console.log("插件目录:", this.actualPluginDir);
+			
+			// 并行下载所有资产文件
+			const downloadPromises = assets.map(async (asset) => {
+				try {
+					new Notice(`正在下载 ${path.basename(asset.path)}...`);
+					const response = await requestUrl({
+						url: asset.url,
+						method: "GET"
+					});
+					
+					if (response.status !== 200) {
+						console.error(`Failed to download ${asset.url}, status: ${response.status}`);
+						return false;
+					}
+					
+					// 文件路径处理，获取相对于vault的路径
+					// 从actualPluginDir计算相对路径 (.obsidian/plugins/interactive-tabs/assets/...)
+					// 解析出相对于插件目录的路径
+					const relativeToVault = this.getRelativePathToVault(asset.path);
+					
+					try {
+						// 使用obsidian API创建目录
+						const dirPath = path.dirname(relativeToVault);
+						if (dirPath && dirPath !== ".") {
+							await this.app.vault.adapter.mkdir(dirPath);
+						}
+						
+						// 使用obsidian API写入文件
+						await this.app.vault.adapter.writeBinary(
+							relativeToVault, 
+							response.arrayBuffer
+						);
+						
+						console.log(`Downloaded ${asset.url} to ${relativeToVault}`);
+						
+						// 检查文件是否确实写入成功
+						const exists = await this.app.vault.adapter.exists(relativeToVault);
+						if (!exists) {
+							console.error(`File appears to be written but doesn't exist: ${relativeToVault}`);
+							return false;
+						}
+						
+						return true;
+					} catch (fsError) {
+						console.error(`文件系统错误 (${relativeToVault}):`, fsError);
+						return false;
+					}
+				} catch (error) {
+					console.error(`Error downloading ${asset.url}:`, error);
+					return false;
+				}
+			});
+
+			const results = await Promise.all(downloadPromises);
+			const success = results.every(result => result);
+			
+			if (success) {
+				this.settings.assetsDownloaded = true;
+				this.settings.lastAssetsCheck = Date.now();
+				await this.saveSettings();
+				new Notice("所有资产文件下载成功！");
+			} else {
+				new Notice("部分资产文件下载失败，请检查网络连接后重试");
+			}
+			
+			return success;
+		} catch (error) {
+			console.error("[MyPlugin] Error downloading assets:", error);
+			new Notice(`下载资产文件失败: ${error.message}`);
+			return false;
+		}
+	}
 
 	async onload() {
 		await this.loadSettings();
-
+		
+		// 存储实际的插件目录路径
+		this.actualPluginDir = this.manifest.dir || "";
+		console.log("插件实际路径:", this.actualPluginDir);
+		console.log("Manifest ID:", this.manifest.id);
+		
 		// 注册设置面板
 		this.addSettingTab(new SettingTab(this.app, this));
 
-		// 获取插件目录
-		const pluginDir = this.manifest.dir || "";
-
 		// 使用 ResourceLoaderService 加载资源
 		const resourceLoader = new ResourceLoaderService(this.app);
-		this.resources = await resourceLoader.load(pluginDir);
-
-		this.registerView(VIEW_TYPE_TAB, (leaf) => {
-			return new TabView(leaf, this, this.resources);
-		});
+		this.resources = await resourceLoader.load(this.actualPluginDir);
+		
+		// 检查资源是否完整，如果不完整则显示通知
+		if (!this.resources.resourcesComplete) {
+			new Notice(
+				"AlphaTab 插件资源文件不完整，某些功能可能无法正常工作。请在插件设置中下载资源文件。",
+				10000
+			);
+		}
+		
+		// 只在有足够资源的情况下注册视图
+		if (this.resources.bravuraUri && this.resources.alphaTabWorkerUri) {
+			this.registerView(VIEW_TYPE_TAB, (leaf) => {
+				// 这里我们需要确保传递的资源对象符合 TabView 所需的格式
+				return new TabView(leaf, this, {
+					bravuraUri: this.resources.bravuraUri || "",
+					alphaTabWorkerUri: this.resources.alphaTabWorkerUri || "",
+					soundFontUri: this.resources.soundFontUri || ""
+				});
+			});
+		}
 
 		this.registerExtensions(
 			["gp", "gp3", "gp4", "gp5", "gpx", "gp7"],
@@ -129,17 +330,6 @@ export default class MyPlugin extends Plugin {
 		console.log("AlphaTab Plugin Unloaded");
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
 }
 
 export function isGuitarProFile(extension: string | undefined): boolean {
