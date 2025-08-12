@@ -225,17 +225,7 @@ private isMessy(str: string): boolean {
 			// 创建新的播放栏
 			const playBar = createPlayBar({
 				app: this.app,
-				onPlayPause: () => {
-					if (!this._api) return;
-					if (this._api.player) {
-						// @ts-ignore
-						if ((this._api.player as any).state === 1) {
-							(this._api.player as any).pause();
-						} else {
-							(this._api.player as any).play();
-						}
-					}
-				},
+				eventBus: this.eventBus,
 				initialPlaying: false,
 				getCurrentTime: () => {
 					// AlphaTab API 中没有直接提供 getPosition 方法

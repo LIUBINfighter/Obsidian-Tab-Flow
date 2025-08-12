@@ -6,29 +6,31 @@ import { createAudioPlayer, AudioPlayerOptions } from "./AudioPlayer";
 
 export interface PlayBarOptions {
 	app: App;
-	onPlayPause: () => void;
+	eventBus: { publish: (event: string, payload?: unknown) => void };
 	initialPlaying?: boolean;
 	getCurrentTime?: () => number; // 获取当前播放时间（毫秒）
 	getDuration?: () => number; // 获取总时长（毫秒）
 	seekTo?: (position: number) => void; // 跳转到指定位置（毫秒）
-    onAudioCreated: (audioEl: HTMLAudioElement) => void; // 新增
-    audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
+	onAudioCreated: (audioEl: HTMLAudioElement) => void; // 新增
+	audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
 }
 
 // 通过此常量控制要加载哪些组件
-// const ENABLED_COMPONENTS = ["playButton", "progressBar", "audioPlayer"];
-// 新增 audioPlayer 功能块，不移除原有 progressBar 代码，仅通过开关控制
 const ENABLED_COMPONENTS = ["playButton"];
 
 export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	const {
-		onPlayPause,
+		app,
+		eventBus,
 		initialPlaying = false,
 		getCurrentTime = () => 0,
 		getDuration = () => 0,
 		seekTo = () => {},
 	} = options;
+	
 	let playing = initialPlaying;
+	let metronomeOn = false;
+	let countInOn = false;
 
 	const bar = document.createElement("div");
 	bar.className = "play-bar nav-buttons-container";
@@ -36,76 +38,148 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	// 左侧控制区
 	let leftSection: HTMLDivElement | null = null;
 	let playPauseBtn: HTMLButtonElement | null = null;
+	let stopBtn: HTMLButtonElement | null = null;
+	let metronomeBtn: HTMLButtonElement | null = null;
+	let countInBtn: HTMLButtonElement | null = null;
+
+	// 内部函数
+	function updatePlayPauseButton() {
+		if (!playPauseBtn) return;
+		playPauseBtn.innerHTML = "";
+		const iconSpan = document.createElement("span");
+		setIcon(iconSpan, playing ? "pause" : "play");
+		playPauseBtn.appendChild(iconSpan);
+		playPauseBtn.setAttribute("aria-label", playing ? "暂停" : "播放");
+	}
+
+	function updateMetronomeBtn() {
+		if (!metronomeBtn) return;
+		metronomeBtn.innerHTML = "";
+		const iconSpan = document.createElement("span");
+		setIcon(iconSpan, "lucide-music-2");
+		metronomeBtn.appendChild(iconSpan);
+		metronomeBtn.setAttribute("aria-label", metronomeOn ? "关闭节拍器" : "开启节拍器");
+		metronomeBtn.classList.toggle("is-active", metronomeOn);
+	}
+
+	function updateCountInBtn() {
+		if (!countInBtn) return;
+		countInBtn.innerHTML = "";
+		const iconSpan = document.createElement("span");
+		setIcon(iconSpan, countInOn ? "lucide-timer" : "lucide-timer-off");
+		countInBtn.appendChild(iconSpan);
+		countInBtn.setAttribute("aria-label", countInOn ? "关闭预备拍" : "开启预备拍");
+		countInBtn.classList.toggle("is-active", countInOn);
+	}
+
 	if (ENABLED_COMPONENTS.includes("playButton")) {
 		leftSection = document.createElement("div");
 		leftSection.className = "play-bar-section play-controls";
 		bar.appendChild(leftSection);
 
+		// 播放/暂停按钮
 		playPauseBtn = document.createElement("button");
 		playPauseBtn.className = "clickable-icon";
 		playPauseBtn.setAttribute("type", "button");
-
-		function updatePlayPauseButton() {
-			playPauseBtn!.innerHTML = "";
-			const iconSpan = document.createElement("span");
-			setIcon(iconSpan, playing ? "pause" : "play");
-			playPauseBtn!.appendChild(iconSpan);
-			playPauseBtn!.setAttribute("aria-label", playing ? "暂停" : "播放");
-		}
 		updatePlayPauseButton();
-
-		playPauseBtn.addEventListener("click", () => {
+		playPauseBtn.onclick = () => {
 			playing = !playing;
-			onPlayPause();
+			if (eventBus) {
+				eventBus.publish("命令:播放暂停");
+			}
 			updatePlayPauseButton();
-			updateProgressInterval();
-		});
+		};
 		leftSection.appendChild(playPauseBtn);
+
+		// 停止按钮
+		stopBtn = document.createElement("button");
+		stopBtn.className = "clickable-icon";
+		stopBtn.setAttribute("type", "button");
+		const stopIcon = document.createElement("span");
+		setIcon(stopIcon, "square");
+		stopBtn.appendChild(stopIcon);
+		stopBtn.setAttribute("aria-label", "停止");
+		stopBtn.onclick = () => {
+			playing = false;
+			if (eventBus) {
+				eventBus.publish("命令:停止");
+			}
+			updatePlayPauseButton();
+		};
+		leftSection.appendChild(stopBtn);
+
+		// 节拍器按钮
+		metronomeBtn = document.createElement("button");
+		metronomeBtn.className = "clickable-icon";
+		metronomeBtn.setAttribute("type", "button");
+		updateMetronomeBtn();
+		metronomeBtn.onclick = () => {
+			metronomeOn = !metronomeOn;
+			if (eventBus) {
+				eventBus.publish("命令:设置节拍器", metronomeOn);
+			}
+			updateMetronomeBtn();
+		};
+		leftSection.appendChild(metronomeBtn);
+
+		// 预备拍按钮
+		countInBtn = document.createElement("button");
+		countInBtn.className = "clickable-icon";
+		countInBtn.setAttribute("type", "button");
+		updateCountInBtn();
+		countInBtn.onclick = () => {
+			countInOn = !countInOn;
+			if (eventBus) {
+				eventBus.publish("命令:设置预备拍", countInOn);
+			}
+			updateCountInBtn();
+		};
+		leftSection.appendChild(countInBtn);
 	}
 
-    // 中间区域：支持两种模式
-    // 1) 传统 progressBar（保留，不默认启用）
-    // 2) 新增 audioPlayer（默认启用）
-    let centerSection: HTMLDivElement | null = null;
-    let progressBar: ProgressBarElement | null = null;
-    let currentTimeDisplay: HTMLSpanElement | null = null;
-    let totalTimeDisplay: HTMLSpanElement | null = null;
-    if (ENABLED_COMPONENTS.includes("progressBar")) {
-        centerSection = document.createElement("div");
-        centerSection.className = "play-bar-section play-progress-container";
+	// 中间区域：支持两种模式
+	// 1) 传统 progressBar（保留，不默认启用）
+	// 2) 新增 audioPlayer（默认启用）
+	let centerSection: HTMLDivElement | null = null;
+	let progressBar: ProgressBarElement | null = null;
+	let currentTimeDisplay: HTMLSpanElement | null = null;
+	let totalTimeDisplay: HTMLSpanElement | null = null;
+	if (ENABLED_COMPONENTS.includes("progressBar")) {
+		centerSection = document.createElement("div");
+		centerSection.className = "play-bar-section play-progress-container";
 
-        currentTimeDisplay = document.createElement("span");
-        currentTimeDisplay.className = "play-time current-time";
-        currentTimeDisplay.textContent = "0:00";
-        centerSection.appendChild(currentTimeDisplay);
+		currentTimeDisplay = document.createElement("span");
+		currentTimeDisplay.className = "play-time current-time";
+		currentTimeDisplay.textContent = "0:00";
+		centerSection.appendChild(currentTimeDisplay);
 
-        progressBar = createProgressBar({
-            getCurrentTime,
-            getDuration,
-            seekTo,
-        }) as ProgressBarElement;
-        centerSection.appendChild(progressBar);
+		progressBar = createProgressBar({
+			getCurrentTime,
+			getDuration,
+			seekTo,
+		}) as ProgressBarElement;
+		centerSection.appendChild(progressBar);
 
-        totalTimeDisplay = document.createElement("span");
-        totalTimeDisplay.className = "play-time total-time";
-        totalTimeDisplay.textContent = "0:00";
-        centerSection.appendChild(totalTimeDisplay);
+		totalTimeDisplay = document.createElement("span");
+		totalTimeDisplay.className = "play-time total-time";
+		totalTimeDisplay.textContent = "0:00";
+		centerSection.appendChild(totalTimeDisplay);
 
-        bar.appendChild(centerSection);
-    } else if (ENABLED_COMPONENTS.includes("audioPlayer")) {
-        centerSection = document.createElement("div");
-        centerSection.className = "play-bar-section play-progress-container";
+		bar.appendChild(centerSection);
+	} else if (ENABLED_COMPONENTS.includes("audioPlayer")) {
+		centerSection = document.createElement("div");
+		centerSection.className = "play-bar-section play-progress-container";
 
-        // 创建并嵌入原生 <audio> 播放器
-        const audioContainer = createAudioPlayer({
-            app: options.app,
-            onAudioCreated: options.onAudioCreated,
-            ...(options.audioPlayerOptions || {}),
-        } as AudioPlayerOptions);
-        centerSection.appendChild(audioContainer);
+		// 创建并嵌入原生 <audio> 播放器
+		const audioContainer = createAudioPlayer({
+			app: options.app,
+			onAudioCreated: options.onAudioCreated,
+			...(options.audioPlayerOptions || {}),
+		} as AudioPlayerOptions);
+		centerSection.appendChild(audioContainer);
 
-        bar.appendChild(centerSection);
-    }
+		bar.appendChild(centerSection);
+	}
 
 	// 右侧状态区（可选）
 	const rightSection = document.createElement("div");
@@ -122,11 +196,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	}
 
 	// 更新进度条显示
-    function updateProgress(
+	function updateProgress(
 		currentTimeOverride?: number,
 		durationOverride?: number
 	) {
-        if (!progressBar || !currentTimeDisplay || !totalTimeDisplay) return;
+		if (!progressBar || !currentTimeDisplay || !totalTimeDisplay) return;
 		try {
 			const currentTime =
 				currentTimeOverride !== undefined
