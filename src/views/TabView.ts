@@ -211,50 +211,158 @@ private isMessy(str: string): boolean {
 			this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 
     // 4. 渲染底部播放栏 PlayBar
-    setTimeout(() => {
-      // 调试 DOM 结构，帮助理解层次关系
-      console.debug("[TabView] 容器层次结构分析:", {
-        containerEl: this.containerEl.className,
-        containerParent: this.containerEl.parentElement?.className,
-        contentEl: this.contentEl.className
-      });
+		// 新方案：在 scoreLoaded 后再渲染 PlayBar，并确保 getCurrentTime/getDuration/seekTo 始终指向最新 player
+		const mountPlayBar = () => {
+			// 清除已有的播放栏（避免重复）
+			const existingPlayBar = document.querySelector('.play-bar');
+			if (existingPlayBar) existingPlayBar.remove();
+			
+			// 创建新的播放栏
+			const playBar = createPlayBar({
+				app: this.app,
+				onPlayPause: () => {
+					if (!this._api) return;
+					if (this._api.player) {
+						// @ts-ignore
+						if ((this._api.player as any).state === 1) {
+							(this._api.player as any).pause();
+						} else {
+							(this._api.player as any).play();
+						}
+					}
+				},
+				initialPlaying: false,
+				getCurrentTime: () => {
+					// AlphaTab API 中没有直接提供 getPosition 方法
+					// 我们需要使用 tickPosition 和其他属性来计算当前时间
+					try {
+						if (this._api) {
+							// 使用 timePosition 属性（如果存在）
+							// @ts-ignore
+							if (typeof this._api.tickPosition === 'number' && this._api.score) {
+								// @ts-ignore 
+								return this._api.timePosition || 0;
+							}
+						}
+					} catch (e) {
+						console.debug("[TabView] 获取当前播放位置出错:", e);
+					}
+					return 0;
+				},
+				getDuration: () => {
+					// 尝试从乐谱中获取总时长
+					try {
+						if (this._api?.score) {
+							// alphaTab API 中 score 对象可能有 duration 属性
+							// @ts-ignore
+							return this._api.score.duration || 0;
+						}
+					} catch (e) {
+						console.debug("[TabView] 获取乐谱总时长出错:", e);
+					}
+					return 0;
+				},
+				seekTo: (ms) => {
+					try {
+						// alphaTab API 可能提供 playerPosition 属性来设置播放位置
+						// @ts-ignore
+						if (this._api && typeof this._api.playerPosition !== 'undefined') {
+							// @ts-ignore
+							this._api.playerPosition = ms;
+						}
+						// 或者尝试使用 timePosition 属性
+						// @ts-ignore
+						else if (this._api && typeof this._api.timePosition !== 'undefined') {
+							// @ts-ignore
+							this._api.timePosition = ms;
+						}
+					} catch (e) {
+						console.debug("[TabView] 设置播放位置出错:", e);
+					}
+				}
+			});
+			
+			// 确保挂载到容器并显示，添加调试信息
+			this.containerEl.appendChild(playBar);
+			
+			// 添加播放位置变化事件监听，更新进度条
+			if (this._api) {
+				// 监听播放位置变化事件
+				this._api.playerPositionChanged.on((args) => {
+					// 手动触发更新，不需要额外操作，因为PlayBar组件会自动调用getCurrentTime
+					// 在下一帧更新UI，避免频繁更新造成性能问题
+					window.requestAnimationFrame(() => {
+						const progressFill = playBar.querySelector('.progress-fill') as HTMLElement;
+						const progressHandle = playBar.querySelector('.progress-handle') as HTMLElement;
+						const currentTimeDisplay = playBar.querySelector('.current-time') as HTMLElement;
+						const totalTimeDisplay = playBar.querySelector('.total-time') as HTMLElement;
+						
+						if (progressFill && progressHandle && currentTimeDisplay && totalTimeDisplay) {
+							// 使用 playerPositionChanged 事件提供的时间信息
+							const currentTime = args.currentTime || 0;
+							const duration = args.endTime || 0;
+							
+							// 更新时间显示
+							currentTimeDisplay.textContent = formatTime(currentTime);
+							totalTimeDisplay.textContent = formatTime(duration);
+							
+							// 更新进度条
+							if (duration > 0) {
+								const progress = (currentTime / duration) * 100;
+								progressFill.style.width = `${progress}%`;
+								
+								// 设置手柄位置为进度条填充的末端
+								const handlePos = progress;
+								progressHandle.style.left = `${handlePos}%`;
+							}
+						}
+					});
+				});
+			}
+			
+			// 格式化时间显示（毫秒 -> mm:ss）
+			function formatTime(ms: number): string {
+				if (isNaN(ms) || ms < 0) return "0:00";
+				const totalSeconds = Math.floor(ms / 1000);
+				const minutes = Math.floor(totalSeconds / 60);
+				const seconds = totalSeconds % 60;
+				return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+			}
+			
+			// 检查播放栏是否正确渲染
+			setTimeout(() => {
+				const isPlayBarVisible = document.querySelector('.play-bar');
+				if (isPlayBarVisible) {
+					console.debug("[TabView] 播放栏已成功挂载并可见");
+				} else {
+					console.warn("[TabView] 播放栏挂载后不可见，可能存在样式问题");
+				}
+				
+				// 检查进度条是否存在
+				const progressBar = document.querySelector('.progress-bar-container');
+				if (progressBar) {
+					console.debug("[TabView] 进度条已正确渲染");
+				} else {
+					console.warn("[TabView] 进度条未渲染，可能需要检查组件结构");
+				}
+			}, 100);
+			
+			console.debug("[TabView] 播放栏已挂载到TabView容器");
+		};
 
-      // 在TabView中，containerEl 是整个视图容器，而 contentEl 是内容区域
-      // 我们直接在 containerEl 中添加一个相对定位的播放栏
-      
-      // 清除已有的播放栏（避免重复）
-      const existingPlayBar = document.querySelector('.play-bar');
-      if (existingPlayBar) existingPlayBar.remove();
-      
-      // 创建新的播放栏
-      const playBar = createPlayBar({
-        app: this.app,
-        onPlayPause: () => {
-          // 仅基础实现，后续可扩展
-          if (!this._api) return;
-          if (this._api.player) {
-            // @ts-ignore
-            if (this._api.player.state === 1) {
-              this._api.player.pause();
-            } else {
-              this._api.player.play();
-            }
-          }
-        },
-        isPlaying: () => {
-          if (!this._api || !this._api.player) return false;
-          // @ts-ignore
-          return this._api.player.state === 1;
-        }
-      });
-      
-      // 播放栏直接挂载到 containerEl，确保显示在视图内部
-      this.containerEl.appendChild(playBar);
-      console.debug("[TabView] 播放栏已挂载到TabView容器");
-      
-      // 不再需要直接设置内联样式，使用CSS变量确保一致性
-      // 边距由 play.css 中的样式定义
-    }, 500); // 延迟确保 DOM 已完全加载		// ...existing code...
+		// 监听 scoreLoaded，乐谱加载后挂载播放栏
+		if (this._api && this._api.scoreLoaded) {
+			this._api.scoreLoaded.on(() => {
+				setTimeout(() => {
+					mountPlayBar();
+				}, 100);
+			});
+		} else {
+			// 兜底：如果未能监听到 scoreLoaded，延迟挂载
+			setTimeout(() => {
+				mountPlayBar();
+			}, 500);
+		}
 	}
 
 	onunload(): void {
