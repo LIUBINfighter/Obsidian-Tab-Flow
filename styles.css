@@ -64,21 +64,19 @@
 
 /* --- play.css --- */
 /* 播放栏自定义按钮样式 */
-.play-bar-btn {
-  display: inline-flex;
+.play-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  height: calc(var(--status-bar-height) * 2);
+  background: var(--status-bar-background);
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 0 20px;
-  height: 36px;
-  font-size: 1.1em;
-  font-weight: 500;
-  color: var(--text-normal);
-  background: var(--background-modifier-active);
-  border: none;
-  border-radius: var(--radius-m);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  justify-content: center;
+  box-shadow: 0 -1px 0 var(--background-modifier-border);
+  padding: 0 16px;
 }
 .play-bar-btn:hover, .play-bar-btn:focus {
   background: var(--interactive-hover);

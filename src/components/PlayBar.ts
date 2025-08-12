@@ -27,7 +27,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
     // 播放/暂停按钮 (自定义样式)
     const playPauseBtn = document.createElement("button");
-    playPauseBtn.className = "play-bar-btn";
+    playPauseBtn.className = "clickable-icon";
     playPauseBtn.setAttribute("type", "button");
     playPauseBtn.setAttribute("aria-label", "播放/暂停");
 
@@ -47,9 +47,6 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         const iconSpan = document.createElement('span');
         setIcon(iconSpan, playing ? 'pause' : 'play');
         playPauseBtn.appendChild(iconSpan);
-        const textSpan = document.createElement('span');
-        textSpan.textContent = playing ? '暂停' : '播放';
-        playPauseBtn.appendChild(textSpan);
         playPauseBtn.setAttribute('aria-label', playing ? '暂停' : '播放');
     }
 
