@@ -326,7 +326,7 @@ export class SettingTab extends PluginSettingTab {
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });
 				tabContents.createEl("p", {
-					text: "AlphaTab 插件 by YourName.",
+					text: "Tab Flow by Jay Bridge",
 				});
 			}
 		};
