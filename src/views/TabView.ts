@@ -252,8 +252,8 @@ private isMessy(str: string): boolean {
       this.containerEl.appendChild(playBar);
       console.debug("[TabView] 播放栏已挂载到TabView容器");
       
-      // 调整contentEl的下边距，为播放栏腾出空间
-      this.contentEl.style.marginBottom = "48px";
+      // 不再需要直接设置内联样式，使用CSS变量确保一致性
+      // 边距由 play.css 中的样式定义
     }, 500); // 延迟确保 DOM 已完全加载		// ...existing code...
 	}
 
