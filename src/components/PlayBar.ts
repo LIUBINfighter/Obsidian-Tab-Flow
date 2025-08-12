@@ -114,6 +114,22 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		};
 		leftSection.appendChild(stopBtn);
 
+		// 选择音轨按钮
+		const tracksBtn = document.createElement("button");
+		tracksBtn.className = "clickable-icon";
+		tracksBtn.setAttribute("type", "button");
+		const tracksIcon = document.createElement("span");
+		// 使用 lucide 图标，代表多图层/多音轨
+		setIcon(tracksIcon, "lucide-layers");
+		tracksBtn.appendChild(tracksIcon);
+		tracksBtn.setAttribute("aria-label", "选择音轨");
+		tracksBtn.onclick = () => {
+			if (eventBus) {
+				eventBus.publish("命令:选择音轨");
+			}
+		};
+		leftSection.appendChild(tracksBtn);
+
 		// 节拍器按钮
 		metronomeBtn = document.createElement("button");
 		metronomeBtn.className = "clickable-icon";
