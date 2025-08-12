@@ -106,7 +106,7 @@ export class SettingTab extends PluginSettingTab {
 				});
 
 				tabContents.createEl("div", {
-					text: "这些文件总大小约为几MB，将保存在插件目录下的 assets-refactor 文件夹。",
+					text: "这些文件总大小约为几MB，将保存在插件目录下的 assets 文件夹。",
 					cls: "setting-item-description",
 				});
 
@@ -144,13 +144,13 @@ export class SettingTab extends PluginSettingTab {
 					new Setting(tabContents)
 						.setName("打开资产目录")
 						.setDesc(
-							"打开插件的 assets-refactor 目录，方便手动管理资源文件"
+							"打开插件的 assets 目录，方便手动管理资源文件"
 						)
 						.addButton((button) =>
 							button.setButtonText("打开目录").onClick(() => {
 								const assetsPath = path.join(
 									this.plugin.actualPluginDir as string,
-									"assets-refactor"
+									"assets"
 								);
 								try {
 									if (!fs.existsSync(assetsPath)) {
@@ -181,8 +181,8 @@ export class SettingTab extends PluginSettingTab {
 				});
 				[
 					"下载上面链接中的 assets.zip 文件",
-					"解压 assets.zip 文件（确保解压后有 assets-refactor 文件夹）",
-					"将解压出的 assets-refactor 文件夹复制到本插件目录中",
+					"解压 assets.zip 文件（确保解压后有 assets 文件夹）",
+					"将解压出的 assets 文件夹复制到本插件目录中",
 					"重启 Obsidian 以应用更改",
 				].forEach((step) => {
 					installSteps.createEl("li", { text: step });
@@ -202,7 +202,7 @@ export class SettingTab extends PluginSettingTab {
 ├── main.js            # 主要插件代码
 ├── manifest.json      # 插件清单
 ├── styles.css         # 样式文件
-└── assets-refactor/   # 资源目录
+└── assets/   # 资源目录
 	├── alphaTab.min.js
 	├── Bravura.woff2
 	└── sonivox.sf3`,

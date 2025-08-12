@@ -18,7 +18,7 @@ export default class MyPlugin extends Plugin {
 	actualPluginDir?: string;
 
 	checkRequiredAssets(): boolean {
-		// 简单实现，实际可根据 assets-refactor 目录和文件判断
+		// 简单实现，实际可根据 assets 目录和文件判断
 		return !!this.settings.assetsDownloaded;
 	}
 

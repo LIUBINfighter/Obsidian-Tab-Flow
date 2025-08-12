@@ -14,17 +14,17 @@ export class ResourceLoaderService {
 		try {
 			const bravuraPath = path.join(
 				pluginDir,
-				"assets-refactor",
+				"assets",
 				"Bravura.woff2"
 			);
 			const alphaTabPath = path.join(
 				pluginDir,
-				"assets-refactor",
+				"assets",
 				"alphaTab.min.js"
 			);
 			const soundFontPath = path.join(
 				pluginDir,
-				"assets-refactor",
+				"assets",
 				"sonivox.sf3"
 			);
 
