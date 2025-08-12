@@ -210,7 +210,8 @@ export class SettingTab extends PluginSettingTab {
 					
 					if (confirmRestart) {
 						// 执行重启
-						this.app.commands.executeCommandById('app:reload');
+						// @ts-ignore
+						app.commands.executeCommandById('app:reload');
 					}
 				};
 				
