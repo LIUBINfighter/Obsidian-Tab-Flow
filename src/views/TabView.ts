@@ -7,6 +7,7 @@ import * as convert from "color-convert";
 
 import { EventBus } from "../utils/EventBus";
 import { AlphaTabService } from "../services/AlphaTabService";
+import { ExternalMediaService } from "../services/ExternalMediaService";
 import { createPlayBar } from "../components/PlayBar";
 
 export type AlphaTabResources = {
@@ -28,6 +29,10 @@ export class TabView extends FileView {
 	private plugin: Plugin;
 	private resources: AlphaTabResources;
 	private scoreTitle: string = ""; // 新增：乐谱标题
+    // --- 新增：外部音频集成 ---
+    private audioEl: HTMLAudioElement | null = null;
+    private audioObjectUrl: string | null = null;
+    private externalMediaService: ExternalMediaService | null = null;
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -212,7 +217,7 @@ private isMessy(str: string): boolean {
 
     // 4. 渲染底部播放栏 PlayBar
 		// 新方案：在 scoreLoaded 后再渲染 PlayBar，并确保 getCurrentTime/getDuration/seekTo 始终指向最新 player
-		const mountPlayBar = () => {
+        const mountPlayBar = () => {
 			// 清除已有的播放栏（避免重复）
 			const existingPlayBar = document.querySelector('.play-bar');
 			if (existingPlayBar) existingPlayBar.remove();
@@ -279,7 +284,16 @@ private isMessy(str: string): boolean {
 					} catch (e) {
 						console.debug("[TabView] 设置播放位置出错:", e);
 					}
-				}
+                },
+                // 新增：获取 audio 元素并完成集成
+                onAudioCreated: (audioEl: HTMLAudioElement) => {
+                    this.audioEl = audioEl;
+                    console.debug('[TabView] onAudioCreated: setupAudioIntegration type =', typeof (this as any).setupAudioIntegration);
+                    this.setupAudioIntegration().catch(err => {
+                        console.error('[TabView] 外部音频集成失败:', err);
+                        new Notice('音频加载失败，无法播放。');
+                    });
+                },
 			});
 			
 			// 确保挂载到容器并显示，添加调试信息
@@ -314,7 +328,7 @@ private isMessy(str: string): boolean {
 								// 设置手柄位置为进度条填充的末端
 								const handlePos = progress;
 								progressHandle.style.left = `${handlePos}%`;
-							}
+                        }
 						}
 					});
 				});
@@ -365,6 +379,41 @@ private isMessy(str: string): boolean {
 		}
 	}
 
+    // --- 新增：设置外部音频集成（导出音频并建立同步）---
+    private setupAudioIntegration = async (): Promise<void> => {
+        if (!this._api || !this.audioEl) return;
+
+        // 1) 建立 external media 同步桥接
+        if (!this.externalMediaService) {
+            this.externalMediaService = new ExternalMediaService(this._api, this.eventBus);
+        } else {
+            this.externalMediaService.disconnectMedia();
+        }
+        this.externalMediaService.connectMedia(this.audioEl);
+
+        // 2) 导出音频为 WAV 并设置 src（生成一次，缓存至卸载）
+        try {
+            new Notice('正在生成音频，请稍候...');
+            // 释放旧的 URL
+            if (this.audioObjectUrl && this.audioObjectUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(this.audioObjectUrl);
+                this.audioObjectUrl = null;
+            }
+            const wavUrl = await this.alphaTabService.exportAudioToWav({
+                masterVolume: 1,
+                metronomeVolume: 0,
+                sampleRate: 44100,
+            });
+            this.audioObjectUrl = wavUrl;
+            this.audioEl.src = wavUrl;
+            this.audioEl.load();
+            new Notice('音频已加载！');
+        } catch (e) {
+            console.error('[TabView] 导出音频失败:', e);
+            throw e;
+        }
+    }
+
 	onunload(): void {
 		console.debug("[TabView] Starting cleanup process");
 
@@ -396,7 +445,24 @@ private isMessy(str: string): boolean {
 			this._styles.remove();
 		}
 
-		// 清理引用
+        // 清理外部音频资源
+        try {
+            if (this.externalMediaService) {
+                this.externalMediaService.destroy();
+                this.externalMediaService = null;
+            }
+            if (this.audioEl) {
+                try { this.audioEl.pause(); } catch {}
+            }
+            if (this.audioObjectUrl && this.audioObjectUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(this.audioObjectUrl);
+                this.audioObjectUrl = null;
+            }
+        } catch (e) {
+            console.warn('[TabView] 清理外部音频资源失败:', e);
+        }
+
+        // 清理引用
 		this.currentFile = null;
 
 		console.debug("[TabView] View unloaded and resources cleaned up");

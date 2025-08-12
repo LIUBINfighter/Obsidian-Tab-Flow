@@ -11,12 +11,13 @@ export interface PlayBarOptions {
 	getCurrentTime?: () => number; // 获取当前播放时间（毫秒）
 	getDuration?: () => number; // 获取总时长（毫秒）
 	seekTo?: (position: number) => void; // 跳转到指定位置（毫秒）
-	onAudioCreated: (audioEl: HTMLAudioElement) => void; // 新增
-	audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
+    onAudioCreated: (audioEl: HTMLAudioElement) => void; // 新增
+    audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
 }
 
 // 通过此常量控制要加载哪些组件
-// const ENABLED_COMPONENTS = ["playButton", "progressBar"];
+// const ENABLED_COMPONENTS = ["playButton", "progressBar", "audioPlayer"];
+// 新增 audioPlayer 功能块，不移除原有 progressBar 代码，仅通过开关控制
 const ENABLED_COMPONENTS = ["playButton"];
 
 export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
@@ -62,34 +63,49 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		leftSection.appendChild(playPauseBtn);
 	}
 
-	// 中间进度条区域
-	let centerSection: HTMLDivElement | null = null;
-	let progressBar: ProgressBarElement | null = null;
-	let currentTimeDisplay: HTMLSpanElement | null = null;
-	let totalTimeDisplay: HTMLSpanElement | null = null;
-	if (ENABLED_COMPONENTS.includes("progressBar")) {
-		centerSection = document.createElement("div");
-		centerSection.className = "play-bar-section play-progress-container";
+    // 中间区域：支持两种模式
+    // 1) 传统 progressBar（保留，不默认启用）
+    // 2) 新增 audioPlayer（默认启用）
+    let centerSection: HTMLDivElement | null = null;
+    let progressBar: ProgressBarElement | null = null;
+    let currentTimeDisplay: HTMLSpanElement | null = null;
+    let totalTimeDisplay: HTMLSpanElement | null = null;
+    if (ENABLED_COMPONENTS.includes("progressBar")) {
+        centerSection = document.createElement("div");
+        centerSection.className = "play-bar-section play-progress-container";
 
-		currentTimeDisplay = document.createElement("span");
-		currentTimeDisplay.className = "play-time current-time";
-		currentTimeDisplay.textContent = "0:00";
-		centerSection.appendChild(currentTimeDisplay);
+        currentTimeDisplay = document.createElement("span");
+        currentTimeDisplay.className = "play-time current-time";
+        currentTimeDisplay.textContent = "0:00";
+        centerSection.appendChild(currentTimeDisplay);
 
-		progressBar = createProgressBar({
-			getCurrentTime,
-			getDuration,
-			seekTo,
-		}) as ProgressBarElement;
-		centerSection.appendChild(progressBar);
+        progressBar = createProgressBar({
+            getCurrentTime,
+            getDuration,
+            seekTo,
+        }) as ProgressBarElement;
+        centerSection.appendChild(progressBar);
 
-		totalTimeDisplay = document.createElement("span");
-		totalTimeDisplay.className = "play-time total-time";
-		totalTimeDisplay.textContent = "0:00";
-		centerSection.appendChild(totalTimeDisplay);
+        totalTimeDisplay = document.createElement("span");
+        totalTimeDisplay.className = "play-time total-time";
+        totalTimeDisplay.textContent = "0:00";
+        centerSection.appendChild(totalTimeDisplay);
 
-		bar.appendChild(centerSection);
-	}
+        bar.appendChild(centerSection);
+    } else if (ENABLED_COMPONENTS.includes("audioPlayer")) {
+        centerSection = document.createElement("div");
+        centerSection.className = "play-bar-section play-progress-container";
+
+        // 创建并嵌入原生 <audio> 播放器
+        const audioContainer = createAudioPlayer({
+            app: options.app,
+            onAudioCreated: options.onAudioCreated,
+            ...(options.audioPlayerOptions || {}),
+        } as AudioPlayerOptions);
+        centerSection.appendChild(audioContainer);
+
+        bar.appendChild(centerSection);
+    }
 
 	// 右侧状态区（可选）
 	const rightSection = document.createElement("div");
@@ -106,11 +122,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	}
 
 	// 更新进度条显示
-	function updateProgress(
+    function updateProgress(
 		currentTimeOverride?: number,
 		durationOverride?: number
 	) {
-		if (!progressBar || !currentTimeDisplay || !totalTimeDisplay) return;
+        if (!progressBar || !currentTimeDisplay || !totalTimeDisplay) return;
 		try {
 			const currentTime =
 				currentTimeOverride !== undefined

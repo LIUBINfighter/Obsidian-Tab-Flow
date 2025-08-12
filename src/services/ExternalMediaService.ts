@@ -126,53 +126,46 @@ export class ExternalMediaService {
      */
     private setupExternalMediaHandler(): void {
         if (!this.mediaElement || !this.api.player || !this.api.player.output) return;
-        
+        const self = this;
         const handler: alphaTab.synth.IExternalMediaHandler = {
-            get backingTrackDuration(): number {
-                if (!this.mediaElement) return 0;
-                const duration = this.mediaElement.duration;
+            get backingTrackDuration() {
+                if (!self.mediaElement) return 0;
+                const duration = self.mediaElement.duration;
                 return Number.isFinite(duration) ? duration * 1000 : 0;
-            }.bind(this),
-            
-            get playbackRate(): number {
-                return this.mediaElement?.playbackRate || 1;
-            }.bind(this),
-            
+            },
+            get playbackRate() {
+                return self.mediaElement?.playbackRate || 1;
+            },
             set playbackRate(value: number) {
-                if (this.mediaElement) {
-                    this.mediaElement.playbackRate = value;
+                if (self.mediaElement) {
+                    self.mediaElement.playbackRate = value;
                 }
-            }.bind(this),
-            
-            get masterVolume(): number {
-                return this.mediaElement?.volume || 1;
-            }.bind(this),
-            
+            },
+            get masterVolume() {
+                return self.mediaElement?.volume || 1;
+            },
             set masterVolume(value: number) {
-                if (this.mediaElement) {
-                    this.mediaElement.volume = value;
+                if (self.mediaElement) {
+                    self.mediaElement.volume = value;
                 }
-            }.bind(this),
-            
-            seekTo(time: number): void {
-                if (this.mediaElement) {
-                    this.mediaElement.currentTime = time / 1000;
+            },
+            seekTo(time: number) {
+                if (self.mediaElement) {
+                    self.mediaElement.currentTime = time / 1000;
                 }
-            }.bind(this),
-            
-            play(): void {
-                if (this.mediaElement) {
-                    this.mediaElement.play().catch(err => {
+            },
+            play() {
+                if (self.mediaElement) {
+                    self.mediaElement.play().catch(err => {
                         console.error('[ExternalMediaService] 播放外部媒体失败:', err);
                     });
                 }
-            }.bind(this),
-            
-            pause(): void {
-                if (this.mediaElement) {
-                    this.mediaElement.pause();
+            },
+            pause() {
+                if (self.mediaElement) {
+                    self.mediaElement.pause();
                 }
-            }.bind(this)
+            }
         };
         
         // 设置外部媒体处理器
