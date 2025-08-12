@@ -19,6 +19,25 @@ export class TracksModal extends Modal {
     }
 
     onOpen() {
+        // 每次打开时尝试从 localStorage 恢复
+        let savedTrackSettings: Record<string, any> | undefined;
+        try {
+            const filePath = (this.api as any)?.score?.filePath;
+            if (filePath) {
+                const raw = localStorage.getItem("tabflow-viewstate:" + filePath);
+                if (raw) {
+                    const state = JSON.parse(raw);
+                    if (state && Array.isArray(state.tracks) && this.tracks) {
+                        const idxSet = new Set(state.tracks);
+                        const matched = this.tracks.filter(t => idxSet.has(t.index));
+                        if (matched.length > 0) this.selectedTracks = new Set(matched);
+                    }
+                    if (state && state.trackSettings && typeof state.trackSettings === 'object') {
+                        savedTrackSettings = state.trackSettings as Record<string, any>;
+                    }
+                }
+            }
+        } catch {}
         this.contentEl.empty();
         this.titleEl.setText("");
         // 创建标题栏容器
@@ -92,6 +111,15 @@ export class TracksModal extends Modal {
             // 静音/独奏按钮
             // 独奏按钮
             const soloBtn = trackSetting.addExtraButton(btn => {
+                // 若有保存的状态，先同步到本地对象以便初始 UI 正确
+                try {
+                    const idxKey = String(track.index);
+                    const s = savedTrackSettings?.[idxKey];
+                    if (s && typeof s.solo === 'boolean') {
+                        // @ts-ignore
+                        track.playbackInfo.isSolo = s.solo;
+                    }
+                } catch {}
                 const updateSoloUI = () => {
                     const isSolo = track.playbackInfo.isSolo;
                     btn.setIcon(isSolo ? "star" : "star-off")
@@ -110,6 +138,7 @@ export class TracksModal extends Modal {
                         this.api.changeTrackSolo([track], newSolo);
                         // 发送事件用于状态同步
                         this.eventBus?.publish("track:solo", { track, value: newSolo });
+                        this.persistTrackParam(track.index, { solo: newSolo });
                     }
                     
                     // 更新UI
@@ -121,6 +150,15 @@ export class TracksModal extends Modal {
             
             // 静音按钮
             const muteBtn = trackSetting.addExtraButton(btn => {
+                // 若有保存的状态，先同步到本地对象以便初始 UI 正确
+                try {
+                    const idxKey = String(track.index);
+                    const s = savedTrackSettings?.[idxKey];
+                    if (s && typeof s.mute === 'boolean') {
+                        // @ts-ignore
+                        track.playbackInfo.isMute = s.mute;
+                    }
+                } catch {}
                 const updateMuteUI = () => {
                     const isMute = track.playbackInfo.isMute;
                     btn.setIcon(isMute ? "volume-x" : "volume-2")
@@ -139,6 +177,7 @@ export class TracksModal extends Modal {
                         this.api.changeTrackMute([track], newMute);
                         // 发送事件用于状态同步
                         this.eventBus?.publish("track:mute", { track, value: newMute });
+                        this.persistTrackParam(track.index, { mute: newMute });
                     }
                     
                     // 更新UI
@@ -157,14 +196,30 @@ export class TracksModal extends Modal {
             volumeSlider.type = "range";
             volumeSlider.min = "0";
             volumeSlider.max = "16";
-            volumeSlider.value = String(track.playbackInfo.volume);
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                const initVol = typeof s?.volume === 'number' ? s.volume : track.playbackInfo.volume;
+                volumeSlider.value = String(initVol);
+            } catch {
+                volumeSlider.value = String(track.playbackInfo.volume);
+            }
             const volumeValue = document.createElement("span");
-            volumeValue.textContent = String(track.playbackInfo.volume);
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                volumeValue.textContent = String(typeof s?.volume === 'number' ? s.volume : track.playbackInfo.volume);
+            } catch {
+                volumeValue.textContent = String(track.playbackInfo.volume);
+            }
             const volumeInput = document.createElement("input");
             volumeInput.type = "number";
             volumeInput.min = "0";
             volumeInput.max = "16";
-            volumeInput.value = String(track.playbackInfo.volume);
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                volumeInput.value = String(typeof s?.volume === 'number' ? s.volume : track.playbackInfo.volume);
+            } catch {
+                volumeInput.value = String(track.playbackInfo.volume);
+            }
             // 事件同步
             const updateVolume = (newVolume: number) => {
                 newVolume = Math.max(0, Math.min(16, newVolume));
@@ -173,6 +228,7 @@ export class TracksModal extends Modal {
                     this.api.changeTrackVolume([track], newVolume / 16);
                     // 发送事件用于状态同步
                     this.eventBus?.publish("track:volume", { track, value: newVolume });
+                    this.persistTrackParam(track.index, { volume: newVolume });
                 }
                 volumeSlider.value = String(newVolume);
                 volumeValue.textContent = String(newVolume);
@@ -200,20 +256,37 @@ export class TracksModal extends Modal {
             transposeSlider.min = "-12";
             transposeSlider.max = "12";
             transposeSlider.step = "1";
-            transposeSlider.value = "0";
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                const initTr = typeof s?.transpose === 'number' ? s.transpose : 0;
+                transposeSlider.value = String(initTr);
+            } catch {
+                transposeSlider.value = "0";
+            }
             const transposeValue = document.createElement("span");
-            transposeValue.textContent = "0";
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                transposeValue.textContent = String(typeof s?.transpose === 'number' ? s.transpose : 0);
+            } catch {
+                transposeValue.textContent = "0";
+            }
             const transposeInput = document.createElement("input");
             transposeInput.type = "number";
             transposeInput.min = "-12";
             transposeInput.max = "12";
-            transposeInput.value = "0";
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                transposeInput.value = String(typeof s?.transpose === 'number' ? s.transpose : 0);
+            } catch {
+                transposeInput.value = "0";
+            }
             const updateTranspose = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
                 if (this.api) {
                     this.api.changeTrackTranspositionPitch([track], v);
                     // 发送事件用于状态同步
                     this.eventBus?.publish("track:transpose", { track, value: v });
+                    this.persistTrackParam(track.index, { transpose: v });
                 }
                 transposeSlider.value = String(v);
                 transposeValue.textContent = String(v);
@@ -241,14 +314,30 @@ export class TracksModal extends Modal {
             transposeAudioSlider.min = "-12";
             transposeAudioSlider.max = "12";
             transposeAudioSlider.step = "1";
-            transposeAudioSlider.value = "0";
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                const initTa = typeof s?.transposeAudio === 'number' ? s.transposeAudio : 0;
+                transposeAudioSlider.value = String(initTa);
+            } catch {
+                transposeAudioSlider.value = "0";
+            }
             const transposeAudioValue = document.createElement("span");
-            transposeAudioValue.textContent = "0";
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                transposeAudioValue.textContent = String(typeof s?.transposeAudio === 'number' ? s.transposeAudio : 0);
+            } catch {
+                transposeAudioValue.textContent = "0";
+            }
             const transposeAudioInput = document.createElement("input");
             transposeAudioInput.type = "number";
             transposeAudioInput.min = "-12";
             transposeAudioInput.max = "12";
-            transposeAudioInput.value = "0";
+            try {
+                const s = savedTrackSettings?.[String(track.index)];
+                transposeAudioInput.value = String(typeof s?.transposeAudio === 'number' ? s.transposeAudio : 0);
+            } catch {
+                transposeAudioInput.value = "0";
+            }
             const updateTransposeAudio = (newVal: number) => {
                 const v = Math.max(-12, Math.min(12, newVal));
                 if (this.api) {
@@ -256,6 +345,7 @@ export class TracksModal extends Modal {
                     // this.api.changeTrackAudioTransposition([track], v);
                     // 发送事件用于状态同步
                     this.eventBus?.publish("track:transposeAudio", { track, value: v });
+                    this.persistTrackParam(track.index, { transposeAudio: v });
                 }
                 transposeAudioSlider.value = String(v);
                 transposeAudioValue.textContent = String(v);
@@ -281,9 +371,31 @@ export class TracksModal extends Modal {
         const selectTracks = Array.from(this.selectedTracks).sort(
             (a, b) => a.index - b.index
         );
-        // 处理音轨移调、音量等批量应用
+        // 持久化到 localStorage
+        try {
+            const filePath = (this.api as any)?.score?.filePath;
+            if (filePath) {
+                const raw = localStorage.getItem("tabflow-viewstate:" + filePath);
+                let state = raw ? JSON.parse(raw) : {};
+                state.tracks = selectTracks.map(t => t.index);
+                localStorage.setItem("tabflow-viewstate:" + filePath, JSON.stringify(state));
+            }
+        } catch {}
         // 这里不再批量处理，交由外部业务逻辑处理
         this.onChange?.(selectTracks);
+    }
+
+    private persistTrackParam(trackIndex: number, partial: Record<string, any>) {
+        try {
+            const filePath = (this.api as any)?.score?.filePath;
+            if (!filePath) return;
+            const raw = localStorage.getItem("tabflow-viewstate:" + filePath);
+            const state = raw ? JSON.parse(raw) : {};
+            state.trackSettings = state.trackSettings || {};
+            const key = String(trackIndex);
+            state.trackSettings[key] = Object.assign({}, state.trackSettings[key] || {}, partial);
+            localStorage.setItem("tabflow-viewstate:" + filePath, JSON.stringify(state));
+        } catch {}
     }
 
     onClose() {

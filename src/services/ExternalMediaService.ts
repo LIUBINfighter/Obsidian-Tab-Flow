@@ -65,7 +65,8 @@ export class ExternalMediaService {
         
         // 恢复默认播放模式
         if (this.api.settings.player) {
-            this.api.settings.player.playerMode = alphaTab.PlayerMode.Auto;
+            // 回退到自动模式
+            this.api.settings.player.playerMode = alphaTab.PlayerMode.EnabledAutomatic;
             this.api.updateSettings();
         }
         
@@ -96,11 +97,12 @@ export class ExternalMediaService {
             this.api.playerStateChanged.on((args) => {
                 // 当 alphaTab 状态改变时，同步外部媒体
                 if (this.mediaElement) {
-                    if (args.state === alphaTab.PlayerState.Playing) {
+                    // PlayerState: 1 通常表示 Playing
+                    if ((args as any).state === 1) {
                         this.mediaElement.play().catch(err => {
                             console.error('[ExternalMediaService] 播放外部媒体失败:', err);
                         });
-                    } else if (args.state === alphaTab.PlayerState.Paused) {
+                    } else {
                         this.mediaElement.pause();
                     }
                 }
@@ -108,13 +110,13 @@ export class ExternalMediaService {
         }
         
         // 监听事件总线上的相关事件
-        this.eventBus.on('playback:volumeChanged', (volume: number) => {
+        this.eventBus.subscribe('playback:volumeChanged', (volume: number) => {
             if (this.mediaElement) {
                 this.mediaElement.volume = volume;
             }
         });
         
-        this.eventBus.on('playback:speedChanged', (speed: number) => {
+        this.eventBus.subscribe('playback:speedChanged', (speed: number) => {
             if (this.mediaElement) {
                 this.mediaElement.playbackRate = speed;
             }
@@ -245,12 +247,14 @@ export class ExternalMediaService {
         // 通知 alphaTab 播放
         if (this.api.playbackRange) {
             this.api.playbackRange.startTick = 0;
-            this.api.playbackRange.endTick = this.api.score?.durationTicks || 0;
+            // 使用 duration（毫秒）估算 endTick 不可靠；保留 0 让 alphaTab 自行处理
+            // 这里仅尽量不访问不存在的属性
+            this.api.playbackRange.endTick = this.api.playbackRange.endTick || 0;
         }
         this.api.play();
         
         // 通知事件总线
-        this.eventBus.emit('playback:started');
+        this.eventBus.publish('playback:started');
     };
     
     private onPause = (): void => {
@@ -261,7 +265,7 @@ export class ExternalMediaService {
         this.api.pause();
         
         // 通知事件总线
-        this.eventBus.emit('playback:paused');
+        this.eventBus.publish('playback:paused');
     };
     
     private onEnded = (): void => {
@@ -272,7 +276,7 @@ export class ExternalMediaService {
         this.api.pause();
         
         // 通知事件总线
-        this.eventBus.emit('playback:finished');
+        this.eventBus.publish('playback:finished');
     };
     
     private onVolumeChange = (): void => {
@@ -282,7 +286,7 @@ export class ExternalMediaService {
         this.api.masterVolume = this.mediaElement.volume;
         
         // 通知事件总线
-        this.eventBus.emit('playback:volumeChanged', this.mediaElement.volume);
+        this.eventBus.publish('playback:volumeChanged', this.mediaElement.volume);
     };
     
     private onRateChange = (): void => {
@@ -292,7 +296,7 @@ export class ExternalMediaService {
         this.api.playbackSpeed = this.mediaElement.playbackRate;
         
         // 通知事件总线
-        this.eventBus.emit('playback:speedChanged', this.mediaElement.playbackRate);
+        this.eventBus.publish('playback:speedChanged', this.mediaElement.playbackRate);
     };
 
     /**

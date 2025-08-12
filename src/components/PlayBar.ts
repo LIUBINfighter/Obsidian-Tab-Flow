@@ -27,7 +27,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		getDuration = () => 0,
 		seekTo = () => {},
 	} = options;
-	
+
 	let playing = initialPlaying;
 	let metronomeOn = false;
 	let countInOn = false;
@@ -58,7 +58,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, "lucide-music-2");
 		metronomeBtn.appendChild(iconSpan);
-		metronomeBtn.setAttribute("aria-label", metronomeOn ? "关闭节拍器" : "开启节拍器");
+		metronomeBtn.setAttribute(
+			"aria-label",
+			metronomeOn ? "关闭节拍器" : "开启节拍器"
+		);
 		metronomeBtn.classList.toggle("is-active", metronomeOn);
 	}
 
@@ -68,7 +71,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, countInOn ? "lucide-timer" : "lucide-timer-off");
 		countInBtn.appendChild(iconSpan);
-		countInBtn.setAttribute("aria-label", countInOn ? "关闭预备拍" : "开启预备拍");
+		countInBtn.setAttribute(
+			"aria-label",
+			countInOn ? "关闭预备拍" : "开启预备拍"
+		);
 		countInBtn.classList.toggle("is-active", countInOn);
 	}
 
@@ -185,6 +191,106 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	const rightSection = document.createElement("div");
 	rightSection.className = "play-bar-section play-status";
 	bar.appendChild(rightSection);
+
+	// 选择器区
+	const selectorSection = document.createElement("div");
+	selectorSection.className = "play-bar-section play-selectors";
+
+	// 1. 速度选择器
+	const speedLabel = document.createElement("label");
+	speedLabel.innerText = "速度:";
+	selectorSection.appendChild(speedLabel);
+
+	const speedSelect = document.createElement("select");
+	["0.5", "0.75", "1.0", "1.25", "1.5", "2.0"].forEach((val) => {
+		const opt = document.createElement("option");
+		opt.value = val;
+		opt.innerText = val + "x";
+		if (val === "1.0") opt.selected = true;
+		speedSelect.appendChild(opt);
+	});
+	speedSelect.onchange = () => {
+		if (eventBus)
+			eventBus.publish("命令:设置速度", parseFloat(speedSelect.value));
+	};
+	selectorSection.appendChild(speedSelect);
+
+	// 2. 布局模式选择器
+	const layoutLabel = document.createElement("label");
+	layoutLabel.innerText = "布局:";
+	layoutLabel.style.marginLeft = "1em";
+	selectorSection.appendChild(layoutLabel);
+
+	const layoutSelect = document.createElement("select");
+	const layoutModes = [
+		{ name: "页面", value: 0 }, // Page
+		{ name: "横向", value: 1 }, // Horizontal
+	];
+	layoutModes.forEach((item) => {
+		const opt = document.createElement("option");
+		opt.value = String(item.value);
+		opt.innerText = item.name;
+		layoutSelect.appendChild(opt);
+	});
+	layoutSelect.onchange = () => {
+		if (eventBus)
+			eventBus.publish("命令:设置布局模式", parseInt(layoutSelect.value));
+	};
+	selectorSection.appendChild(layoutSelect);
+
+	// 3. 谱表模式选择器
+	const staveLabel = document.createElement("label");
+	staveLabel.innerText = "谱表:";
+	staveLabel.style.marginLeft = "1em";
+	selectorSection.appendChild(staveLabel);
+
+	const staveSelect = document.createElement("select");
+	const staveProfiles = [
+		{ name: "五线+六线", value: "ScoreTab" },
+		{ name: "仅五线谱", value: "Score" },
+		{ name: "仅六线谱", value: "Tab" },
+		{ name: "混合六线谱", value: "TabMixed" },
+	];
+	staveProfiles.forEach((item) => {
+		const opt = document.createElement("option");
+		opt.value = item.value;
+		opt.innerText = item.name;
+		staveSelect.appendChild(opt);
+	});
+	staveSelect.onchange = () => {
+		if (eventBus) eventBus.publish("命令:设置谱表模式", staveSelect.value);
+	};
+	selectorSection.appendChild(staveSelect);
+
+	// 4. 缩放选择器
+	const zoomLabel = document.createElement("label");
+	zoomLabel.innerText = "缩放:";
+	zoomLabel.style.marginLeft = "1em";
+	selectorSection.appendChild(zoomLabel);
+
+	const zoomSelect = document.createElement("select");
+	[
+		{ label: "50%", value: 0.5 },
+		{ label: "75%", value: 0.75 },
+		{ label: "100%", value: 1 },
+		{ label: "125%", value: 1.25 },
+		{ label: "150%", value: 1.5 },
+		{ label: "200%", value: 2 },
+	].forEach(({ label, value }) => {
+		const opt = document.createElement("option");
+		opt.value = value.toString();
+		opt.innerText = label;
+		if (value === 1) opt.selected = true;
+		zoomSelect.appendChild(opt);
+	});
+	zoomSelect.onchange = () => {
+		if (eventBus)
+			eventBus.publish("命令:设置缩放", parseFloat(zoomSelect.value));
+	};
+	selectorSection.appendChild(zoomSelect);
+
+	// 插入到 bar 中合适位置
+	bar.appendChild(selectorSection);
 
 	// 格式化时间显示（毫秒 -> mm:ss）
 	function formatTime(ms: number): string {
