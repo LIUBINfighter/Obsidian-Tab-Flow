@@ -101,12 +101,12 @@
   bottom: 0;
   z-index: 100;
   /* height: calc(var(--status-bar-height) * 2); */
-  background: var(--status-bar-background);
+  background: var(--background-primary);
   display: flex;
   align-items: center;
   justify-content: space-between;
   box-shadow: 0 -1px 0 var(--background-modifier-border);
-  padding: 0 16px;
+  padding: var(--size-4-2) var(--size-4-2);
 }
 
 /* 播放栏各分区样式 */
