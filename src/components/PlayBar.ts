@@ -35,12 +35,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	const bar = document.createElement("div");
 	bar.className = "play-bar nav-buttons-container";
 
-	// 左侧控制区
-	let leftSection: HTMLDivElement | null = null;
-	let playPauseBtn: HTMLButtonElement | null = null;
-	let stopBtn: HTMLButtonElement | null = null;
-	let metronomeBtn: HTMLButtonElement | null = null;
-	let countInBtn: HTMLButtonElement | null = null;
+    // 控件引用
+    let playPauseBtn: HTMLButtonElement | null = null;
+    let stopBtn: HTMLButtonElement | null = null;
+    let metronomeBtn: HTMLButtonElement | null = null;
+    let countInBtn: HTMLButtonElement | null = null;
 
 	// 内部函数
 	function updatePlayPauseButton() {
@@ -78,11 +77,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		countInBtn.classList.toggle("is-active", countInOn);
 	}
 
-	if (ENABLED_COMPONENTS.includes("playButton")) {
-		leftSection = document.createElement("div");
-		leftSection.className = "play-bar-section play-controls";
-		bar.appendChild(leftSection);
-
+    if (ENABLED_COMPONENTS.includes("playButton")) {
 		// 播放/暂停按钮
 		playPauseBtn = document.createElement("button");
 		playPauseBtn.className = "clickable-icon";
@@ -95,7 +90,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
 			updatePlayPauseButton();
 		};
-		leftSection.appendChild(playPauseBtn);
+        bar.appendChild(playPauseBtn);
 
 		// 停止按钮
 		stopBtn = document.createElement("button");
@@ -112,7 +107,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
 			updatePlayPauseButton();
 		};
-		leftSection.appendChild(stopBtn);
+        bar.appendChild(stopBtn);
 
 		// 选择音轨按钮
 		const tracksBtn = document.createElement("button");
@@ -127,8 +122,24 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			if (eventBus) {
 				eventBus.publish("命令:选择音轨");
 			}
-		};
-		leftSection.appendChild(tracksBtn);
+        };
+        bar.appendChild(tracksBtn);
+
+        // 刷新播放器按钮
+        const refreshBtn = document.createElement("button");
+        refreshBtn.className = "clickable-icon";
+        refreshBtn.setAttribute("type", "button");
+        const refreshIcon = document.createElement("span");
+        // 使用 lucide 刷新图标
+        setIcon(refreshIcon, "lucide-refresh-ccw");
+        refreshBtn.appendChild(refreshIcon);
+        refreshBtn.setAttribute("aria-label", "刷新播放器");
+        refreshBtn.onclick = () => {
+            if (eventBus) {
+                eventBus.publish("命令:刷新播放器");
+            }
+        };
+        bar.appendChild(refreshBtn);
 
 		// 节拍器按钮
 		metronomeBtn = document.createElement("button");
@@ -142,7 +153,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
 			updateMetronomeBtn();
 		};
-		leftSection.appendChild(metronomeBtn);
+        bar.appendChild(metronomeBtn);
 
 		// 预备拍按钮
 		countInBtn = document.createElement("button");
@@ -156,66 +167,45 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
 			updateCountInBtn();
 		};
-		leftSection.appendChild(countInBtn);
+        bar.appendChild(countInBtn);
 	}
 
-	// 中间区域：支持两种模式
-	// 1) 传统 progressBar（保留，不默认启用）
-	// 2) 新增 audioPlayer（默认启用）
-	let centerSection: HTMLDivElement | null = null;
-	let progressBar: ProgressBarElement | null = null;
-	let currentTimeDisplay: HTMLSpanElement | null = null;
-	let totalTimeDisplay: HTMLSpanElement | null = null;
-	if (ENABLED_COMPONENTS.includes("progressBar")) {
-		centerSection = document.createElement("div");
-		centerSection.className = "play-bar-section play-progress-container";
+    // 进度/播放器区域与时间显示（可选，直接追加到 bar）
+    let progressBar: ProgressBarElement | null = null;
+    let currentTimeDisplay: HTMLSpanElement | null = null;
+    let totalTimeDisplay: HTMLSpanElement | null = null;
+    if (ENABLED_COMPONENTS.includes("progressBar")) {
+        currentTimeDisplay = document.createElement("span");
+        currentTimeDisplay.className = "play-time current-time";
+        currentTimeDisplay.textContent = "0:00";
+        bar.appendChild(currentTimeDisplay);
 
-		currentTimeDisplay = document.createElement("span");
-		currentTimeDisplay.className = "play-time current-time";
-		currentTimeDisplay.textContent = "0:00";
-		centerSection.appendChild(currentTimeDisplay);
+        progressBar = createProgressBar({
+            getCurrentTime,
+            getDuration,
+            seekTo,
+        }) as ProgressBarElement;
+        // 外层容器简化为进度条容器
+        bar.appendChild(progressBar);
 
-		progressBar = createProgressBar({
-			getCurrentTime,
-			getDuration,
-			seekTo,
-		}) as ProgressBarElement;
-		centerSection.appendChild(progressBar);
-
-		totalTimeDisplay = document.createElement("span");
-		totalTimeDisplay.className = "play-time total-time";
-		totalTimeDisplay.textContent = "0:00";
-		centerSection.appendChild(totalTimeDisplay);
-
-		bar.appendChild(centerSection);
-	} else if (ENABLED_COMPONENTS.includes("audioPlayer")) {
-		centerSection = document.createElement("div");
-		centerSection.className = "play-bar-section play-progress-container";
-
-		// 创建并嵌入原生 <audio> 播放器
-		const audioContainer = createAudioPlayer({
-			app: options.app,
-			onAudioCreated: options.onAudioCreated,
-			...(options.audioPlayerOptions || {}),
-		} as AudioPlayerOptions);
-		centerSection.appendChild(audioContainer);
-
-		bar.appendChild(centerSection);
-	}
-
-	// 右侧状态区（可选）
-	const rightSection = document.createElement("div");
-	rightSection.className = "play-bar-section play-status";
-	bar.appendChild(rightSection);
-
-	// 选择器区
-	const selectorSection = document.createElement("div");
-	selectorSection.className = "play-bar-section play-selectors";
+        totalTimeDisplay = document.createElement("span");
+        totalTimeDisplay.className = "play-time total-time";
+        totalTimeDisplay.textContent = "0:00";
+        bar.appendChild(totalTimeDisplay);
+    } else if (ENABLED_COMPONENTS.includes("audioPlayer")) {
+        // 创建并嵌入原生 <audio> 播放器
+        const audioContainer = createAudioPlayer({
+            app: options.app,
+            onAudioCreated: options.onAudioCreated,
+            ...(options.audioPlayerOptions || {}),
+        } as AudioPlayerOptions);
+        bar.appendChild(audioContainer);
+    }
 
 	// 1. 速度选择器
 	const speedLabel = document.createElement("label");
 	speedLabel.innerText = "速度:";
-	selectorSection.appendChild(speedLabel);
+    bar.appendChild(speedLabel);
 
 	const speedSelect = document.createElement("select");
 	["0.5", "0.75", "1.0", "1.25", "1.5", "2.0"].forEach((val) => {
@@ -229,13 +219,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		if (eventBus)
 			eventBus.publish("命令:设置速度", parseFloat(speedSelect.value));
 	};
-	selectorSection.appendChild(speedSelect);
+    bar.appendChild(speedSelect);
 
 	// 2. 布局模式选择器
 	const layoutLabel = document.createElement("label");
 	layoutLabel.innerText = "布局:";
 	layoutLabel.style.marginLeft = "1em";
-	selectorSection.appendChild(layoutLabel);
+    bar.appendChild(layoutLabel);
 
 	const layoutSelect = document.createElement("select");
 	const layoutModes = [
@@ -252,13 +242,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		if (eventBus)
 			eventBus.publish("命令:设置布局模式", parseInt(layoutSelect.value));
 	};
-	selectorSection.appendChild(layoutSelect);
+    bar.appendChild(layoutSelect);
 
 	// 3. 谱表模式选择器
 	const staveLabel = document.createElement("label");
 	staveLabel.innerText = "谱表:";
 	staveLabel.style.marginLeft = "1em";
-	selectorSection.appendChild(staveLabel);
+    bar.appendChild(staveLabel);
 
 	const staveSelect = document.createElement("select");
 	const staveProfiles = [
@@ -276,13 +266,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	staveSelect.onchange = () => {
 		if (eventBus) eventBus.publish("命令:设置谱表模式", staveSelect.value);
 	};
-	selectorSection.appendChild(staveSelect);
+    bar.appendChild(staveSelect);
 
 	// 4. 缩放选择器
 	const zoomLabel = document.createElement("label");
 	zoomLabel.innerText = "缩放:";
 	zoomLabel.style.marginLeft = "1em";
-	selectorSection.appendChild(zoomLabel);
+    bar.appendChild(zoomLabel);
 
 	const zoomSelect = document.createElement("select");
 	[
@@ -303,10 +293,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		if (eventBus)
 			eventBus.publish("命令:设置缩放", parseFloat(zoomSelect.value));
 	};
-	selectorSection.appendChild(zoomSelect);
-
-	// 插入到 bar 中合适位置
-	bar.appendChild(selectorSection);
+    bar.appendChild(zoomSelect);
 
 	// 格式化时间显示（毫秒 -> mm:ss）
 	function formatTime(ms: number): string {

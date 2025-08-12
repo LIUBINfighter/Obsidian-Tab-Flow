@@ -367,6 +367,20 @@ private isMessy(str: string): boolean {
 				mountPlayBar();
 			}, 500);
 		}
+
+        // 订阅刷新播放器命令：对当前文件执行完整重载
+        this.eventBus.subscribe("命令:刷新播放器", async () => {
+            try {
+                if (this.currentFile) {
+                    await this.reloadFile();
+                } else if (this._api) {
+                    // 没有文件时至少强制渲染刷新
+                    this._api.render();
+                }
+            } catch (e) {
+                console.warn("[TabView] 刷新播放器失败:", e);
+            }
+        });
 	}
 
     // --- 新增：设置外部音频集成（导出音频并建立同步）---

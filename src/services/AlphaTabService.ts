@@ -138,6 +138,17 @@ export class AlphaTabService {
                 this.api.render();
             }
         });
+        // 新增：刷新播放器（重新渲染当前乐谱）
+        this.eventBus.subscribe("命令:刷新播放器", () => {
+            try {
+                if ((this.api as any)?.score) {
+                    // 方案A：仅强制渲染
+                    this.api.render();
+                }
+            } catch (e) {
+                console.warn("[AlphaTabService] 刷新播放器失败:", e);
+            }
+        });
         // 音频导出事件
         this.eventBus.subscribe("命令:导出音频", async (options?: Partial<alphaTab.synth.AudioExportOptions>) => {
             try {

@@ -28,18 +28,19 @@
 }
 
 .play-bar {
-	position: absolute;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	z-index: 100;
-	/* height: calc(var(--status-bar-height) * 2); */
-	background: var(--background-primary);
-	display: flex;
-	align-items: center;
-	justify-content: center; /* 居中对齐而不是两端对齐 */
-	box-shadow: 0 -1px 0 var(--background-modifier-border);
-	padding: var(--size-4-2) var(--size-4-2);
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: var(--background-primary);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start; /* 从左到右顺序排列，左对齐 */
+    gap: 6px;
+    box-shadow: 0 -1px 0 var(--background-modifier-border);
+    padding: var(--size-4-2) var(--size-4-2);
 }
 
 /* 播放栏各分区样式 */
@@ -79,15 +80,13 @@
 }
 
 /* 进度条相关样式 */
+/* 简化布局后，进度条容器规则可保留宽度控制 */
 .play-progress-container {
-	flex: 1;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin: 0 10px;
-	min-width: 200px;
-	max-width: 800px; /* 硬编码最大宽度 */
-	margin: 0 auto; /* 居中显示 */
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+    max-width: 800px;
 }
 
 .play-time {
