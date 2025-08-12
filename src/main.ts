@@ -12,6 +12,14 @@ import {
 	DEFAULT_SETTINGS,
 } from "./settings/SettingTab";
 
+/**
+ * 资产状态类型
+ */
+export interface AssetStatus {
+	file: string;
+	exists: boolean;
+	path: string;
+}
 
 export default class MyPlugin extends Plugin {
 	settings: TabFlowSettings;
@@ -63,7 +71,13 @@ export default class MyPlugin extends Plugin {
 		return path.join(normalizedPluginDir, "assets", fileName);
 	}
 
-	async checkRequiredAssets(): Promise<boolean> {
+
+
+	/**
+	 * 检查资产文件状态
+	 * @returns 如果所有资产文件都存在则返回true，否则返回false
+	 */
+	async checkRequiredAssets(): Promise<boolean | AssetStatus[]> {
 		try {
 			if (!this.actualPluginDir) {
 				console.error("[MyPlugin] Plugin directory not found");
@@ -80,26 +94,43 @@ export default class MyPlugin extends Plugin {
 				return false;
 			}
 			
-			// 检查三个必需的资产文件是否存在
-			const assetPromises = [
+			// 要检查的资产文件
+			const assetFiles = [
 				ASSET_FILES.ALPHA_TAB,
 				ASSET_FILES.BRAVURA,
 				ASSET_FILES.SOUNDFONT
-			].map(async file => {
-				const filePath = path.join(assetsDirRelative, file);
-				const exists = await this.app.vault.adapter.exists(filePath);
-				if (!exists) {
-					console.log(`[MyPlugin] Missing asset file: ${filePath}`);
-				} else {
-					console.log(`[MyPlugin] Found asset file: ${filePath}`);
-				}
-				return exists;
-			});
+			];
 			
-			const results = await Promise.all(assetPromises);
-			const allAssetsExist = results.every(result => result);
+			// 检查每个文件并返回详细状态
+			const assetStatuses: AssetStatus[] = await Promise.all(
+				assetFiles.map(async file => {
+					const filePath = path.join(assetsDirRelative, file);
+					const exists = await this.app.vault.adapter.exists(filePath);
+					
+					if (!exists) {
+						console.log(`[MyPlugin] Missing asset file: ${filePath}`);
+					} else {
+						console.log(`[MyPlugin] Found asset file: ${filePath}`);
+					}
+					
+					return {
+						file,
+						exists,
+						path: filePath
+					};
+				})
+			);
 			
-			return allAssetsExist;
+			// 检查是否所有文件都存在
+			const allAssetsExist = assetStatuses.every(status => status.exists);
+			
+			// 如果只需要简单的布尔结果
+			if (this.settings.simpleAssetCheck) {
+				return allAssetsExist;
+			}
+			
+			// 返回详细的资产状态列表
+			return assetStatuses;
 		} catch (error) {
 			console.error("[MyPlugin] Error checking assets:", error);
 			return false;
