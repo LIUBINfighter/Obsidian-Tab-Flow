@@ -329,9 +329,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		},
 		speed: () => {
 			if (!show('speed')) return;
-			const label = document.createElement('label');
-			label.innerText = '速度:';
-			bar.appendChild(label);
+			const speedIcon = document.createElement('span');
+			setIcon(speedIcon, 'lucide-gauge');
+			speedIcon.style.marginRight = '0.5em';
+			bar.appendChild(speedIcon);
 			const select = document.createElement('select');
 			['0.5','0.75','1.0','1.25','1.5','2.0'].forEach((val) => {
 				const opt = document.createElement('option');
@@ -342,9 +343,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		},
 		staveProfile: () => {
 			if (!show('staveProfile')) return;
-			const label = document.createElement('label');
-			label.innerText = '谱表:'; label.style.marginLeft = '1em';
-			bar.appendChild(label);
+			const staveIcon = document.createElement('span');
+			setIcon(staveIcon, 'lucide-list-music');
+			staveIcon.style.marginLeft = '1em';
+			staveIcon.style.marginRight = '0.5em';
+			bar.appendChild(staveIcon);
 			const select = document.createElement('select');
 			[
 				{ name: '五线+六线', value: alphaTab.StaveProfile.ScoreTab },
@@ -357,9 +360,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		},
 		zoom: () => {
 			if (!show('zoom')) return;
-			const label = document.createElement('label');
-			label.innerText = '缩放:'; label.style.marginLeft = '1em';
-			bar.appendChild(label);
+			const zoomIcon = document.createElement('span');
+			setIcon(zoomIcon, 'lucide-zoom-in');
+			zoomIcon.style.marginLeft = '1em';
+			zoomIcon.style.marginRight = '0.5em';
+			bar.appendChild(zoomIcon);
 			const select = document.createElement('select');
 			[
 				{ label: '50%', value: 0.5 }, { label: '75%', value: 0.75 }, { label: '100%', value: 1 },
