@@ -19,6 +19,7 @@ export interface TabFlowSettings {
     /** 播放栏配置 */
     playBar?: {
         components: PlayBarComponentVisibility;
+        order?: string[];
     };
 }
 
@@ -48,6 +49,11 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
             progressBar: false,
             audioPlayer: false,
         },
+        order: [
+            "playPause","stop","metronome","countIn","tracks","refresh",
+            "locateCursor","layoutToggle","exportMenu","toTop","toBottom","openSettings",
+            "progressBar","speed","staveProfile","zoom","audioPlayer"
+        ],
     },
 };
 
@@ -397,6 +403,115 @@ export class SettingTab extends PluginSettingTab {
 							});
 					});
 
+				// 可视化编辑（推荐）：组件卡片（拖拽/上下移动/开关）
+				tabContents.createEl("h4", { text: "可视化编辑（拖拽排序 + 开关）" });
+				const cardsWrap = tabContents.createDiv({ attr: { style: "display:flex; flex-direction:column; gap:8px;" } });
+				const meta: Array<{ key: keyof PlayBarComponentVisibility | 'audioPlayer'; label: string; desc?: string; disabled?: boolean }>= [
+					{ key: 'playPause', label: '播放/暂停' },
+					{ key: 'stop', label: '停止' },
+					{ key: 'metronome', label: '节拍器' },
+					{ key: 'countIn', label: '预备拍' },
+					{ key: 'tracks', label: '选择音轨' },
+					{ key: 'refresh', label: '刷新/重建播放器' },
+					{ key: 'locateCursor', label: '滚动到光标' },
+					{ key: 'layoutToggle', label: '布局切换' },
+					{ key: 'exportMenu', label: '导出菜单' },
+					{ key: 'toTop', label: '回到顶部' },
+					{ key: 'toBottom', label: '回到底部' },
+					{ key: 'openSettings', label: '打开设置' },
+					{ key: 'progressBar', label: '进度条' },
+					{ key: 'speed', label: '速度选择' },
+					{ key: 'staveProfile', label: '谱表选择' },
+					{ key: 'zoom', label: '缩放选择' },
+					{ key: 'audioPlayer', label: '原生音频播放器（实验性）', disabled: true, desc: '暂不可用，存在与 AlphaTab 播放器冲突风险' },
+				];
+
+				const getOrder = (): string[] => {
+					const def = [
+						"playPause","stop","metronome","countIn","tracks","refresh",
+						"locateCursor","layoutToggle","exportMenu","toTop","toBottom","openSettings",
+						"progressBar","speed","staveProfile","zoom","audioPlayer"
+					];
+					const saved = this.plugin.settings.playBar?.order;
+					return Array.isArray(saved) && saved.length ? saved.slice() : def.slice();
+				};
+
+				let draggingKey: string | null = null;
+				const renderCards = () => {
+					cardsWrap.empty();
+					const order = getOrder().filter(k => meta.some(m => m.key === (k as any)));
+					const comp = this.plugin.settings.playBar?.components || ({} as any);
+					order.forEach((key) => {
+						const m = meta.find(x => x.key === (key as any));
+						if (!m) return;
+						const card = cardsWrap.createDiv({ cls: 'tabflow-card', attr: { draggable: 'true', style: 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--background-modifier-border); border-radius:6px;' } });
+						card.dataset.key = String(key);
+						const left = card.createDiv({ attr: { style: 'display:flex; align-items:center; gap:8px;' } });
+						left.createSpan({ text: '⠿', attr: { style: 'cursor:grab; user-select:none;' } });
+						left.createEl('strong', { text: m.label });
+						if (m.desc) left.createSpan({ text: ` - ${m.desc}`, attr: { style: 'color:var(--text-muted);font-size:0.9em;' } });
+						const right = card.createDiv({ attr: { style: 'display:flex; align-items:center; gap:6px;' } });
+						const upBtn = right.createEl('button', { text: '↑' });
+						const downBtn = right.createEl('button', { text: '↓' });
+						new Setting(right).addToggle(t => {
+							const current = !!(comp as any)[key];
+							t.setValue(m.disabled ? false : current).onChange(async (v) => {
+								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+								(this.plugin.settings.playBar.components as any)[key] = m.disabled ? false : v;
+								await this.plugin.saveSettings();
+								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+							});
+							if (m.disabled) (t as any).toggleEl.querySelector('input')?.setAttribute('disabled','true');
+						});
+
+						upBtn.onclick = async () => {
+							const cur = getOrder();
+							const i = cur.indexOf(String(key));
+							if (i > 0) {
+								[cur[i-1], cur[i]] = [cur[i], cur[i-1]];
+								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+								(this.plugin.settings.playBar as any).order = cur;
+								await this.plugin.saveSettings();
+								renderCards();
+								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+							}
+						};
+						downBtn.onclick = async () => {
+							const cur = getOrder();
+							const i = cur.indexOf(String(key));
+							if (i >= 0 && i < cur.length - 1) {
+								[cur[i+1], cur[i]] = [cur[i], cur[i+1]];
+								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+								(this.plugin.settings.playBar as any).order = cur;
+								await this.plugin.saveSettings();
+								renderCards();
+								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+							}
+						};
+
+						card.addEventListener('dragstart', (e) => { draggingKey = String(key); (e.dataTransfer as DataTransfer).effectAllowed = 'move'; });
+						card.addEventListener('dragover', (e) => { e.preventDefault(); (e.dataTransfer as DataTransfer).dropEffect = 'move'; card.style.background = 'var(--background-modifier-hover)'; });
+						card.addEventListener('dragleave', () => { card.style.background = ''; });
+						card.addEventListener('drop', async () => {
+							card.style.background = '';
+							if (!draggingKey || draggingKey === key) return;
+							const cur = getOrder();
+							const from = cur.indexOf(String(draggingKey));
+							const to = cur.indexOf(String(key));
+							if (from < 0 || to < 0) return;
+							// 互换位置（覆盖则交换，更符合直觉）
+							[cur[from], cur[to]] = [cur[to], cur[from]];
+							this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+							(this.plugin.settings.playBar as any).order = cur;
+							await this.plugin.saveSettings();
+							renderCards();
+							try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+							draggingKey = null;
+						});
+					});
+				};
+				renderCards();
+
 				// PlayBar 组件可见性
 				tabContents.createEl("h4", { text: "播放栏组件" });
 				const comp = this.plugin.settings.playBar?.components || ({} as any);
@@ -452,6 +567,27 @@ export class SettingTab extends PluginSettingTab {
 							}
 						});
 				}
+
+				// 顺序编辑（简单文本逗号分隔）
+				tabContents.createEl("h4", { text: "组件顺序" });
+				new Setting(tabContents)
+					.setName("渲染顺序")
+					.setDesc("使用逗号分隔组件键名，未知键将被忽略。清空则恢复默认顺序。")
+					.addText((t) => {
+						const current = (this.plugin.settings.playBar?.order || []).join(",");
+						t.setPlaceholder("playPause,stop,metronome,...")
+						 .setValue(current)
+						 .onChange(async (v) => {
+							const arr = v.split(",").map(s => s.trim()).filter(Boolean);
+							this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+							(this.plugin.settings.playBar as any).order = arr.length > 0 ? arr : undefined;
+							await this.plugin.saveSettings();
+							try {
+								// @ts-ignore
+								this.app.workspace.trigger('tabflow:playbar-components-changed');
+							} catch {}
+						 });
+					});
 
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });
