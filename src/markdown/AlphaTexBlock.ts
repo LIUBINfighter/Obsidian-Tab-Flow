@@ -1,4 +1,5 @@
 import * as alphaTab from "@coderline/alphatab";
+import { setIcon } from "obsidian";
 import type { AlphaTabResources } from "../services/ResourceLoaderService";
 
 export interface AlphaTexInitOptions {
@@ -62,7 +63,7 @@ export function mountAlphaTexBlock(
 	const scoreEl = document.createElement("div");
 	scoreEl.className = "alphatex-score";
 	const controlsEl = document.createElement("div");
-	controlsEl.className = "alphatex-controls";
+	controlsEl.className = "alphatex-controls nav-buttons-container";
 	wrapper.appendChild(scoreEl);
 	wrapper.appendChild(controlsEl);
 	rootEl.appendChild(wrapper);
@@ -78,6 +79,17 @@ export function mountAlphaTexBlock(
 	const fontStyle = document.createElement("style");
 	fontStyle.innerHTML = `@font-face { font-family: 'alphaTab'; src: url(${resources.bravuraUri}); }`;
 	document.head.appendChild(fontStyle);
+
+	// Cursor and highlight styles (aligned with TabView)
+	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
+	const runtimeStyle = document.createElement("style");
+	runtimeStyle.innerHTML = `
+		.alphatex-block .at-cursor-bar { background: ${accent}; opacity: 0.2; }
+		.alphatex-block .at-selection div { background: ${accent}; opacity: 0.4; }
+		.alphatex-block .at-cursor-beat { background: ${accent}; width: 3px; }
+		.alphatex-block .at-highlight * { fill: ${accent}; stroke: ${accent}; }
+	`;
+	document.head.appendChild(runtimeStyle);
 
 	const api = new alphaTab.AlphaTabApi(scoreEl, {
 		core: {
@@ -124,6 +136,15 @@ export function mountAlphaTexBlock(
 		api.metronomeVolume = merged.metronome ? 1 : 0;
 	}
 
+	// Configure scroll element similar to TabView
+	try {
+		const scrollEl = rootEl.closest(
+			".markdown-reading-view,.markdown-preview-view,.view-content,.workspace-leaf-content"
+		) as HTMLElement | null;
+		(api.settings.player as any).scrollElement = scrollEl || "html,body";
+		api.updateSettings();
+	} catch {}
+
 	// render via convenient tex method; fallback to manual importer if needed
 	let destroyed = false;
 	const renderFromTex = () => {
@@ -152,70 +173,86 @@ export function mountAlphaTexBlock(
 	};
 	renderFromTex();
 
-	// controls (only if soundFont is available)
+	// controls (try to unify style with PlayBar)
 	if (resources.soundFontUri) {
-		const playBtn = document.createElement("button");
-		playBtn.className = "atx-btn";
-		playBtn.textContent = "Play/Pause";
-		playBtn.addEventListener("click", () => api.playPause());
+		const playPauseBtn = document.createElement("button");
+		playPauseBtn.className = "clickable-icon";
+		playPauseBtn.setAttribute("type", "button");
+		const playIcon = document.createElement("span");
+		setIcon(playIcon, "play");
+		playPauseBtn.appendChild(playIcon);
+		playPauseBtn.setAttribute("aria-label", "播放/暂停");
+		playPauseBtn.addEventListener("click", () => api.playPause());
 
 		const stopBtn = document.createElement("button");
-		stopBtn.className = "atx-btn";
-		stopBtn.textContent = "Stop";
+		stopBtn.className = "clickable-icon";
+		stopBtn.setAttribute("type", "button");
+		const stopIcon = document.createElement("span");
+		setIcon(stopIcon, "square");
+		stopBtn.appendChild(stopIcon);
+		stopBtn.setAttribute("aria-label", "停止");
 		stopBtn.addEventListener("click", () => api.stop());
 
-		const speedLabel = document.createElement("label");
-		speedLabel.className = "atx-label";
-		speedLabel.textContent = "Speed:";
-		const speedInput = document.createElement("input");
-		speedInput.type = "number";
-		speedInput.min = "0.5";
-		speedInput.max = "2";
-		speedInput.step = "0.1";
-		speedInput.value = String(merged.speed ?? 1.0);
-		speedInput.addEventListener("change", () => {
-			const v = parseFloat(speedInput.value);
-			if (!isNaN(v)) api.playbackSpeed = Math.max(0.5, Math.min(2.0, v));
-		});
-		speedLabel.appendChild(speedInput);
+		const speedIcon = document.createElement("span");
+		setIcon(speedIcon, "lucide-gauge");
+		speedIcon.style.marginRight = "0.5em";
 
-		const scaleLabel = document.createElement("label");
-		scaleLabel.className = "atx-label";
-		scaleLabel.textContent = "Scale:";
-		const scaleInput = document.createElement("input");
-		scaleInput.type = "number";
-		scaleInput.min = "0.5";
-		scaleInput.max = "2";
-		scaleInput.step = "0.05";
-		scaleInput.value = String(merged.scale ?? 1.0);
-		scaleInput.addEventListener("change", () => {
-			const v = parseFloat(scaleInput.value);
+		const speedSelect = document.createElement("select");
+		["0.5","0.75","1.0","1.25","1.5","2.0"].forEach((val) => {
+			const opt = document.createElement("option");
+			opt.value = val;
+			opt.innerText = val + "x";
+			if (val === String(merged.speed ?? 1.0)) opt.selected = true;
+			speedSelect.appendChild(opt);
+		});
+		speedSelect.onchange = () => {
+			const v = parseFloat(speedSelect.value);
+			if (!isNaN(v)) api.playbackSpeed = v;
+		};
+
+		const zoomIcon = document.createElement("span");
+		setIcon(zoomIcon, "lucide-zoom-in");
+		zoomIcon.style.marginLeft = "1em";
+		zoomIcon.style.marginRight = "0.5em";
+		const zoomSelect = document.createElement("select");
+		[
+			{ label: "50%", value: 0.5 }, { label: "75%", value: 0.75 }, { label: "100%", value: 1 },
+			{ label: "125%", value: 1.25 }, { label: "150%", value: 1.5 }, { label: "200%", value: 2 },
+		].forEach(({label: l, value}) => {
+			const opt = document.createElement("option");
+			opt.value = String(value);
+			opt.innerText = l;
+			if (value === (merged.scale ?? 1)) opt.selected = true;
+			zoomSelect.appendChild(opt);
+		});
+		zoomSelect.onchange = () => {
+			const v = parseFloat(zoomSelect.value);
 			if (!isNaN(v)) {
-				api.settings.display.scale = Math.max(0.5, Math.min(2.0, v));
+				api.settings.display.scale = v;
 				api.updateSettings();
 				api.render();
 			}
-		});
-		scaleLabel.appendChild(scaleInput);
+		};
 
-		const metroLabel = document.createElement("label");
-		metroLabel.className = "atx-label";
-		const metroCheck = document.createElement("input");
-		metroCheck.type = "checkbox";
-		metroCheck.checked = !!merged.metronome;
-		metroCheck.addEventListener("change", () => {
-			api.metronomeVolume = metroCheck.checked ? 1 : 0;
-		});
-		metroLabel.appendChild(metroCheck);
-		const metroText = document.createElement("span");
-		metroText.textContent = "Metronome";
-		metroLabel.appendChild(metroText);
+		const metroBtn = document.createElement("button");
+		metroBtn.className = "clickable-icon";
+		metroBtn.setAttribute("type", "button");
+		const metroIcon = document.createElement("span");
+		setIcon(metroIcon, "lucide-music-2");
+		metroBtn.appendChild(metroIcon);
+		metroBtn.setAttribute("aria-label", "节拍器");
+		metroBtn.onclick = () => {
+			const enabled = (api.metronomeVolume || 0) > 0 ? false : true;
+			api.metronomeVolume = enabled ? 1 : 0;
+		};
 
-		controlsEl.appendChild(playBtn);
+		controlsEl.appendChild(playPauseBtn);
 		controlsEl.appendChild(stopBtn);
-		controlsEl.appendChild(speedLabel);
-		controlsEl.appendChild(scaleLabel);
-		controlsEl.appendChild(metroLabel);
+		controlsEl.appendChild(speedIcon);
+		controlsEl.appendChild(speedSelect);
+		controlsEl.appendChild(zoomIcon);
+		controlsEl.appendChild(zoomSelect);
+		controlsEl.appendChild(metroBtn);
 	} else {
 		const note = document.createElement("div");
 		note.className = "alphatex-note";
@@ -230,6 +267,7 @@ export function mountAlphaTexBlock(
 			try { api.destroy(); } catch {}
 			try { rootEl.innerHTML = ""; } catch {}
 			try { fontStyle.remove(); } catch {}
+			try { runtimeStyle.remove(); } catch {}
 		},
 	};
 }
