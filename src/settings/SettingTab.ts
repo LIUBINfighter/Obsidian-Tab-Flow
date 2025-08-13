@@ -86,10 +86,32 @@ export interface AssetStatus {
 
 export class SettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
+    private _eventBound = false;
 
 	constructor(app: App, plugin: MyPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+        // 绑定一次全局事件：跳转到本插件设置的“播放器配置”子页签
+        if (!this._eventBound) {
+            // @ts-ignore
+            this.app.workspace.on('tabflow:open-plugin-settings-player', async () => {
+                try {
+                    // 打开设置面板并定位到本插件设置页
+                    // @ts-ignore
+                    this.app.setting.open();
+                    // @ts-ignore 可能存在的API：openTabById
+                    if (this.app.setting.openTabById) {
+                        // @ts-ignore
+                        this.app.setting.openTabById(this.plugin.manifest.id);
+                    }
+                    // 提示 display 使用 player 作为默认活动子页签
+                    (this as any)._forceActiveInnerTab = 'player';
+                    // 如果当前就是本插件设置页，强制重绘
+                    try { await this.display(); } catch {}
+                } catch {}
+            });
+            this._eventBound = true;
+        }
 	}
 
 	/**
@@ -165,7 +187,8 @@ export class SettingTab extends PluginSettingTab {
 			{ id: "about", name: "关于" },
 		];
 
-		let activeTab = "general";
+        let activeTab = (this as any)._forceActiveInnerTab || "general";
+        (this as any)._forceActiveInnerTab = undefined;
 
 		const renderTab = async (tabId: string) => {
 			tabContents.empty();
@@ -379,6 +402,29 @@ export class SettingTab extends PluginSettingTab {
 
 				// 可视化编辑（推荐）：组件卡片（拖拽/上下移动/开关）
 				tabContents.createEl("h4", { text: "可视化编辑（拖拽排序 + 开关）" });
+				// 恢复默认设置按钮
+				new Setting(tabContents)
+					.setName("恢复默认")
+					.setDesc("重置播放栏组件的显示开关与顺序为默认配置")
+					.addButton((btn) => {
+						btn.setButtonText("恢复默认")
+							.onClick(async () => {
+								try {
+									this.plugin.settings.playBar = {
+										components: JSON.parse(JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})),
+										order: (DEFAULT_SETTINGS.playBar?.order || []).slice(),
+									};
+									await this.plugin.saveSettings();
+									renderCards();
+
+									// 通知视图即时应用
+									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
+									new Notice("已恢复默认设置");
+								} catch (e) {
+									new Notice("恢复默认失败: " + e);
+								}
+							});
+					});
 				const cardsWrap = tabContents.createDiv({ attr: { style: "display:flex; flex-direction:column; gap:8px;" } });
 				const meta: Array<{ key: keyof PlayBarComponentVisibility | 'audioPlayer'; label: string; icon: string; desc?: string; disabled?: boolean }> = [
 					{ key: 'playPause', label: '播放/暂停', icon: 'play' },
@@ -493,29 +539,7 @@ export class SettingTab extends PluginSettingTab {
 				};
 				renderCards();
 
-				// 恢复默认设置按钮
-				new Setting(tabContents)
-					.setName("恢复默认")
-					.setDesc("重置播放栏组件的显示开关与顺序为默认配置")
-					.addButton((btn) => {
-						btn.setButtonText("恢复默认")
-							.onClick(async () => {
-								try {
-									this.plugin.settings.playBar = {
-										components: JSON.parse(JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})),
-										order: (DEFAULT_SETTINGS.playBar?.order || []).slice(),
-									};
-									await this.plugin.saveSettings();
-									renderCards();
 
-									// 通知视图即时应用
-									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
-									new Notice("已恢复默认设置");
-								} catch (e) {
-									new Notice("恢复默认失败: " + e);
-								}
-							});
-					});
 
 				// PlayBar 组件可见性
 				// tabContents.createEl("h4", { text: "播放栏组件" });

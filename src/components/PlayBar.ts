@@ -288,23 +288,30 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'settings');
 			openSettingsBtn.appendChild(icon);
-			openSettingsBtn.setAttribute('aria-label', '打开设置');
-			openSettingsBtn.onclick = () => {
-				try {
-					// @ts-ignore
-					app.commands.executeCommandById('app:open-settings');
-					setTimeout(() => {
-						try {
-							const search = document.querySelector('input.setting-search-input') as HTMLInputElement | null;
-							if (search) {
-								search.value = 'Tab Flow';
-								const ev = new Event('input', { bubbles: true });
-								search.dispatchEvent(ev);
-							}
-						} catch {}
-					}, 100);
-				} catch {}
-			};
+            openSettingsBtn.setAttribute('aria-label', '打开设置');
+            openSettingsBtn.onclick = () => {
+                try {
+                    // 直达本插件SettingTab的“播放器配置”页签
+                    // @ts-ignore
+                    app.workspace.trigger('tabflow:open-plugin-settings-player');
+                } catch {
+                    try {
+                        // 退化处理
+                        // @ts-ignore
+                        app.commands.executeCommandById('app:open-settings');
+                        setTimeout(() => {
+                            try {
+                                const search = document.querySelector('input.setting-search-input') as HTMLInputElement | null;
+                                if (search) {
+                                    search.value = 'Tab Flow';
+                                    const ev = new Event('input', { bubbles: true });
+                                    search.dispatchEvent(ev);
+                                }
+                            } catch {}
+                        }, 120);
+                    } catch {}
+                }
+            };
 			bar.appendChild(openSettingsBtn);
 		},
 		progressBar: () => {
