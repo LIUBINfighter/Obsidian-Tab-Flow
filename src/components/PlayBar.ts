@@ -41,6 +41,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
     let stopBtn: HTMLButtonElement | null = null;
     let metronomeBtn: HTMLButtonElement | null = null;
     let countInBtn: HTMLButtonElement | null = null;
+    let openSettingsBtn: HTMLButtonElement | null = null;
 
 	// 内部函数
 	function updatePlayPauseButton() {
@@ -141,6 +142,33 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             }
         };
         bar.appendChild(refreshBtn);
+
+        // 打开设置按钮
+        openSettingsBtn = document.createElement("button");
+        openSettingsBtn.className = "clickable-icon";
+        openSettingsBtn.setAttribute("type", "button");
+        const settingsIcon = document.createElement("span");
+        setIcon(settingsIcon, "settings");
+        openSettingsBtn.appendChild(settingsIcon);
+        openSettingsBtn.setAttribute("aria-label", "打开设置");
+        openSettingsBtn.onclick = () => {
+            try {
+                // @ts-ignore Obsidian command id for settings
+                app.commands.executeCommandById('app:open-settings');
+                // 聚焦到插件页签
+                setTimeout(() => {
+                    try {
+                        const search = document.querySelector('input.setting-search-input') as HTMLInputElement | null;
+                        if (search) {
+                            search.value = 'Tab Flow';
+                            const ev = new Event('input', { bubbles: true });
+                            search.dispatchEvent(ev);
+                        }
+                    } catch {}
+                }, 100);
+            } catch {}
+        };
+        bar.appendChild(openSettingsBtn);
 
 		// 节拍器按钮
 		metronomeBtn = document.createElement("button");

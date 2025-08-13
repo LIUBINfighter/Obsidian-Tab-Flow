@@ -14,6 +14,8 @@ export interface TabFlowSettings {
 	assetsDownloaded?: boolean;
 	lastAssetsCheck?: number;
 	simpleAssetCheck?: boolean;
+	/** 开发者选项：显示 Debug Bar */
+	showDebugBar?: boolean;
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -21,6 +23,7 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	simpleAssetCheck: false, // 默认使用详细资产状态检查
 	assetsDownloaded: false,
 	lastAssetsCheck: 0,
+	showDebugBar: false,
 };
 
 export interface AssetStatus {
@@ -107,6 +110,7 @@ export class SettingTab extends PluginSettingTab {
 
 		const tabList = [
 			{ id: "general", name: "资产管理" },
+			{ id: "player", name: "播放器配置" },
 			{ id: "about", name: "关于" },
 		];
 
@@ -323,6 +327,31 @@ export class SettingTab extends PluginSettingTab {
 				pre.createEl("code", {
 					text: `.obsidian/tab-flow/\n├── main.js\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
 				});
+			} else if (tabId === "player") {
+				// 播放器配置
+				tabContents.createEl("h3", { text: "播放器配置" });
+				tabContents.createEl("div", {
+					text: "以下为开发者选项，用于显示/隐藏 Debug Bar（实验与诊断用途）",
+					cls: "setting-item-description",
+				});
+
+				new Setting(tabContents)
+					.setName("显示 Debug Bar（开发者选项）")
+					.setDesc("启用后在视图顶部显示调试栏，用于实验功能和问题诊断。")
+					.addToggle((toggle) => {
+						toggle.setValue(this.plugin.settings.showDebugBar ?? false)
+							.onChange(async (value) => {
+								this.plugin.settings.showDebugBar = value;
+								await this.plugin.saveSettings();
+								// 实时通知工作区：调试栏开关变化
+								try {
+									// @ts-ignore - Obsidian 支持触发自定义事件
+									this.app.workspace.trigger('tabflow:debugbar-toggle', value);
+								} catch {}
+								new Notice(value ? "已启用 Debug Bar" : "已隐藏 Debug Bar");
+							});
+					});
+
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });
 				tabContents.createEl("p", {

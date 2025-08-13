@@ -33,6 +33,7 @@ export class TabView extends FileView {
     private audioEl: HTMLAudioElement | null = null;
     private audioObjectUrl: string | null = null;
     private externalMediaService: ExternalMediaService | null = null;
+    private settingsChangeHandler?: () => void;
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -202,18 +203,8 @@ private isMessy(str: string): boolean {
 		this._api = this.alphaTabService.getApi();
 
 
-			// 3. 渲染 DebugBar
-			// eslint-disable-next-line @typescript-eslint/no-var-requires
-			const { createDebugBar } = require("../components/DebugBar");
-			const debugBar = createDebugBar({
-				app: this.app, // 关键补充
-				api: this.alphaTabService.getApi(),
-				isAudioLoaded: this.isAudioLoaded.bind(this),
-				onTrackModal: () => {},
-				eventBus: this.eventBus,
-				getScoreTitle: this.getScoreTitle.bind(this)
-			});
-			this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
+			// 3. 渲染 DebugBar（受设置控制：开发者选项）
+			this.renderDebugBarIfEnabled();
 
     // 4. 渲染底部播放栏 PlayBar
 		// 新方案：在 scoreLoaded 后再渲染 PlayBar，并确保 getCurrentTime/getDuration/seekTo 始终指向最新 player
@@ -382,6 +373,22 @@ private isMessy(str: string): boolean {
             }
         });
 
+		// 监听设置变化，实时响应 Debug Bar 挂载/卸载
+        this.settingsChangeHandler = () => {
+            try {
+                const enabled = (this.plugin as any)?.settings?.showDebugBar === true;
+                const existing = this.contentEl.querySelector('.debug-bar');
+                if (enabled && !existing) {
+                    this.renderDebugBarIfEnabled();
+                } else if (!enabled && existing) {
+                    (existing as HTMLElement).remove();
+                }
+            } catch {}
+        };
+        // 监听自定义事件以实时响应 SettingTab 的切换
+        // @ts-ignore
+        this.registerEvent(this.app.workspace.on('tabflow:debugbar-toggle', this.settingsChangeHandler));
+
         // 订阅加载乐谱：由视图读取文件并下发数据给 AlphaTabService
         this.eventBus.subscribe("命令:加载当前文件", async () => {
             if (!this.currentFile) return;
@@ -486,7 +493,10 @@ private isMessy(str: string): boolean {
 
                         // 触发播放栏重挂载（内部包含去重逻辑）
                         setTimeout(() => {
-                            const mountPlayBar = () => {
+                            const existingPlayBar = document.querySelector('.play-bar');
+                            if (existingPlayBar) existingPlayBar.remove();
+                            // 复用顶部定义的 mountPlayBar，保证功能与时间显示完整
+                            const reMount = () => {
                                 // eslint-disable-next-line @typescript-eslint/no-var-requires
                                 const { createPlayBar } = require("../components/PlayBar");
                                 const playBar = createPlayBar({
@@ -498,11 +508,29 @@ private isMessy(str: string): boolean {
                                     seekTo: () => {},
                                     onAudioCreated: () => {},
                                 });
-                                const existingPlayBar = document.querySelector('.play-bar');
-                                if (existingPlayBar) existingPlayBar.remove();
                                 this.containerEl.appendChild(playBar);
                             };
-                            mountPlayBar();
+                            reMount();
+
+                            // 如开启了 DebugBar，则重建以绑定新 API
+                            try {
+                                const showDebugBar = (this.plugin as any)?.settings?.showDebugBar === true;
+                                if (showDebugBar) {
+                                    const old = this.contentEl.querySelector('.debug-bar');
+                                    if (old) old.remove();
+                                    // eslint-disable-next-line @typescript-eslint/no-var-requires
+                                    const { createDebugBar } = require("../components/DebugBar");
+                                    const debugBar = createDebugBar({
+                                        app: this.app,
+                                        api: this.alphaTabService.getApi(),
+                                        isAudioLoaded: this.isAudioLoaded.bind(this),
+                                        onTrackModal: () => {},
+                                        eventBus: this.eventBus,
+                                        getScoreTitle: this.getScoreTitle.bind(this)
+                                    });
+                                    this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
+                                }
+                            } catch {}
                         }, 50);
                     });
                 }
@@ -550,6 +578,30 @@ private isMessy(str: string): boolean {
             console.error('[TabView] 导出音频失败:', e);
             throw e;
         }
+    }
+
+    // --- 渲染 DebugBar（根据设置）---
+    private renderDebugBarIfEnabled(): void {
+        try {
+            const show = (this.plugin as any)?.settings?.showDebugBar === true;
+            const existing = this.contentEl.querySelector('.debug-bar');
+            if (!show) {
+                if (existing) (existing as HTMLElement).remove();
+                return;
+            }
+            if (existing) return;
+            // eslint-disable-next-line @typescript-eslint/no-var-requires
+            const { createDebugBar } = require("../components/DebugBar");
+            const debugBar = createDebugBar({
+                app: this.app,
+                api: this.alphaTabService.getApi(),
+                isAudioLoaded: this.isAudioLoaded.bind(this),
+                onTrackModal: () => {},
+                eventBus: this.eventBus,
+                getScoreTitle: this.getScoreTitle.bind(this)
+            });
+            this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
+        } catch {}
     }
 
 	onunload(): void {
