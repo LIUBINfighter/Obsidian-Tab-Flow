@@ -353,28 +353,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	};
     bar.appendChild(speedSelect);
 
-	// 2. 布局模式选择器
-	const layoutLabel = document.createElement("label");
-	layoutLabel.innerText = "布局:";
-	layoutLabel.style.marginLeft = "1em";
-    bar.appendChild(layoutLabel);
-
-	const layoutSelect = document.createElement("select");
-	const layoutModes = [
-		{ name: "页面", value: alphaTab.LayoutMode.Page },
-		{ name: "横向", value: alphaTab.LayoutMode.Horizontal },
-	];
-	layoutModes.forEach((item) => {
-		const opt = document.createElement("option");
-		opt.value = String(item.value);
-		opt.innerText = item.name;
-		layoutSelect.appendChild(opt);
-	});
-	layoutSelect.onchange = () => {
-		if (eventBus)
-			eventBus.publish("命令:切换布局", parseInt(layoutSelect.value));
-	};
-    bar.appendChild(layoutSelect);
+    // 布局模式下拉已移除，仅保留图标切换按钮
 
 	// 3. 谱表模式选择器
 	const staveLabel = document.createElement("label");
