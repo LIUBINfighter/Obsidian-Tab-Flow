@@ -432,7 +432,26 @@ export class SettingTab extends PluginSettingTab {
 				addToggle("谱表选择", "staveProfile");
 				addToggle("缩放选择", "zoom");
 				addToggle("进度条", "progressBar", "与原生音频播放器二选一");
-				addToggle("原生音频播放器", "audioPlayer", "与进度条二选一");
+
+				// 原生音频播放器：暂不可用（前端禁用，避免被激活）
+				{
+					const s = new Setting(tabContents)
+						.setName("原生音频播放器（实验性）")
+						.setDesc(
+							"暂不可用：与 AlphaTab 内置播放器存在冲突，可能导致双声叠加、播放位置不同步、导出占用冲突、内存消耗异常等问题。待后续修复。"
+						)
+						.addToggle((t) => {
+							const current = Boolean(comp["audioPlayer"] ?? false);
+							t.setValue(false);
+							t.setDisabled(true);
+							// 如历史上用户曾开启，这里强制关闭并保存，确保前端不激活
+							if (current) {
+								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+								(this.plugin.settings.playBar.components as any)["audioPlayer"] = false;
+								this.plugin.saveSettings();
+							}
+						});
+				}
 
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });

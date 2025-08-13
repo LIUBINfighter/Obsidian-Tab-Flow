@@ -111,7 +111,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         return typeof v === 'boolean' ? v : defaultValue;
     };
 
-    if (show("playPause")) {
+	if (show("playPause")) {
 		// 播放/暂停按钮
 		playPauseBtn = document.createElement("button");
 		playPauseBtn.className = "clickable-icon";
@@ -125,8 +125,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			updatePlayPauseButton();
 		};
         bar.appendChild(playPauseBtn);
+	}
 
-		// 停止按钮
+	// 停止按钮（独立控制）
+	if (show("stop")) {
 		stopBtn = document.createElement("button");
 		stopBtn.className = "clickable-icon";
 		stopBtn.setAttribute("type", "button");
@@ -141,15 +143,15 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
 			updatePlayPauseButton();
 		};
-        bar.appendChild(stopBtn);
+		bar.appendChild(stopBtn);
+	}
 
-        // 选择音轨按钮
-        if (show("tracks")) {
-        const tracksBtn = document.createElement("button");
+	// 选择音轨按钮
+	if (show("tracks")) {
+		const tracksBtn = document.createElement("button");
 		tracksBtn.className = "clickable-icon";
 		tracksBtn.setAttribute("type", "button");
 		const tracksIcon = document.createElement("span");
-		// 使用 lucide 图标，代表多图层/多音轨
 		setIcon(tracksIcon, "lucide-layers");
 		tracksBtn.appendChild(tracksIcon);
 		tracksBtn.setAttribute("aria-label", "选择音轨");
@@ -157,156 +159,153 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			if (eventBus) {
 				eventBus.publish("命令:选择音轨");
 			}
-        };
-        bar.appendChild(tracksBtn);
-        }
+		};
+		bar.appendChild(tracksBtn);
+	}
 
-        // 刷新播放器按钮
-        if (show("refresh")) {
-        const refreshBtn = document.createElement("button");
-        refreshBtn.className = "clickable-icon";
-        refreshBtn.setAttribute("type", "button");
-        const refreshIcon = document.createElement("span");
-        // 使用 lucide 刷新图标
-        setIcon(refreshIcon, "lucide-refresh-ccw");
-        refreshBtn.appendChild(refreshIcon);
-        refreshBtn.setAttribute("aria-label", "刷新播放器");
-        refreshBtn.onclick = () => {
-            if (eventBus) {
-                eventBus.publish("命令:重新构造AlphaTabApi");
-            }
-        };
-        bar.appendChild(refreshBtn);
-        }
+	// 刷新播放器按钮
+	if (show("refresh")) {
+		const refreshBtn = document.createElement("button");
+		refreshBtn.className = "clickable-icon";
+		refreshBtn.setAttribute("type", "button");
+		const refreshIcon = document.createElement("span");
+		setIcon(refreshIcon, "lucide-refresh-ccw");
+		refreshBtn.appendChild(refreshIcon);
+		refreshBtn.setAttribute("aria-label", "刷新播放器");
+		refreshBtn.onclick = () => {
+			if (eventBus) {
+				eventBus.publish("命令:重新构造AlphaTabApi");
+			}
+		};
+		bar.appendChild(refreshBtn);
+	}
 
-        // 滚动到光标
-        if (show("locateCursor")) {
-        locateCursorBtn = document.createElement("button");
-        locateCursorBtn.className = "clickable-icon";
-        locateCursorBtn.setAttribute("type", "button");
-        const locateIcon = document.createElement("span");
-        setIcon(locateIcon, "lucide-crosshair");
-        locateCursorBtn.appendChild(locateIcon);
-        locateCursorBtn.setAttribute("aria-label", "滚动到光标");
-        locateCursorBtn.onclick = () => {
-            if (eventBus) {
-                eventBus.publish("命令:滚动到光标");
-            }
-        };
-        bar.appendChild(locateCursorBtn);
-        }
+	// 滚动到光标
+	if (show("locateCursor")) {
+		locateCursorBtn = document.createElement("button");
+		locateCursorBtn.className = "clickable-icon";
+		locateCursorBtn.setAttribute("type", "button");
+		const locateIcon = document.createElement("span");
+		setIcon(locateIcon, "lucide-crosshair");
+		locateCursorBtn.appendChild(locateIcon);
+		locateCursorBtn.setAttribute("aria-label", "滚动到光标");
+		locateCursorBtn.onclick = () => {
+			if (eventBus) {
+				eventBus.publish("命令:滚动到光标");
+			}
+		};
+		bar.appendChild(locateCursorBtn);
+	}
 
-        // 布局切换（Page <-> Horizontal）
-        if (show("layoutToggle")) {
-        layoutToggleBtn = document.createElement("button");
-        layoutToggleBtn.className = "clickable-icon";
-        layoutToggleBtn.setAttribute("type", "button");
-        updateLayoutToggleBtn();
-        layoutToggleBtn.onclick = () => {
-            layoutMode = layoutMode === alphaTab.LayoutMode.Page
-                ? alphaTab.LayoutMode.Horizontal
-                : alphaTab.LayoutMode.Page;
-            if (eventBus) {
-                eventBus.publish("命令:切换布局", layoutMode);
-            }
-            updateLayoutToggleBtn();
-        };
-        bar.appendChild(layoutToggleBtn);
-        }
+	// 布局切换（Page <-> Horizontal）
+	if (show("layoutToggle")) {
+		layoutToggleBtn = document.createElement("button");
+		layoutToggleBtn.className = "clickable-icon";
+		layoutToggleBtn.setAttribute("type", "button");
+		updateLayoutToggleBtn();
+		layoutToggleBtn.onclick = () => {
+			layoutMode = layoutMode === alphaTab.LayoutMode.Page
+				? alphaTab.LayoutMode.Horizontal
+				: alphaTab.LayoutMode.Page;
+			if (eventBus) {
+				eventBus.publish("命令:切换布局", layoutMode);
+			}
+			updateLayoutToggleBtn();
+		};
+		bar.appendChild(layoutToggleBtn);
+	}
 
-        // 导出：统一选择器（弹出导出模态框）
-        if (show("exportMenu")) {
-        exportChooserBtn = document.createElement("button");
-        exportChooserBtn.className = "clickable-icon";
-        exportChooserBtn.setAttribute("type", "button");
-        const exportIcon = document.createElement("span");
-        setIcon(exportIcon, "lucide-download");
-        exportChooserBtn.appendChild(exportIcon);
-        exportChooserBtn.setAttribute("aria-label", "导出");
-        exportChooserBtn.onclick = () => {
-            try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const { ExportChooserModal } = require("./ExportChooserModal");
-                const getTitle = () => {
-                    try {
-                        // 视图会设置 score.filePath 与标题，但此处只作为模态展示用途
-                        return (document.querySelector('.view-header-title')?.textContent || '').trim() || 'Untitled';
-                    } catch { return 'Untitled'; }
-                };
-                new ExportChooserModal({ app, eventBus, getFileName: getTitle }).open();
-            } catch (e) {
-                console.error('[PlayBar] 打开导出选择器失败:', e);
-            }
-        };
-        bar.appendChild(exportChooserBtn);
-        }
+	// 导出：统一选择器（弹出导出模态框）
+	if (show("exportMenu")) {
+		exportChooserBtn = document.createElement("button");
+		exportChooserBtn.className = "clickable-icon";
+		exportChooserBtn.setAttribute("type", "button");
+		const exportIcon = document.createElement("span");
+		setIcon(exportIcon, "lucide-download");
+		exportChooserBtn.appendChild(exportIcon);
+		exportChooserBtn.setAttribute("aria-label", "导出");
+		exportChooserBtn.onclick = () => {
+			try {
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				const { ExportChooserModal } = require("./ExportChooserModal");
+				const getTitle = () => {
+					try {
+						return (document.querySelector('.view-header-title')?.textContent || '').trim() || 'Untitled';
+					} catch { return 'Untitled'; }
+				};
+				new ExportChooserModal({ app, eventBus, getFileName: getTitle }).open();
+			} catch (e) {
+				console.error('[PlayBar] 打开导出选择器失败:', e);
+			}
+		};
+		bar.appendChild(exportChooserBtn);
+	}
 
-        // 回到顶部
-        if (show("toTop")) {
-        toTopBtn = document.createElement("button");
-        toTopBtn.className = "clickable-icon";
-        toTopBtn.setAttribute("type", "button");
-        const topIcon = document.createElement("span");
-        setIcon(topIcon, "lucide-chevrons-up");
-        toTopBtn.appendChild(topIcon);
-        toTopBtn.setAttribute("aria-label", "回到顶部");
-        toTopBtn.onclick = () => {
-            if (eventBus) {
-                eventBus.publish("命令:滚动到顶部");
-            }
-        };
-        bar.appendChild(toTopBtn);
-        }
+	// 回到顶部
+	if (show("toTop")) {
+		toTopBtn = document.createElement("button");
+		toTopBtn.className = "clickable-icon";
+		toTopBtn.setAttribute("type", "button");
+		const topIcon = document.createElement("span");
+		setIcon(topIcon, "lucide-chevrons-up");
+		toTopBtn.appendChild(topIcon);
+		toTopBtn.setAttribute("aria-label", "回到顶部");
+		toTopBtn.onclick = () => {
+			if (eventBus) {
+				eventBus.publish("命令:滚动到顶部");
+			}
+		};
+		bar.appendChild(toTopBtn);
+	}
 
-        // 回到底部
-        if (show("toBottom")) {
-        toBottomBtn = document.createElement("button");
-        toBottomBtn.className = "clickable-icon";
-        toBottomBtn.setAttribute("type", "button");
-        const bottomIcon = document.createElement("span");
-        setIcon(bottomIcon, "lucide-chevrons-down");
-        toBottomBtn.appendChild(bottomIcon);
-        toBottomBtn.setAttribute("aria-label", "回到底部");
-        toBottomBtn.onclick = () => {
-            if (eventBus) {
-                eventBus.publish("命令:滚动到底部");
-            }
-        };
-        bar.appendChild(toBottomBtn);
-        }
+	// 回到底部
+	if (show("toBottom")) {
+		toBottomBtn = document.createElement("button");
+		toBottomBtn.className = "clickable-icon";
+		toBottomBtn.setAttribute("type", "button");
+		const bottomIcon = document.createElement("span");
+		setIcon(bottomIcon, "lucide-chevrons-down");
+		toBottomBtn.appendChild(bottomIcon);
+		toBottomBtn.setAttribute("aria-label", "回到底部");
+		toBottomBtn.onclick = () => {
+			if (eventBus) {
+				eventBus.publish("命令:滚动到底部");
+			}
+		};
+		bar.appendChild(toBottomBtn);
+	}
 
-        // 打开设置按钮
-        if (show("openSettings")) {
-        openSettingsBtn = document.createElement("button");
-        openSettingsBtn.className = "clickable-icon";
-        openSettingsBtn.setAttribute("type", "button");
-        const settingsIcon = document.createElement("span");
-        setIcon(settingsIcon, "settings");
-        openSettingsBtn.appendChild(settingsIcon);
-        openSettingsBtn.setAttribute("aria-label", "打开设置");
-        openSettingsBtn.onclick = () => {
-            try {
-                // @ts-ignore Obsidian command id for settings
-                app.commands.executeCommandById('app:open-settings');
-                // 聚焦到插件页签
-                setTimeout(() => {
-                    try {
-                        const search = document.querySelector('input.setting-search-input') as HTMLInputElement | null;
-                        if (search) {
-                            search.value = 'Tab Flow';
-                            const ev = new Event('input', { bubbles: true });
-                            search.dispatchEvent(ev);
-                        }
-                    } catch {}
-                }, 100);
-            } catch {}
-        };
-        bar.appendChild(openSettingsBtn);
-        }
+	// 打开设置按钮
+	if (show("openSettings")) {
+		openSettingsBtn = document.createElement("button");
+		openSettingsBtn.className = "clickable-icon";
+		openSettingsBtn.setAttribute("type", "button");
+		const settingsIcon = document.createElement("span");
+		setIcon(settingsIcon, "settings");
+		openSettingsBtn.appendChild(settingsIcon);
+		openSettingsBtn.setAttribute("aria-label", "打开设置");
+		openSettingsBtn.onclick = () => {
+			try {
+				// @ts-ignore Obsidian command id for settings
+				app.commands.executeCommandById('app:open-settings');
+				setTimeout(() => {
+					try {
+						const search = document.querySelector('input.setting-search-input') as HTMLInputElement | null;
+						if (search) {
+							search.value = 'Tab Flow';
+							const ev = new Event('input', { bubbles: true });
+							search.dispatchEvent(ev);
+						}
+					} catch {}
+				}, 100);
+			} catch {}
+		};
+		bar.appendChild(openSettingsBtn);
+	}
 
-		// 节拍器按钮
-        if (show("metronome")) {
-        metronomeBtn = document.createElement("button");
+	// 节拍器按钮
+	if (show("metronome")) {
+		metronomeBtn = document.createElement("button");
 		metronomeBtn.className = "clickable-icon";
 		metronomeBtn.setAttribute("type", "button");
 		updateMetronomeBtn();
@@ -317,12 +316,12 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
 			updateMetronomeBtn();
 		};
-        bar.appendChild(metronomeBtn);
-        }
+		bar.appendChild(metronomeBtn);
+	}
 
-		// 预备拍按钮
-        if (show("countIn")) {
-        countInBtn = document.createElement("button");
+	// 预备拍按钮
+	if (show("countIn")) {
+		countInBtn = document.createElement("button");
 		countInBtn.className = "clickable-icon";
 		countInBtn.setAttribute("type", "button");
 		updateCountInBtn();
@@ -333,8 +332,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
 			updateCountInBtn();
 		};
-        bar.appendChild(countInBtn);
-        }
+		bar.appendChild(countInBtn);
 	}
 
     // 进度/播放器区域与时间显示（可选，直接追加到 bar）
