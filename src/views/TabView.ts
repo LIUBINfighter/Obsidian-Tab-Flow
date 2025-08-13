@@ -373,6 +373,18 @@ private isMessy(str: string): boolean {
             }
         });
 
+		// 设置变化时重新挂载 PlayBar（组件可见性变更）
+		// @ts-ignore
+		this.registerEvent(this.app.workspace.on('tabflow:playbar-components-changed', () => {
+			try {
+				const existing = document.querySelector('.play-bar');
+				if (existing) existing.remove();
+				mountPlayBar();
+			} catch (e) {
+				console.warn('[TabView] 重新挂载 PlayBar 失败:', e);
+			}
+		}));
+
 		// 监听设置变化，实时响应 Debug Bar 挂载/卸载
         this.settingsChangeHandler = () => {
             try {

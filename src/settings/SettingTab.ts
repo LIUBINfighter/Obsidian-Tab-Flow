@@ -16,6 +16,10 @@ export interface TabFlowSettings {
 	simpleAssetCheck?: boolean;
 	/** 开发者选项：显示 Debug Bar */
 	showDebugBar?: boolean;
+    /** 播放栏配置 */
+    playBar?: {
+        components: PlayBarComponentVisibility;
+    };
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -24,7 +28,48 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	assetsDownloaded: false,
 	lastAssetsCheck: 0,
 	showDebugBar: false,
+    playBar: {
+        components: {
+            playPause: true,
+            stop: true,
+            tracks: true,
+            refresh: true,
+            locateCursor: true,
+            layoutToggle: true,
+            exportMenu: true,
+            toTop: true,
+            toBottom: true,
+            openSettings: true,
+            metronome: true,
+            countIn: true,
+            speed: true,
+            staveProfile: true,
+            zoom: true,
+            progressBar: false,
+            audioPlayer: false,
+        },
+    },
 };
+
+export interface PlayBarComponentVisibility {
+    playPause: boolean;
+    stop: boolean;
+    tracks: boolean;
+    refresh: boolean;
+    locateCursor: boolean;
+    layoutToggle: boolean;
+    exportMenu: boolean;
+    toTop: boolean;
+    toBottom: boolean;
+    openSettings: boolean;
+    metronome: boolean;
+    countIn: boolean;
+    speed: boolean;
+    staveProfile: boolean;
+    zoom: boolean;
+    progressBar: boolean;
+    audioPlayer: boolean;
+}
 
 export interface AssetStatus {
 	file: string; // 文件名（不含路径）
@@ -351,6 +396,43 @@ export class SettingTab extends PluginSettingTab {
 								new Notice(value ? "已启用 Debug Bar" : "已隐藏 Debug Bar");
 							});
 					});
+
+				// PlayBar 组件可见性
+				tabContents.createEl("h4", { text: "播放栏组件" });
+				const comp = this.plugin.settings.playBar?.components || ({} as any);
+				const addToggle = (name: string, key: keyof typeof comp, desc?: string) => {
+					new Setting(tabContents)
+						.setName(name)
+						.setDesc(desc || "")
+						.addToggle((t) => {
+							t.setValue(Boolean(comp[key] ?? true)).onChange(async (v) => {
+								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+								(this.plugin.settings.playBar.components as any)[key] = v;
+								await this.plugin.saveSettings();
+								try {
+									// @ts-ignore
+									this.app.workspace.trigger('tabflow:playbar-components-changed');
+								} catch {}
+							});
+						});
+				};
+				addToggle("播放/暂停", "playPause");
+				addToggle("停止", "stop");
+				addToggle("选择音轨", "tracks");
+				addToggle("刷新/重建播放器", "refresh");
+				addToggle("滚动到光标", "locateCursor");
+				addToggle("布局切换", "layoutToggle");
+				addToggle("导出菜单", "exportMenu");
+				addToggle("回到顶部", "toTop");
+				addToggle("回到底部", "toBottom");
+				addToggle("打开设置", "openSettings");
+				addToggle("节拍器", "metronome");
+				addToggle("预备拍", "countIn");
+				addToggle("速度选择", "speed");
+				addToggle("谱表选择", "staveProfile");
+				addToggle("缩放选择", "zoom");
+				addToggle("进度条", "progressBar", "与原生音频播放器二选一");
+				addToggle("原生音频播放器", "audioPlayer", "与进度条二选一");
 
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });

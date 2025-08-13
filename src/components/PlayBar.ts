@@ -96,7 +96,22 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         layoutToggleBtn.classList.toggle("is-active", isHorizontal);
     }
 
-    if (ENABLED_COMPONENTS.includes("playButton")) {
+    // 从全局设置读取可见性（若获取失败则全部显示）
+    let visibility: any = undefined;
+    try {
+        // @ts-ignore - 通过全局 app.plugins 获取本插件实例
+        const pluginId = 'tab-flow';
+        const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+        visibility = plugin?.settings?.playBar?.components;
+    } catch {}
+
+    const show = (key: string, defaultValue = true): boolean => {
+        if (!visibility) return defaultValue;
+        const v = visibility[key];
+        return typeof v === 'boolean' ? v : defaultValue;
+    };
+
+    if (show("playPause")) {
 		// 播放/暂停按钮
 		playPauseBtn = document.createElement("button");
 		playPauseBtn.className = "clickable-icon";
@@ -128,8 +143,9 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		};
         bar.appendChild(stopBtn);
 
-		// 选择音轨按钮
-		const tracksBtn = document.createElement("button");
+        // 选择音轨按钮
+        if (show("tracks")) {
+        const tracksBtn = document.createElement("button");
 		tracksBtn.className = "clickable-icon";
 		tracksBtn.setAttribute("type", "button");
 		const tracksIcon = document.createElement("span");
@@ -143,8 +159,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			}
         };
         bar.appendChild(tracksBtn);
+        }
 
         // 刷新播放器按钮
+        if (show("refresh")) {
         const refreshBtn = document.createElement("button");
         refreshBtn.className = "clickable-icon";
         refreshBtn.setAttribute("type", "button");
@@ -159,8 +177,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             }
         };
         bar.appendChild(refreshBtn);
+        }
 
         // 滚动到光标
+        if (show("locateCursor")) {
         locateCursorBtn = document.createElement("button");
         locateCursorBtn.className = "clickable-icon";
         locateCursorBtn.setAttribute("type", "button");
@@ -174,8 +194,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             }
         };
         bar.appendChild(locateCursorBtn);
+        }
 
         // 布局切换（Page <-> Horizontal）
+        if (show("layoutToggle")) {
         layoutToggleBtn = document.createElement("button");
         layoutToggleBtn.className = "clickable-icon";
         layoutToggleBtn.setAttribute("type", "button");
@@ -190,8 +212,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             updateLayoutToggleBtn();
         };
         bar.appendChild(layoutToggleBtn);
+        }
 
         // 导出：统一选择器（弹出导出模态框）
+        if (show("exportMenu")) {
         exportChooserBtn = document.createElement("button");
         exportChooserBtn.className = "clickable-icon";
         exportChooserBtn.setAttribute("type", "button");
@@ -215,8 +239,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             }
         };
         bar.appendChild(exportChooserBtn);
+        }
 
         // 回到顶部
+        if (show("toTop")) {
         toTopBtn = document.createElement("button");
         toTopBtn.className = "clickable-icon";
         toTopBtn.setAttribute("type", "button");
@@ -230,8 +256,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             }
         };
         bar.appendChild(toTopBtn);
+        }
 
         // 回到底部
+        if (show("toBottom")) {
         toBottomBtn = document.createElement("button");
         toBottomBtn.className = "clickable-icon";
         toBottomBtn.setAttribute("type", "button");
@@ -245,8 +273,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             }
         };
         bar.appendChild(toBottomBtn);
+        }
 
         // 打开设置按钮
+        if (show("openSettings")) {
         openSettingsBtn = document.createElement("button");
         openSettingsBtn.className = "clickable-icon";
         openSettingsBtn.setAttribute("type", "button");
@@ -272,9 +302,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             } catch {}
         };
         bar.appendChild(openSettingsBtn);
+        }
 
 		// 节拍器按钮
-		metronomeBtn = document.createElement("button");
+        if (show("metronome")) {
+        metronomeBtn = document.createElement("button");
 		metronomeBtn.className = "clickable-icon";
 		metronomeBtn.setAttribute("type", "button");
 		updateMetronomeBtn();
@@ -286,9 +318,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			updateMetronomeBtn();
 		};
         bar.appendChild(metronomeBtn);
+        }
 
 		// 预备拍按钮
-		countInBtn = document.createElement("button");
+        if (show("countIn")) {
+        countInBtn = document.createElement("button");
 		countInBtn.className = "clickable-icon";
 		countInBtn.setAttribute("type", "button");
 		updateCountInBtn();
@@ -300,13 +334,14 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			updateCountInBtn();
 		};
         bar.appendChild(countInBtn);
+        }
 	}
 
     // 进度/播放器区域与时间显示（可选，直接追加到 bar）
     let progressBar: ProgressBarElement | null = null;
     let currentTimeDisplay: HTMLSpanElement | null = null;
     let totalTimeDisplay: HTMLSpanElement | null = null;
-    if (ENABLED_COMPONENTS.includes("progressBar")) {
+    if (show("progressBar", false)) {
         currentTimeDisplay = document.createElement("span");
         currentTimeDisplay.className = "play-time current-time";
         currentTimeDisplay.textContent = "0:00";
@@ -324,7 +359,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         totalTimeDisplay.className = "play-time total-time";
         totalTimeDisplay.textContent = "0:00";
         bar.appendChild(totalTimeDisplay);
-    } else if (ENABLED_COMPONENTS.includes("audioPlayer")) {
+    } else if (show("audioPlayer", false)) {
         // 创建并嵌入原生 <audio> 播放器
         const audioContainer = createAudioPlayer({
             app: options.app,
@@ -334,77 +369,83 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         bar.appendChild(audioContainer);
     }
 
-	// 1. 速度选择器
-	const speedLabel = document.createElement("label");
-	speedLabel.innerText = "速度:";
-    bar.appendChild(speedLabel);
+    // 1. 速度选择器
+    if (show("speed")) {
+        const speedLabel = document.createElement("label");
+        speedLabel.innerText = "速度:";
+        bar.appendChild(speedLabel);
 
-	const speedSelect = document.createElement("select");
-	["0.5", "0.75", "1.0", "1.25", "1.5", "2.0"].forEach((val) => {
-		const opt = document.createElement("option");
-		opt.value = val;
-		opt.innerText = val + "x";
-		if (val === "1.0") opt.selected = true;
-		speedSelect.appendChild(opt);
-	});
-	speedSelect.onchange = () => {
-		if (eventBus)
-			eventBus.publish("命令:设置速度", parseFloat(speedSelect.value));
-	};
-    bar.appendChild(speedSelect);
+        const speedSelect = document.createElement("select");
+        ["0.5", "0.75", "1.0", "1.25", "1.5", "2.0"].forEach((val) => {
+            const opt = document.createElement("option");
+            opt.value = val;
+            opt.innerText = val + "x";
+            if (val === "1.0") opt.selected = true;
+            speedSelect.appendChild(opt);
+        });
+        speedSelect.onchange = () => {
+            if (eventBus)
+                eventBus.publish("命令:设置速度", parseFloat(speedSelect.value));
+        };
+        bar.appendChild(speedSelect);
+    }
 
     // 布局模式下拉已移除，仅保留图标切换按钮
 
-	// 3. 谱表模式选择器
-	const staveLabel = document.createElement("label");
-	staveLabel.innerText = "谱表:";
-	staveLabel.style.marginLeft = "1em";
-    bar.appendChild(staveLabel);
+    // 3. 谱表模式选择器
+    if (show("staveProfile")) {
+        const staveLabel = document.createElement("label");
+        staveLabel.innerText = "谱表:";
+        staveLabel.style.marginLeft = "1em";
+        bar.appendChild(staveLabel);
 
-	const staveSelect = document.createElement("select");
-	const staveProfiles = [
-		{ name: "五线+六线", value: alphaTab.StaveProfile.ScoreTab },
-		{ name: "仅五线谱", value: alphaTab.StaveProfile.Score },
-		{ name: "仅六线谱", value: alphaTab.StaveProfile.Tab },
-		{ name: "混合六线谱", value: alphaTab.StaveProfile.TabMixed },
-	];
-	staveProfiles.forEach((item) => {
-		const opt = document.createElement("option");
-		opt.value = String(item.value);
-		opt.innerText = item.name;
-		staveSelect.appendChild(opt);
-	});
-	staveSelect.onchange = () => {
-		if (eventBus) eventBus.publish("命令:设置谱表", parseInt(staveSelect.value));
-	};
-    bar.appendChild(staveSelect);
+        const staveSelect = document.createElement("select");
+        const staveProfiles = [
+            { name: "五线+六线", value: alphaTab.StaveProfile.ScoreTab },
+            { name: "仅五线谱", value: alphaTab.StaveProfile.Score },
+            { name: "仅六线谱", value: alphaTab.StaveProfile.Tab },
+            { name: "混合六线谱", value: alphaTab.StaveProfile.TabMixed },
+        ];
+        staveProfiles.forEach((item) => {
+            const opt = document.createElement("option");
+            opt.value = String(item.value);
+            opt.innerText = item.name;
+            staveSelect.appendChild(opt);
+        });
+        staveSelect.onchange = () => {
+            if (eventBus) eventBus.publish("命令:设置谱表", parseInt(staveSelect.value));
+        };
+        bar.appendChild(staveSelect);
+    }
 
-	// 4. 缩放选择器
-	const zoomLabel = document.createElement("label");
-	zoomLabel.innerText = "缩放:";
-	zoomLabel.style.marginLeft = "1em";
-    bar.appendChild(zoomLabel);
+    // 4. 缩放选择器
+    if (show("zoom")) {
+        const zoomLabel = document.createElement("label");
+        zoomLabel.innerText = "缩放:";
+        zoomLabel.style.marginLeft = "1em";
+        bar.appendChild(zoomLabel);
 
-	const zoomSelect = document.createElement("select");
-	[
-		{ label: "50%", value: 0.5 },
-		{ label: "75%", value: 0.75 },
-		{ label: "100%", value: 1 },
-		{ label: "125%", value: 1.25 },
-		{ label: "150%", value: 1.5 },
-		{ label: "200%", value: 2 },
-	].forEach(({ label, value }) => {
-		const opt = document.createElement("option");
-		opt.value = value.toString();
-		opt.innerText = label;
-		if (value === 1) opt.selected = true;
-		zoomSelect.appendChild(opt);
-	});
-	zoomSelect.onchange = () => {
-		if (eventBus)
-			eventBus.publish("命令:设置缩放", parseFloat(zoomSelect.value));
-	};
-    bar.appendChild(zoomSelect);
+        const zoomSelect = document.createElement("select");
+        [
+            { label: "50%", value: 0.5 },
+            { label: "75%", value: 0.75 },
+            { label: "100%", value: 1 },
+            { label: "125%", value: 1.25 },
+            { label: "150%", value: 1.5 },
+            { label: "200%", value: 2 },
+        ].forEach(({ label, value }) => {
+            const opt = document.createElement("option");
+            opt.value = value.toString();
+            opt.innerText = label;
+            if (value === 1) opt.selected = true;
+            zoomSelect.appendChild(opt);
+        });
+        zoomSelect.onchange = () => {
+            if (eventBus)
+                eventBus.publish("命令:设置缩放", parseFloat(zoomSelect.value));
+        };
+        bar.appendChild(zoomSelect);
+    }
 
 	// 格式化时间显示（毫秒 -> mm:ss）
 	function formatTime(ms: number): string {
