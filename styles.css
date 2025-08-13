@@ -286,6 +286,7 @@
 /* 统一去除 setting-item 顶部多余分隔线 */
 .itabs-settings-contents .setting-item.mod-toggle {
     border-top: none !important;
+	padding: 0;
 }
 
 /* 组件卡片细节样式 */
