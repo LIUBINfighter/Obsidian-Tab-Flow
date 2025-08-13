@@ -45,10 +45,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
     let openSettingsBtn: HTMLButtonElement | null = null;
     let locateCursorBtn: HTMLButtonElement | null = null;
     let layoutToggleBtn: HTMLButtonElement | null = null;
-    let exportAudioBtn: HTMLButtonElement | null = null;
-    let exportMidiBtn: HTMLButtonElement | null = null;
-    let exportPdfBtn: HTMLButtonElement | null = null;
-    let exportGpBtn: HTMLButtonElement | null = null;
+    let exportChooserBtn: HTMLButtonElement | null = null;
     let toTopBtn: HTMLButtonElement | null = null;
     let toBottomBtn: HTMLButtonElement | null = null;
 
@@ -194,66 +191,30 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         };
         bar.appendChild(layoutToggleBtn);
 
-        // 导出：音频
-        exportAudioBtn = document.createElement("button");
-        exportAudioBtn.className = "clickable-icon";
-        exportAudioBtn.setAttribute("type", "button");
-        const audioIcon = document.createElement("span");
-        setIcon(audioIcon, "lucide-music-2");
-        exportAudioBtn.appendChild(audioIcon);
-        exportAudioBtn.setAttribute("aria-label", "导出音频");
-        exportAudioBtn.onclick = () => {
-            // 优先通过服务层命令，兼容现有实现
-            if (eventBus) {
-                eventBus.publish("命令:导出音频");
+        // 导出：统一选择器（弹出导出模态框）
+        exportChooserBtn = document.createElement("button");
+        exportChooserBtn.className = "clickable-icon";
+        exportChooserBtn.setAttribute("type", "button");
+        const exportIcon = document.createElement("span");
+        setIcon(exportIcon, "lucide-download");
+        exportChooserBtn.appendChild(exportIcon);
+        exportChooserBtn.setAttribute("aria-label", "导出");
+        exportChooserBtn.onclick = () => {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const { ExportChooserModal } = require("./ExportChooserModal");
+                const getTitle = () => {
+                    try {
+                        // 视图会设置 score.filePath 与标题，但此处只作为模态展示用途
+                        return (document.querySelector('.view-header-title')?.textContent || '').trim() || 'Untitled';
+                    } catch { return 'Untitled'; }
+                };
+                new ExportChooserModal({ app, eventBus, getFileName: getTitle }).open();
+            } catch (e) {
+                console.error('[PlayBar] 打开导出选择器失败:', e);
             }
         };
-        bar.appendChild(exportAudioBtn);
-
-        // 导出：MIDI
-        exportMidiBtn = document.createElement("button");
-        exportMidiBtn.className = "clickable-icon";
-        exportMidiBtn.setAttribute("type", "button");
-        const midiIcon = document.createElement("span");
-        setIcon(midiIcon, "lucide-download");
-        exportMidiBtn.appendChild(midiIcon);
-        exportMidiBtn.setAttribute("aria-label", "导出MIDI");
-        exportMidiBtn.onclick = () => {
-            if (eventBus) {
-                eventBus.publish("命令:导出MIDI");
-            }
-        };
-        bar.appendChild(exportMidiBtn);
-
-        // 导出：PDF
-        exportPdfBtn = document.createElement("button");
-        exportPdfBtn.className = "clickable-icon";
-        exportPdfBtn.setAttribute("type", "button");
-        const pdfIcon = document.createElement("span");
-        setIcon(pdfIcon, "lucide-file-text");
-        exportPdfBtn.appendChild(pdfIcon);
-        exportPdfBtn.setAttribute("aria-label", "导出PDF");
-        exportPdfBtn.onclick = () => {
-            if (eventBus) {
-                eventBus.publish("命令:导出PDF");
-            }
-        };
-        bar.appendChild(exportPdfBtn);
-
-        // 导出：GP
-        exportGpBtn = document.createElement("button");
-        exportGpBtn.className = "clickable-icon";
-        exportGpBtn.setAttribute("type", "button");
-        const gpIcon = document.createElement("span");
-        setIcon(gpIcon, "lucide-guitar");
-        exportGpBtn.appendChild(gpIcon);
-        exportGpBtn.setAttribute("aria-label", "导出GP");
-        exportGpBtn.onclick = () => {
-            if (eventBus) {
-                eventBus.publish("命令:导出GP");
-            }
-        };
-        bar.appendChild(exportGpBtn);
+        bar.appendChild(exportChooserBtn);
 
         // 回到顶部
         toTopBtn = document.createElement("button");
