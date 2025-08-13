@@ -610,92 +610,93 @@ private isMessy(str: string): boolean {
 		this.currentFile = file;
 		try {
 			console.debug(`[TabView] Loading file: ${file.name}`);
-			// 使用 AlphaTabService 加载文件
+			// 先绑定 scoreLoaded 事件，再触发加载，避免首开时事件错过
+			const attachScoreLoadedHandler = () => {
+				if (!this._api || !this._api.scoreLoaded) return;
+				this._api.scoreLoaded.on(() => {
+					const score = this._api.score;
+					// 1) 标题同步
+					if (score && score.title && !this.isMessy(score.title)) {
+						this.scoreTitle = score.title;
+					} else {
+						this.scoreTitle = this.currentFile ? this.currentFile.basename : "";
+					}
+
+					// 2) 将文件路径写入 score，用于 TracksModal 等处做持久化键
+					try {
+						if (score && this.currentFile?.path) {
+							(score as any).filePath = this.currentFile.path;
+						}
+					} catch {}
+
+					// 3) 读取并应用持久化的视图状态（音轨选择与轨道参数）
+					try {
+						const filePathKey = (this._api as any)?.score?.filePath as string | undefined;
+						if (filePathKey) {
+							const raw = localStorage.getItem("tabflow-viewstate:" + filePathKey);
+							if (raw) {
+								const state = JSON.parse(raw) || {};
+								const allTracks: alphaTab.model.Track[] = this._api.score?.tracks || [];
+
+								// 3.1 渲染选中的音轨
+								if (Array.isArray(state.tracks) && state.tracks.length > 0) {
+									const idxSet = new Set<number>(state.tracks);
+									const selected = allTracks.filter(t => idxSet.has(t.index));
+									if (selected.length > 0) {
+										this._api.renderTracks(selected as any);
+									}
+								}
+
+								// 3.2 应用轨道参数（solo/mute/volume/transpose）
+								if (state.trackSettings && typeof state.trackSettings === 'object') {
+									const settings: Record<string, any> = state.trackSettings;
+									allTracks.forEach(track => {
+										const s = settings[String(track.index)] || settings[track.index];
+										if (!s) return;
+										try {
+											if (typeof s.solo === 'boolean') {
+												this._api.changeTrackSolo([track], s.solo);
+												// @ts-ignore
+												track.playbackInfo.isSolo = s.solo;
+											}
+											if (typeof s.mute === 'boolean') {
+												this._api.changeTrackMute([track], s.mute);
+												// @ts-ignore
+												track.playbackInfo.isMute = s.mute;
+											}
+											if (typeof s.volume === 'number') {
+												const vol = Math.max(0, Math.min(16, s.volume));
+												this._api.changeTrackVolume([track], vol / 16);
+												// @ts-ignore
+												track.playbackInfo.volume = vol;
+											}
+											if (typeof s.transpose === 'number') {
+												const tr = Math.max(-12, Math.min(12, s.transpose));
+												this._api.changeTrackTranspositionPitch([track], tr);
+											}
+											if (typeof s.transposeAudio === 'number') {
+												// @ts-ignore
+												track.playbackInfo.transposeAudio = s.transposeAudio;
+											}
+										} catch {}
+									});
+								}
+							}
+						}
+					} catch {}
+
+					// 4) 强制刷新 header
+					this.leaf?.setViewState({
+						type: VIEW_TYPE_TAB,
+						state: { file: this.currentFile?.path }
+					}, { history: false });
+				});
+			};
+			attachScoreLoadedHandler();
+
+			// 使用 AlphaTabService 加载文件（在事件绑定之后）
 			const inputFile = await this.app.vault.readBinary(file);
 			await this.alphaTabService.loadScore(new Uint8Array(inputFile));
-			// 监听 scoreLoaded 事件，获取乐谱标题
-            if (this._api && this._api.scoreLoaded) {
-                this._api.scoreLoaded.on(() => {
-                    const score = this._api.score;
-                    // 1) 标题同步
-                    if (score && score.title && !this.isMessy(score.title)) {
-                        this.scoreTitle = score.title;
-                    } else {
-                        this.scoreTitle = this.currentFile ? this.currentFile.basename : "";
-                    }
-
-                    // 2) 将文件路径写入 score，用于 TracksModal 等处做持久化键
-                    try {
-                        if (score && this.currentFile?.path) {
-                            (score as any).filePath = this.currentFile.path;
-                        }
-                    } catch {}
-
-                    // 3) 读取并应用持久化的视图状态（音轨选择与轨道参数）
-                    try {
-                        const filePathKey = (this._api as any)?.score?.filePath as string | undefined;
-                        if (filePathKey) {
-                            const raw = localStorage.getItem("tabflow-viewstate:" + filePathKey);
-                            if (raw) {
-                                const state = JSON.parse(raw) || {};
-                                const allTracks: alphaTab.model.Track[] = this._api.score?.tracks || [];
-
-                                // 3.1 渲染选中的音轨
-                                if (Array.isArray(state.tracks) && state.tracks.length > 0) {
-                                    const idxSet = new Set<number>(state.tracks);
-                                    const selected = allTracks.filter(t => idxSet.has(t.index));
-                                    if (selected.length > 0) {
-                                        this._api.renderTracks(selected as any);
-                                    }
-                                }
-
-                                // 3.2 应用轨道参数（solo/mute/volume/transpose）
-                                if (state.trackSettings && typeof state.trackSettings === 'object') {
-                                    const settings: Record<string, any> = state.trackSettings;
-                                    allTracks.forEach(track => {
-                                        const s = settings[String(track.index)] || settings[track.index];
-                                        if (!s) return;
-                                        try {
-                                            if (typeof s.solo === 'boolean') {
-                                                this._api.changeTrackSolo([track], s.solo);
-                                                // 同步本地以便 UI 初始值正确
-                                                // @ts-ignore
-                                                track.playbackInfo.isSolo = s.solo;
-                                            }
-                                            if (typeof s.mute === 'boolean') {
-                                                this._api.changeTrackMute([track], s.mute);
-                                                // @ts-ignore
-                                                track.playbackInfo.isMute = s.mute;
-                                            }
-                                            if (typeof s.volume === 'number') {
-                                                const vol = Math.max(0, Math.min(16, s.volume));
-                                                this._api.changeTrackVolume([track], vol / 16);
-                                                // @ts-ignore
-                                                track.playbackInfo.volume = vol;
-                                            }
-                                            if (typeof s.transpose === 'number') {
-                                                const tr = Math.max(-12, Math.min(12, s.transpose));
-                                                this._api.changeTrackTranspositionPitch([track], tr);
-                                            }
-                                            // 备用：音频移调，当前 API 可能不支持，仅同步 UI
-                                            if (typeof s.transposeAudio === 'number') {
-                                                // @ts-ignore
-                                                track.playbackInfo.transposeAudio = s.transposeAudio;
-                                            }
-                                        } catch {}
-                                    });
-                                }
-                            }
-                        }
-                    } catch {}
-
-                    // 4) 强制刷新 header
-                    this.leaf?.setViewState({
-                        type: VIEW_TYPE_TAB,
-                        state: { file: this.currentFile?.path }
-                    }, { history: false });
-                });
-            }
 			// 配置滚动元素 - 在乐谱加载后设置
 			this.configureScrollElement();
 			console.debug(`[TabView] File loaded successfully: ${file.name}`);
