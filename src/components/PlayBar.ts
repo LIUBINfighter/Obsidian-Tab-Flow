@@ -136,7 +136,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         refreshBtn.setAttribute("aria-label", "刷新播放器");
         refreshBtn.onclick = () => {
             if (eventBus) {
-                eventBus.publish("命令:刷新播放器");
+                eventBus.publish("命令:重新构造AlphaTabApi");
             }
         };
         bar.appendChild(refreshBtn);

@@ -381,6 +381,140 @@ private isMessy(str: string): boolean {
                 console.warn("[TabView] 刷新播放器失败:", e);
             }
         });
+
+        // 订阅加载乐谱：由视图读取文件并下发数据给 AlphaTabService
+        this.eventBus.subscribe("命令:加载当前文件", async () => {
+            if (!this.currentFile) return;
+            try {
+                const inputFile = await this.app.vault.readBinary(this.currentFile);
+                this.eventBus.publish("命令:加载乐谱", new Uint8Array(inputFile));
+            } catch (e) {
+                console.warn("[TabView] 加载当前文件失败:", e);
+            }
+        });
+
+        // 订阅重建 API：触发服务层重建
+        this.eventBus.subscribe("命令:重新构造AlphaTabApi", () => {
+            this.eventBus.publish("命令:重建AlphaTabApi");
+        });
+
+        // 服务层 API 重建完成后，更新本视图引用并重新加载当前文件
+        this.eventBus.subscribe("状态:API已重建", () => {
+            try {
+                // 1) 更新 _api 引用
+                this._api = this.alphaTabService.getApi();
+
+                // 2) 重新配置滚动容器
+                this.configureScrollElement();
+
+                // 3) 附加 scoreLoaded 处理和播放栏挂载
+                if (this._api && this._api.scoreLoaded) {
+                    this._api.scoreLoaded.on(() => {
+                        const score = this._api.score;
+                        // 标题
+                        if (score && score.title && !this.isMessy(score.title)) {
+                            this.scoreTitle = score.title;
+                        } else if (this.currentFile) {
+                            this.scoreTitle = this.currentFile.basename;
+                        }
+                        // 写入 filePath 以用于持久化键
+                        try {
+                            if (score && this.currentFile?.path) {
+                                (score as any).filePath = this.currentFile.path;
+                            }
+                        } catch {}
+
+                        // 读取并应用持久化的视图状态（音轨选择与轨道参数）
+                        try {
+                            const filePathKey = (this._api as any)?.score?.filePath as string | undefined;
+                            if (filePathKey) {
+                                const raw = localStorage.getItem("tabflow-viewstate:" + filePathKey);
+                                if (raw) {
+                                    const state = JSON.parse(raw) || {};
+                                    const allTracks: alphaTab.model.Track[] = this._api.score?.tracks || [];
+                                    // 渲染选中的音轨
+                                    if (Array.isArray(state.tracks) && state.tracks.length > 0) {
+                                        const idxSet = new Set<number>(state.tracks);
+                                        const selected = allTracks.filter(t => idxSet.has(t.index));
+                                        if (selected.length > 0) {
+                                            this._api.renderTracks(selected as any);
+                                        }
+                                    }
+                                    // 应用轨道参数
+                                    if (state.trackSettings && typeof state.trackSettings === 'object') {
+                                        const settings: Record<string, any> = state.trackSettings;
+                                        allTracks.forEach(track => {
+                                            const s = settings[String(track.index)] || settings[track.index];
+                                            if (!s) return;
+                                            try {
+                                                if (typeof s.solo === 'boolean') {
+                                                    this._api.changeTrackSolo([track], s.solo);
+                                                    // @ts-ignore
+                                                    track.playbackInfo.isSolo = s.solo;
+                                                }
+                                                if (typeof s.mute === 'boolean') {
+                                                    this._api.changeTrackMute([track], s.mute);
+                                                    // @ts-ignore
+                                                    track.playbackInfo.isMute = s.mute;
+                                                }
+                                                if (typeof s.volume === 'number') {
+                                                    const vol = Math.max(0, Math.min(16, s.volume));
+                                                    this._api.changeTrackVolume([track], vol / 16);
+                                                    // @ts-ignore
+                                                    track.playbackInfo.volume = vol;
+                                                }
+                                                if (typeof s.transpose === 'number') {
+                                                    const tr = Math.max(-12, Math.min(12, s.transpose));
+                                                    this._api.changeTrackTranspositionPitch([track], tr);
+                                                }
+                                                if (typeof s.transposeAudio === 'number') {
+                                                    // @ts-ignore
+                                                    track.playbackInfo.transposeAudio = s.transposeAudio;
+                                                }
+                                            } catch {}
+                                        });
+                                    }
+                                }
+                            }
+                        } catch {}
+
+                        // 刷新 header 文本
+                        this.leaf?.setViewState({
+                            type: VIEW_TYPE_TAB,
+                            state: { file: this.currentFile?.path }
+                        }, { history: false });
+
+                        // 触发播放栏重挂载（内部包含去重逻辑）
+                        setTimeout(() => {
+                            const mountPlayBar = () => {
+                                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                                const { createPlayBar } = require("../components/PlayBar");
+                                const playBar = createPlayBar({
+                                    app: this.app,
+                                    eventBus: this.eventBus,
+                                    initialPlaying: false,
+                                    getCurrentTime: () => 0,
+                                    getDuration: () => 0,
+                                    seekTo: () => {},
+                                    onAudioCreated: () => {},
+                                });
+                                const existingPlayBar = document.querySelector('.play-bar');
+                                if (existingPlayBar) existingPlayBar.remove();
+                                this.containerEl.appendChild(playBar);
+                            };
+                            mountPlayBar();
+                        }, 50);
+                    });
+                }
+
+                // 4) 加载当前文件，延迟以确保 API 完全就绪
+                setTimeout(() => {
+                    this.eventBus.publish("命令:加载当前文件");
+                }, 50);
+            } catch (e) {
+                console.warn("[TabView] 处理 API 重建事件失败:", e);
+            }
+        });
 	}
 
     // --- 新增：设置外部音频集成（导出音频并建立同步）---

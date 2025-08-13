@@ -10,6 +10,8 @@ export class AlphaTabService {
     private scrollProxy: ScrollConfigProxy;
     private eventBus: EventBus;
     private app: App;
+    private element: HTMLElement;
+    private resources: { alphaTabWorkerUri: string; soundFontUri: string; bravuraUri: string };
 
     constructor(
         app: App,
@@ -19,6 +21,8 @@ export class AlphaTabService {
     ) {
         this.app = app;
         this.eventBus = eventBus;
+        this.element = element;
+        this.resources = resources;
 
         // 获取当前元素的计算样式用于暗色适配
         const style = window.getComputedStyle(element);
@@ -158,6 +162,20 @@ export class AlphaTabService {
                 this.eventBus.publish("状态:音频导出失败", e);
             }
         });
+        // 命令：加载乐谱（传入 Uint8Array 或 ArrayBuffer）
+        this.eventBus.subscribe("命令:加载乐谱", async (data: Uint8Array | ArrayBuffer) => {
+            try {
+                const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+                await this.loadScore(bytes);
+                this.eventBus.publish("状态:乐谱已加载");
+            } catch (e) {
+                this.eventBus.publish("状态:加载失败", e);
+            }
+        });
+        // 命令：重新构造 AlphaTabApi
+        this.eventBus.subscribe("命令:重建AlphaTabApi", () => {
+            this.reconstructApi();
+        });
         // 轨道事件处理 - 用于状态同步和日志记录
         this.eventBus.subscribe("track:solo", (data: { track: Record<string, unknown>, value: boolean }) => {
             console.debug(`[AlphaTabService] 轨道 ${data.track.name} 独奏状态: ${data.value}`);
@@ -196,6 +214,58 @@ export class AlphaTabService {
     public destroy() {
         this.api.destroy();
         this.scrollProxy.destroy();
+    }
+
+    /**
+     * 重新构造 AlphaTabApi（不重复注册命令订阅，仅重建 API 和其事件监听）
+     */
+    public reconstructApi(): void {
+        try {
+            if (this.api) {
+                try { this.api.destroy(); } catch {}
+            }
+            if (this.scrollProxy) {
+                try { this.scrollProxy.destroy(); } catch {}
+            }
+            const style = window.getComputedStyle(this.element);
+            this.api = new alphaTab.AlphaTabApi(this.element, {
+                core: { scriptFile: this.resources.alphaTabWorkerUri, smuflFontSources: new Map(), fontDirectory: "" },
+                player: {
+                    enablePlayer: true,
+                    playerMode: alphaTab.PlayerMode.EnabledAutomatic,
+                    enableCursor: true,
+                    enableAnimatedBeatCursor: true,
+                    soundFont: this.resources.soundFontUri,
+                    scrollMode: alphaTab.ScrollMode.Continuous,
+                    scrollSpeed: 500,
+                    scrollOffsetY: -25,
+                    scrollOffsetX: 25,
+                    nativeBrowserSmoothScroll: false,
+                },
+                display: {
+                    resources: {
+                        mainGlyphColor: style.getPropertyValue("--color-base-100"),
+                        secondaryGlyphColor: style.getPropertyValue("--color-base-60"),
+                        staffLineColor: style.getPropertyValue("--color-base-40"),
+                        barSeparatorColor: style.getPropertyValue("--color-base-40"),
+                        barNumberColor:
+                            "#" +
+                            convert.hsl.hex([
+                                parseFloat(style.getPropertyValue("--accent-h")),
+                                parseFloat(style.getPropertyValue("--accent-s")),
+                                parseFloat(style.getPropertyValue("--accent-l")),
+                            ]),
+                        scoreInfoColor: style.getPropertyValue("--color-base-100"),
+                    },
+                },
+            });
+            this.scrollProxy = new ScrollConfigProxy(this.api);
+            this.registerApiListeners();
+            // 将新 API 上报给外界：某些组件直接持有 _api 引用
+            this.eventBus.publish("状态:API已重建", this.api);
+        } catch (e) {
+            console.warn("[AlphaTabService] 重建 AlphaTabApi 失败:", e);
+        }
     }
 
     /**
