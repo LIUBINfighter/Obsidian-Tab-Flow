@@ -87,18 +87,8 @@ export function registerExportEventHandlers(
         try {
             onExportStart?.("midi");
             const fileName = (getFileName?.() || "Untitled") + ".mid";
-            // 尝试用 downloadMidi 的重载（如果支持文件名参数）
-            if (api && typeof api.downloadMidi === "function") {
-                // 检查 downloadMidi 是否支持文件名参数
-                try {
-                    // @ts-ignore
-                    api.downloadMidi(fileName);
-                } catch {
-                    // 如果不支持参数则直接调用
-                    api.downloadMidi();
-                }
-            } else if (api && typeof (api as any).exportMidi === "function") {
-                // 某些 alphaTab 版本有 exportMidi 方法
+            // 优先使用 exportMidi 以便自定义文件名
+            if (api && typeof (api as any).exportMidi === "function") {
                 // @ts-ignore
                 const midiData = api.exportMidi();
                 const a = document.createElement('a');
@@ -107,9 +97,14 @@ export function registerExportEventHandlers(
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-            } else {
-                // 兜底
-                api.downloadMidi();
+            } else if (api && typeof api.downloadMidi === "function") {
+                // 回退到内置下载（可能无法自定义文件名）
+                try {
+                    // @ts-ignore 尝试带文件名（部分版本支持）
+                    api.downloadMidi(fileName);
+                } catch {
+                    api.downloadMidi();
+                }
             }
             onExportFinish?.("midi", true);
         } catch (e: any) {
