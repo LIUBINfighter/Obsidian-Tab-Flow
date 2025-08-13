@@ -28,7 +28,7 @@ export class AlphaTabService {
         const style = window.getComputedStyle(element);
 
         this.api = new alphaTab.AlphaTabApi(element, {
-            core: { scriptFile: resources.alphaTabWorkerUri, smuflFontSources: new Map(), fontDirectory: "" },
+            core: { scriptFile: resources.alphaTabWorkerUri, smuflFontSources: (resources.bravuraUri ? new Map([[((alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0), resources.bravuraUri]]) : new Map()) as unknown as Map<number, string>, fontDirectory: "" },
             player: {
                 enablePlayer: true,
                 playerMode: alphaTab.PlayerMode.EnabledAutomatic,
@@ -289,7 +289,7 @@ export class AlphaTabService {
             }
             const style = window.getComputedStyle(this.element);
             this.api = new alphaTab.AlphaTabApi(this.element, {
-                core: { scriptFile: this.resources.alphaTabWorkerUri, smuflFontSources: new Map(), fontDirectory: "" },
+                core: { scriptFile: this.resources.alphaTabWorkerUri, smuflFontSources: (this.resources.bravuraUri ? new Map([[((alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0), this.resources.bravuraUri]]) : new Map()) as unknown as Map<number, string>, fontDirectory: "" },
                 player: {
                     enablePlayer: true,
                     playerMode: alphaTab.PlayerMode.EnabledAutomatic,

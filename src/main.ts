@@ -1,4 +1,4 @@
-import { Plugin, TFile, Notice, requestUrl } from "obsidian";
+import { Plugin, TFile, Notice, requestUrl, MarkdownRenderChild } from "obsidian";
 import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
 import {
 	ResourceLoaderService,
@@ -277,6 +277,42 @@ export default class MyPlugin extends Plugin {
 					soundFontUri: this.resources.soundFontUri || ""
 				});
 			});
+
+			// 注册 Markdown 代码块处理器: alphatex
+			try {
+				// 动态引入以避免在测试环境下的循环依赖
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				const { mountAlphaTexBlock } = require("./markdown/AlphaTexBlock");
+				this.registerMarkdownCodeBlockProcessor("alphatex", async (source, el, ctx) => {
+					// 资源缺失：在块内提示并提供下载按钮
+					if (!this.resources.bravuraUri || !this.resources.alphaTabWorkerUri) {
+						const holder = el.createEl("div");
+						holder.addClass("alphatex-block");
+						const msg = holder.createEl("div", { text: "AlphaTab 资源缺失，无法渲染此代码块。" });
+						const btn = holder.createEl("button", { text: "下载资源" });
+						btn.addEventListener("click", async () => {
+							btn.setAttr("disabled", "true");
+							btn.setText("下载中...");
+							const ok = await this.downloadAssets();
+							btn.removeAttribute("disabled");
+							btn.setText(ok ? "下载完成，请刷新预览" : "下载失败，重试");
+						});
+						return;
+					}
+
+					const block = mountAlphaTexBlock(el, source, this.resources, {
+						scale: 1.0,
+						speed: 1.0,
+						scrollMode: "Continuous",
+						metronome: false,
+					});
+					const child = new MarkdownRenderChild(el);
+					child.onunload = () => block.destroy();
+					ctx.addChild(child);
+				});
+			} catch (e) {
+				console.warn("Failed to register alphatex code block processor:", e);
+			}
 		}
 
 		this.registerExtensions(
