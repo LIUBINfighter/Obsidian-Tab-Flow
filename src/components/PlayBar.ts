@@ -3,6 +3,7 @@ import { App, setIcon } from "obsidian";
 import { createProgressBar } from "./ProgressBar";
 import type { ProgressBarElement } from "./ProgressBar.types";
 import { createAudioPlayer, AudioPlayerOptions } from "./AudioPlayer";
+import * as alphaTab from "@coderline/alphatab";
 
 export interface PlayBarOptions {
 	app: App;
@@ -229,8 +230,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	const layoutSelect = document.createElement("select");
 	const layoutModes = [
-		{ name: "页面", value: 0 }, // Page
-		{ name: "横向", value: 1 }, // Horizontal
+		{ name: "页面", value: alphaTab.LayoutMode.Page },
+		{ name: "横向", value: alphaTab.LayoutMode.Horizontal },
 	];
 	layoutModes.forEach((item) => {
 		const opt = document.createElement("option");
@@ -240,7 +241,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	});
 	layoutSelect.onchange = () => {
 		if (eventBus)
-			eventBus.publish("命令:设置布局模式", parseInt(layoutSelect.value));
+			eventBus.publish("命令:切换布局", parseInt(layoutSelect.value));
 	};
     bar.appendChild(layoutSelect);
 
@@ -252,19 +253,19 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	const staveSelect = document.createElement("select");
 	const staveProfiles = [
-		{ name: "五线+六线", value: "ScoreTab" },
-		{ name: "仅五线谱", value: "Score" },
-		{ name: "仅六线谱", value: "Tab" },
-		{ name: "混合六线谱", value: "TabMixed" },
+		{ name: "五线+六线", value: alphaTab.StaveProfile.ScoreTab },
+		{ name: "仅五线谱", value: alphaTab.StaveProfile.Score },
+		{ name: "仅六线谱", value: alphaTab.StaveProfile.Tab },
+		{ name: "混合六线谱", value: alphaTab.StaveProfile.TabMixed },
 	];
 	staveProfiles.forEach((item) => {
 		const opt = document.createElement("option");
-		opt.value = item.value;
+		opt.value = String(item.value);
 		opt.innerText = item.name;
 		staveSelect.appendChild(opt);
 	});
 	staveSelect.onchange = () => {
-		if (eventBus) eventBus.publish("命令:设置谱表模式", staveSelect.value);
+		if (eventBus) eventBus.publish("命令:设置谱表", parseInt(staveSelect.value));
 	};
     bar.appendChild(staveSelect);
 
