@@ -154,8 +154,9 @@ export class AlphaTabService {
             }
         });
         // 音频导出事件
-        this.eventBus.subscribe("命令:导出音频", async (options?: Partial<alphaTab.synth.AudioExportOptions>) => {
+        this.eventBus.subscribe("命令:导出音频", async (payload?: { fileName?: string } & Partial<alphaTab.synth.AudioExportOptions>) => {
             try {
+                const { fileName, ...options } = payload || {};
                 const wavUrl = await this.exportAudioToWav(options);
                 this.eventBus.publish("状态:音频导出完成", wavUrl);
             } catch (e) {
@@ -163,7 +164,7 @@ export class AlphaTabService {
             }
         });
         // 新增：导出 MIDI / PDF / GP 事件
-        this.eventBus.subscribe("命令:导出MIDI", () => {
+        this.eventBus.subscribe("命令:导出MIDI", (payload?: { fileName?: string }) => {
             try {
                 // 动态注册并执行
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -171,6 +172,8 @@ export class AlphaTabService {
                 const handlers = registerExportEventHandlers({
                     api: this.api,
                     getFileName: () => {
+                        const p = (payload?.fileName || '').trim();
+                        if (p) return p;
                         const t = this.api?.score?.title;
                         return (t && String(t).trim()) || "Untitled";
                     },
@@ -181,13 +184,15 @@ export class AlphaTabService {
                 console.warn("[AlphaTabService] 导出MIDI失败:", e);
             }
         });
-        this.eventBus.subscribe("命令:导出PDF", () => {
+        this.eventBus.subscribe("命令:导出PDF", (payload?: { fileName?: string }) => {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
                 const { registerExportEventHandlers } = require("../events/exportEvents");
                 const handlers = registerExportEventHandlers({
                     api: this.api,
                     getFileName: () => {
+                        const p = (payload?.fileName || '').trim();
+                        if (p) return p;
                         const t = this.api?.score?.title;
                         return (t && String(t).trim()) || "Untitled";
                     },
@@ -198,13 +203,15 @@ export class AlphaTabService {
                 console.warn("[AlphaTabService] 导出PDF失败:", e);
             }
         });
-        this.eventBus.subscribe("命令:导出GP", () => {
+        this.eventBus.subscribe("命令:导出GP", (payload?: { fileName?: string }) => {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
                 const { registerExportEventHandlers } = require("../events/exportEvents");
                 const handlers = registerExportEventHandlers({
                     api: this.api,
                     getFileName: () => {
+                        const p = (payload?.fileName || '').trim();
+                        if (p) return p;
                         const t = this.api?.score?.title;
                         return (t && String(t).trim()) || "Untitled";
                     },
