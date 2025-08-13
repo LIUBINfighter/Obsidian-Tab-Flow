@@ -184,7 +184,14 @@ private isMessy(str: string): boolean {
 			stroke: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
 		}
 		`;
+		// 隐藏 Obsidian 全局状态栏（仅当 TabView 存在时）
+		styles.innerHTML += `
+		.tabflow-hide-statusbar .status-bar { display: none !important; }
+		`;
 		this._styles = styles;
+
+		// 添加标记类以隐藏状态栏
+		try { document.body.classList.add('tabflow-hide-statusbar'); } catch {}
 
 		// 注册文件变更监听
 		this.registerFileWatcher();
@@ -633,6 +640,9 @@ private isMessy(str: string): boolean {
 
 	onunload(): void {
 		console.debug("[TabView] Starting cleanup process");
+
+		// 恢复状态栏显示
+		try { document.body.classList.remove('tabflow-hide-statusbar'); } catch {}
 
 		// --- START: 新增字体样式清理逻辑 ---
 		if (this._fontStyle) {
