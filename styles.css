@@ -1,4 +1,4 @@
-/* build: build */
+/* build: dev */
 /* --- TrackModal.css --- */
 
 .tracks-modal .setting-item {
@@ -142,6 +142,15 @@
 .play-bar .clickable-icon:hover {
 	color: var(--icon-color-hover);
 	background-color: var(--interactive-hover);
+}
+
+/* 激活态：高亮图标本身而不仅是背景 */
+.play-bar .clickable-icon.is-active {
+    color: var(--interactive-accent);
+    background-color: var(--interactive-hover);
+}
+.play-bar .clickable-icon.is-active svg {
+    stroke: currentColor;
 }
 
 /* 进度条相关样式 */

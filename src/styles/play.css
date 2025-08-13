@@ -79,6 +79,15 @@
 	background-color: var(--interactive-hover);
 }
 
+/* 激活态：高亮图标本身而不仅是背景 */
+.play-bar .clickable-icon.is-active {
+    color: var(--interactive-accent);
+    background-color: var(--interactive-hover);
+}
+.play-bar .clickable-icon.is-active svg {
+    stroke: currentColor;
+}
+
 /* 进度条相关样式 */
 /* 简化布局后，进度条容器规则可保留宽度控制 */
 .play-progress-container {
