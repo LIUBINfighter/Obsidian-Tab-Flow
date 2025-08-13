@@ -162,6 +162,59 @@ export class AlphaTabService {
                 this.eventBus.publish("状态:音频导出失败", e);
             }
         });
+        // 新增：导出 MIDI / PDF / GP 事件
+        this.eventBus.subscribe("命令:导出MIDI", () => {
+            try {
+                // 动态注册并执行
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const { registerExportEventHandlers } = require("../events/exportEvents");
+                const handlers = registerExportEventHandlers({
+                    api: this.api,
+                    getFileName: () => {
+                        const t = this.api?.score?.title;
+                        return (t && String(t).trim()) || "Untitled";
+                    },
+                    app: this.app,
+                });
+                handlers.exportMidi();
+            } catch (e) {
+                console.warn("[AlphaTabService] 导出MIDI失败:", e);
+            }
+        });
+        this.eventBus.subscribe("命令:导出PDF", () => {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const { registerExportEventHandlers } = require("../events/exportEvents");
+                const handlers = registerExportEventHandlers({
+                    api: this.api,
+                    getFileName: () => {
+                        const t = this.api?.score?.title;
+                        return (t && String(t).trim()) || "Untitled";
+                    },
+                    app: this.app,
+                });
+                handlers.exportPdf();
+            } catch (e) {
+                console.warn("[AlphaTabService] 导出PDF失败:", e);
+            }
+        });
+        this.eventBus.subscribe("命令:导出GP", () => {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const { registerExportEventHandlers } = require("../events/exportEvents");
+                const handlers = registerExportEventHandlers({
+                    api: this.api,
+                    getFileName: () => {
+                        const t = this.api?.score?.title;
+                        return (t && String(t).trim()) || "Untitled";
+                    },
+                    app: this.app,
+                });
+                handlers.exportGp();
+            } catch (e) {
+                console.warn("[AlphaTabService] 导出GP失败:", e);
+            }
+        });
         // 命令：加载乐谱（传入 Uint8Array 或 ArrayBuffer）
         this.eventBus.subscribe("命令:加载乐谱", async (data: Uint8Array | ArrayBuffer) => {
             try {

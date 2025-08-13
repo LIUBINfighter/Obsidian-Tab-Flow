@@ -543,6 +543,21 @@ private isMessy(str: string): boolean {
                 console.warn("[TabView] 处理 API 重建事件失败:", e);
             }
         });
+
+        // 导航命令：滚动到顶部/底部
+        this.eventBus.subscribe("命令:滚动到顶部", () => {
+            try {
+                if (this._api) {
+                    this._api.tickPosition = 0;
+                    this._api.scrollToCursor?.();
+                }
+            } catch {}
+        });
+        this.eventBus.subscribe("命令:滚动到底部", () => {
+            try {
+                this.scrollToBottom();
+            } catch {}
+        });
 	}
 
     // --- 新增：设置外部音频集成（导出音频并建立同步）---

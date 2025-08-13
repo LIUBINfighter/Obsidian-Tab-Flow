@@ -32,6 +32,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let playing = initialPlaying;
 	let metronomeOn = false;
 	let countInOn = false;
+    let layoutMode: number = alphaTab.LayoutMode.Page;
 
 	const bar = document.createElement("div");
 	bar.className = "play-bar nav-buttons-container";
@@ -42,6 +43,14 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
     let metronomeBtn: HTMLButtonElement | null = null;
     let countInBtn: HTMLButtonElement | null = null;
     let openSettingsBtn: HTMLButtonElement | null = null;
+    let locateCursorBtn: HTMLButtonElement | null = null;
+    let layoutToggleBtn: HTMLButtonElement | null = null;
+    let exportAudioBtn: HTMLButtonElement | null = null;
+    let exportMidiBtn: HTMLButtonElement | null = null;
+    let exportPdfBtn: HTMLButtonElement | null = null;
+    let exportGpBtn: HTMLButtonElement | null = null;
+    let toTopBtn: HTMLButtonElement | null = null;
+    let toBottomBtn: HTMLButtonElement | null = null;
 
 	// 内部函数
 	function updatePlayPauseButton() {
@@ -78,6 +87,17 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		);
 		countInBtn.classList.toggle("is-active", countInOn);
 	}
+
+    function updateLayoutToggleBtn() {
+        if (!layoutToggleBtn) return;
+        layoutToggleBtn.innerHTML = "";
+        const iconSpan = document.createElement("span");
+        const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
+        setIcon(iconSpan, isHorizontal ? "lucide-panels-top-left" : "lucide-layout");
+        layoutToggleBtn.appendChild(iconSpan);
+        layoutToggleBtn.setAttribute("aria-label", isHorizontal ? "布局: 横向" : "布局: 页面");
+        layoutToggleBtn.classList.toggle("is-active", isHorizontal);
+    }
 
     if (ENABLED_COMPONENTS.includes("playButton")) {
 		// 播放/暂停按钮
@@ -142,6 +162,128 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
             }
         };
         bar.appendChild(refreshBtn);
+
+        // 滚动到光标
+        locateCursorBtn = document.createElement("button");
+        locateCursorBtn.className = "clickable-icon";
+        locateCursorBtn.setAttribute("type", "button");
+        const locateIcon = document.createElement("span");
+        setIcon(locateIcon, "lucide-crosshair");
+        locateCursorBtn.appendChild(locateIcon);
+        locateCursorBtn.setAttribute("aria-label", "滚动到光标");
+        locateCursorBtn.onclick = () => {
+            if (eventBus) {
+                eventBus.publish("命令:滚动到光标");
+            }
+        };
+        bar.appendChild(locateCursorBtn);
+
+        // 布局切换（Page <-> Horizontal）
+        layoutToggleBtn = document.createElement("button");
+        layoutToggleBtn.className = "clickable-icon";
+        layoutToggleBtn.setAttribute("type", "button");
+        updateLayoutToggleBtn();
+        layoutToggleBtn.onclick = () => {
+            layoutMode = layoutMode === alphaTab.LayoutMode.Page
+                ? alphaTab.LayoutMode.Horizontal
+                : alphaTab.LayoutMode.Page;
+            if (eventBus) {
+                eventBus.publish("命令:切换布局", layoutMode);
+            }
+            updateLayoutToggleBtn();
+        };
+        bar.appendChild(layoutToggleBtn);
+
+        // 导出：音频
+        exportAudioBtn = document.createElement("button");
+        exportAudioBtn.className = "clickable-icon";
+        exportAudioBtn.setAttribute("type", "button");
+        const audioIcon = document.createElement("span");
+        setIcon(audioIcon, "lucide-music-2");
+        exportAudioBtn.appendChild(audioIcon);
+        exportAudioBtn.setAttribute("aria-label", "导出音频");
+        exportAudioBtn.onclick = () => {
+            // 优先通过服务层命令，兼容现有实现
+            if (eventBus) {
+                eventBus.publish("命令:导出音频");
+            }
+        };
+        bar.appendChild(exportAudioBtn);
+
+        // 导出：MIDI
+        exportMidiBtn = document.createElement("button");
+        exportMidiBtn.className = "clickable-icon";
+        exportMidiBtn.setAttribute("type", "button");
+        const midiIcon = document.createElement("span");
+        setIcon(midiIcon, "lucide-download");
+        exportMidiBtn.appendChild(midiIcon);
+        exportMidiBtn.setAttribute("aria-label", "导出MIDI");
+        exportMidiBtn.onclick = () => {
+            if (eventBus) {
+                eventBus.publish("命令:导出MIDI");
+            }
+        };
+        bar.appendChild(exportMidiBtn);
+
+        // 导出：PDF
+        exportPdfBtn = document.createElement("button");
+        exportPdfBtn.className = "clickable-icon";
+        exportPdfBtn.setAttribute("type", "button");
+        const pdfIcon = document.createElement("span");
+        setIcon(pdfIcon, "lucide-file-text");
+        exportPdfBtn.appendChild(pdfIcon);
+        exportPdfBtn.setAttribute("aria-label", "导出PDF");
+        exportPdfBtn.onclick = () => {
+            if (eventBus) {
+                eventBus.publish("命令:导出PDF");
+            }
+        };
+        bar.appendChild(exportPdfBtn);
+
+        // 导出：GP
+        exportGpBtn = document.createElement("button");
+        exportGpBtn.className = "clickable-icon";
+        exportGpBtn.setAttribute("type", "button");
+        const gpIcon = document.createElement("span");
+        setIcon(gpIcon, "lucide-guitar");
+        exportGpBtn.appendChild(gpIcon);
+        exportGpBtn.setAttribute("aria-label", "导出GP");
+        exportGpBtn.onclick = () => {
+            if (eventBus) {
+                eventBus.publish("命令:导出GP");
+            }
+        };
+        bar.appendChild(exportGpBtn);
+
+        // 回到顶部
+        toTopBtn = document.createElement("button");
+        toTopBtn.className = "clickable-icon";
+        toTopBtn.setAttribute("type", "button");
+        const topIcon = document.createElement("span");
+        setIcon(topIcon, "lucide-chevrons-up");
+        toTopBtn.appendChild(topIcon);
+        toTopBtn.setAttribute("aria-label", "回到顶部");
+        toTopBtn.onclick = () => {
+            if (eventBus) {
+                eventBus.publish("命令:滚动到顶部");
+            }
+        };
+        bar.appendChild(toTopBtn);
+
+        // 回到底部
+        toBottomBtn = document.createElement("button");
+        toBottomBtn.className = "clickable-icon";
+        toBottomBtn.setAttribute("type", "button");
+        const bottomIcon = document.createElement("span");
+        setIcon(bottomIcon, "lucide-chevrons-down");
+        toBottomBtn.appendChild(bottomIcon);
+        toBottomBtn.setAttribute("aria-label", "回到底部");
+        toBottomBtn.onclick = () => {
+            if (eventBus) {
+                eventBus.publish("命令:滚动到底部");
+            }
+        };
+        bar.appendChild(toBottomBtn);
 
         // 打开设置按钮
         openSettingsBtn = document.createElement("button");
