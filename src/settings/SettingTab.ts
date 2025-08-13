@@ -16,11 +16,11 @@ export interface TabFlowSettings {
 	simpleAssetCheck?: boolean;
 	/** 开发者选项：显示 Debug Bar */
 	showDebugBar?: boolean;
-    /** 播放栏配置 */
-    playBar?: {
-        components: PlayBarComponentVisibility;
-        order?: string[];
-    };
+	/** 播放栏配置 */
+	playBar?: {
+		components: PlayBarComponentVisibility;
+		order?: string[];
+	};
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -29,52 +29,52 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	assetsDownloaded: false,
 	lastAssetsCheck: 0,
 	showDebugBar: false,
-    playBar: {
-        components: {
-            playPause: true,
-            stop: true,
-            tracks: true,
-            refresh: true,
-            locateCursor: true,
-            layoutToggle: true,
-            exportMenu: true,
-            toTop: true,
-            toBottom: true,
-            openSettings: true,
-            metronome: true,
-            countIn: true,
-            speed: true,
-            staveProfile: true,
-            zoom: true,
-            progressBar: false,
-            audioPlayer: false,
-        },
-        order: [
-            "playPause","stop","metronome","countIn","tracks","refresh",
-            "locateCursor","layoutToggle","exportMenu","toTop","toBottom","openSettings",
-            "progressBar","speed","staveProfile","zoom","audioPlayer"
-        ],
-    },
+	playBar: {
+		components: {
+			playPause: true,
+			stop: true,
+			tracks: true,
+			refresh: true,
+			locateCursor: true,
+			layoutToggle: true,
+			exportMenu: true,
+			toTop: true,
+			toBottom: true,
+			openSettings: true,
+			metronome: true,
+			countIn: true,
+			speed: true,
+			staveProfile: true,
+			zoom: true,
+			progressBar: true,
+			audioPlayer: false,
+		},
+		order: [
+			"playPause", "stop", "metronome", "countIn", "tracks", "refresh",
+			"locateCursor", "layoutToggle", "exportMenu", "toTop", "toBottom", "openSettings",
+			"progressBar", "speed", "staveProfile", "zoom", "audioPlayer"
+		],
+	},
 };
 
 export interface PlayBarComponentVisibility {
-    playPause: boolean;
-    stop: boolean;
-    tracks: boolean;
-    refresh: boolean;
-    locateCursor: boolean;
-    layoutToggle: boolean;
-    exportMenu: boolean;
-    toTop: boolean;
-    toBottom: boolean;
-    openSettings: boolean;
-    metronome: boolean;
-    countIn: boolean;
-    speed: boolean;
-    staveProfile: boolean;
-    zoom: boolean;
-    progressBar: boolean;
-    audioPlayer: boolean;
+	playPause: boolean;
+	stop: boolean;
+	tracks: boolean;
+	refresh: boolean;
+	locateCursor: boolean;
+	layoutToggle: boolean;
+	exportMenu: boolean;
+	toTop: boolean;
+	toBottom: boolean;
+	openSettings: boolean;
+	metronome: boolean;
+	countIn: boolean;
+	speed: boolean;
+	staveProfile: boolean;
+	zoom: boolean;
+	progressBar: boolean;
+	audioPlayer: boolean;
 }
 
 export interface AssetStatus {
@@ -195,9 +195,8 @@ export class SettingTab extends PluginSettingTab {
 				assetsStatusContainer.createEl("div", {
 					text: allOk ? "✅ 所有资产文件已安装" : "❌ 资产文件不完整",
 					attr: {
-						style: `font-weight: bold; color: ${
-							allOk ? "var(--text-success)" : "var(--text-error)"
-						}; margin-bottom: 10px;`,
+						style: `font-weight: bold; color: ${allOk ? "var(--text-success)" : "var(--text-error)"
+							}; margin-bottom: 10px;`,
 					},
 				});
 
@@ -214,13 +213,10 @@ export class SettingTab extends PluginSettingTab {
 						s.size != null
 							? ` - ${(s.size / 1024).toFixed(1)} KB`
 							: "";
-					li.innerHTML = `<span style="color:${color}">${icon} ${
-						s.file
-					}</span> - ${
-						descriptions[s.file] || "资源文件"
-					} <span style="color:${color};font-style:italic;">(${
-						s.exists ? "已安装" : "未安装"
-					})</span>${sizeText}`;
+					li.innerHTML = `<span style="color:${color}">${icon} ${s.file
+						}</span> - ${descriptions[s.file] || "资源文件"
+						} <span style="color:${color};font-style:italic;">(${s.exists ? "已安装" : "未安装"
+						})</span>${sizeText}`;
 				});
 
 				if (this.plugin.settings.lastAssetsCheck) {
@@ -379,58 +375,36 @@ export class SettingTab extends PluginSettingTab {
 					text: `.obsidian/tab-flow/\n├── main.js\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
 				});
 			} else if (tabId === "player") {
-				// 播放器配置
-				tabContents.createEl("h3", { text: "播放器配置" });
-				tabContents.createEl("div", {
-					text: "以下为开发者选项，用于显示/隐藏 Debug Bar（实验与诊断用途）",
-					cls: "setting-item-description",
-				});
 
-				new Setting(tabContents)
-					.setName("显示 Debug Bar（开发者选项）")
-					.setDesc("启用后在视图顶部显示调试栏，用于实验功能和问题诊断。")
-					.addToggle((toggle) => {
-						toggle.setValue(this.plugin.settings.showDebugBar ?? false)
-							.onChange(async (value) => {
-								this.plugin.settings.showDebugBar = value;
-								await this.plugin.saveSettings();
-								// 实时通知工作区：调试栏开关变化
-								try {
-									// @ts-ignore - Obsidian 支持触发自定义事件
-									this.app.workspace.trigger('tabflow:debugbar-toggle', value);
-								} catch {}
-								new Notice(value ? "已启用 Debug Bar" : "已隐藏 Debug Bar");
-							});
-					});
 
 				// 可视化编辑（推荐）：组件卡片（拖拽/上下移动/开关）
 				tabContents.createEl("h4", { text: "可视化编辑（拖拽排序 + 开关）" });
 				const cardsWrap = tabContents.createDiv({ attr: { style: "display:flex; flex-direction:column; gap:8px;" } });
-				const meta: Array<{ key: keyof PlayBarComponentVisibility | 'audioPlayer'; label: string; desc?: string; disabled?: boolean }>= [
-					{ key: 'playPause', label: '播放/暂停' },
-					{ key: 'stop', label: '停止' },
-					{ key: 'metronome', label: '节拍器' },
-					{ key: 'countIn', label: '预备拍' },
-					{ key: 'tracks', label: '选择音轨' },
-					{ key: 'refresh', label: '刷新/重建播放器' },
-					{ key: 'locateCursor', label: '滚动到光标' },
-					{ key: 'layoutToggle', label: '布局切换' },
-					{ key: 'exportMenu', label: '导出菜单' },
-					{ key: 'toTop', label: '回到顶部' },
-					{ key: 'toBottom', label: '回到底部' },
-					{ key: 'openSettings', label: '打开设置' },
-					{ key: 'progressBar', label: '进度条' },
-					{ key: 'speed', label: '速度选择' },
-					{ key: 'staveProfile', label: '谱表选择' },
-					{ key: 'zoom', label: '缩放选择' },
-					{ key: 'audioPlayer', label: '原生音频播放器（实验性）', disabled: true, desc: '暂不可用，存在与 AlphaTab 播放器冲突风险' },
+				const meta: Array<{ key: keyof PlayBarComponentVisibility | 'audioPlayer'; label: string; icon: string; desc?: string; disabled?: boolean }> = [
+					{ key: 'playPause', label: '播放/暂停', icon: 'play' },
+					{ key: 'stop', label: '停止', icon: 'square' },
+					{ key: 'metronome', label: '节拍器', icon: 'lucide-music-2' },
+					{ key: 'countIn', label: '预备拍', icon: 'lucide-timer' },
+					{ key: 'tracks', label: '选择音轨', icon: 'lucide-layers' },
+					{ key: 'refresh', label: '刷新/重建播放器', icon: 'lucide-refresh-ccw' },
+					{ key: 'locateCursor', label: '滚动到光标', icon: 'lucide-crosshair' },
+					{ key: 'layoutToggle', label: '布局切换', icon: 'lucide-layout' },
+					{ key: 'exportMenu', label: '导出菜单', icon: 'lucide-download' },
+					{ key: 'toTop', label: '回到顶部', icon: 'lucide-chevrons-up' },
+					{ key: 'toBottom', label: '回到底部', icon: 'lucide-chevrons-down' },
+					{ key: 'openSettings', label: '打开设置', icon: 'settings' },
+					{ key: 'progressBar', label: '进度条', icon: 'lucide-line-chart' },
+					{ key: 'speed', label: '速度选择', icon: 'lucide-gauge' },
+					{ key: 'staveProfile', label: '谱表选择', icon: 'lucide-list-music' },
+					{ key: 'zoom', label: '缩放选择', icon: 'lucide-zoom-in' },
+					{ key: 'audioPlayer', label: '原生音频播放器（实验性）', icon: 'audio-file', disabled: true, desc: '暂不可用，存在与 AlphaTab 播放器冲突风险' },
 				];
 
 				const getOrder = (): string[] => {
 					const def = [
-						"playPause","stop","metronome","countIn","tracks","refresh",
-						"locateCursor","layoutToggle","exportMenu","toTop","toBottom","openSettings",
-						"progressBar","speed","staveProfile","zoom","audioPlayer"
+						"playPause", "stop", "metronome", "countIn", "tracks", "refresh",
+						"locateCursor", "layoutToggle", "exportMenu", "toTop", "toBottom", "openSettings",
+						"progressBar", "speed", "staveProfile", "zoom", "audioPlayer"
 					];
 					const saved = this.plugin.settings.playBar?.order;
 					return Array.isArray(saved) && saved.length ? saved.slice() : def.slice();
@@ -448,44 +422,51 @@ export class SettingTab extends PluginSettingTab {
 						card.dataset.key = String(key);
 						const left = card.createDiv({ attr: { style: 'display:flex; align-items:center; gap:8px;' } });
 						left.createSpan({ text: '⠿', attr: { style: 'cursor:grab; user-select:none;' } });
+						const iconEl = left.createSpan();
+						// @ts-ignore Obsidian setIcon
+						(require('obsidian') as any).setIcon(iconEl, m.icon);
 						left.createEl('strong', { text: m.label });
 						if (m.desc) left.createSpan({ text: ` - ${m.desc}`, attr: { style: 'color:var(--text-muted);font-size:0.9em;' } });
 						const right = card.createDiv({ attr: { style: 'display:flex; align-items:center; gap:6px;' } });
-						const upBtn = right.createEl('button', { text: '↑' });
-						const downBtn = right.createEl('button', { text: '↓' });
+						const upBtn = right.createEl('button');
+						const upIcon = upBtn.createSpan();
+						(require('obsidian') as any).setIcon(upIcon, 'lucide-arrow-up');
+						const downBtn = right.createEl('button');
+						const downIcon = downBtn.createSpan();
+						(require('obsidian') as any).setIcon(downIcon, 'lucide-arrow-down');
 						new Setting(right).addToggle(t => {
 							const current = !!(comp as any)[key];
 							t.setValue(m.disabled ? false : current).onChange(async (v) => {
 								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
 								(this.plugin.settings.playBar.components as any)[key] = m.disabled ? false : v;
 								await this.plugin.saveSettings();
-								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
 							});
-							if (m.disabled) (t as any).toggleEl.querySelector('input')?.setAttribute('disabled','true');
+							if (m.disabled) (t as any).toggleEl.querySelector('input')?.setAttribute('disabled', 'true');
 						});
 
 						upBtn.onclick = async () => {
 							const cur = getOrder();
 							const i = cur.indexOf(String(key));
 							if (i > 0) {
-								[cur[i-1], cur[i]] = [cur[i], cur[i-1]];
+								[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
 								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
 								(this.plugin.settings.playBar as any).order = cur;
 								await this.plugin.saveSettings();
 								renderCards();
-								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
 							}
 						};
 						downBtn.onclick = async () => {
 							const cur = getOrder();
 							const i = cur.indexOf(String(key));
 							if (i >= 0 && i < cur.length - 1) {
-								[cur[i+1], cur[i]] = [cur[i], cur[i+1]];
+								[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
 								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
 								(this.plugin.settings.playBar as any).order = cur;
 								await this.plugin.saveSettings();
 								renderCards();
-								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
 							}
 						};
 
@@ -505,88 +486,136 @@ export class SettingTab extends PluginSettingTab {
 							(this.plugin.settings.playBar as any).order = cur;
 							await this.plugin.saveSettings();
 							renderCards();
-							try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+							try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
 							draggingKey = null;
 						});
 					});
 				};
 				renderCards();
 
-				// PlayBar 组件可见性
-				tabContents.createEl("h4", { text: "播放栏组件" });
-				const comp = this.plugin.settings.playBar?.components || ({} as any);
-				const addToggle = (name: string, key: keyof typeof comp, desc?: string) => {
-					new Setting(tabContents)
-						.setName(name)
-						.setDesc(desc || "")
-						.addToggle((t) => {
-							t.setValue(Boolean(comp[key] ?? true)).onChange(async (v) => {
-								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-								(this.plugin.settings.playBar.components as any)[key] = v;
-								await this.plugin.saveSettings();
-								try {
-									// @ts-ignore
-									this.app.workspace.trigger('tabflow:playbar-components-changed');
-								} catch {}
-							});
-						});
-				};
-				addToggle("播放/暂停", "playPause");
-				addToggle("停止", "stop");
-				addToggle("选择音轨", "tracks");
-				addToggle("刷新/重建播放器", "refresh");
-				addToggle("滚动到光标", "locateCursor");
-				addToggle("布局切换", "layoutToggle");
-				addToggle("导出菜单", "exportMenu");
-				addToggle("回到顶部", "toTop");
-				addToggle("回到底部", "toBottom");
-				addToggle("打开设置", "openSettings");
-				addToggle("节拍器", "metronome");
-				addToggle("预备拍", "countIn");
-				addToggle("速度选择", "speed");
-				addToggle("谱表选择", "staveProfile");
-				addToggle("缩放选择", "zoom");
-				addToggle("进度条", "progressBar", "与原生音频播放器二选一");
-
-				// 原生音频播放器：暂不可用（前端禁用，避免被激活）
-				{
-					const s = new Setting(tabContents)
-						.setName("原生音频播放器（实验性）")
-						.setDesc(
-							"暂不可用：与 AlphaTab 内置播放器存在冲突，可能导致双声叠加、播放位置不同步、导出占用冲突、内存消耗异常等问题。待后续修复。"
-						)
-						.addToggle((t) => {
-							const current = Boolean(comp["audioPlayer"] ?? false);
-							t.setValue(false);
-							t.setDisabled(true);
-							// 如历史上用户曾开启，这里强制关闭并保存，确保前端不激活
-							if (current) {
-								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-								(this.plugin.settings.playBar.components as any)["audioPlayer"] = false;
-								this.plugin.saveSettings();
-							}
-						});
-				}
-
-				// 顺序编辑（简单文本逗号分隔）
-				tabContents.createEl("h4", { text: "组件顺序" });
+				// 恢复默认设置按钮
 				new Setting(tabContents)
-					.setName("渲染顺序")
-					.setDesc("使用逗号分隔组件键名，未知键将被忽略。清空则恢复默认顺序。")
-					.addText((t) => {
-						const current = (this.plugin.settings.playBar?.order || []).join(",");
-						t.setPlaceholder("playPause,stop,metronome,...")
-						 .setValue(current)
-						 .onChange(async (v) => {
-							const arr = v.split(",").map(s => s.trim()).filter(Boolean);
-							this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-							(this.plugin.settings.playBar as any).order = arr.length > 0 ? arr : undefined;
-							await this.plugin.saveSettings();
-							try {
-								// @ts-ignore
-								this.app.workspace.trigger('tabflow:playbar-components-changed');
-							} catch {}
-						 });
+					.setName("恢复默认")
+					.setDesc("重置播放栏组件的显示开关与顺序为默认配置")
+					.addButton((btn) => {
+						btn.setButtonText("恢复默认")
+							.onClick(async () => {
+								try {
+									this.plugin.settings.playBar = {
+										components: JSON.parse(JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})),
+										order: (DEFAULT_SETTINGS.playBar?.order || []).slice(),
+									};
+									await this.plugin.saveSettings();
+									renderCards();
+
+									// 通知视图即时应用
+									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+									new Notice("已恢复默认设置");
+								} catch (e) {
+									new Notice("恢复默认失败: " + e);
+								}
+							});
+					});
+
+				// PlayBar 组件可见性
+				// tabContents.createEl("h4", { text: "播放栏组件" });
+				// const comp = this.plugin.settings.playBar?.components || ({} as any);
+				// const addToggle = (name: string, key: keyof typeof comp, desc?: string) => {
+				// 	new Setting(tabContents)
+				// 		.setName(name)
+				// 		.setDesc(desc || "")
+				// 		.addToggle((t) => {
+				// 			t.setValue(Boolean(comp[key] ?? true)).onChange(async (v) => {
+				// 				this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+				// 				(this.plugin.settings.playBar.components as any)[key] = v;
+				// 				await this.plugin.saveSettings();
+				// 				try {
+				// 					// @ts-ignore
+				// 					this.app.workspace.trigger('tabflow:playbar-components-changed');
+				// 				} catch {}
+				// 			});
+				// 		});
+				// };
+				// addToggle("播放/暂停", "playPause");
+				// addToggle("停止", "stop");
+				// addToggle("选择音轨", "tracks");
+				// addToggle("刷新/重建播放器", "refresh");
+				// addToggle("滚动到光标", "locateCursor");
+				// addToggle("布局切换", "layoutToggle");
+				// addToggle("导出菜单", "exportMenu");
+				// addToggle("回到顶部", "toTop");
+				// addToggle("回到底部", "toBottom");
+				// addToggle("打开设置", "openSettings");
+				// addToggle("节拍器", "metronome");
+				// addToggle("预备拍", "countIn");
+				// addToggle("速度选择", "speed");
+				// addToggle("谱表选择", "staveProfile");
+				// addToggle("缩放选择", "zoom");
+				// addToggle("进度条", "progressBar", "与原生音频播放器二选一");
+
+				// // 原生音频播放器：暂不可用（前端禁用，避免被激活）
+				// {
+				// 	const s = new Setting(tabContents)
+				// 		.setName("原生音频播放器（实验性）")
+				// 		.setDesc(
+				// 			"暂不可用：与 AlphaTab 内置播放器存在冲突，可能导致双声叠加、播放位置不同步、导出占用冲突、内存消耗异常等问题。待后续修复。"
+				// 		)
+				// 		.addToggle((t) => {
+				// 			const current = Boolean(comp["audioPlayer"] ?? false);
+				// 			t.setValue(false);
+				// 			t.setDisabled(true);
+				// 			// 如历史上用户曾开启，这里强制关闭并保存，确保前端不激活
+				// 			if (current) {
+				// 				this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+				// 				(this.plugin.settings.playBar.components as any)["audioPlayer"] = false;
+				// 				this.plugin.saveSettings();
+				// 			}
+				// 		});
+				// }
+
+				// // 顺序编辑（简单文本逗号分隔）
+				// tabContents.createEl("h4", { text: "组件顺序" });
+				// new Setting(tabContents)
+				// 	.setName("渲染顺序")
+				// 	.setDesc("使用逗号分隔组件键名，未知键将被忽略。清空则恢复默认顺序。")
+				// 	.addText((t) => {
+				// 		const current = (this.plugin.settings.playBar?.order || []).join(",");
+				// 		t.setPlaceholder("playPause,stop,metronome,...")
+				// 		 .setValue(current)
+				// 		 .onChange(async (v) => {
+				// 			const arr = v.split(",").map(s => s.trim()).filter(Boolean);
+				// 			this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+				// 			(this.plugin.settings.playBar as any).order = arr.length > 0 ? arr : undefined;
+				// 			await this.plugin.saveSettings();
+				// 			try {
+				// 				// @ts-ignore
+				// 				this.app.workspace.trigger('tabflow:playbar-components-changed');
+				// 			} catch {}
+				// 		 });
+				// 	});
+
+				// 播放器配置
+				tabContents.createEl("h3", { text: "Debug Bar" });
+				tabContents.createEl("div", {
+					text: "以下为开发者选项，用于显示/隐藏 Debug Bar（实验与诊断用途）",
+					cls: "setting-item-description",
+				});
+
+				new Setting(tabContents)
+					.setName("显示 Debug Bar（开发者选项）")
+					.setDesc("启用后在视图顶部显示调试栏，用于实验功能和问题诊断。")
+					.addToggle((toggle) => {
+						toggle.setValue(this.plugin.settings.showDebugBar ?? false)
+							.onChange(async (value) => {
+								this.plugin.settings.showDebugBar = value;
+								await this.plugin.saveSettings();
+								// 实时通知工作区：调试栏开关变化
+								try {
+									// @ts-ignore - Obsidian 支持触发自定义事件
+									this.app.workspace.trigger('tabflow:debugbar-toggle', value);
+								} catch { }
+								new Notice(value ? "已启用 Debug Bar" : "已隐藏 Debug Bar");
+							});
 					});
 
 			} else if (tabId === "about") {
