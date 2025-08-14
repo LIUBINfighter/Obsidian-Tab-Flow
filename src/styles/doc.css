@@ -62,12 +62,29 @@
 }
 
 /* Embedded AlphaTex markdown editor styling */
+.alphatex-playground {
+    display: flex;
+    gap: 12px;
+}
+.alphatex-playground.is-vertical {
+    flex-direction: column;
+}
+.alphatex-playground.is-horizontal {
+    flex-direction: row;
+    align-items: stretch;
+}
+.alphatex-playground.is-horizontal .inmarkdown-editor,
+.alphatex-playground.is-horizontal .inmarkdown-preview {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
 .inmarkdown-editor-cm {
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
 	background: var(--background-primary);
 	padding: 6px 8px;
-	margin-bottom: 12px;
+    margin-bottom: 12px;
 	position: relative;
 }
 .inmarkdown-editor-cm:focus-within {
@@ -88,8 +105,13 @@
 .inmarkdown-editor-cm .cm-content {
 	padding: 0;
 }
-.inmarkdown-preview {
-	margin-top: 4px;
+.inmarkdown-preview { margin-top: 4px; }
+.alphatex-playground.is-horizontal .inmarkdown-preview { margin-top: 0; }
+
+/* Viewport fallback: narrow screens force vertical */
+@media (max-width: 720px) {
+    .alphatex-playground.is-horizontal { flex-direction: column; }
+    .alphatex-playground.is-horizontal .inmarkdown-preview { margin-top: 4px; }
 }
 
 .tabflow-doc-content {
@@ -175,6 +197,14 @@
 /* Host wrapper for each playground instance in docs */
 .doc-playground-host {
     margin: 16px 0 20px 0;
+    /* enable container queries for responsive playground */
+    container-type: inline-size;
+}
+
+/* Container query: if host is narrow, force vertical */
+@container (max-width: 720px) {
+    .doc-playground-host .alphatex-playground.is-horizontal { flex-direction: column; }
+    .doc-playground-host .alphatex-playground.is-horizontal .inmarkdown-preview { margin-top: 4px; }
 }
 
 /* Ensure AlphaTex containers do not exceed panel width */

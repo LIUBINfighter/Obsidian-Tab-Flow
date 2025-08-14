@@ -57,7 +57,7 @@ export default {
 		container.createEl('p', { text: '音符格式为 fret.string.duration；休止用 r 替代品格（fret）。时值：1=全音符，2=二分，4=四分，8=八分，依此类推。' });
 		if (plugin) {
 			const host1 = container.createDiv({ cls: 'doc-playground-host' });
-			createAlphaTexPlayground(plugin, host1, SAMPLE_SINGLE_NOTES, {});
+			createAlphaTexPlayground(plugin, host1, SAMPLE_SINGLE_NOTES, { layout: 'horizontal' });
 		}
 
 		// Chords

@@ -9,6 +9,10 @@ export interface AlphaTexPlaygroundOptions {
 	onChange?: (value: string) => void;
 	/** 额外 alphaTab 渲染参数 (可覆盖内置默认) */
 	alphaTabOptions?: Record<string, unknown>;
+	/** 布局：vertical(上下) 或 horizontal(左右) */
+	layout?: 'vertical' | 'horizontal';
+	/** 附加到根容器的自定义类名（可用于主题/自定义布局） */
+	className?: string;
 }
 
 export interface AlphaTexPlaygroundHandle {
@@ -28,10 +32,12 @@ export function createAlphaTexPlayground(
 	initialSource: string,
 	options: AlphaTexPlaygroundOptions = {}
 ): AlphaTexPlaygroundHandle {
-	const { placeholder = '输入 AlphaTex 内容...', debounceMs = 350, readOnly = false, onChange, alphaTabOptions = {} } = options;
+	const { placeholder = '输入 AlphaTex 内容...', debounceMs = 350, readOnly = false, onChange, alphaTabOptions = {}, layout = 'vertical', className = '' } = options;
 
 	container.empty();
 	const wrapper = container.createDiv({ cls: 'alphatex-playground inmarkdown-wrapper' });
+	if (layout === 'horizontal') wrapper.classList.add('is-horizontal'); else wrapper.classList.add('is-vertical');
+	if (className) wrapper.classList.add(className);
 
 	// 编辑器容器
 	const editorWrap = wrapper.createDiv({ cls: 'inmarkdown-editor' });
