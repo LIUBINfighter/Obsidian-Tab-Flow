@@ -37,9 +37,12 @@
 		"@codemirror/commands": "^6.8.1",
 		"@codemirror/language": "^6.11.1",
 		"@codemirror/rangeset": "^0.19.2",
+		"@codemirror/state": "^6.4.1",
+		"@codemirror/view": "^6.26.3",
 		"@coderline/alphatab": "^1.6.0",
 		"@types/mime-types": "^3.0.0",
 		"jszip": "^3.10.1",
+		"monkey-around": "^3.0.0",
 		"mime-types": "^3.0.1"
 	}
 }
