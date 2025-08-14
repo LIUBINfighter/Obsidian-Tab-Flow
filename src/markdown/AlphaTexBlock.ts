@@ -202,53 +202,53 @@ export function mountAlphaTexBlock(
 		stopBtn.setAttribute("aria-label", "停止");
 		stopBtn.addEventListener("click", () => api.stop());
 
-		const speedIcon = document.createElement("span");
-		setIcon(speedIcon, "lucide-gauge");
-		speedIcon.style.marginRight = "0.5em";
+		// const speedIcon = document.createElement("span");
+		// setIcon(speedIcon, "lucide-gauge");
+		// speedIcon.style.marginRight = "0.5em";
 
-		const speedInput = document.createElement("input");
-		speedInput.type = "number";
-		speedInput.min = "0.5";
-		speedInput.max = "2";
-		speedInput.step = "0.05";
-		speedInput.value = String(merged.speed ?? 1.0);
-		const applySpeed = () => {
-			const v = parseFloat(speedInput.value);
-			if (!isNaN(v)) {
-				const clamped = Math.max(0.5, Math.min(2.0, v));
-				api.playbackSpeed = clamped;
-				if (speedInput.value !== String(clamped)) speedInput.value = String(clamped);
-				merged.speed = clamped;
-				defaults?.onUpdateInit?.({ speed: clamped });
-			}
-		};
-		speedInput.addEventListener("change", applySpeed);
-		speedInput.addEventListener("blur", applySpeed);
+		// const speedInput = document.createElement("input");
+		// speedInput.type = "number";
+		// speedInput.min = "0.5";
+		// speedInput.max = "2";
+		// speedInput.step = "0.05";
+		// speedInput.value = String(merged.speed ?? 1.0);
+		// const applySpeed = () => {
+		// 	const v = parseFloat(speedInput.value);
+		// 	if (!isNaN(v)) {
+		// 		const clamped = Math.max(0.5, Math.min(2.0, v));
+		// 		api.playbackSpeed = clamped;
+		// 		if (speedInput.value !== String(clamped)) speedInput.value = String(clamped);
+		// 		merged.speed = clamped;
+		// 		defaults?.onUpdateInit?.({ speed: clamped });
+		// 	}
+		// };
+		// speedInput.addEventListener("change", applySpeed);
+		// speedInput.addEventListener("blur", applySpeed);
 
-		const zoomIcon = document.createElement("span");
-		setIcon(zoomIcon, "lucide-zoom-in");
-		zoomIcon.style.marginLeft = "1em";
-		zoomIcon.style.marginRight = "0.5em";
-		const zoomInput = document.createElement("input");
-		zoomInput.type = "number";
-		zoomInput.min = "0.5";
-		zoomInput.max = "2";
-		zoomInput.step = "0.05";
-		zoomInput.value = String(merged.scale ?? 1.0);
-		const applyScale = () => {
-			const v = parseFloat(zoomInput.value);
-			if (!isNaN(v)) {
-				const clamped = Math.max(0.5, Math.min(2.0, v));
-				api.settings.display.scale = clamped;
-				api.updateSettings();
-				api.render();
-				if (zoomInput.value !== String(clamped)) zoomInput.value = String(clamped);
-				merged.scale = clamped;
-				defaults?.onUpdateInit?.({ scale: clamped });
-			}
-		};
-		zoomInput.addEventListener("change", applyScale);
-		zoomInput.addEventListener("blur", applyScale);
+		// const zoomIcon = document.createElement("span");
+		// setIcon(zoomIcon, "lucide-zoom-in");
+		// zoomIcon.style.marginLeft = "1em";
+		// zoomIcon.style.marginRight = "0.5em";
+		// const zoomInput = document.createElement("input");
+		// zoomInput.type = "number";
+		// zoomInput.min = "0.5";
+		// zoomInput.max = "2";
+		// zoomInput.step = "0.05";
+		// zoomInput.value = String(merged.scale ?? 1.0);
+		// const applyScale = () => {
+		// 	const v = parseFloat(zoomInput.value);
+		// 	if (!isNaN(v)) {
+		// 		const clamped = Math.max(0.5, Math.min(2.0, v));
+		// 		api.settings.display.scale = clamped;
+		// 		api.updateSettings();
+		// 		api.render();
+		// 		if (zoomInput.value !== String(clamped)) zoomInput.value = String(clamped);
+		// 		merged.scale = clamped;
+		// 		defaults?.onUpdateInit?.({ scale: clamped });
+		// 	}
+		// };
+		// zoomInput.addEventListener("change", applyScale);
+		// zoomInput.addEventListener("blur", applyScale);
 
 		const metroBtn = document.createElement("button");
 		metroBtn.className = "clickable-icon";
@@ -266,10 +266,10 @@ export function mountAlphaTexBlock(
 
 		controlsEl.appendChild(playPauseBtn);
 		controlsEl.appendChild(stopBtn);
-		controlsEl.appendChild(speedIcon);
-		controlsEl.appendChild(speedInput);
-		controlsEl.appendChild(zoomIcon);
-		controlsEl.appendChild(zoomInput);
+		// controlsEl.appendChild(speedIcon);
+		// controlsEl.appendChild(speedInput);
+		// controlsEl.appendChild(zoomIcon);
+		// controlsEl.appendChild(zoomInput);
 		controlsEl.appendChild(metroBtn);
     } else if (playerEnabled && !resources.soundFontUri) {
         // compact note, no controls container
