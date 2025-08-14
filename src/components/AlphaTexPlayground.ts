@@ -165,7 +165,14 @@ export function createAlphaTexPlayground(
 
 	function scheduleRender() {
 		if (debounceTimer) window.clearTimeout(debounceTimer);
-		debounceTimer = window.setTimeout(() => renderPreview(), debounceMs);
+		debounceTimer = window.setTimeout(() => {
+			const ric = (window as any).requestIdleCallback as undefined | ((cb: (deadline: any) => void) => number);
+			if (typeof ric === 'function') {
+				ric(() => renderPreview());
+			} else {
+				renderPreview();
+			}
+		}, debounceMs);
 		onChange?.(embedded.value);
 	}
 

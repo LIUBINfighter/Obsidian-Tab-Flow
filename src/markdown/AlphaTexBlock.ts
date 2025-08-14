@@ -24,6 +24,38 @@ export interface AlphaTexMountHandle {
 	destroy: () => void;
 }
 
+// 并发调度：限制同时进行的 AlphaTabApi 初始化数量，避免主线程长任务堆叠
+const MAX_CONCURRENT_ALPHATAB_INITS = 3;
+let currentInits = 0;
+const initQueue: Array<() => void> = [];
+
+function requestIdle(fn: () => void) {
+    const ric = (window as any).requestIdleCallback as undefined | ((cb: (deadline: any) => void) => number);
+    if (typeof ric === 'function') {
+        ric(() => fn());
+    } else {
+        setTimeout(fn, 0);
+    }
+}
+
+function scheduleInit(task: () => void) {
+    const tryRun = () => {
+        if (currentInits < MAX_CONCURRENT_ALPHATAB_INITS) {
+            currentInits++;
+            requestIdle(() => {
+                try { task(); } finally {
+                    currentInits = Math.max(0, currentInits - 1);
+                    const next = initQueue.shift();
+                    if (next) scheduleInit(next);
+                }
+            });
+        } else {
+            initQueue.push(task);
+        }
+    };
+    tryRun();
+}
+
 function parseInlineInit(source: string): { opts: AlphaTexInitOptions; body: string } {
     // Robust multi-line parser for leading Mermaid-like init block
     // Only if it appears at the very beginning (ignoring BOM/whitespace)
@@ -122,10 +154,7 @@ export function mountAlphaTexBlock(
 	const base40 = style.getPropertyValue("--color-base-40") || "#707070";
 	const scoreInfoColor = mainGlyphColor;
 
-	// Inject @font-face like TabView to ensure glyph font is available
-	const fontStyle = document.createElement("style");
-	fontStyle.innerHTML = `@font-face { font-family: 'alphaTab'; src: url(${resources.bravuraUri}); }`;
-	document.head.appendChild(fontStyle);
+    // 字体由全局注入一次（main.ts），此处不再重复注入，减少样式计算与回流
 
 	// Cursor and highlight styles (aligned with TabView)
 	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
@@ -138,106 +167,108 @@ export function mountAlphaTexBlock(
 	`;
 	document.head.appendChild(runtimeStyle);
 
-	const playerEnabled = (String(merged.player || "enable").toLowerCase() !== "disable");
-	const api = new alphaTab.AlphaTabApi(scoreEl, {
-		core: {
-			scriptFile: resources.alphaTabWorkerUri || "",
-			smuflFontSources: (
-				resources.bravuraUri
-					? new Map([
-						[((alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0), resources.bravuraUri],
-					])
-					: new Map()
-			) as unknown as Map<number, string>,
-			fontDirectory: "",
-		},
-		player: {
-			enablePlayer: playerEnabled,
-			playerMode: playerEnabled ? alphaTab.PlayerMode.EnabledAutomatic : alphaTab.PlayerMode.Disabled,
-			enableCursor: playerEnabled,
-			enableAnimatedBeatCursor: playerEnabled,
-			soundFont: playerEnabled ? resources.soundFontUri : undefined,
-			scrollMode: toScrollMode(merged.scrollMode) ?? alphaTab.ScrollMode.Continuous,
-			scrollSpeed: 500,
-			scrollOffsetY: -25,
-			scrollOffsetX: 25,
-			nativeBrowserSmoothScroll: false,
-		},
-		display: {
-			resources: {
-				mainGlyphColor,
-				secondaryGlyphColor,
-				staffLineColor: base40,
-				barSeparatorColor: base40,
-				barNumberColor: mainGlyphColor,
-				scoreInfoColor,
-			},
-			scale: merged.scale ?? 1.0,
-		},
-	});
+    const playerEnabled = (String(merged.player || "enable").toLowerCase() !== "disable");
+    let destroyed = false;
+    let api: alphaTab.AlphaTabApi | null = null;
 
-	// apply runtime options
-	if (typeof merged.speed === "number" && api.player) {
-		api.playbackSpeed = merged.speed;
-	}
-	if (typeof merged.metronome === "boolean") {
-		api.metronomeVolume = merged.metronome ? 1 : 0;
-	}
-
-    // Configure scroll element to be this block wrapper only (avoid full-page scroll)
-    try {
-        (api.settings.player as any).scrollElement = wrapper as unknown as HTMLElement;
-        api.updateSettings();
-    } catch {}
-
-	// render via convenient tex method; fallback to manual importer if needed
-	let destroyed = false;
-    const renderFromTex = () => {
-		try {
-			if (typeof (api as any).tex === "function") {
-                (api as any).tex(body);
-				return;
-			}
-			// Fallback: manual import
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const Importer: any = (alphaTab as any).importer?.AlphaTexImporter;
-			if (Importer) {
-				const imp = new Importer();
-				imp.logErrors = true;
-				imp.initFromString(body, api.settings);
-				const score = imp.readScore();
-                api.renderScore(score);
-			}
-		} catch (e) {
-			// Simple error surface into controls
-            const errEl = document.createElement("div");
-            errEl.className = "alphatex-error";
-            errEl.textContent = `AlphaTex render error: ${e}`;
-            wrapper.appendChild(errEl);
-		}
-	};
-    // Apply track filtering after score loaded if requested
-    try {
-        (api as any).scoreLoaded?.on?.(() => {
-            try {
-                const tracksRequest = merged.tracks;
-                if (!Array.isArray(tracksRequest) || tracksRequest.length === 0) return;
-                if (tracksRequest.includes(-1)) return; // -1 means all
-                const allTracks = (api as any).score?.tracks as any[] | undefined;
-                if (!allTracks || allTracks.length === 0) return;
-                const wanted = new Set<number>(tracksRequest);
-                const selected = allTracks.filter(t => typeof t?.index === 'number' && wanted.has(t.index));
-                if (selected.length > 0) {
-                    (api as any).renderTracks(selected);
-                }
-            } catch {}
+    const heavyInit = () => {
+        if (destroyed) return;
+        api = new alphaTab.AlphaTabApi(scoreEl, {
+            core: {
+                scriptFile: resources.alphaTabWorkerUri || "",
+                smuflFontSources: (
+                    resources.bravuraUri
+                        ? new Map([
+                            [((alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0), resources.bravuraUri],
+                        ])
+                        : new Map()
+                ) as unknown as Map<number, string>,
+                fontDirectory: "",
+            },
+            player: {
+                enablePlayer: playerEnabled,
+                playerMode: playerEnabled ? alphaTab.PlayerMode.EnabledAutomatic : alphaTab.PlayerMode.Disabled,
+                enableCursor: playerEnabled,
+                enableAnimatedBeatCursor: playerEnabled,
+                soundFont: playerEnabled ? resources.soundFontUri : undefined,
+                scrollMode: toScrollMode(merged.scrollMode) ?? alphaTab.ScrollMode.Continuous,
+                scrollSpeed: 500,
+                scrollOffsetY: -25,
+                scrollOffsetX: 25,
+                nativeBrowserSmoothScroll: false,
+            },
+            display: {
+                resources: {
+                    mainGlyphColor,
+                    secondaryGlyphColor,
+                    staffLineColor: base40,
+                    barSeparatorColor: base40,
+                    barNumberColor: mainGlyphColor,
+                    scoreInfoColor,
+                },
+                scale: merged.scale ?? 1.0,
+            },
         });
-    } catch {}
 
-    renderFromTex();
+        // apply runtime options
+        if (typeof merged.speed === "number" && api.player) {
+            api.playbackSpeed = merged.speed;
+        }
+        if (typeof merged.metronome === "boolean") {
+            api.metronomeVolume = merged.metronome ? 1 : 0;
+        }
 
-    // controls (try to unify style with PlayBar) — only when player is enabled
-    if (resources.soundFontUri && playerEnabled) {
+        // scope scroll container to this wrapper only
+        try {
+            (api.settings.player as any).scrollElement = wrapper as unknown as HTMLElement;
+            api.updateSettings();
+        } catch {}
+
+        // render via convenient tex method; fallback to manual importer if needed
+        const renderFromTex = () => {
+            try {
+                if (typeof (api as any).tex === "function") {
+                    (api as any).tex(body);
+                    return;
+                }
+                const Importer: any = (alphaTab as any).importer?.AlphaTexImporter;
+                if (Importer) {
+                    const imp = new Importer();
+                    imp.logErrors = true;
+                    imp.initFromString(body, api!.settings);
+                    const score = imp.readScore();
+                    api!.renderScore(score);
+                }
+            } catch (e) {
+                const errEl = document.createElement("div");
+                errEl.className = "alphatex-error";
+                errEl.textContent = `AlphaTex render error: ${e}`;
+                wrapper.appendChild(errEl);
+            }
+        };
+
+        // Apply track filtering after score loaded if requested
+        try {
+            (api as any).scoreLoaded?.on?.(() => {
+                try {
+                    const tracksRequest = merged.tracks;
+                    if (!Array.isArray(tracksRequest) || tracksRequest.length === 0) return;
+                    if (tracksRequest.includes(-1)) return;
+                    const allTracks = (api as any).score?.tracks as any[] | undefined;
+                    if (!allTracks || allTracks.length === 0) return;
+                    const wanted = new Set<number>(tracksRequest);
+                    const selected = allTracks.filter(t => typeof t?.index === 'number' && wanted.has(t.index));
+                    if (selected.length > 0) {
+                        (api as any).renderTracks(selected);
+                    }
+                } catch {}
+            });
+        } catch {}
+
+        renderFromTex();
+
+        // controls — only when player is enabled
+        if (resources.soundFontUri && playerEnabled) {
         // attach controls container only when needed
         wrapper.appendChild(controlsEl);
 		const playPauseBtn = document.createElement("button");
@@ -247,7 +278,7 @@ export function mountAlphaTexBlock(
 		setIcon(playIcon, "play");
 		playPauseBtn.appendChild(playIcon);
 		playPauseBtn.setAttribute("aria-label", "播放/暂停");
-		playPauseBtn.addEventListener("click", () => api.playPause());
+        playPauseBtn.addEventListener("click", () => api!.playPause());
 
 		const stopBtn = document.createElement("button");
 		stopBtn.className = "clickable-icon";
@@ -256,7 +287,7 @@ export function mountAlphaTexBlock(
 		setIcon(stopIcon, "square");
 		stopBtn.appendChild(stopIcon);
 		stopBtn.setAttribute("aria-label", "停止");
-		stopBtn.addEventListener("click", () => api.stop());
+        stopBtn.addEventListener("click", () => api!.stop());
 
 		// const speedIcon = document.createElement("span");
 		// setIcon(speedIcon, "lucide-gauge");
@@ -314,8 +345,8 @@ export function mountAlphaTexBlock(
 		metroBtn.appendChild(metroIcon);
 		metroBtn.setAttribute("aria-label", "节拍器");
 		metroBtn.onclick = () => {
-			const enabled = (api.metronomeVolume || 0) > 0 ? false : true;
-			api.metronomeVolume = enabled ? 1 : 0;
+            const enabled = (api!.metronomeVolume || 0) > 0 ? false : true;
+            api!.metronomeVolume = enabled ? 1 : 0;
 			merged.metronome = enabled;
 			try { metroBtn.classList.toggle("is-active", !!enabled); } catch {}
 		};
@@ -339,7 +370,7 @@ export function mountAlphaTexBlock(
 				setIcon(icon, "lucide-crosshair");
 				btn.appendChild(icon);
 				btn.setAttribute("aria-label", "滚动到光标");
-				btn.onclick = () => { try { (api as any).scrollToCursor?.(); } catch {} };
+                btn.onclick = () => { try { (api as any).scrollToCursor?.(); } catch {} };
 				controlsEl.appendChild(btn);
 			},
 			layoutToggle: () => {
@@ -347,17 +378,17 @@ export function mountAlphaTexBlock(
 				btn.className = "clickable-icon";
 				btn.setAttribute("type", "button");
 				const icon = document.createElement("span");
-				const isHorizontal = (api.settings?.display as any)?.layoutMode === (alphaTab as any).LayoutMode?.Horizontal;
+                const isHorizontal = (api!.settings?.display as any)?.layoutMode === (alphaTab as any).LayoutMode?.Horizontal;
 				setIcon(icon, isHorizontal ? "lucide-panels-top-left" : "lucide-layout");
 				btn.appendChild(icon);
 				btn.setAttribute("aria-label", isHorizontal ? "布局: 横向" : "布局: 页面");
 				btn.onclick = () => {
 					try {
-						const current = (api.settings?.display as any)?.layoutMode;
+                        const current = (api!.settings?.display as any)?.layoutMode;
 						const next = current === (alphaTab as any).LayoutMode?.Page ? (alphaTab as any).LayoutMode?.Horizontal : (alphaTab as any).LayoutMode?.Page;
-						(api.settings.display as any).layoutMode = next;
-						api.updateSettings();
-						api.render();
+                        (api!.settings.display as any).layoutMode = next;
+                        api!.updateSettings();
+                        api!.render();
 						setIcon(icon, next === (alphaTab as any).LayoutMode?.Horizontal ? "lucide-panels-top-left" : "lucide-layout");
 						btn.setAttribute("aria-label", next === (alphaTab as any).LayoutMode?.Horizontal ? "布局: 横向" : "布局: 页面");
 					} catch {}
@@ -372,7 +403,7 @@ export function mountAlphaTexBlock(
 				setIcon(icon, "lucide-chevrons-up");
 				btn.appendChild(icon);
 				btn.setAttribute("aria-label", "回到顶部");
-				btn.onclick = () => { try { (api as any).tickPosition = 0; (api as any).scrollToCursor?.(); } catch {} };
+            btn.onclick = () => { try { (api as any).tickPosition = 0; (api as any).scrollToCursor?.(); } catch {} };
 				controlsEl.appendChild(btn);
 			},
 			toBottom: () => {
@@ -385,13 +416,13 @@ export function mountAlphaTexBlock(
 				btn.setAttribute("aria-label", "回到底部");
 				btn.onclick = () => {
 					try {
-						const score: any = (api as any).score;
+                        const score: any = (api as any).score;
 						const masterBars = score?.masterBars || [];
 						if (!masterBars.length) return;
 						const last = masterBars[masterBars.length - 1];
 						const endTick = last.start + last.calculateDuration();
-						(api as any).tickPosition = endTick;
-						(api as any).scrollToCursor?.();
+                        (api as any).tickPosition = endTick;
+                        (api as any).scrollToCursor?.();
 					} catch {}
 				};
 				controlsEl.appendChild(btn);
@@ -426,21 +457,24 @@ export function mountAlphaTexBlock(
 		// controlsEl.appendChild(zoomIcon);
 		// controlsEl.appendChild(zoomInput);
 		// metronome already added by ordered renderers when requested
-    } else if (playerEnabled && !resources.soundFontUri) {
+        } else if (playerEnabled && !resources.soundFontUri) {
         // compact note, no controls container
         const note = document.createElement("div");
         note.className = "alphatex-note";
         note.textContent = "SoundFont missing: playback disabled. Rendering only.";
         wrapper.appendChild(note);
-    }
+        }
+    };
+
+    // 推迟并限制初始化
+    scheduleInit(heavyInit);
 
 	return {
 		destroy: () => {
 			if (destroyed) return;
 			destroyed = true;
-			try { api.destroy(); } catch {}
+            try { api?.destroy(); } catch {}
 			try { rootEl.innerHTML = ""; } catch {}
-			try { fontStyle.remove(); } catch {}
 			try { runtimeStyle.remove(); } catch {}
 				// clear runtime UI override when this block unmounts
 				try { defaults?.clearUiOverride?.(); } catch {}

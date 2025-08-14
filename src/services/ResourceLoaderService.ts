@@ -2,9 +2,9 @@ import { App } from "obsidian";
 import * as path from "path";
 
 export interface AlphaTabResources {
-	bravuraUri?: string;
-	alphaTabWorkerUri?: string;
-	soundFontUri?: string; // 改为URL而不是二进制数据
+	bravuraUri?: string; // 使用文件 URL（app 资源路径）
+	alphaTabWorkerUri?: string; // 使用文件 URL（app 资源路径）
+	soundFontUri?: string; // 使用文件 URL（app 资源路径）
 	resourcesComplete: boolean;
 }
 
@@ -58,15 +58,13 @@ export class ResourceLoaderService {
 				if (!soundFontExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.SOUNDFONT}`);
 			}
 
-			// 尝试加载每个资源，如果不存在则跳过
+			// 使用 Obsidian 资源 URL（可被缓存/共享）
 			if (bravuraExists) {
-				const bravuraData = await this.app.vault.adapter.readBinary(bravuraPath);
-				resources.bravuraUri = `data:font/woff2;base64,${this.arrayBufferToBase64(bravuraData)}`;
+				resources.bravuraUri = this.app.vault.adapter.getResourcePath(bravuraPath);
 			}
 
 			if (alphaTabExists) {
-				const alphaTabData = await this.app.vault.adapter.readBinary(alphaTabPath);
-				resources.alphaTabWorkerUri = `data:application/javascript;base64,${this.arrayBufferToBase64(alphaTabData)}`;
+				resources.alphaTabWorkerUri = this.app.vault.adapter.getResourcePath(alphaTabPath);
 			}
 
 			if (soundFontExists) {
@@ -100,6 +98,7 @@ export class ResourceLoaderService {
 		}
 	}
 
+	// 兼容旧实现保留方法（未使用）
 	private arrayBufferToBase64(buffer: ArrayBuffer): string {
 		const bytes = new Uint8Array(buffer);
 		const chunkSize = 0x8000;

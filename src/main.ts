@@ -283,6 +283,16 @@ export default class MyPlugin extends Plugin {
 			);
 		}
 		
+		// 全局注入一次 @font-face，避免每块重复注入
+		try {
+			if (this.resources.bravuraUri) {
+				const style = document.createElement('style');
+				style.id = 'tabflow-global-alphatab-font';
+				style.textContent = `@font-face { font-family: 'alphaTab'; src: url(${this.resources.bravuraUri}); }`;
+				if (!document.getElementById(style.id)) document.head.appendChild(style);
+			}
+		} catch {}
+
 		// 只在有足够资源的情况下注册视图
 		if (this.resources.bravuraUri && this.resources.alphaTabWorkerUri) {
 			this.registerView(VIEW_TYPE_TAB, (leaf) => {
