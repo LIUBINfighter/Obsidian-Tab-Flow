@@ -27,7 +27,7 @@ export default class MyPlugin extends Plugin {
 	resources!: AlphaTabResources;
 	actualPluginDir?: string;
 	// 运行期 UI 覆盖：仅会话级，不落盘
-	runtimeUiOverride?: { components?: Record<string, boolean>; order?: string[] } | null;
+		runtimeUiOverride?: { components?: Record<string, boolean>; order?: string[] | string } | null;
 	
 	// 加载和保存设置的方法
 	async loadSettings() {
@@ -359,7 +359,7 @@ export default class MyPlugin extends Plugin {
 						scrollMode: "Continuous",
 						metronome: false,
 						onUpdateInit,
-						setUiOverride: (override: { components?: Record<string, boolean>; order?: string[] } | null) => {
+						setUiOverride: (override: { components?: Record<string, boolean>; order?: string[] | string } | null) => {
 							try { (this as any).runtimeUiOverride = override || null; } catch {}
 							try { this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
 						},

@@ -95,7 +95,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
     // 从运行期覆盖或全局设置读取可见性（覆盖优先）
     let visibility: any = undefined;
-    let runtimeOverride: { components?: Record<string, boolean>; order?: string[] } | undefined = undefined;
+    let runtimeOverride: { components?: Record<string, boolean>; order?: string[] | string } | undefined = undefined;
     let plugin: any = undefined;
     try {
         // @ts-ignore - 通过全局 app.plugins 获取本插件实例
@@ -126,10 +126,31 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
     let order: string[] = defaultOrder;
     try {
-        const saved = (runtimeOverride?.order && Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0)
+        const rawOrder = (runtimeOverride?.order && ((Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0) || typeof runtimeOverride.order === 'string'))
             ? runtimeOverride.order
             : plugin?.settings?.playBar?.order;
-        if (Array.isArray(saved) && saved.length > 0) order = saved;
+
+        if (Array.isArray(rawOrder) && rawOrder.length > 0) {
+            order = rawOrder as string[];
+        } else if (typeof rawOrder === 'string' && rawOrder.trim().length > 0) {
+            // 解析数字序列，例如 "2,1,3" -> 映射到默认键序列的索引
+            const indices = rawOrder.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+            // 将 1 基或 0 基的索引都容忍：1..N 或 0..N-1
+            const looksOneBased = indices.some(n => n === 1) || indices.every(n => n > 0);
+            const normalized = indices.map(n => looksOneBased ? n - 1 : n).filter(n => n >= 0 && n < defaultOrder.length);
+            if (normalized.length > 0) {
+                order = normalized.map(i => defaultOrder[i]);
+                // 当使用数字序列时，默认只渲染这组组件：将其它组件视作隐藏
+                runtimeOverride = runtimeOverride || {};
+                runtimeOverride.components = runtimeOverride.components || {};
+                const allowed = new Set(order);
+                defaultOrder.forEach(k => {
+                    if (!allowed.has(k)) (runtimeOverride!.components as Record<string, boolean>)[k] = false;
+                });
+                // 确保已选择的键默认显示
+                order.forEach(k => (runtimeOverride!.components as Record<string, boolean>)[k] = true);
+            }
+        }
     } catch {}
 
 	const renderers: Record<string, () => void> = {

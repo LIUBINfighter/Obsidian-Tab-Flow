@@ -9,6 +9,13 @@ const SAMPLE = `\\title "Instrument & Tuning"
 // 以四分音为默认时值
 :4 0.6 2.5 2.4 2.3 | 3.2 2.2 0.1 3.1`;
 
+const SAMPLE2 = `\\title "Instrument & Tuning (Piano)"
+\\instrument piano
+\\tuning piano
+.
+// 非弦乐：使用音名与八度（如 C4 D4），而非 fret.string
+:4 C4 D4 E4 F4 | G4 A4 B4 r`;
+
 export default {
 	id: 'instruments-tuning',
 	title: '乐器与调音',
@@ -21,11 +28,16 @@ export default {
 		const ul = container.createEl('ul');
 		ul.createEl('li', { text: '\\instrument 支持 GM 号码或名称（如 ElectricGuitarClean、piano 等）。' });
 		ul.createEl('li', { text: '\\tuning 采用音名+八度（如 E4 B3 G3 D3 A2 E2），用于弦乐器的指板定位与音高。' });
-		container.createEl('p', { text: '下面提供一个最小示例：电吉他音色 + 标准六弦调弦。可尝试改为不同音色或改变某根弦的音高，听听差异。' });
+		container.createEl('p', { text: '下面提供两个最小示例：其一为电吉他（弦乐，使用 fret.string）；其二为钢琴（非弦乐，使用 C4 D4 这类音名与八度）。' });
 
 		if (plugin) {
-			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
-			createAlphaTexPlayground(plugin, playgroundHost, SAMPLE, {});
+			container.createEl('h4', { text: '示例一：电吉他（标准六弦调弦）' });
+			const playgroundHost1 = container.createDiv({ cls: 'doc-playground-host' });
+			createAlphaTexPlayground(plugin, playgroundHost1, SAMPLE, {});
+
+			container.createEl('h4', { text: '示例二：钢琴（非弦乐，音名与八度）' });
+			const playgroundHost2 = container.createDiv({ cls: 'doc-playground-host' });
+			createAlphaTexPlayground(plugin, playgroundHost2, SAMPLE2, {});
 		} else {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染。' });
 		}

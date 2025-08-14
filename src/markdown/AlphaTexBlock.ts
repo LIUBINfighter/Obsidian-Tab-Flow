@@ -16,7 +16,7 @@ export interface AlphaTexInitOptions {
 	// callback for two-way binding (provided by main.ts)
 	onUpdateInit?: (partial: Partial<AlphaTexInitOptions>) => void;
 		// runtime UI override bridge (provided by main.ts)
-		setUiOverride?: (override: { components?: Record<string, boolean>; order?: string[] } | null) => void;
+		setUiOverride?: (override: { components?: Record<string, boolean>; order?: string[] | string } | null) => void;
 		clearUiOverride?: () => void;
 }
 
@@ -25,18 +25,33 @@ export interface AlphaTexMountHandle {
 }
 
 function parseInlineInit(source: string): { opts: AlphaTexInitOptions; body: string } {
-	// Mermaid-like init: %%{init: {...}}%% must be on first line
-	const firstLineEnd = source.indexOf("\n");
-	const firstLine = firstLineEnd >= 0 ? source.slice(0, firstLineEnd) : source;
-	const initMatch = firstLine.match(/^\s*%%\{\s*init\s*:\s*(\{[\s\S]*\})\s*}\s*%%\s*$/);
-	if (!initMatch) return { opts: {}, body: source };
-	try {
-		const json = JSON.parse(initMatch[1]);
-		const body = firstLineEnd >= 0 ? source.slice(firstLineEnd + 1) : "";
-		return { opts: json || {}, body };
-	} catch {
-		return { opts: {}, body: source };
-	}
+    // Support Mermaid-like init on the very first line, single-line or multi-line until closing }%%
+    // Examples:
+    // %%{init: {"a":1}}%%\n...  or
+    // %%{init: {\n  ...\n} }%%\n...
+    const multi = source.match(/^\s*%%\{\s*init\s*:\s*(\{[\s\S]*?\})\s*%%\s*\r?\n?/);
+    if (multi) {
+        try {
+            const json = JSON.parse(multi[1]);
+            const body = source.slice(multi[0].length);
+            return { opts: json || {}, body };
+        } catch {
+            // fall through to no-init behavior
+        }
+    }
+
+    // legacy: strictly single-line on first line
+    const firstLineEnd = source.indexOf("\n");
+    const firstLine = firstLineEnd >= 0 ? source.slice(0, firstLineEnd) : source;
+    const initMatch = firstLine.match(/^\s*%%\{\s*init\s*:\s*(\{[\s\S]*\})\s*}\s*%%\s*$/);
+    if (!initMatch) return { opts: {}, body: source };
+    try {
+        const json = JSON.parse(initMatch[1]);
+        const body = firstLineEnd >= 0 ? source.slice(firstLineEnd + 1) : "";
+        return { opts: json || {}, body };
+    } catch {
+        return { opts: {}, body: source };
+    }
 }
 
 function toScrollMode(value: number | string | undefined): number | undefined {
@@ -69,7 +84,7 @@ export function mountAlphaTexBlock(
 
 	// extract optional UI override from init
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const uiOverride: { components?: Record<string, boolean>; order?: string[] } | undefined = (opts as any)?.ui;
+	const uiOverride: { components?: Record<string, boolean>; order?: string[] | string } | undefined = (opts as any)?.ui;
 	try { if (uiOverride && defaults?.setUiOverride) defaults.setUiOverride(uiOverride); } catch {}
 
 	// container structure
