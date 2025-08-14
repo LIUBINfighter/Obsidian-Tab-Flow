@@ -316,42 +316,8 @@ export default class MyPlugin extends Plugin {
 						return;
 					}
 
-					// set up two-way binding to init line
-					const section = ctx.getSectionInfo(el);
-					const file = ctx.sourcePath ? this.app.vault.getAbstractFileByPath(ctx.sourcePath) : null;
-					const onUpdateInit = async (partial: any) => {
-						try {
-							if (!section || !file) return;
-							if (!(file instanceof TFile)) return;
-							const raw = await this.app.vault.read(file);
-							const lines = raw.split(/\r?\n/);
-							const start = section.lineStart;
-							const end = section.lineEnd;
-							if (start == null || end == null || start >= lines.length) return;
-							// fenced block is from start..end, replace first content line if it is init, else insert
-							let contentStart = start + 1; // after ```alphatex
-							if (contentStart <= end) {
-								const first = lines[contentStart] ?? "";
-								const m = first.match(/^\s*%%\{\s*init\s*:\s*(\{[\s\S]*\})\s*}\s*%%\s*$/);
-								let initObj: Record<string, any> = {};
-								if (m) {
-									try { initObj = JSON.parse(m[1] || "{}") || {}; } catch {}
-									Object.assign(initObj, partial || {});
-									const ordered: any = {};
-									["scale","speed","scrollMode","metronome"].forEach(k => { if (initObj[k] !== undefined) ordered[k] = initObj[k]; });
-									lines[contentStart] = `%%{init: ${JSON.stringify(ordered)}}%%`;
-								} else {
-									Object.assign(initObj, partial || {});
-									const ordered: any = {};
-									["scale","speed","scrollMode","metronome"].forEach(k => { if ((initObj as any)[k] !== undefined) ordered[k] = (initObj as any)[k]; });
-									lines.splice(contentStart, 0, `%%{init: ${JSON.stringify(ordered)}}%%`);
-                                }
-                            }
-                            await this.app.vault.modify(file, lines.join("\n"));
-						} catch (e) {
-							console.warn("alphatex init write-back failed", e);
-						}
-					};
+					// remove legacy two-way binding to init line (UI options now runtime-only)
+					const onUpdateInit = async (_partial: any) => { /* no-op by design */ };
 
 					const block = mountAlphaTexBlock(el, source, this.resources, {
 						scale: 1.0,

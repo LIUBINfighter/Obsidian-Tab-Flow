@@ -184,14 +184,11 @@ export function mountAlphaTexBlock(
 		api.metronomeVolume = merged.metronome ? 1 : 0;
 	}
 
-	// Configure scroll element similar to TabView
-	try {
-		const scrollEl = rootEl.closest(
-			".markdown-reading-view,.markdown-preview-view,.view-content,.workspace-leaf-content"
-		) as HTMLElement | null;
-		(api.settings.player as any).scrollElement = scrollEl || "html,body";
-		api.updateSettings();
-	} catch {}
+    // Configure scroll element to be this block wrapper only (avoid full-page scroll)
+    try {
+        (api.settings.player as any).scrollElement = wrapper as unknown as HTMLElement;
+        api.updateSettings();
+    } catch {}
 
 	// render via convenient tex method; fallback to manual importer if needed
 	let destroyed = false;
@@ -321,7 +318,6 @@ export function mountAlphaTexBlock(
 			api.metronomeVolume = enabled ? 1 : 0;
 			merged.metronome = enabled;
 			try { metroBtn.classList.toggle("is-active", !!enabled); } catch {}
-			defaults?.onUpdateInit?.({ metronome: enabled });
 		};
 
 		// component-level visibility via init.ui.components (defaults to true)
@@ -330,13 +326,106 @@ export function mountAlphaTexBlock(
 			return typeof c?.[key] === "boolean" ? !!c?.[key] : def;
 		};
 
-		if (shouldShow("playPause", true)) controlsEl.appendChild(playPauseBtn);
-		if (shouldShow("stop", true)) controlsEl.appendChild(stopBtn);
+		// Minimal renderers for in-block controls
+		const renderers: Record<string, () => void> = {
+			playPause: () => controlsEl.appendChild(playPauseBtn),
+			stop: () => controlsEl.appendChild(stopBtn),
+			metronome: () => controlsEl.appendChild(metroBtn),
+			locateCursor: () => {
+				const btn = document.createElement("button");
+				btn.className = "clickable-icon";
+				btn.setAttribute("type", "button");
+				const icon = document.createElement("span");
+				setIcon(icon, "lucide-crosshair");
+				btn.appendChild(icon);
+				btn.setAttribute("aria-label", "滚动到光标");
+				btn.onclick = () => { try { (api as any).scrollToCursor?.(); } catch {} };
+				controlsEl.appendChild(btn);
+			},
+			layoutToggle: () => {
+				const btn = document.createElement("button");
+				btn.className = "clickable-icon";
+				btn.setAttribute("type", "button");
+				const icon = document.createElement("span");
+				const isHorizontal = (api.settings?.display as any)?.layoutMode === (alphaTab as any).LayoutMode?.Horizontal;
+				setIcon(icon, isHorizontal ? "lucide-panels-top-left" : "lucide-layout");
+				btn.appendChild(icon);
+				btn.setAttribute("aria-label", isHorizontal ? "布局: 横向" : "布局: 页面");
+				btn.onclick = () => {
+					try {
+						const current = (api.settings?.display as any)?.layoutMode;
+						const next = current === (alphaTab as any).LayoutMode?.Page ? (alphaTab as any).LayoutMode?.Horizontal : (alphaTab as any).LayoutMode?.Page;
+						(api.settings.display as any).layoutMode = next;
+						api.updateSettings();
+						api.render();
+						setIcon(icon, next === (alphaTab as any).LayoutMode?.Horizontal ? "lucide-panels-top-left" : "lucide-layout");
+						btn.setAttribute("aria-label", next === (alphaTab as any).LayoutMode?.Horizontal ? "布局: 横向" : "布局: 页面");
+					} catch {}
+				};
+				controlsEl.appendChild(btn);
+			},
+			toTop: () => {
+				const btn = document.createElement("button");
+				btn.className = "clickable-icon";
+				btn.setAttribute("type", "button");
+				const icon = document.createElement("span");
+				setIcon(icon, "lucide-chevrons-up");
+				btn.appendChild(icon);
+				btn.setAttribute("aria-label", "回到顶部");
+				btn.onclick = () => { try { (api as any).tickPosition = 0; (api as any).scrollToCursor?.(); } catch {} };
+				controlsEl.appendChild(btn);
+			},
+			toBottom: () => {
+				const btn = document.createElement("button");
+				btn.className = "clickable-icon";
+				btn.setAttribute("type", "button");
+				const icon = document.createElement("span");
+				setIcon(icon, "lucide-chevrons-down");
+				btn.appendChild(icon);
+				btn.setAttribute("aria-label", "回到底部");
+				btn.onclick = () => {
+					try {
+						const score: any = (api as any).score;
+						const masterBars = score?.masterBars || [];
+						if (!masterBars.length) return;
+						const last = masterBars[masterBars.length - 1];
+						const endTick = last.start + last.calculateDuration();
+						(api as any).tickPosition = endTick;
+						(api as any).scrollToCursor?.();
+					} catch {}
+				};
+				controlsEl.appendChild(btn);
+			},
+		};
+
+		// Supported key set for in-block controls
+		const supportedKeys = Object.keys(renderers);
+		const PLAYBAR_DEFAULT_ORDER = [
+			"playPause","stop","metronome","countIn","tracks","refresh",
+			"locateCursor","layoutToggle","exportMenu","toTop","toBottom","openSettings",
+			"progressBar","speed","staveProfile","zoom","audioPlayer"
+		];
+		const parseOrder = (): string[] => {
+			const ord = uiOverride?.order as unknown;
+			if (!ord) return ["playPause","stop","metronome"]; // default minimal
+			if (Array.isArray(ord)) return (ord as string[]).filter(k => supportedKeys.includes(k));
+			if (typeof ord === "string") {
+				const nums = ord.split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+				const looksOneBased = nums.some(n => n === 1) || nums.every(n => n > 0);
+				const idx = nums.map(n => looksOneBased ? n - 1 : n).filter(n => n >= 0 && n < PLAYBAR_DEFAULT_ORDER.length);
+				return idx.map(i => PLAYBAR_DEFAULT_ORDER[i]).filter(k => supportedKeys.includes(k));
+			}
+			return ["playPause","stop","metronome"]; // fallback
+		};
+		const orderList = parseOrder();
+		// If order didn't resolve to supported keys, fall back to show available ones respecting components
+		const finalKeys = orderList.length > 0 ? orderList : ["playPause","stop","metronome"]; 
+		finalKeys.forEach(key => { if (shouldShow(key, true)) try { renderers[key]?.(); } catch {} });
 		// controlsEl.appendChild(speedIcon);
 		// controlsEl.appendChild(speedInput);
 		// controlsEl.appendChild(zoomIcon);
 		// controlsEl.appendChild(zoomInput);
-		if (shouldShow("metronome", true)) controlsEl.appendChild(metroBtn);
+		// metronome already added by ordered renderers when requested
     } else if (playerEnabled && !resources.soundFontUri) {
         // compact note, no controls container
         const note = document.createElement("div");
