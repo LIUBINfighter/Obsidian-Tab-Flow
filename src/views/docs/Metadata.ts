@@ -45,7 +45,8 @@ export default {
 		container.createEl('p', { text: '下方示例包含常见的元数据字段，并在点号（.）后提供了两小节内容用于快速验证。' });
 
 		if (plugin) {
-			createAlphaTexPlayground(plugin, container, SAMPLE, {});
+			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
+			createAlphaTexPlayground(plugin, playgroundHost, SAMPLE, {});
 		} else {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染。' });
 		}

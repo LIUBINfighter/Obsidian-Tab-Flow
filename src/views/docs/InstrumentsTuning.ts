@@ -24,7 +24,8 @@ export default {
 		container.createEl('p', { text: '下面提供一个最小示例：电吉他音色 + 标准六弦调弦。可尝试改为不同音色或改变某根弦的音高，听听差异。' });
 
 		if (plugin) {
-			createAlphaTexPlayground(plugin, container, SAMPLE, {});
+			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
+			createAlphaTexPlayground(plugin, playgroundHost, SAMPLE, {});
 		} else {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染。' });
 		}

@@ -31,7 +31,8 @@ export default {
 		container.createEl('p', { text: '下面给出一个示例片段（Canon Rock）。可直接修改文本，预览会自动刷新。' });
 
 		if (plugin) {
-			createAlphaTexPlayground(plugin, container, SAMPLE, {});
+			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
+			createAlphaTexPlayground(plugin, playgroundHost, SAMPLE, {});
 		} else {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染。' });
 		}

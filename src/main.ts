@@ -359,7 +359,7 @@ export default class MyPlugin extends Plugin {
 						scrollMode: "Continuous",
 						metronome: false,
 						onUpdateInit,
-						setUiOverride: (override) => {
+						setUiOverride: (override: { components?: Record<string, boolean>; order?: string[] } | null) => {
 							try { (this as any).runtimeUiOverride = override || null; } catch {}
 							try { this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
 						},

@@ -117,8 +117,11 @@ export class EmbeddableMarkdownEditor {
 			try {
 				// 保护：在视图未就绪或已卸载时不调用后续逻辑，避免 selection 相关错误
 				const hasView = !!(update as any)?.view;
+				const root = (update as any)?.view?.root;
+				const rootOk = !!root && typeof root.getSelection === 'function';
+				const inDom = !!this.editorEl?.isConnected;
 				const stillLoaded = !!(this as any).editor?.activeCM || !!(this as any)._loaded;
-				if (!hasView || !stillLoaded) return;
+				if (!hasView || !rootOk || !inDom || !stillLoaded) return;
 				originalOnUpdate?.(update, changed);
 				if (changed) this.options.onChange?.(update);
 			} catch {
