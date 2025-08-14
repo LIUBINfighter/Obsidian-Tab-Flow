@@ -1,8 +1,9 @@
 // 示例面板：InMarkdownRender
 import type MyPlugin from '../../main';
 import type { AlphaTabResources } from '../../services/ResourceLoaderService';
+import { createEmbeddableMarkdownEditor } from '../../editor/EmbeddableMarkdownEditor';
 
-const SAMPLE = `%%{init: {"scale":1,"speed":2,"scrollMode":"Continuous","metronome":false,"player":"disable"}}%%
+const SAMPLE = `%%{init: {"scale":1,"speed":2,"scrollMode":"Continuous","metronome":false,"player":"enable"}}%%
 
 \\title "Canon Rock"
 \\subtitle "JerryC"
@@ -20,11 +21,12 @@ export default {
 
 	// Stack vertically: editor on top, preview below
 	const editorWrap = wrapper.createDiv({ cls: 'inmarkdown-editor' });
-	// textarea for alphatex source (top)
-	const ta = editorWrap.createEl('textarea');
-	ta.style.width = '100%';
-	ta.style.height = '220px';
-	ta.value = SAMPLE;
+	const editorContainer = editorWrap.createDiv({ cls: 'inmarkdown-editor-cm' });
+	const embedded = plugin ? createEmbeddableMarkdownEditor(plugin.app, editorContainer, {
+		value: SAMPLE,
+		placeholder: '输入 AlphaTex 内容...',
+		onChange: () => scheduleRender(),
+	}) : null;
 
 	// preview container (bottom)
 	const previewWrap = wrapper.createDiv({ cls: 'inmarkdown-preview tabflow-doc-main-content' });
@@ -70,7 +72,7 @@ export default {
 			// eslint-disable-next-line @typescript-eslint/no-var-requires
 			const { mountAlphaTexBlock } = require('../../markdown/AlphaTexBlock');
 			try {
-				mounted = mountAlphaTexBlock(previewWrap, ta.value, resources, {
+				mounted = mountAlphaTexBlock(previewWrap, embedded?.value || '', resources, {
 					scale: 1,
 					speed: 1,
 					scrollMode: 'Continuous',
@@ -85,12 +87,12 @@ export default {
 		// initial render
 		renderPreview();
 
-		// re-render on change with debounce
-		let t: number | null = null;
-		ta.addEventListener('input', () => {
-			if (t) clearTimeout(t);
-			t = window.setTimeout(() => renderPreview(), 350);
-		});
+		// re-render debounce helper for embedded editor
+		let debounceTimer: number | null = null;
+		function scheduleRender() {
+			if (debounceTimer) clearTimeout(debounceTimer);
+			debounceTimer = window.setTimeout(() => renderPreview(), 350);
+		}
 
 		// cleanup when container is removed
 		// observe DOM removal to destroy mounted block

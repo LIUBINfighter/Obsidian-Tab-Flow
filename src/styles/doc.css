@@ -58,6 +58,37 @@
 	padding: 16px;
 }
 
+/* Embedded AlphaTex markdown editor styling */
+.inmarkdown-editor-cm {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	padding: 6px 8px;
+	margin-bottom: 12px;
+	position: relative;
+}
+.inmarkdown-editor-cm:focus-within {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
+}
+.inmarkdown-editor-cm .cm-editor {
+	background: transparent;
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	line-height: 1.5;
+	max-height: 260px; /* keep a reasonable height */
+	overflow: auto;
+}
+.inmarkdown-editor-cm .cm-scroller {
+	padding: 4px 2px;
+}
+.inmarkdown-editor-cm .cm-content {
+	padding: 0;
+}
+.inmarkdown-preview {
+	margin-top: 4px;
+}
+
 .tabflow-doc-content {
 	min-height: 320px;
 	padding: 16px;
