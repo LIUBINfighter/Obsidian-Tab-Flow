@@ -704,6 +704,18 @@ export class SettingTab extends PluginSettingTab {
 											await leaf.setViewState({ type: 'alphatex-doc-view', active: true });
 											this.app.workspace.revealLeaf(leaf);
 										}
+										// 尝试关闭设置面板（优先 API），以便文档视图成为唯一活动视图
+										try {
+											if ((this.app as any).setting && typeof (this.app as any).setting.close === 'function') {
+												(this.app as any).setting.close();
+											} else if ((this.app as any).workspace && typeof (this.app as any).workspace.detachLeavesOfType === 'function') {
+												(this.app as any).workspace.detachLeavesOfType('settings');
+											} else {
+												console.debug('[SettingTab] no API to close settings view');
+											}
+										} catch (closeErr) {
+											console.warn('[SettingTab] failed to close settings view', closeErr);
+										}
 									} else {
 										// commands API 不可用，直接打开视图
 										const leaf = this.app.workspace.getLeaf(true);
