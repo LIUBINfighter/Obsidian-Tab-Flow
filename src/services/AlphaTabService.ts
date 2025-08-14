@@ -62,6 +62,7 @@ export class AlphaTabService {
 
         this.registerCommandHandlers();
         this.registerApiListeners();
+        this.registerWorkspaceEvents();
     }
 
     private registerCommandHandlers() {
@@ -267,7 +268,33 @@ export class AlphaTabService {
     private registerApiListeners() {
         this.api.playerReady.on(() => this.eventBus.publish("状态:音频就绪"));
         this.api.error.on((err) => this.eventBus.publish("状态:错误", err));
+        
+        // 添加播放位置变化事件监听，用于进度条更新
+        this.api.playerPositionChanged.on((args) => {
+            this.eventBus.publish("状态:播放位置变化", {
+                currentTime: args.currentTime || 0,
+                endTime: args.endTime || 0
+            });
+        });
+        
         // 可继续补充其它 alphaTab 事件的监听和广播
+    }
+
+    private registerWorkspaceEvents() {
+        // 监听手动刷新事件 - 使用事件总线而不是 workspace
+        this.eventBus.subscribe("命令:手动刷新", () => {
+            try {
+                console.debug("[AlphaTabService] 收到手动刷新事件");
+                // 强制重新渲染
+                if (this.api && (this.api as any).score) {
+                    this.api.render();
+                }
+                // 重新配置滚动元素
+                this.configureScrollElement();
+            } catch (e) {
+                console.warn("[AlphaTabService] 手动刷新失败:", e);
+            }
+        });
     }
 
     public async loadScore(fileData: Uint8Array) {

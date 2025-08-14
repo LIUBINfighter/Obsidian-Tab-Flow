@@ -344,11 +344,9 @@ private isMessy(str: string): boolean {
 			// 确保挂载到容器并显示，添加调试信息
 			this.containerEl.appendChild(playBar);
 			
-			// 添加播放位置变化事件监听，更新进度条
-			if (this._api) {
-				// 监听播放位置变化事件
+			// 直接监听 AlphaTab API 的播放位置变化事件，更新进度条
+			if (this._api && this._api.playerPositionChanged) {
 				this._api.playerPositionChanged.on((args) => {
-					// 手动触发更新，不需要额外操作，因为PlayBar组件会自动调用getCurrentTime
 					// 在下一帧更新UI，避免频繁更新造成性能问题
 					window.requestAnimationFrame(() => {
 						const progressFill = playBar.querySelector('.progress-fill') as HTMLElement;
@@ -357,7 +355,6 @@ private isMessy(str: string): boolean {
 						const totalTimeDisplay = playBar.querySelector('.total-time') as HTMLElement;
 						
 						if (progressFill && progressHandle && currentTimeDisplay && totalTimeDisplay) {
-							// 使用 playerPositionChanged 事件提供的时间信息
 							const currentTime = args.currentTime || 0;
 							const duration = args.endTime || 0;
 							
@@ -373,7 +370,7 @@ private isMessy(str: string): boolean {
 								// 设置手柄位置为进度条填充的末端
 								const handlePos = progress;
 								progressHandle.style.left = `${handlePos}%`;
-                        }
+							}
 						}
 					});
 				});
@@ -470,6 +467,21 @@ private isMessy(str: string): boolean {
 		// 布局切换后更新滚轮绑定
 		this.eventBus.subscribe("命令:切换布局", () => {
 			setTimeout(() => this.updateWheelToHorizontalBinding(), 10);
+		});
+
+		// 监听手动刷新事件 - 使用事件总线
+		this.eventBus.subscribe("命令:手动刷新", () => {
+			try {
+				console.debug("[TabView] 收到手动刷新事件");
+				// 重新挂载播放栏
+				const existingPlayBar = document.querySelector('.play-bar');
+				if (existingPlayBar) existingPlayBar.remove();
+				mountPlayBar();
+				// 更新滚轮绑定
+				this.updateWheelToHorizontalBinding();
+			} catch (e) {
+				console.warn("[TabView] 手动刷新失败:", e);
+			}
 		});
 
         // 订阅加载乐谱：由视图读取文件并下发数据给 AlphaTabService
@@ -586,22 +598,8 @@ private isMessy(str: string): boolean {
                         setTimeout(() => {
                             const existingPlayBar = document.querySelector('.play-bar');
                             if (existingPlayBar) existingPlayBar.remove();
-                            // 复用顶部定义的 mountPlayBar，保证功能与时间显示完整
-                            const reMount = () => {
-                                // eslint-disable-next-line @typescript-eslint/no-var-requires
-                                const { createPlayBar } = require("../components/PlayBar");
-                                const playBar = createPlayBar({
-                                    app: this.app,
-                                    eventBus: this.eventBus,
-                                    initialPlaying: false,
-                                    getCurrentTime: () => 0,
-                                    getDuration: () => 0,
-                                    seekTo: () => {},
-                                    onAudioCreated: () => {},
-                                });
-                                this.containerEl.appendChild(playBar);
-                            };
-                            reMount();
+                            // 重新挂载播放栏，确保绑定到新的 API 实例
+                            mountPlayBar();
 
                             // 如开启了 DebugBar，则重建以绑定新 API
                             try {
@@ -825,31 +823,32 @@ private isMessy(str: string): boolean {
 									const settings: Record<string, any> = state.trackSettings;
 									allTracks.forEach(track => {
 										const s = settings[String(track.index)] || settings[track.index];
-										if (!s) return;
+										if (!s || typeof s !== 'object') return;
 										try {
-											if (typeof s.solo === 'boolean') {
-												this._api.changeTrackSolo([track], s.solo);
+											const trackSettings = s as any;
+											if (typeof trackSettings.solo === 'boolean') {
+												this._api.changeTrackSolo([track], trackSettings.solo);
 												// @ts-ignore
-												track.playbackInfo.isSolo = s.solo;
+												track.playbackInfo.isSolo = trackSettings.solo;
 											}
-											if (typeof s.mute === 'boolean') {
-												this._api.changeTrackMute([track], s.mute);
+											if (typeof trackSettings.mute === 'boolean') {
+												this._api.changeTrackMute([track], trackSettings.mute);
 												// @ts-ignore
-												track.playbackInfo.isMute = s.mute;
+												track.playbackInfo.isMute = trackSettings.mute;
 											}
-											if (typeof s.volume === 'number') {
-												const vol = Math.max(0, Math.min(16, s.volume));
+											if (typeof trackSettings.volume === 'number') {
+												const vol = Math.max(0, Math.min(16, trackSettings.volume));
 												this._api.changeTrackVolume([track], vol / 16);
 												// @ts-ignore
 												track.playbackInfo.volume = vol;
 											}
-											if (typeof s.transpose === 'number') {
-												const tr = Math.max(-12, Math.min(12, s.transpose));
+											if (typeof trackSettings.transpose === 'number') {
+												const tr = Math.max(-12, Math.min(12, trackSettings.transpose));
 												this._api.changeTrackTranspositionPitch([track], tr);
 											}
-											if (typeof s.transposeAudio === 'number') {
+											if (typeof trackSettings.transposeAudio === 'number') {
 												// @ts-ignore
-												track.playbackInfo.transposeAudio = s.transposeAudio;
+												track.playbackInfo.transposeAudio = trackSettings.transposeAudio;
 											}
 										} catch {}
 									});

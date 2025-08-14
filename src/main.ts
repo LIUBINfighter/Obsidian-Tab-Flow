@@ -337,11 +337,11 @@ export default class MyPlugin extends Plugin {
 						onUpdateInit,
 						setUiOverride: (override: { components?: Record<string, boolean>; order?: string[] | string } | null) => {
 							try { (this as any).runtimeUiOverride = override || null; } catch {}
-							try { this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+							try { this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { /* empty */ }
 						},
 						clearUiOverride: () => {
-							try { (this as any).runtimeUiOverride = null; } catch {}
-							try { this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch {}
+							try { (this as any).runtimeUiOverride = null; } catch { /* empty */ }
+							try { this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { /* empty */ }
 						},
 					});
 					const child = new MarkdownRenderChild(el);
@@ -409,41 +409,10 @@ export default class MyPlugin extends Plugin {
 						});
 				});
 
-				if (file instanceof TFile && isGuitarProFile(file.extension)) {
+				// Preview 菜单项 - 在当前面板预览
+				if (file instanceof TFile) {
 					menu.addItem((item) => {
-						item.setTitle("Open as Guitar Tab (AlphaTab)")
-							.setIcon("music")
-							.onClick(async () => {
-								const leaf = this.app.workspace.getLeaf(false);
-								await leaf.setViewState({
-									type: VIEW_TYPE_TAB,
-									state: { file: file.path },
-								});
-								this.app.workspace.revealLeaf(leaf); // 确保新叶子处于活动状态
-							});
-					});
-				}
-
-				// 为 AlphaTex 文件添加专门的菜单项
-				if (file instanceof TFile && isAlphaTexFile(file.extension)) {
-					menu.addItem((item) => {
-						item.setTitle("Open as AlphaTex Tab")
-							.setIcon("music")
-							.onClick(async () => {
-								const leaf = this.app.workspace.getLeaf(false);
-								await leaf.setViewState({
-									type: VIEW_TYPE_TAB,
-									state: { file: file.path },
-								});
-								this.app.workspace.revealLeaf(leaf);
-							});
-					});
-				}
-
-				// 通用预览菜单项 - 支持所有文件类型
-				if (file instanceof TFile && (isSupportedTabFile(file.extension) || !file.extension)) {
-					menu.addItem((item) => {
-						item.setTitle("Preview in AlphaTab")
+						item.setTitle("Preview")
 							.setIcon("eye")
 							.onClick(async () => {
 								const leaf = this.app.workspace.getLeaf(false);
@@ -452,6 +421,44 @@ export default class MyPlugin extends Plugin {
 									state: { file: file.path },
 								});
 								this.app.workspace.revealLeaf(leaf);
+							});
+					});
+				}
+
+				// Open editor & Preview 菜单项 - 左栏编辑器，右栏预览
+				if (file instanceof TFile) {
+					menu.addItem((item) => {
+						item.setTitle("Open editor & Preview")
+							.setIcon("layout-sidebar-right")
+							.onClick(async () => {
+								// 在左栏打开默认编辑器
+								const leftLeaf = this.app.workspace.getLeaf(false);
+								await leftLeaf.openFile(file);
+								
+								// 在右栏打开 TabView 预览
+								const rightLeaf = this.app.workspace.getLeaf('split', 'vertical');
+								await rightLeaf.setViewState({
+									type: VIEW_TYPE_TAB,
+									state: { file: file.path },
+								});
+								this.app.workspace.revealLeaf(rightLeaf);
+								
+								// 手动触发刷新事件，确保 TabView 正确加载
+								setTimeout(() => {
+									// 通过全局事件总线触发刷新（如果存在的话）
+									try {
+										// 尝试获取右栏 TabView 的事件总线并触发刷新
+										const tabViews = this.app.workspace.getLeavesOfType(VIEW_TYPE_TAB);
+										tabViews.forEach(leaf => {
+											const view = leaf.view as any;
+											if (view && view.eventBus && typeof view.eventBus.publish === 'function') {
+												view.eventBus.publish("命令:手动刷新");
+											}
+										});
+									} catch (e) {
+										console.warn("[Main] 手动刷新事件触发失败:", e);
+									}
+								}, 50);
 							});
 					});
 				}
