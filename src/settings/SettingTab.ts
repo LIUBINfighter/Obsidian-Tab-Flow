@@ -481,11 +481,9 @@ export class SettingTab extends PluginSettingTab {
 						left.createEl('strong', { text: m.label });
 						if (m.desc) left.createSpan({ text: ` - ${m.desc}`, attr: { style: 'color:var(--text-muted);font-size:0.9em;' } });
 						const right = card.createDiv({ attr: { style: 'display:flex; align-items:center; gap:6px;' } });
-						const upBtn = right.createEl('button');
-						const upIcon = upBtn.createSpan();
+						const upIcon = right.createSpan({ cls: 'icon-clickable', attr: { 'aria-label': '上移', role: 'button', tabindex: '0' } });
 						(require('obsidian') as any).setIcon(upIcon, 'lucide-arrow-up');
-						const downBtn = right.createEl('button');
-						const downIcon = downBtn.createSpan();
+						const downIcon = right.createSpan({ cls: 'icon-clickable', attr: { 'aria-label': '下移', role: 'button', tabindex: '0' } });
 						(require('obsidian') as any).setIcon(downIcon, 'lucide-arrow-down');
 						new Setting(right).addToggle(t => {
 							const current = !!(comp as any)[key];
@@ -498,7 +496,7 @@ export class SettingTab extends PluginSettingTab {
 							if (m.disabled) (t as any).toggleEl.querySelector('input')?.setAttribute('disabled', 'true');
 						});
 
-						upBtn.onclick = async () => {
+						const moveUp = async () => {
 							const cur = getOrder();
 							const i = cur.indexOf(String(key));
 							if (i > 0) {
@@ -510,7 +508,7 @@ export class SettingTab extends PluginSettingTab {
 								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
 							}
 						};
-						downBtn.onclick = async () => {
+						const moveDown = async () => {
 							const cur = getOrder();
 							const i = cur.indexOf(String(key));
 							if (i >= 0 && i < cur.length - 1) {
@@ -522,6 +520,15 @@ export class SettingTab extends PluginSettingTab {
 								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
 							}
 						};
+
+						upIcon.addEventListener('click', () => { moveUp(); });
+						upIcon.addEventListener('keydown', (e: KeyboardEvent) => {
+							if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveUp(); }
+						});
+						downIcon.addEventListener('click', () => { moveDown(); });
+						downIcon.addEventListener('keydown', (e: KeyboardEvent) => {
+							if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveDown(); }
+						});
 
 						card.addEventListener('dragstart', (e) => {
 							draggingKey = String(key);

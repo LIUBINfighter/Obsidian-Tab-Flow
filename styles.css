@@ -1,4 +1,4 @@
-/* build: build */
+/* build: dev */
 /* --- TrackModal.css --- */
 
 .tracks-modal .setting-item {
@@ -337,6 +337,39 @@
 
 .tabflow-card button:hover {
 	background: var(--background-secondary-alt);
+}
+
+/* Clickable icon style to replace buttons for order controls */
+.tabflow-card .icon-clickable {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	border-radius: 6px;
+	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.tabflow-card .icon-clickable:hover {
+	/* Accent-tinted hover background */
+	background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-secondary-alt));
+	color: var(--text-on-accent, var(--text-normal));
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 35%, transparent) inset;
+}
+
+.tabflow-card .icon-clickable:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+.tabflow-card .icon-clickable:active {
+	background: color-mix(in srgb, var(--interactive-accent) 28%, var(--background-secondary-alt));
+	color: var(--text-on-accent, var(--text-normal));
 }
 
 .tabflow-card.insert-before {
