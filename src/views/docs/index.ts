@@ -11,6 +11,7 @@ import NoteEffects from './NoteEffects';
 import Lyrics from './Lyrics';
 import Percussion from './Percussion';
 import SyncPoints from './SyncPoints';
+import ExampleProgression from './ExampleProgression';
 
 export interface DocPanel {
   id: string;
@@ -32,6 +33,7 @@ export const panels: DocPanel[] = [
   Lyrics,
   Percussion,
   SyncPoints,
+  ExampleProgression,
 ];
 
 export default panels;
