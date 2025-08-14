@@ -1,4 +1,5 @@
 import type MyPlugin from '../main';
+import { setIcon, normalizePath, TFile } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEditor';
 
@@ -46,6 +47,43 @@ export function createAlphaTexPlayground(
 		value: initialSource,
 		placeholder,
 		onChange: () => scheduleRender(),
+	});
+
+	// Editor toolbar (top-right icons)
+	const toolbar = editorWrap.createDiv({ cls: 'inmarkdown-editor-toolbar' });
+	const btnCopy = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
+	const iCopy = document.createElement('span'); setIcon(iCopy, 'copy'); btnCopy.appendChild(iCopy); btnCopy.setAttr('aria-label', '复制到剪贴板');
+	btnCopy.addEventListener('click', async () => {
+		try {
+			await navigator.clipboard.writeText(embedded.value);
+		} catch {
+			try {
+				const ta = document.createElement('textarea'); ta.value = embedded.value; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+			} catch {}
+		}
+	});
+
+	const btnReset = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
+	const iReset = document.createElement('span'); setIcon(iReset, 'rotate-ccw'); btnReset.appendChild(iReset); btnReset.setAttr('aria-label', '重置为默认内容');
+	btnReset.addEventListener('click', () => { try { embedded.set(initialSource, false); scheduleRender(); } catch {} });
+
+	const btnNewNote = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
+	const iNew = document.createElement('span'); setIcon(iNew, 'file-plus'); btnNewNote.appendChild(iNew); btnNewNote.setAttr('aria-label', '根据此文本创建新的笔记');
+	btnNewNote.addEventListener('click', async () => {
+		try {
+			const now = new Date();
+			const pad = (n: number) => String(n).padStart(2, '0');
+			const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+			const folder = 'Alphatex Playground';
+			const baseName = `Playground-${stamp}.md`;
+			const filePath = normalizePath(`${folder}/${baseName}`);
+			// ensure folder
+			try { if (!(await plugin.app.vault.adapter.exists(folder))) await plugin.app.vault.createFolder(folder); } catch {}
+			const content = `\`\`\`alphatex\n${embedded.value}\n\`\`\``.replace(/`/g, '`');
+			const file = await plugin.app.vault.create(filePath, content) as TFile;
+			const leaf = plugin.app.workspace.getLeaf(true);
+			await leaf.openFile(file);
+		} catch (e) { console.warn('[Playground] 创建笔记失败', e); }
 	});
 	if (readOnly) {
 		// 简单只读（利用 CodeMirror DOM 属性）
@@ -104,7 +142,9 @@ export function createAlphaTexPlayground(
 				...alphaTabOptions,
 			});
 		} catch (e) {
-			previewWrap.createEl('div', { text: '渲染失败：' + String(e) });
+			console.warn('[Playground] AlphaTex 渲染失败:', e);
+			const err = previewWrap.createDiv({ cls: 'alphatex-block' });
+			err.createEl('div', { cls: 'alphatex-error', text: 'AlphaTab 引擎报错：' + String((e as any)?.message || e) });
 		}
 	}
 

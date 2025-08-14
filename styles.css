@@ -104,6 +104,7 @@
 	padding: 12px 16px;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
+
 .tabflow-doc-header h2 {
 	margin: 0;
 }
@@ -115,16 +116,22 @@
 	align-items: flex-start;
 	margin: 12px 16px 0 16px;
 }
-.tabflow-doc-layout.is-narrow { display: block; }
+
+.tabflow-doc-layout.is-narrow {
+	display: block;
+}
+
 .tabflow-doc-left {
 	width: 220px;
 	min-width: 160px;
 	max-width: 30%;
 }
+
 .tabflow-doc-main {
 	flex: 1 1 auto;
 	background: transparent;
-	min-width: 0; /* allow content to shrink within flex to avoid overflow */
+	min-width: 0;
+	/* allow content to shrink within flex to avoid overflow */
 }
 
 /* Navigation styling */
@@ -134,11 +141,13 @@
 	border-radius: 6px;
 	padding: 8px;
 }
+
 .tabflow-nav ul {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
+
 .tabflow-nav .tab-item {
 	padding: 8px 10px;
 	margin: 4px 0;
@@ -146,9 +155,11 @@
 	cursor: default;
 	color: var(--text-normal);
 }
+
 .tabflow-nav .tab-item:hover {
 	background: var(--background-modifier-hover);
 }
+
 .tabflow-nav .tab-item--active {
 	background: var(--interactive-accent);
 	color: var(--text-on-accent, #fff);
@@ -164,20 +175,23 @@
 
 /* Embedded AlphaTex markdown editor styling */
 .alphatex-playground {
-    display: flex;
-    gap: 12px;
+	display: flex;
+	gap: 12px;
 }
+
 .alphatex-playground.is-vertical {
-    flex-direction: column;
+	flex-direction: column;
 }
+
 .alphatex-playground.is-horizontal {
-    flex-direction: row;
-    align-items: stretch;
+	flex-direction: row;
+	align-items: stretch;
 }
+
 .alphatex-playground.is-horizontal .inmarkdown-editor,
 .alphatex-playground.is-horizontal .inmarkdown-preview {
-    flex: 1 1 0;
-    min-width: 0;
+	flex: 1 1 0;
+	min-width: 0;
 }
 
 .inmarkdown-editor-cm {
@@ -185,34 +199,67 @@
 	border-radius: 6px;
 	background: var(--background-primary);
 	padding: 6px 8px;
-    margin-bottom: 12px;
+	margin-bottom: 12px;
 	position: relative;
 }
+
+.inmarkdown-editor-toolbar {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	display: flex;
+	gap: 6px;
+}
+
+.inmarkdown-editor-toolbar .clickable-icon {
+	padding: 4px;
+	border-radius: 4px;
+}
+
+.inmarkdown-editor-toolbar .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+}
+
 .inmarkdown-editor-cm:focus-within {
 	border-color: var(--interactive-accent);
 	box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
 }
+
 .inmarkdown-editor-cm .cm-editor {
 	background: transparent;
 	font-family: var(--font-monospace);
 	font-size: 13px;
 	line-height: 1.5;
-	max-height: 260px; /* keep a reasonable height */
+	max-height: 260px;
+	/* keep a reasonable height */
 	overflow: auto;
 }
+
 .inmarkdown-editor-cm .cm-scroller {
 	padding: 4px 2px;
 }
+
 .inmarkdown-editor-cm .cm-content {
 	padding: 0;
 }
-.inmarkdown-preview { margin-top: 4px; }
-.alphatex-playground.is-horizontal .inmarkdown-preview { margin-top: 0; }
+
+.inmarkdown-preview {
+	margin-top: 4px;
+}
+
+.alphatex-playground.is-horizontal .inmarkdown-preview {
+	margin-top: 0;
+}
 
 /* Viewport fallback: narrow screens force vertical */
 @media (max-width: 720px) {
-    .alphatex-playground.is-horizontal { flex-direction: column; }
-    .alphatex-playground.is-horizontal .inmarkdown-preview { margin-top: 4px; }
+	.alphatex-playground.is-horizontal {
+		flex-direction: column;
+	}
+
+	.alphatex-playground.is-horizontal .inmarkdown-preview {
+		margin-top: 4px;
+	}
 }
 
 .tabflow-doc-content {
@@ -223,6 +270,7 @@
 	max-width: 90ch;
 	margin: 12px 16px;
 }
+
 .tabflow-doc-markdown {
 	width: 100%;
 	box-sizing: border-box;
@@ -232,6 +280,7 @@
 	padding: 8px 16px;
 	border-top: 1px solid var(--background-modifier-border);
 }
+
 .playbar-placeholder {
 	color: var(--text-muted);
 }
@@ -242,7 +291,10 @@
 	gap: 16px;
 	align-items: stretch;
 }
-.tabflow-doc-layout.is-narrow { display: block; }
+
+.tabflow-doc-layout.is-narrow {
+	display: block;
+}
 
 /* Narrow mode (per-view): make left sidebar full width above content */
 .tabflow-doc-layout.is-narrow .tabflow-doc-left {
@@ -250,18 +302,22 @@
 	max-width: none;
 	margin-bottom: 12px;
 }
+
 .tabflow-doc-layout.is-narrow .tabflow-doc-main {
 	width: 100%;
 	box-sizing: border-box;
 }
+
 .tabflow-doc-left {
 	width: 240px;
 	min-width: 180px;
 }
+
 .tabflow-doc-main {
 	flex: 1 1 auto;
 	background: transparent;
-	min-width: 0; /* allow content to shrink within flex to avoid overflow */
+	min-width: 0;
+	/* allow content to shrink within flex to avoid overflow */
 }
 
 .tabflow-doc-nav {
@@ -270,6 +326,7 @@
 	border-radius: 6px;
 	padding: 8px;
 }
+
 .tabflow-doc-tab {
 	padding: 8px 10px;
 	border-radius: 4px;
@@ -277,9 +334,11 @@
 	color: var(--text-normal);
 	margin-bottom: 6px;
 }
+
 .tabflow-doc-tab:hover {
 	background: var(--background-modifier-hover);
 }
+
 .tabflow-doc-tab.active {
 	background: var(--background-modifier-success);
 	color: var(--interactive-accent);
@@ -297,71 +356,101 @@
 
 /* Host wrapper for each playground instance in docs */
 .doc-playground-host {
-    margin: 16px 0 20px 0;
-    /* enable container queries for responsive playground */
-    container-type: inline-size;
+	margin: 16px 0 20px 0;
+	/* enable container queries for responsive playground */
+	container-type: inline-size;
 }
 
 /* Container query: if host is narrow, force vertical */
 @container (max-width: 720px) {
-    .doc-playground-host .alphatex-playground.is-horizontal { flex-direction: column; }
-    .doc-playground-host .alphatex-playground.is-horizontal .inmarkdown-preview { margin-top: 4px; }
+	.doc-playground-host .alphatex-playground.is-horizontal {
+		flex-direction: column;
+	}
+
+	.doc-playground-host .alphatex-playground.is-horizontal .inmarkdown-preview {
+		margin-top: 4px;
+	}
 }
 
 /* Ensure AlphaTex containers do not exceed panel width */
-.alphatex-block { max-width: 100%; }
-.alphatex-score { width: 100%; max-width: 100%; }
-.alphatex-score svg { max-width: 100%; height: auto; }
+.alphatex-block {
+	max-width: 100%;
+}
+
+.alphatex-score {
+	width: 100%;
+	max-width: 100%;
+}
+
+.alphatex-score svg {
+	max-width: 100%;
+	height: auto;
+}
 
 /* In-panel prev/next navigation (Hugo-like) */
 .doc-nav {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-    align-items: stretch;
-    flex-wrap: nowrap;
+	display: flex;
+	gap: 12px;
+	margin-top: 20px;
+	align-items: stretch;
+	flex-wrap: nowrap;
 }
-.doc-nav.two .doc-nav-item { flex: 1 1 0; }
-.doc-nav.one .doc-nav-item { flex: 1 1 100%; }
+
+.doc-nav.two .doc-nav-item {
+	flex: 1 1 0;
+}
+
+.doc-nav.one .doc-nav-item {
+	flex: 1 1 100%;
+}
+
 .doc-nav-item {
-    padding: 14px 16px;
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 8px;
-    background: var(--background-secondary);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    min-height: 72px;
-    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+	padding: 14px 16px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	background: var(--background-secondary);
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	min-height: 72px;
+	transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
+
 .doc-nav-item:hover {
-    background: var(--background-modifier-hover);
-    border-color: var(--interactive-accent);
-    transform: translateY(-1px);
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+	transform: translateY(-1px);
 }
+
 .doc-nav-item.is-disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
+
 .doc-nav-item--prev {
-    justify-self: start;
+	justify-self: start;
 }
+
 .doc-nav-item--next {
-    justify-self: stretch;
-    text-align: left;
+	justify-self: stretch;
+	text-align: left;
 }
+
 .doc-nav-label {
 	font-size: 13px;
-    color: var(--text-muted);
+	color: var(--text-muted);
 }
+
 .doc-nav-title {
 	font-size: 16px;
-    font-weight: 600;
-    color: var(--text-normal);
+	font-weight: 600;
+	color: var(--text-normal);
 }
 
 @media (max-width: 600px) {
-    .doc-nav { flex-direction: column; }
+	.doc-nav {
+		flex-direction: column;
+	}
 }
 
 /* Responsive: keep single column */
@@ -370,22 +459,24 @@
 		padding: 12px;
 		margin: 8px;
 	}
+
 	/* Stack sidebar above main content on narrow screens */
 	.tabflow-doc-layout {
 		display: block;
 		margin: 8px 0;
 	}
+
 	.tabflow-doc-left {
 		width: 100%;
 		max-width: none;
 		margin-bottom: 12px;
 	}
+
 	.tabflow-doc-main {
 		width: 100%;
 		box-sizing: border-box;
 	}
 }
-
 /* --- play.css --- */
 /* 播放栏自定义按钮样式 */
 .play-bar {
