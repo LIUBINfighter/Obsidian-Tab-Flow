@@ -1,4 +1,4 @@
-name: Release Obsidian plugin interactive-tabs
+name: Release Obsidian plugin tab-flow
 
 on:
   push:
@@ -24,9 +24,28 @@ jobs:
 
       - name: Package plugin
         run: |
-          mkdir interactive-tabs
-          cp main.js manifest.json styles.css interactive-tabs/
-          zip -r interactive-tabs.zip interactive-tabs/
+          mkdir tab-flow
+          cp main.js manifest.json styles.css tab-flow/
+          zip -r tab-flow.zip tab-flow/
+
+      - name: Package assets
+        run: |
+          # 创建资产目录结构
+          mkdir -p assets-package/assets/alphatab/font
+          mkdir -p assets-package/assets/alphatab/soundfont
+          
+          # 复制必要资产文件
+          cp assets/alphatab/alphaTab.worker.mjs assets-package/assets/alphatab/
+          cp assets/alphatab/alphatab.js assets-package/assets/alphatab/
+          cp assets/alphatab/soundfont/sonivox.sf2 assets-package/assets/alphatab/soundfont/
+          cp assets/alphatab/font/Bravura.woff2 assets-package/assets/alphatab/font/
+          cp assets/alphatab/font/Bravura.woff assets-package/assets/alphatab/font/
+          cp assets/alphatab/font/bravura_metadata.json assets-package/assets/alphatab/font/
+          
+          # 创建资产压缩包
+          cd assets-package
+          zip -r ../assets.zip .
+          cd ..
 
       - name: Create release
         env:
@@ -37,4 +56,4 @@ jobs:
           gh release create "$tag" \
             --title="$tag" \
             --draft \
-            main.js manifest.json styles.css interactive-tabs.zip
+            main.js manifest.json styles.css tab-flow.zip assets.zip

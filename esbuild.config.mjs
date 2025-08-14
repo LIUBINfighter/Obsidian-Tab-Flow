@@ -9,13 +9,15 @@ if you want to view the source, please visit the github repository of this plugi
 */
 `;
 
-const prod = (process.argv[2] === "production");
+// 从所有 CLI 参数检测标志
+const prod = process.argv.includes("production");
+const refactor = process.argv.includes("--refactor");
 
 const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ["main.ts"],
+	entryPoints: [refactor ? "src-refactor/main.ts" : "src/main.ts"],
 	bundle: true,
 	external: [
 		"obsidian",

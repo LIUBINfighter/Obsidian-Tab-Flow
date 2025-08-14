@@ -1,0 +1,129 @@
+.itabs-settings-tabs {
+	display: flex;
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 1em;
+	gap: 0.5em;
+}
+
+.itabs-settings-tab {
+	background: none;
+	border: none;
+	padding: 0.5em 1.5em;
+	cursor: pointer;
+	font-size: 1em;
+	color: var(--text-normal);
+	border-radius: 0.5em 0.5em 0 0;
+	transition: background 0.2s, color 0.2s;
+}
+
+.itabs-settings-tab.active {
+	border-bottom: 2px solid var(--interactive-accent);
+	font-weight: bold;
+	color: var(--interactive-accent);
+	background: var(--background-secondary-alt);
+}
+
+.itabs-settings-tab:hover:not(.active) {
+	background: var(--background-secondary);
+}
+
+.itabs-settings-contents {
+	padding: 1em 0;
+}
+
+/* 统一去除 setting-item 顶部多余分隔线 */
+.itabs-settings-contents .setting-item.mod-toggle {
+	border-top: none !important;
+	padding: 0;
+}
+
+/* 组件卡片细节样式 */
+.tabflow-card button {
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	border-radius: 6px;
+	padding: 4px 8px;
+}
+
+.tabflow-card button:hover {
+	background: var(--background-secondary-alt);
+}
+
+/* Clickable icon style to replace buttons for order controls */
+.tabflow-card .icon-clickable {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	border-radius: 6px;
+	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.tabflow-card .icon-clickable:hover {
+	/* Accent-tinted hover background */
+	background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-secondary-alt));
+	color: var(--text-on-accent, var(--text-normal));
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 35%, transparent) inset;
+}
+
+.tabflow-card .icon-clickable:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+.tabflow-card .icon-clickable:active {
+	background: color-mix(in srgb, var(--interactive-accent) 28%, var(--background-secondary-alt));
+	color: var(--text-on-accent, var(--text-normal));
+}
+
+.tabflow-card.insert-before {
+	box-shadow: 0 2px 0 0 var(--interactive-accent) inset;
+}
+
+.tabflow-card.insert-after {
+	box-shadow: 0 -2px 0 0 var(--interactive-accent) inset;
+}
+
+.tabflow-card.swap-target {
+	background: var(--background-modifier-hover);
+	outline: 2px dashed var(--interactive-accent);
+}
+
+.setting-item-description {
+	color: var(--text-muted);
+	font-size: 0.95em;
+	margin-bottom: 0.5em;
+}
+
+pre.setting-item-description {
+	background-color: var(--background-secondary);
+	padding: 10px;
+	border-radius: 5px;
+	overflow-x: auto;
+	font-family: monospace;
+	margin-top: 8px;
+	margin-bottom: 16px;
+}
+
+pre.setting-item-description code {
+	white-space: pre;
+	font-size: 0.85em;
+}
+
+ol.setting-item-description,
+ul.setting-item-description {
+	margin-left: 1.5em;
+	margin-bottom: 0.5em;
+}
+
+ol.setting-item-description li,
+ul.setting-item-description li {
+	margin-bottom: 0.2em;
+}

@@ -94,7 +94,19 @@ const createMockSelectElement = () => {
 
 export class Plugin {
   app: any;
-  manifest: any = { dir: '/mock/plugin/dir' };
+  manifest: any = { 
+    dir: '/mock/plugin/dir', 
+    id: 'interactive-tabs'
+  };
+  
+  constructor(app?: any, manifest?: any) {
+    if (app) {
+      this.app = app;
+    }
+    if (manifest) {
+      this.manifest = manifest;
+    }
+  }
   
   loadData = () => Promise.resolve({});
   saveData = () => Promise.resolve();
@@ -179,33 +191,68 @@ export class Modal {
   onClose() {}
 }
 
-export class App {
-  vault = {
-    adapter: {
-      exists: () => Promise.resolve(false),
-      getResourcePath: () => '/mock/path',
-      basePath: '/mock/path'
-    },
-    read: () => Promise.resolve(''),
-    readBinary: () => Promise.resolve(new ArrayBuffer(0)),
-    create: () => Promise.resolve(),
-    getAbstractFileByPath: () => null,
-    on: () => {},
-    off: () => {}
-  };
+export class PluginSettingTab {
+  app: any;
+  plugin: any;
+  containerEl: any;
   
-  workspace = {
-    getLeaf: () => new WorkspaceLeaf(),
-    setActiveLeaf: () => {},
-    revealLeaf: () => {},
-    splitActiveLeaf: () => new WorkspaceLeaf(),
-    on: () => {},
-    iterateAllLeaves: () => {},
-    detachLeavesOfType: () => {}
-  };
+  constructor(app: any, plugin: any) {
+    this.app = app;
+    this.plugin = plugin;
+    this.containerEl = createMockElement('div');
+  }
+  
+  display() {}
+  hide() {}
 }
 
-// Re-export everything as default
+// Mock Vault Adapter
+export class MockAdapter {
+  basePath: string;
+  
+  constructor() {
+    this.basePath = '/mock/vault/path';
+  }
+  
+  getBasePath() {
+    return this.basePath;
+  }
+  
+  // 模拟文件系统检查，让 manifest.json 验证通过
+  exists(path: string): boolean {
+    // 如果是请求 manifest.json，返回 true
+    if (path.includes('manifest.json')) {
+      return true;
+    }
+    return false;
+  }
+  
+  // 模拟读取 manifest.json 文件
+  read(path: string): Promise<string> {
+    if (path.includes('manifest.json')) {
+      return Promise.resolve(JSON.stringify({
+        id: 'interactive-tabs',
+        name: 'Interactive Tabs',
+        version: '1.0.0'
+      }));
+    }
+    return Promise.reject(new Error('File not found'));
+  }
+}
+
+// Mock Vault
+export class MockVault {
+  adapter = new MockAdapter();
+}
+
+// Mock App
+export class MockApp {
+  vault = new MockVault();
+}
+
+// 让 App 继承 MockApp
+export class App extends MockApp {}
+
 export default {
   Plugin,
   FileView,
@@ -213,5 +260,10 @@ export default {
   WorkspaceLeaf,
   TFile,
   Notice,
-  App
+  Modal,
+  PluginSettingTab,
+  App,
+  MockApp,
+  MockVault,
+  MockAdapter
 };
