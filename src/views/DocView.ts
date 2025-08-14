@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
 import MyPlugin from '../main';
 import panelsRegistry, { DocPanel } from './docs/index';
 
@@ -59,8 +59,78 @@ export class DocView extends ItemView {
 
         // Header
         const header = container.createDiv({ cls: 'tabflow-doc-header' });
+
+        // 标题（先渲染）
         header.createEl('h2', { text: 'TabFlow 文档' });
 
+        // 按钮组（后渲染，和标题同级）
+        const btnGroup = header.createDiv({ cls: 'tabflow-doc-header-btns' });
+
+        // GitHub 按钮（SVG图标）
+        const githubBtn = btnGroup.createEl('a', {
+            href: 'https://github.com/LIUBINfighter/Obsidian-Tab-Flow',
+            attr: { target: '_blank', rel: 'noopener', 'aria-label': 'GitHub' },
+            cls: 'mod-cta'
+        });
+        githubBtn.innerHTML = `
+            <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
+                -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.6-.18-3.29
+                -.8-3.29-3.56 0-.79.28-1.43.74-1.93-.07-.18-.32-.91.07-1.89 0 0 .6-.19 1.97.73.57-.16 1.18
+                -.24 1.79-.24.61 0 1.22.08 1.79.24 1.37-.92 1.97-.73 1.97-.73.39.98.14 1.71.07 1.89.46.5
+                .74 1.14.74 1.93 0 2.77-1.69 3.38-3.3 3.56.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19
+                0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+        `;
+
+        // Issue 按钮（文字）
+        const issueBtn = btnGroup.createEl('a', {
+            href: 'https://github.com/LIUBINfighter/Obsidian-Tab-Flow/issues',
+            attr: { target: '_blank', rel: 'noopener', 'aria-label': 'Issue' },
+            cls: 'mod-cta'
+        });
+        issueBtn.innerText = 'Issue';
+
+        // alphaTab.js 官方文档按钮（黑体文字）
+        const alphaTabBtn = btnGroup.createEl('a', {
+            href: 'https://www.alphatab.net/',
+            attr: { target: '_blank', rel: 'noopener', 'aria-label': 'alphaTab.js 官方文档' },
+            cls: 'mod-cta'
+        });
+        alphaTabBtn.innerText = 'alphaTab.js';
+
+        // 设置按钮（齿轮图标）
+        const settingsBtn = btnGroup.createEl('button', {
+            cls: 'clickable-icon',
+            attr: { 'aria-label': '设置', type: 'button', style: 'margin-left:0.5em;' }
+        });
+        const iconSpan = document.createElement('span');
+        settingsBtn.appendChild(iconSpan);
+        setIcon(iconSpan, 'settings');
+        settingsBtn.onclick = () => {
+            try {
+                // 直达本插件SettingTab的“播放器配置”页签
+                // @ts-ignore
+                this.plugin.app.workspace.trigger('tabflow:open-plugin-settings-player');
+            } catch {
+                try {
+                    // 退化处理
+                    // @ts-ignore
+                    this.plugin.app.commands.executeCommandById('app:open-settings');
+                    setTimeout(() => {
+                        try {
+                            const search = document.querySelector('input.setting-search-input') as HTMLInputElement | null;
+                            if (search) {
+                                search.value = 'Tab Flow';
+                                const ev = new Event('input', { bubbles: true });
+                                search.dispatchEvent(ev);
+                            }
+                        } catch {}
+                    }, 120);
+                } catch {}
+            }
+        };
         // Layout wrapper
         const layout = container.createDiv({ cls: 'tabflow-doc-layout' });
         // Observe width changes of the view container to toggle narrow layout per-view
