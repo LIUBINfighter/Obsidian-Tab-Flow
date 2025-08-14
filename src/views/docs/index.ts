@@ -4,6 +4,13 @@ import Overview from './Overview';
 import MetadataPanel from './Metadata';
 import InstrumentsTuning from './InstrumentsTuning';
 import Notes from './Notes';
+import Stylesheet from './Stylesheet';
+import BarMetadata from './BarMetadata';
+import BeatEffects from './BeatEffects';
+import NoteEffects from './NoteEffects';
+import Lyrics from './Lyrics';
+import Percussion from './Percussion';
+import SyncPoints from './SyncPoints';
 
 export interface DocPanel {
   id: string;
@@ -18,6 +25,13 @@ export const panels: DocPanel[] = [
   MetadataPanel,
   InstrumentsTuning,
   Notes,
+  Stylesheet,
+  BarMetadata,
+  BeatEffects,
+  NoteEffects,
+  Lyrics,
+  Percussion,
+  SyncPoints,
 ];
 
 export default panels;
