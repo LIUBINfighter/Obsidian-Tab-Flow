@@ -56,4 +56,7 @@ jobs:
           gh release create "$tag" \
             --title="$tag" \
             --draft \
-            main.js manifest.json styles.css tab-flow.zip assets.zip
+            main.js manifest.json styles.css tab-flow.zip assets.zip \
+            assets/alphaTab.min.js \
+            assets/Bravura.woff2 \
+            assets/sonivox.sf3
