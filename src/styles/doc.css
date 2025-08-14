@@ -1,38 +1,24 @@
 /* Basic layout for AlphaTex documentation view */
 .alphatex-doc-header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 12px;
 	padding: 12px 16px;
 	border-bottom: 1px solid var(--background-modifier-border);
 }
 .alphatex-doc-header h2 { margin: 0; font-size: 1.1rem; }
-.alphatex-doc-header-right { display: flex; gap: 8px; align-items: center; }
-.alphatex-doc-search { padding: 4px 8px; }
 
-.alphatex-doc-grid {
-	display: grid;
-	grid-template-columns: 220px 1fr 240px;
-	gap: 16px;
+.alphatex-doc-content {
+	min-height: 320px;
 	padding: 16px;
+	background: var(--background-secondary);
+	border-radius: 4px;
+	max-width: 90ch;
+	margin: 12px 16px;
 }
-.alphatex-doc-toc { border-right: 1px solid var(--background-modifier-border); padding-right: 12px; }
-.alphatex-doc-toc ul { list-style: none; padding-left: 0; }
-.alphatex-doc-toc li { margin: 6px 0; }
-.alphatex-doc-toc a { cursor: pointer; color: var(--text-accent); text-decoration: none; }
-
-.alphatex-doc-content { min-height: 320px; padding: 8px 12px; background: var(--background-secondary); border-radius: 4px; }
 .alphatex-doc-markdown { max-width: 72ch; }
-
-.alphatex-doc-sidebar { padding: 12px; border-left: 1px solid var(--background-modifier-border); }
-.alphatex-doc-sidebar .muted { color: var(--text-faint); font-size: 0.9rem; }
 
 .alphatex-doc-footer { padding: 8px 16px; border-top: 1px solid var(--background-modifier-border); }
 .playbar-placeholder { color: var(--text-muted); }
 
+/* Responsive: keep single column */
 @media (max-width: 900px) {
-	.alphatex-doc-grid { grid-template-columns: 1fr; }
-	.alphatex-doc-toc { border-right: none; border-bottom: 1px solid var(--background-modifier-border); padding-bottom: 8px; }
-	.alphatex-doc-sidebar { display: none; }
+	.alphatex-doc-content { padding: 12px; margin: 8px; }
 }

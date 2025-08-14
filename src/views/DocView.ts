@@ -50,71 +50,33 @@ export class DocView extends ItemView {
         const container = this.contentEl;
         container.empty();
 
-        // Header
-        const header = container.createDiv({ cls: 'alphatex-doc-header' });
+    // Header (minimal)
+    const header = container.createDiv({ cls: 'alphatex-doc-header' });
     header.createEl('h2', { text: 'AlphaTex 文档' });
-        const headerRight = header.createDiv({ cls: 'alphatex-doc-header-right' });
-        // toolbar buttons: search & copy sample & download assets placeholder
-        const search = headerRight.createEl('input');
-        search.type = 'search';
-        search.placeholder = '搜索文档...';
-        search.classList.add('alphatex-doc-search');
 
-        const copyBtn = headerRight.createEl('button', { text: '复制示例' });
-        copyBtn.classList.add('mod-cta');
-        copyBtn.onclick = async () => {
-            const sample = this.getSectionMarkdown('Introduction');
-            await navigator.clipboard?.writeText?.(sample);
-        };
+    // Single-column content layout (no TOC/sidebar)
+    const contentWrap = container.createDiv({ cls: 'alphatex-doc-content' });
+    contentWrap.createEl('p', { text: '文档内容区：选择章节后将在此处显示。' });
 
-        const downloadBtn = headerRight.createEl('button', { text: '下载资源' });
-        downloadBtn.onclick = () => {
-            // placeholder: trigger plugin-level download if available
-            try {
-                // @ts-ignore
-                if (typeof this.plugin.downloadAssets === 'function') this.plugin.downloadAssets();
-        } catch (e) { /* ignore style injection failure */ }
-        };
-
-        // Main grid: left TOC / content / right sidebar
-        const grid = container.createDiv({ cls: 'alphatex-doc-grid' });
-
-        const tocWrap = grid.createDiv({ cls: 'alphatex-doc-toc' });
-        tocWrap.createEl('h4', { text: '目录' });
-        const ul = tocWrap.createEl('ul');
-        const sections = ['Introduction', 'Quick Start', 'Syntax', 'Metadata', 'Tracks & Staves', 'Effects', 'Sync Points', 'Reference'];
-        sections.forEach(t => {
-            const li = ul.createEl('li');
-            const a = li.createEl('a', { text: t });
-            a.onclick = () => this.showSection(t);
-        });
-
-        const contentWrap = grid.createDiv({ cls: 'alphatex-doc-content' });
-    contentWrap.createEl('p', { text: '选择左侧目录以查看对应章节，右上角可搜索并复制示例代码。' });
-
-        const sidebar = grid.createDiv({ cls: 'alphatex-doc-sidebar' });
-        sidebar.createEl('h4', { text: '操作' });
-        sidebar.createEl('div', { text: '占位：演示/导出/分享' }).addClass('muted');
-
-        // Footer / playbar placeholder
-        const footer = container.createDiv({ cls: 'alphatex-doc-footer' });
-        footer.createEl('div', { text: '播放控制占位 (PlayBar)' }).addClass('playbar-placeholder');
+    // Footer / playbar placeholder
+    const footer = container.createDiv({ cls: 'alphatex-doc-footer' });
+    footer.createEl('div', { text: '播放控制占位 (PlayBar)' }).addClass('playbar-placeholder');
 
         // default section
         await this.showSection('Introduction');
     }
 
     private async showSection(title: string) {
-        const content = this.contentEl.querySelector('.alphatex-doc-content') as HTMLElement;
+    const content = this.contentEl.querySelector('.alphatex-doc-content') as HTMLElement;
         if (!content) return;
         content.empty();
 
     content.createEl('h3', { text: title });
 
         // basic section contents (placeholder text); real content will be loaded from docs later
-        const md = this.getSectionMarkdown(title);
-        const div = content.createDiv({ cls: 'alphatex-doc-markdown' });
-        await MarkdownRenderer.renderMarkdown(md, div, this.plugin.manifest.dir ?? '', this);
+    const md = this.getSectionMarkdown(title);
+    const div = content.createDiv({ cls: 'alphatex-doc-markdown' });
+    await MarkdownRenderer.renderMarkdown(md, div, this.plugin.manifest.dir ?? '', this);
     }
 
     private getSectionMarkdown(title: string): string {
