@@ -1,6 +1,6 @@
 {
-	"name": "interactive-tabs",
-	"version": "0.0.1",
+	"name": "obsidian-tab-flow",
+	"version": "0.0.7",
 	"description": "",
 	"main": "main.js",
 	"type": "module",

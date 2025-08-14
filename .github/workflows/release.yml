@@ -24,8 +24,11 @@ jobs:
 
       - name: Package plugin
         run: |
-          mkdir tab-flow
+          mkdir -p tab-flow/assets
           cp main.js manifest.json styles.css tab-flow/
+          cp assets/alphaTab.min.js tab-flow/assets/
+          cp assets/Bravura.woff2 tab-flow/assets/
+          cp assets/sonivox.sf3 tab-flow/assets/
           zip -r tab-flow.zip tab-flow/
 
       - name: Package assets
