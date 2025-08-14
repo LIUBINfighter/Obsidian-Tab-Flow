@@ -153,6 +153,11 @@
 	border-radius: 6px;
 }
 
+/* Host wrapper for each playground instance in docs */
+.doc-playground-host {
+    margin: 16px 0 20px 0;
+}
+
 /* Responsive: keep single column */
 @media (max-width: 900px) {
 	.tabflow-doc-content {
