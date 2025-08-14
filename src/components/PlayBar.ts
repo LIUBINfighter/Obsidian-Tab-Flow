@@ -16,9 +16,6 @@ export interface PlayBarOptions {
 	audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
 }
 
-// 通过此常量控制要加载哪些组件
-const ENABLED_COMPONENTS = ["playButton"];
-
 export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	const {
 		app,

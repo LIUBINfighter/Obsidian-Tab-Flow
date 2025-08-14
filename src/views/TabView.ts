@@ -34,6 +34,9 @@ export class TabView extends FileView {
     private audioObjectUrl: string | null = null;
     private externalMediaService: ExternalMediaService | null = null;
     private settingsChangeHandler?: () => void;
+    // --- 新增：横向布局时将垂直滚轮转写为水平滚动 ---
+    private wheelHandlerBoundEl: HTMLElement | null = null;
+    private wheelHandler: ((e: WheelEvent) => void) | null = null;
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -134,6 +137,60 @@ public getScoreTitle(): string {
 	if (this.currentFile) return this.currentFile.basename;
 	return "alphaTab";
 }
+
+    // --- 新增：根据布局启用/解绑滚轮转写 ---
+    private updateWheelToHorizontalBinding(): void {
+        try {
+            if (!this._api) return;
+
+            const isHorizontal =
+                this._api.settings?.display?.layoutMode === (alphaTab as any).LayoutMode?.Horizontal;
+
+            // 选择绑定的滚动容器：优先使用 settings.player.scrollElement
+            let el: HTMLElement | null = null;
+            const configured = (this._api.settings?.player as any)?.scrollElement as any;
+            if (configured && configured instanceof HTMLElement) el = configured;
+            if (!el) el = this.contentEl.querySelector('.at-viewport') as HTMLElement | null;
+            if (!el) el = this.containerEl as HTMLElement;
+
+            // 解绑旧的
+            if (this.wheelHandlerBoundEl && this.wheelHandler) {
+                try { this.wheelHandlerBoundEl.removeEventListener('wheel', this.wheelHandler as any); } catch {}
+                this.wheelHandlerBoundEl = null;
+                this.wheelHandler = null;
+            }
+
+            if (!isHorizontal || !el) return;
+
+            const handler = (e: WheelEvent) => {
+                // 不干预缩放/系统快捷
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+                const target = el as HTMLElement;
+                const canScrollHoriz = target.scrollWidth > target.clientWidth;
+                if (!canScrollHoriz) return;
+
+                // 归一化 delta
+                const unit = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? (target as HTMLElement).clientWidth : 1;
+                const primaryDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+                const dx = primaryDelta * unit;
+
+                const atStart = (target as HTMLElement).scrollLeft <= 0;
+                const atEnd = (target as HTMLElement).scrollLeft + (target as HTMLElement).clientWidth >= (target as HTMLElement).scrollWidth - 1;
+                const goingLeft = dx < 0;
+                const goingRight = dx > 0;
+                if ((atStart && goingLeft) || (atEnd && goingRight)) return;
+
+                (target as HTMLElement).scrollLeft += dx;
+                e.preventDefault();
+                e.stopPropagation();
+            };
+
+            el.addEventListener('wheel', handler, { passive: false });
+            this.wheelHandlerBoundEl = el;
+            this.wheelHandler = handler;
+        } catch {}
+    }
 
 /**
  * 检查字符串是否为乱码（CJK场景下常见）
@@ -357,12 +414,14 @@ private isMessy(str: string): boolean {
 			this._api.scoreLoaded.on(() => {
 				setTimeout(() => {
 					mountPlayBar();
+					this.updateWheelToHorizontalBinding();
 				}, 100);
 			});
 		} else {
 			// 兜底：如果未能监听到 scoreLoaded，延迟挂载
 			setTimeout(() => {
 				mountPlayBar();
+				this.updateWheelToHorizontalBinding();
 			}, 500);
 		}
 
@@ -407,6 +466,11 @@ private isMessy(str: string): boolean {
         // 监听自定义事件以实时响应 SettingTab 的切换
         // @ts-ignore
         this.registerEvent(this.app.workspace.on('tabflow:debugbar-toggle', this.settingsChangeHandler));
+
+		// 布局切换后更新滚轮绑定
+		this.eventBus.subscribe("命令:切换布局", () => {
+			setTimeout(() => this.updateWheelToHorizontalBinding(), 10);
+		});
 
         // 订阅加载乐谱：由视图读取文件并下发数据给 AlphaTabService
         this.eventBus.subscribe("命令:加载当前文件", async () => {
@@ -550,7 +614,10 @@ private isMessy(str: string): boolean {
                                     this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
                                 }
                             } catch {}
-                        }, 50);
+						}, 50);
+
+						// 布局或渲染变化后更新滚轮绑定
+						this.updateWheelToHorizontalBinding();
                     });
                 }
 
@@ -672,7 +739,7 @@ private isMessy(str: string): boolean {
 			this._styles.remove();
 		}
 
-        // 清理外部音频资源
+		// 清理外部音频资源
         try {
             if (this.externalMediaService) {
                 this.externalMediaService.destroy();
@@ -688,6 +755,15 @@ private isMessy(str: string): boolean {
         } catch (e) {
             console.warn('[TabView] 清理外部音频资源失败:', e);
         }
+
+		// 解绑滚轮事件
+		try {
+			if (this.wheelHandlerBoundEl && this.wheelHandler) {
+				this.wheelHandlerBoundEl.removeEventListener('wheel', this.wheelHandler as any);
+			}
+		} catch {}
+		this.wheelHandlerBoundEl = null;
+		this.wheelHandler = null;
 
         // 清理引用
 		this.currentFile = null;
@@ -836,6 +912,9 @@ private isMessy(str: string): boolean {
 				console.debug("[TabView] 滚动配置已更新");
 			}
 		}, 100);
+
+		// 再次延迟绑定滚轮转写（等待 DOM 就绪）
+		setTimeout(() => this.updateWheelToHorizontalBinding(), 50);
 	}
 
 	// 注册文件变更监听
