@@ -457,6 +457,13 @@ export class SettingTab extends PluginSettingTab {
 				};
 
 				let draggingKey: string | null = null;
+				const clearDndHighlights = () => {
+					const cards = cardsWrap.querySelectorAll('.tabflow-card');
+					cards.forEach((el) => {
+						el.classList.remove('insert-before', 'insert-after', 'swap-target');
+						(el as HTMLElement).style.background = '';
+					});
+				};
 				const renderCards = () => {
 					cardsWrap.empty();
 					const order = getOrder().filter(k => meta.some(m => m.key === (k as any)));
@@ -516,18 +523,46 @@ export class SettingTab extends PluginSettingTab {
 							}
 						};
 
-						card.addEventListener('dragstart', (e) => { draggingKey = String(key); (e.dataTransfer as DataTransfer).effectAllowed = 'move'; });
-						card.addEventListener('dragover', (e) => { e.preventDefault(); (e.dataTransfer as DataTransfer).dropEffect = 'move'; card.style.background = 'var(--background-modifier-hover)'; });
-						card.addEventListener('dragleave', () => { card.style.background = ''; });
+						card.addEventListener('dragstart', (e) => {
+							draggingKey = String(key);
+							(e.dataTransfer as DataTransfer).effectAllowed = 'move';
+						});
+						card.addEventListener('dragover', (e) => {
+							e.preventDefault();
+							(e.dataTransfer as DataTransfer).dropEffect = 'move';
+							clearDndHighlights();
+							const rect = card.getBoundingClientRect();
+							const offsetY = (e as DragEvent).clientY - rect.top;
+							const ratio = offsetY / rect.height;
+							if (ratio < 0.33) {
+								card.classList.add('insert-before');
+							} else if (ratio > 0.66) {
+								card.classList.add('insert-after');
+							} else {
+								card.classList.add('swap-target');
+							}
+						});
+						card.addEventListener('dragleave', () => { clearDndHighlights(); });
+						card.addEventListener('dragend', () => { clearDndHighlights(); });
 						card.addEventListener('drop', async () => {
-							card.style.background = '';
+							const isInsertBefore = card.classList.contains('insert-before');
+							const isInsertAfter = card.classList.contains('insert-after');
+							const isSwap = card.classList.contains('swap-target');
+							clearDndHighlights();
 							if (!draggingKey || draggingKey === key) return;
-							const cur = getOrder();
-							const from = cur.indexOf(String(draggingKey));
-							const to = cur.indexOf(String(key));
+							const list = getOrder();
+							const from = list.indexOf(String(draggingKey));
+							const to = list.indexOf(String(key));
 							if (from < 0 || to < 0) return;
-							// 互换位置（覆盖则交换，更符合直觉）
-							[cur[from], cur[to]] = [cur[to], cur[from]];
+							const cur = list.slice();
+							if (isSwap) {
+								[cur[from], cur[to]] = [cur[to], cur[from]];
+							} else {
+								let insertIndex = to + (isInsertAfter ? 1 : 0);
+								const [moved] = cur.splice(from, 1);
+								if (from < insertIndex) insertIndex -= 1;
+								cur.splice(insertIndex, 0, moved);
+							}
 							this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
 							(this.plugin.settings.playBar as any).order = cur;
 							await this.plugin.saveSettings();
@@ -647,6 +682,47 @@ export class SettingTab extends PluginSettingTab {
 				tabContents.createEl("p", {
 					text: "Tab Flow by Jay Bridge",
 				});
+
+				// 快速打开 AlphaTex 文档视图按钮
+				new Setting(tabContents)
+					.setName("AlphaTex 文档")
+					.setDesc("打开 AlphaTex 快速文档视图，包含语法速查与示例。")
+					.addButton((btn) => {
+						btn.setButtonText("打开文档").onClick(async () => {
+							try {
+								new Notice('尝试打开 AlphaTex 文档视图...');
+								console.log('[SettingTab] open-doc button clicked');
+								// 优先通过已注册的命令触发（某些环境命令API可能同步或不可await）
+								try {
+									const execFn = (this.app as any).commands && (this.app as any).commands.executeCommandById;
+									if (typeof execFn === 'function') {
+										const res = execFn.call((this.app as any).commands, 'open-alphatex-doc-view');
+										console.log('[SettingTab] executeCommandById returned', res);
+										// 如果命令没有生效（返回 falsy），回退到直接打开视图
+										if (!res) {
+											const leaf = this.app.workspace.getLeaf(true);
+											await leaf.setViewState({ type: 'alphatex-doc-view', active: true });
+											this.app.workspace.revealLeaf(leaf);
+										}
+									} else {
+										// commands API 不可用，直接打开视图
+										const leaf = this.app.workspace.getLeaf(true);
+										await leaf.setViewState({ type: 'alphatex-doc-view', active: true });
+										this.app.workspace.revealLeaf(leaf);
+									}
+								} catch (innerErr) {
+									console.error('[SettingTab] executeCommandById error', innerErr);
+									// 回退：直接打开视图
+									const leaf = this.app.workspace.getLeaf(true);
+									await leaf.setViewState({ type: 'alphatex-doc-view', active: true });
+									this.app.workspace.revealLeaf(leaf);
+								}
+							} catch (e) {
+								console.error('[SettingTab] Open AlphaTex doc failed', e);
+								new Notice('打开文档失败，请查看控制台日志');
+							}
+						});
+					});
 			}
 		};
 
