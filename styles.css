@@ -1,4 +1,4 @@
-/* build: dev */
+/* build: build */
 /* --- TrackModal.css --- */
 
 .tracks-modal .setting-item {
@@ -343,8 +343,8 @@
 }
 
 .tabflow-doc-tab.active {
-	background: var(--background-modifier-success);
-	color: var(--interactive-accent);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
 	font-weight: 600;
 }
 
@@ -480,6 +480,7 @@
 		box-sizing: border-box;
 	}
 }
+
 /* --- play.css --- */
 /* 播放栏自定义按钮样式 */
 .play-bar {

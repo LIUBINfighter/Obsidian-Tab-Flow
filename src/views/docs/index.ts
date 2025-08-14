@@ -1,3 +1,9 @@
+export interface DocPanel {
+  id: string;
+  title: string;
+  render: (container: HTMLElement, plugin?: unknown) => void;
+}
+
 import ReadMe from './ReadMe';
 import InMarkdownRender from './InMarkdownRender';
 import Overview from './Overview';

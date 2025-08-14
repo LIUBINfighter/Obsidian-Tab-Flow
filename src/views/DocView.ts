@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import MyPlugin from '../main';
-import panelsRegistry, { DocPanel } from './docs';
+import panelsRegistry, { DocPanel } from './docs/index';
 
 export const VIEW_TYPE_TABFLOW_DOC = 'tabflow-doc-view';
 // 兼容导出：保留旧名称以避免其它文件立刻出错

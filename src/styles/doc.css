@@ -242,8 +242,8 @@
 }
 
 .tabflow-doc-tab.active {
-	background: var(--background-modifier-success);
-	color: var(--interactive-accent);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
 	font-weight: 600;
 }
 
