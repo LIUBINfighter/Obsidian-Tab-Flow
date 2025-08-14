@@ -232,6 +232,16 @@ export class AlphaTabService {
                 this.eventBus.publish("状态:加载失败", e);
             }
         });
+
+        // 命令：加载 AlphaTex 乐谱（传入文本内容）
+        this.eventBus.subscribe("命令:加载AlphaTex乐谱", async (textContent: string) => {
+            try {
+                await this.loadAlphaTexScore(textContent);
+                this.eventBus.publish("状态:乐谱已加载");
+            } catch (e) {
+                this.eventBus.publish("状态:加载失败", e);
+            }
+        });
         // 命令：重新构造 AlphaTabApi
         this.eventBus.subscribe("命令:重建AlphaTabApi", () => {
             this.reconstructApi();
@@ -262,6 +272,29 @@ export class AlphaTabService {
 
     public async loadScore(fileData: Uint8Array) {
         await this.api.load(fileData);
+    }
+
+    public async loadAlphaTexScore(textContent: string) {
+        try {
+            // 使用 AlphaTab 的 tex 方法加载 AlphaTex 内容
+            if (typeof (this.api as any).tex === "function") {
+                await (this.api as any).tex(textContent);
+            } else {
+                // 备用方案：使用 AlphaTexImporter
+                const Importer: any = (alphaTab as any).importer?.AlphaTexImporter;
+                if (Importer) {
+                    const importer = new Importer();
+                    importer.initFromString(textContent, this.api.settings);
+                    const score = importer.readScore();
+                    this.api.renderScore(score);
+                } else {
+                    throw new Error("AlphaTexImporter not available");
+                }
+            }
+        } catch (error) {
+            console.error("[AlphaTabService] Failed to load AlphaTex content:", error);
+            throw error;
+        }
     }
 
     /**

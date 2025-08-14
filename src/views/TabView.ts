@@ -476,8 +476,16 @@ private isMessy(str: string): boolean {
         this.eventBus.subscribe("命令:加载当前文件", async () => {
             if (!this.currentFile) return;
             try {
-                const inputFile = await this.app.vault.readBinary(this.currentFile);
-                this.eventBus.publish("命令:加载乐谱", new Uint8Array(inputFile));
+                // 根据文件扩展名决定读取方式
+                if (this.currentFile.extension && ["alphatab", "alphatex"].includes(this.currentFile.extension.toLowerCase())) {
+                    // AlphaTex 文件作为文本读取
+                    const textContent = await this.app.vault.read(this.currentFile);
+                    this.eventBus.publish("命令:加载AlphaTex乐谱", textContent);
+                } else {
+                    // Guitar Pro 等二进制文件
+                    const inputFile = await this.app.vault.readBinary(this.currentFile);
+                    this.eventBus.publish("命令:加载乐谱", new Uint8Array(inputFile));
+                }
             } catch (e) {
                 console.warn("[TabView] 加载当前文件失败:", e);
             }
@@ -860,8 +868,16 @@ private isMessy(str: string): boolean {
 			attachScoreLoadedHandler();
 
 			// 使用 AlphaTabService 加载文件（在事件绑定之后）
-			const inputFile = await this.app.vault.readBinary(file);
-			await this.alphaTabService.loadScore(new Uint8Array(inputFile));
+			// 根据文件扩展名决定读取方式
+			if (file.extension && ["alphatab", "alphatex"].includes(file.extension.toLowerCase())) {
+				// AlphaTex 文件作为文本读取
+				const textContent = await this.app.vault.read(file);
+				await this.alphaTabService.loadAlphaTexScore(textContent);
+			} else {
+				// Guitar Pro 等二进制文件
+				const inputFile = await this.app.vault.readBinary(file);
+				await this.alphaTabService.loadScore(new Uint8Array(inputFile));
+			}
 			// 配置滚动元素 - 在乐谱加载后设置
 			this.configureScrollElement();
 			console.debug(`[TabView] File loaded successfully: ${file.name}`);
@@ -936,8 +952,16 @@ private isMessy(str: string): boolean {
 		}
 
 		try {
-			const inputFile = await this.app.vault.readBinary(this.currentFile);
-			this._api.load(new Uint8Array(inputFile));
+			// 根据文件扩展名决定读取方式
+			if (this.currentFile.extension && ["alphatab", "alphatex"].includes(this.currentFile.extension.toLowerCase())) {
+				// AlphaTex 文件作为文本读取
+				const textContent = await this.app.vault.read(this.currentFile);
+				await this.alphaTabService.loadAlphaTexScore(textContent);
+			} else {
+				// Guitar Pro 等二进制文件
+				const inputFile = await this.app.vault.readBinary(this.currentFile);
+				this._api.load(new Uint8Array(inputFile));
+			}
 			console.debug(
 				`[TabView] 已重新加载文件: ${this.currentFile.basename}`
 			);

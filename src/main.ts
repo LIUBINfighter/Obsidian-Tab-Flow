@@ -353,13 +353,24 @@ export default class MyPlugin extends Plugin {
 			}
 		}
 
-		this.registerExtensions(
-			["gp", "gp3", "gp4", "gp5", "gpx", "gp7"],
-			VIEW_TYPE_TAB
-		);
+		// 注册文件扩展名 - 根据设置决定是否自动打开
+		if (this.settings.autoOpenAlphaTexFiles) {
+			this.registerExtensions(
+				["gp", "gp3", "gp4", "gp5", "gpx", "gp7", "alphatab", "alphatex"],
+				VIEW_TYPE_TAB
+			);
+		} else {
+			this.registerExtensions(
+				["gp", "gp3", "gp4", "gp5", "gpx", "gp7"],
+				VIEW_TYPE_TAB
+			);
+		}
 
 		this.registerEvent(
 			this.app.workspace.on("file-menu", (menu, file) => {
+				// 添加分隔线
+				menu.addSeparator();
+				
 				menu.addItem((item) => {
 					item.setTitle("Create a new AlphaTab file")
 						.setIcon("plus")
@@ -413,18 +424,37 @@ export default class MyPlugin extends Plugin {
 					});
 				}
 
-				menu.addItem((item) => {
-					item.setTitle("Preview in AlphaTab")
-						.setIcon("eye")
-						.onClick(async () => {
-							const leaf = this.app.workspace.getLeaf(false);
-							await leaf.setViewState({
-								type: VIEW_TYPE_TAB,
-								state: { file: file.path },
+				// 为 AlphaTex 文件添加专门的菜单项
+				if (file instanceof TFile && isAlphaTexFile(file.extension)) {
+					menu.addItem((item) => {
+						item.setTitle("Open as AlphaTex Tab")
+							.setIcon("music")
+							.onClick(async () => {
+								const leaf = this.app.workspace.getLeaf(false);
+								await leaf.setViewState({
+									type: VIEW_TYPE_TAB,
+									state: { file: file.path },
+								});
+								this.app.workspace.revealLeaf(leaf);
 							});
-							this.app.workspace.revealLeaf(leaf);
-						});
-				});
+					});
+				}
+
+				// 通用预览菜单项 - 支持所有文件类型
+				if (file instanceof TFile && (isSupportedTabFile(file.extension) || !file.extension)) {
+					menu.addItem((item) => {
+						item.setTitle("Preview in AlphaTab")
+							.setIcon("eye")
+							.onClick(async () => {
+								const leaf = this.app.workspace.getLeaf(false);
+								await leaf.setViewState({
+									type: VIEW_TYPE_TAB,
+									state: { file: file.path },
+								});
+								this.app.workspace.revealLeaf(leaf);
+							});
+					});
+				}
 			})
 		);
 	}
@@ -442,4 +472,13 @@ export function isGuitarProFile(extension: string | undefined): boolean {
 	return ["gp", "gp3", "gp4", "gp5", "gpx", "gp7"].includes(
 		extension.toLowerCase()
 	);
+}
+
+export function isAlphaTexFile(extension: string | undefined): boolean {
+	if (!extension) return false;
+	return ["alphatab", "alphatex"].includes(extension.toLowerCase());
+}
+
+export function isSupportedTabFile(extension: string | undefined): boolean {
+	return isGuitarProFile(extension) || isAlphaTexFile(extension);
 }

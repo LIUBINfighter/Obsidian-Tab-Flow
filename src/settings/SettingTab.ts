@@ -16,6 +16,8 @@ export interface TabFlowSettings {
 	simpleAssetCheck?: boolean;
 	/** 开发者选项：显示 Debug Bar */
 	showDebugBar?: boolean;
+	/** 自动打开 AlphaTex 文件 */
+	autoOpenAlphaTexFiles?: boolean;
 	/** 播放栏配置 */
 	playBar?: {
 		components: PlayBarComponentVisibility;
@@ -29,6 +31,7 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	assetsDownloaded: false,
 	lastAssetsCheck: 0,
 	showDebugBar: false,
+	autoOpenAlphaTexFiles: false, // 默认不自动打开 AlphaTex 文件
 	playBar: {
 		components: {
 			playPause: true,
@@ -253,6 +256,21 @@ export class SettingTab extends PluginSettingTab {
 						},
 					});
 				}
+
+				// 文件处理设置
+				tabContents.createEl("h3", { text: "文件处理设置" });
+				
+				new Setting(tabContents)
+					.setName("自动打开 AlphaTex 文件")
+					.setDesc("启用后，双击 .alphatab 或 .alphatex 文件时会自动使用 TabView 打开。禁用时只能通过右键菜单「Preview in AlphaTab」打开。")
+					.addToggle((toggle) => {
+						toggle.setValue(this.plugin.settings.autoOpenAlphaTexFiles ?? false)
+							.onChange(async (value) => {
+								this.plugin.settings.autoOpenAlphaTexFiles = value;
+								await this.plugin.saveSettings();
+								new Notice(value ? "已启用自动打开 AlphaTex 文件" : "已禁用自动打开 AlphaTex 文件，需重启 Obsidian 生效");
+							});
+					});
 
 				// 操作按钮区域
 				const actionSetting = new Setting(tabContents)
