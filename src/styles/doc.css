@@ -7,6 +7,57 @@
 	margin: 0;
 }
 
+/* Two-column layout: left sidebar (navigation) + main content */
+.tabflow-doc-layout {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+	margin: 12px 16px 0 16px;
+}
+.tabflow-doc-left {
+	width: 220px;
+	min-width: 160px;
+	max-width: 30%;
+}
+.tabflow-doc-main {
+	flex: 1 1 auto;
+}
+
+/* Navigation styling */
+.tabflow-nav {
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px;
+}
+.tabflow-nav ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.tabflow-nav .tab-item {
+	padding: 8px 10px;
+	margin: 4px 0;
+	border-radius: 4px;
+	cursor: default;
+	color: var(--text-normal);
+}
+.tabflow-nav .tab-item:hover {
+	background: var(--background-modifier-hover);
+}
+.tabflow-nav .tab-item--active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent, #fff);
+}
+
+/* Main content placeholder */
+.tabflow-doc-main-content {
+	background: var(--background-secondary);
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 16px;
+}
+
 .tabflow-doc-content {
 	min-height: 320px;
 	padding: 16px;
@@ -16,7 +67,7 @@
 	margin: 12px 16px;
 }
 .tabflow-doc-markdown {
-	max-width: 72ch;
+	max-width: 90%;
 }
 
 .tabflow-doc-footer {
@@ -27,10 +78,68 @@
 	color: var(--text-muted);
 }
 
+/* Two-column layout: left navigation + main content */
+.tabflow-doc-layout {
+	display: flex;
+	gap: 16px;
+	align-items: stretch;
+}
+.tabflow-doc-left {
+	width: 240px;
+	min-width: 180px;
+}
+.tabflow-doc-main {
+	flex: 1 1 auto;
+	background: transparent;
+}
+
+.tabflow-doc-nav {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px;
+}
+.tabflow-doc-tab {
+	padding: 8px 10px;
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--text-normal);
+	margin-bottom: 6px;
+}
+.tabflow-doc-tab:hover {
+	background: var(--background-modifier-hover);
+}
+.tabflow-doc-tab.active {
+	background: var(--background-modifier-success);
+	color: var(--interactive-accent);
+	font-weight: 600;
+}
+
+.tabflow-doc-main .tabflow-doc-markdown {
+	padding: 12px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+}
+
 /* Responsive: keep single column */
 @media (max-width: 900px) {
 	.tabflow-doc-content {
 		padding: 12px;
 		margin: 8px;
+	}
+	/* Stack sidebar above main content on narrow screens */
+	.tabflow-doc-layout {
+		display: block;
+		margin: 8px 0;
+	}
+	.tabflow-doc-left {
+		width: 100%;
+		max-width: none;
+		margin-bottom: 12px;
+	}
+	.tabflow-doc-main {
+		width: 100%;
+		box-sizing: border-box;
 	}
 }

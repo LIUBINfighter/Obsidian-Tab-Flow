@@ -738,12 +738,12 @@ export class SettingTab extends PluginSettingTab {
 								try {
 									const execFn = (this.app as any).commands && (this.app as any).commands.executeCommandById;
 									if (typeof execFn === 'function') {
-										const res = execFn.call((this.app as any).commands, 'open-alphatex-doc-view');
+										const res = execFn.call((this.app as any).commands, 'open-tabflow-doc-view');
 										console.log('[SettingTab] executeCommandById returned', res);
 										// 如果命令没有生效（返回 falsy），回退到直接打开视图
 										if (!res) {
 											const leaf = this.app.workspace.getLeaf(true);
-											await leaf.setViewState({ type: 'alphatex-doc-view', active: true });
+											await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
 											this.app.workspace.revealLeaf(leaf);
 										}
 										// 尝试关闭设置面板（优先 API），以便文档视图成为唯一活动视图
@@ -761,14 +761,14 @@ export class SettingTab extends PluginSettingTab {
 									} else {
 										// commands API 不可用，直接打开视图
 										const leaf = this.app.workspace.getLeaf(true);
-										await leaf.setViewState({ type: 'alphatex-doc-view', active: true });
+										await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
 										this.app.workspace.revealLeaf(leaf);
 									}
 								} catch (innerErr) {
 									console.error('[SettingTab] executeCommandById error', innerErr);
 									// 回退：直接打开视图
 									const leaf = this.app.workspace.getLeaf(true);
-									await leaf.setViewState({ type: 'alphatex-doc-view', active: true });
+									await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
 									this.app.workspace.revealLeaf(leaf);
 								}
 							} catch (e) {
