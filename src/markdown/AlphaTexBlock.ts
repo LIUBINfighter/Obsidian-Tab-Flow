@@ -137,15 +137,39 @@ export function mountAlphaTexBlock(
 	const uiOverride: { components?: Record<string, boolean>; order?: string[] | string } | undefined = (opts as any)?.ui;
 	try { if (uiOverride && defaults?.setUiOverride) defaults.setUiOverride(uiOverride); } catch {}
 
-	// container structure
-	const wrapper = document.createElement("div");
-	wrapper.className = "alphatex-block";
-	const scoreEl = document.createElement("div");
-	scoreEl.className = "alphatex-score";
+    // container structure
+    const wrapper = document.createElement("div");
+    wrapper.className = "alphatex-block";
+    const messagesEl = document.createElement("div");
+    messagesEl.className = "alphatex-messages";
+    const scoreEl = document.createElement("div");
+    scoreEl.className = "alphatex-score";
     const controlsEl = document.createElement("div");
     controlsEl.className = "alphatex-controls nav-buttons-container";
+    wrapper.appendChild(messagesEl);
     wrapper.appendChild(scoreEl);
-	rootEl.appendChild(wrapper);
+    rootEl.appendChild(wrapper);
+
+    const formatError = (err: unknown): string => {
+        try {
+            // Prefer message if present
+            const anyErr = err as any;
+            if (anyErr && typeof anyErr.message === "string") return anyErr.message;
+            // Some AlphaTab errors might be plain strings
+            return String(err);
+        } catch {
+            return "Unknown error";
+        }
+    };
+
+    const appendError = (text: string) => {
+        try {
+            const errEl = document.createElement("div");
+            errEl.className = "alphatex-error";
+            errEl.textContent = text;
+            messagesEl.appendChild(errEl);
+        } catch {}
+    };
 
 	// AlphaTabApi setup (theme-aware colors)
 	const style = window.getComputedStyle(rootEl);
@@ -210,6 +234,9 @@ export function mountAlphaTexBlock(
             },
         });
 
+        // Subscribe error events from AlphaTab and surface them in UI
+        try { (api as any).error?.on?.((e: unknown) => appendError(formatError(e))); } catch {}
+
         // apply runtime options
         if (typeof merged.speed === "number" && api.player) {
             api.playbackSpeed = merged.speed;
@@ -238,12 +265,16 @@ export function mountAlphaTexBlock(
                     imp.initFromString(body, api!.settings);
                     const score = imp.readScore();
                     api!.renderScore(score);
+                    // Best-effort: surface importer-reported errors if available
+                    try {
+                        const errs = (imp as any)?.errors || (imp as any)?._errors;
+                        if (Array.isArray(errs) && errs.length > 0) {
+                            errs.forEach((er: unknown) => appendError(formatError(er)));
+                        }
+                    } catch {}
                 }
             } catch (e) {
-                const errEl = document.createElement("div");
-                errEl.className = "alphatex-error";
-                errEl.textContent = `AlphaTex render error: ${e}`;
-                wrapper.appendChild(errEl);
+                appendError(`AlphaTex render error: ${formatError(e)}`);
             }
         };
 
