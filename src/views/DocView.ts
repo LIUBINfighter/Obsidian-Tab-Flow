@@ -90,7 +90,7 @@ export class DocView extends ItemView {
             attr: { target: '_blank', rel: 'noopener', 'aria-label': 'Issue' },
             cls: 'mod-cta'
         });
-        issueBtn.innerText = '|  Feedback for Docs  |';
+        issueBtn.innerText = '[Feedback for Docs]';
 
         // alphaTab.js 官方文档按钮（黑体文字）
         const alphaTabBtn = btnGroup.createEl('a', {
@@ -98,7 +98,7 @@ export class DocView extends ItemView {
             attr: { target: '_blank', rel: 'noopener', 'aria-label': 'alphaTab.js 官方文档' },
             cls: 'mod-cta'
         });
-        alphaTabBtn.innerText = 'alphaTab.js   |';
+        alphaTabBtn.innerText = '[alphaTab.js]';
 
         // 设置按钮（齿轮图标）
         const settingsBtn = btnGroup.createEl('button', {
