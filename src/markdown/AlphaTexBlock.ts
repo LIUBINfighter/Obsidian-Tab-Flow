@@ -69,10 +69,9 @@ export function mountAlphaTexBlock(
 	wrapper.className = "alphatex-block";
 	const scoreEl = document.createElement("div");
 	scoreEl.className = "alphatex-score";
-	const controlsEl = document.createElement("div");
-	controlsEl.className = "alphatex-controls nav-buttons-container";
-	wrapper.appendChild(scoreEl);
-	wrapper.appendChild(controlsEl);
+    const controlsEl = document.createElement("div");
+    controlsEl.className = "alphatex-controls nav-buttons-container";
+    wrapper.appendChild(scoreEl);
 	rootEl.appendChild(wrapper);
 
 	// AlphaTabApi setup (theme-aware colors)
@@ -173,16 +172,18 @@ export function mountAlphaTexBlock(
 			}
 		} catch (e) {
 			// Simple error surface into controls
-			const errEl = document.createElement("div");
-			errEl.className = "alphatex-error";
-			errEl.textContent = `AlphaTex render error: ${e}`;
-			controlsEl.appendChild(errEl);
+            const errEl = document.createElement("div");
+            errEl.className = "alphatex-error";
+            errEl.textContent = `AlphaTex render error: ${e}`;
+            wrapper.appendChild(errEl);
 		}
 	};
 	renderFromTex();
 
-	// controls (try to unify style with PlayBar)
-	if (resources.soundFontUri && playerEnabled) {
+    // controls (try to unify style with PlayBar) — only when player is enabled
+    if (resources.soundFontUri && playerEnabled) {
+        // attach controls container only when needed
+        wrapper.appendChild(controlsEl);
 		const playPauseBtn = document.createElement("button");
 		playPauseBtn.className = "clickable-icon";
 		playPauseBtn.setAttribute("type", "button");
@@ -270,14 +271,13 @@ export function mountAlphaTexBlock(
 		controlsEl.appendChild(zoomIcon);
 		controlsEl.appendChild(zoomInput);
 		controlsEl.appendChild(metroBtn);
-	} else {
-		const note = document.createElement("div");
-		note.className = "alphatex-note";
-		note.textContent = playerEnabled
-			? "SoundFont missing: playback disabled. Rendering only."
-			: "Player disabled by init: rendering only.";
-		controlsEl.appendChild(note);
-	}
+    } else if (playerEnabled && !resources.soundFontUri) {
+        // compact note, no controls container
+        const note = document.createElement("div");
+        note.className = "alphatex-note";
+        note.textContent = "SoundFont missing: playback disabled. Rendering only.";
+        wrapper.appendChild(note);
+    }
 
 	return {
 		destroy: () => {
