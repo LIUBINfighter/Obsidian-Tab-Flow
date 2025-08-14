@@ -3,6 +3,7 @@ import InMarkdownRender from './InMarkdownRender';
 import Overview from './Overview';
 import MetadataPanel from './Metadata';
 import InstrumentsTuning from './InstrumentsTuning';
+import Notes from './Notes';
 
 export interface DocPanel {
   id: string;
@@ -16,6 +17,7 @@ export const panels: DocPanel[] = [
   Overview,
   MetadataPanel,
   InstrumentsTuning,
+  Notes,
 ];
 
 export default panels;
