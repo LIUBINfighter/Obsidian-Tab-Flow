@@ -9,6 +9,7 @@ enum TabType {
 	Settings = "settings",
 }
 
+
 export class AlphaTabSettingTab extends PluginSettingTab {
 	plugin: AlphaTabPlugin;
 	activeTab: TabType = TabType.Assets; // 默认显示资产选项卡
@@ -18,13 +19,13 @@ export class AlphaTabSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	display(): void {
+	async display(): Promise<void> {
 		const { containerEl } = this;
 		containerEl.empty();
 
 		// 创建选项卡容器
 		const tabsContainer = containerEl.createDiv({ cls: "settings-tabs" });
-		
+
 		// 添加自定义样式，使选项卡更美观
 		containerEl.createEl("style", {
 			text: `
@@ -57,21 +58,21 @@ export class AlphaTabSettingTab extends PluginSettingTab {
 			cls: `settings-tab ${this.activeTab === TabType.Assets ? "active" : ""}`,
 			text: "资产管理",
 		});
-		
+
 		const settingsTab = tabsContainer.createDiv({
 			cls: `settings-tab ${this.activeTab === TabType.Settings ? "active" : ""}`,
 			text: "其他设置",
 		});
 
 		// 添加选项卡点击事件
-		assetsTab.addEventListener("click", () => {
+		assetsTab.addEventListener("click", async () => {
 			this.activeTab = TabType.Assets;
-			this.display();
+			await this.display();
 		});
 
-		settingsTab.addEventListener("click", () => {
+		settingsTab.addEventListener("click", async () => {
 			this.activeTab = TabType.Settings;
-			this.display();
+			await this.display();
 		});
 
 		// 创建选项卡内容容器
@@ -79,32 +80,28 @@ export class AlphaTabSettingTab extends PluginSettingTab {
 
 		// 根据当前活动选项卡显示相应内容
 		if (this.activeTab === TabType.Assets) {
-			this.displayAssetsTab(tabContentContainer);
+			await this.displayAssetsTab(tabContentContainer);
 		} else if (this.activeTab === TabType.Settings) {
 			this.displaySettingsTab(tabContentContainer);
 		}
 	}
 
+
 	// 显示资产管理选项卡内容
-	displayAssetsTab(containerEl: HTMLElement): void {
+	async displayAssetsTab(containerEl: HTMLElement): Promise<void> {
 		// 资源文件管理区域
 		containerEl.createEl("h3", { text: "资源文件管理" });
 
 		// 显示资源文件状态
-		const assetsStatus = this.plugin.checkRequiredAssets()
-			? "✅ 已安装"
-			: "❌ 未安装或不完整";
+		const assetsCheck = await this.plugin.checkRequiredAssets();
+		const assetsStatus = assetsCheck ? "✅ 已安装" : "❌ 未安装或不完整";
 
 		new Setting(containerEl)
 			.setName("必要资源文件")
 			.setDesc(`状态: ${assetsStatus}`)
 			.addButton((button) =>
 				button
-					.setButtonText(
-						this.plugin.checkRequiredAssets()
-							? "重新下载"
-							: "下载资源文件"
-					)
+					.setButtonText(assetsCheck ? "重新下载" : "下载资源文件")
 					.setCta()
 					.onClick(async () => {
 						button.setButtonText("正在下载...").setDisabled(true);
@@ -126,7 +123,7 @@ export class AlphaTabSettingTab extends PluginSettingTab {
 							);
 						}
 
-						this.display(); // 重新渲染设置页面以更新状态
+						await this.display(); // 重新渲染设置页面以更新状态
 					})
 			);
 
