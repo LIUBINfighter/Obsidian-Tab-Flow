@@ -90,5 +90,42 @@ export class DocView extends ItemView {
                 contentWrap.setText('渲染面板时出错');
             }
         }
+
+        // In-panel navigation (上一条 / 下一条) inferred from panels order
+        const currentIndex = Math.max(0, this.panels.findIndex((p) => p.id === (active?.id || null)));
+        const prevPanel = currentIndex > 0 ? this.panels[currentIndex - 1] : null;
+        const nextPanel = currentIndex < this.panels.length - 1 ? this.panels[currentIndex + 1] : null;
+
+        if (prevPanel || nextPanel) {
+            const docNav = contentWrap.createDiv({ cls: 'doc-nav' });
+
+            if (prevPanel) {
+                const prev = docNav.createDiv({ cls: 'doc-nav-item doc-nav-item--prev' });
+                const label = prev.createDiv({ cls: 'doc-nav-label', text: '上一条' });
+                label.setAttr('aria-hidden', 'true');
+                prev.createDiv({ cls: 'doc-nav-title', text: prevPanel.title });
+                prev.setAttr('role', 'button');
+                prev.setAttr('tabindex', '0');
+                prev.setAttr('aria-label', `上一条：${prevPanel.title}`);
+                prev.addEventListener('click', () => { this.activeId = prevPanel.id; this.render(); });
+                prev.addEventListener('keypress', (e) => { if ((e as KeyboardEvent).key === 'Enter') { this.activeId = prevPanel.id; this.render(); } });
+            }
+
+            if (nextPanel) {
+                const next = docNav.createDiv({ cls: 'doc-nav-item doc-nav-item--next' });
+                const label = next.createDiv({ cls: 'doc-nav-label', text: '下一条' });
+                label.setAttr('aria-hidden', 'true');
+                next.createDiv({ cls: 'doc-nav-title', text: nextPanel.title });
+                next.setAttr('role', 'button');
+                next.setAttr('tabindex', '0');
+                next.setAttr('aria-label', `下一条：${nextPanel.title}`);
+                next.addEventListener('click', () => { this.activeId = nextPanel.id; this.render(); });
+                next.addEventListener('keypress', (e) => { if ((e as KeyboardEvent).key === 'Enter') { this.activeId = nextPanel.id; this.render(); } });
+            }
+
+            // layout class: one vs two columns
+            const count = docNav.children.length;
+            if (count >= 2) docNav.addClass('two'); else docNav.addClass('one');
+        }
     }
 }

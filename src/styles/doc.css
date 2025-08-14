@@ -21,6 +21,8 @@
 }
 .tabflow-doc-main {
 	flex: 1 1 auto;
+	background: transparent;
+	min-width: 0; /* allow content to shrink within flex to avoid overflow */
 }
 
 /* Navigation styling */
@@ -98,7 +100,8 @@
 	margin: 12px 16px;
 }
 .tabflow-doc-markdown {
-	max-width: 90%;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 .tabflow-doc-footer {
@@ -122,6 +125,7 @@
 .tabflow-doc-main {
 	flex: 1 1 auto;
 	background: transparent;
+	min-width: 0; /* allow content to shrink within flex to avoid overflow */
 }
 
 .tabflow-doc-nav {
@@ -151,11 +155,69 @@
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
+	width: 100%;
+	box-sizing: border-box;
 }
 
 /* Host wrapper for each playground instance in docs */
 .doc-playground-host {
     margin: 16px 0 20px 0;
+}
+
+/* Ensure AlphaTex containers do not exceed panel width */
+.alphatex-block { max-width: 100%; }
+.alphatex-score { width: 100%; max-width: 100%; }
+.alphatex-score svg { max-width: 100%; height: auto; }
+
+/* In-panel prev/next navigation (Hugo-like) */
+.doc-nav {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+}
+.doc-nav.two .doc-nav-item { flex: 1 1 0; }
+.doc-nav.one .doc-nav-item { flex: 1 1 100%; }
+.doc-nav-item {
+    padding: 14px 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background: var(--background-secondary);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    min-height: 72px;
+    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.doc-nav-item:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+    transform: translateY(-1px);
+}
+.doc-nav-item.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.doc-nav-item--prev {
+    justify-self: start;
+}
+.doc-nav-item--next {
+    justify-self: stretch;
+    text-align: left;
+}
+.doc-nav-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.doc-nav-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
+@media (max-width: 900px) {
+    .doc-nav { flex-direction: column; }
 }
 
 /* Responsive: keep single column */
