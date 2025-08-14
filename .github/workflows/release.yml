@@ -31,17 +31,18 @@ jobs:
       - name: Package assets
         run: |
           # 创建资产目录结构
-          mkdir -p assets-package/assets/alphatab/font
-          mkdir -p assets-package/assets/alphatab/soundfont
-          
-          # 复制必要资产文件
-          cp assets/alphatab/alphaTab.worker.mjs assets-package/assets/alphatab/
-          cp assets/alphatab/alphatab.js assets-package/assets/alphatab/
-          cp assets/alphatab/soundfont/sonivox.sf2 assets-package/assets/alphatab/soundfont/
-          cp assets/alphatab/font/Bravura.woff2 assets-package/assets/alphatab/font/
-          cp assets/alphatab/font/Bravura.woff assets-package/assets/alphatab/font/
-          cp assets/alphatab/font/bravura_metadata.json assets-package/assets/alphatab/font/
-          
+          mkdir -p assets-package/assets/font
+          mkdir -p assets-package/assets/soundfont
+
+          # 复制必要资产文件（按实际 assets 目录结构）
+          cp assets/alphaTab.min.js assets-package/assets/
+          cp assets/Bravura.woff2 assets-package/assets/font/
+          cp assets/sonivox.sf3 assets-package/assets/soundfont/
+
+          # 如有其他字体或元数据文件可补充
+          # cp assets/Bravura.woff assets-package/assets/font/
+          # cp assets/bravura_metadata.json assets-package/assets/font/
+
           # 创建资产压缩包
           cd assets-package
           zip -r ../assets.zip .
