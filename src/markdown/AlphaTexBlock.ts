@@ -25,33 +25,51 @@ export interface AlphaTexMountHandle {
 }
 
 function parseInlineInit(source: string): { opts: AlphaTexInitOptions; body: string } {
-    // Support Mermaid-like init on the very first line, single-line or multi-line until closing }%%
-    // Examples:
-    // %%{init: {"a":1}}%%\n...  or
-    // %%{init: {\n  ...\n} }%%\n...
-    const multi = source.match(/^\s*%%\{\s*init\s*:\s*(\{[\s\S]*?\})\s*%%\s*\r?\n?/);
-    if (multi) {
-        try {
-            const json = JSON.parse(multi[1]);
-            const body = source.slice(multi[0].length);
-            return { opts: json || {}, body };
-        } catch {
-            // fall through to no-init behavior
-        }
-    }
+    // Robust multi-line parser for leading Mermaid-like init block
+    // Only if it appears at the very beginning (ignoring BOM/whitespace)
+    let s = source;
+    if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1);
+    const start = s.match(/^\s*%%\{\s*init\s*:/);
+    if (!start) return { opts: {}, body: source };
+    let cursor = start[0].length;
+    const objStart = s.indexOf('{', cursor);
+    if (objStart < 0) return { opts: {}, body: source };
 
-    // legacy: strictly single-line on first line
-    const firstLineEnd = source.indexOf("\n");
-    const firstLine = firstLineEnd >= 0 ? source.slice(0, firstLineEnd) : source;
-    const initMatch = firstLine.match(/^\s*%%\{\s*init\s*:\s*(\{[\s\S]*\})\s*}\s*%%\s*$/);
-    if (!initMatch) return { opts: {}, body: source };
-    try {
-        const json = JSON.parse(initMatch[1]);
-        const body = firstLineEnd >= 0 ? source.slice(firstLineEnd + 1) : "";
-        return { opts: json || {}, body };
-    } catch {
-        return { opts: {}, body: source };
+    // Scan JSON object with brace counting and string handling
+    let i = objStart;
+    let depth = 0;
+    let inString = false;
+    let quote: '"' | "'" | null = null;
+    while (i < s.length) {
+        const ch = s[i];
+        if (inString) {
+            if (ch === '\\') { i += 2; continue; }
+            if (ch === quote) { inString = false; quote = null; }
+            i++;
+            continue;
+        }
+        if (ch === '"' || ch === "'") { inString = true; quote = ch as '"' | "'"; i++; continue; }
+        if (ch === '{') { depth++; i++; continue; }
+        if (ch === '}') { depth--; i++; if (depth === 0) break; continue; }
+        i++;
     }
+    if (depth !== 0) return { opts: {}, body: source };
+    const jsonText = s.slice(objStart, i);
+    let opts: AlphaTexInitOptions = {};
+    try { opts = JSON.parse(jsonText) || {}; } catch { return { opts: {}, body: source }; }
+
+    // Consume trailing wrapper: optional spaces, optional extra '}', then closing '%%', then optional newline
+    let k = i;
+    while (k < s.length && /\s/.test(s[k])) k++;
+    if (s[k] === '}') { k++; while (k < s.length && /\s/.test(s[k])) k++; }
+    if (s.slice(k, k + 2) === '%%') k += 2;
+    if (s[k] === '\r') k++;
+    if (s[k] === '\n') k++;
+
+    // Map back to original source length if a BOM was stripped
+    const consumed = k + (source.length - s.length);
+    const body = source.slice(consumed);
+    return { opts, body };
 }
 
 function toScrollMode(value: number | string | undefined): number | undefined {
@@ -177,10 +195,10 @@ export function mountAlphaTexBlock(
 
 	// render via convenient tex method; fallback to manual importer if needed
 	let destroyed = false;
-	const renderFromTex = () => {
+    const renderFromTex = () => {
 		try {
 			if (typeof (api as any).tex === "function") {
-				(api as any).tex(body, merged.tracks);
+                (api as any).tex(body);
 				return;
 			}
 			// Fallback: manual import
@@ -191,7 +209,7 @@ export function mountAlphaTexBlock(
 				imp.logErrors = true;
 				imp.initFromString(body, api.settings);
 				const score = imp.readScore();
-				api.renderScore(score, merged.tracks);
+                api.renderScore(score);
 			}
 		} catch (e) {
 			// Simple error surface into controls
@@ -201,7 +219,25 @@ export function mountAlphaTexBlock(
             wrapper.appendChild(errEl);
 		}
 	};
-	renderFromTex();
+    // Apply track filtering after score loaded if requested
+    try {
+        (api as any).scoreLoaded?.on?.(() => {
+            try {
+                const tracksRequest = merged.tracks;
+                if (!Array.isArray(tracksRequest) || tracksRequest.length === 0) return;
+                if (tracksRequest.includes(-1)) return; // -1 means all
+                const allTracks = (api as any).score?.tracks as any[] | undefined;
+                if (!allTracks || allTracks.length === 0) return;
+                const wanted = new Set<number>(tracksRequest);
+                const selected = allTracks.filter(t => typeof t?.index === 'number' && wanted.has(t.index));
+                if (selected.length > 0) {
+                    (api as any).renderTracks(selected);
+                }
+            } catch {}
+        });
+    } catch {}
+
+    renderFromTex();
 
     // controls (try to unify style with PlayBar) — only when player is enabled
     if (resources.soundFontUri && playerEnabled) {
