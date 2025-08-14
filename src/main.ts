@@ -1,6 +1,6 @@
 import { Plugin, TFile, Notice, requestUrl, MarkdownRenderChild } from "obsidian";
 import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
-import { AlphaTexDocView, VIEW_TYPE_ALPHATEX_DOC } from "./views/AlphaTexDocView";
+import { DocView, VIEW_TYPE_ALPHATEX_DOC } from "./views/DocView";
 import {
 	ResourceLoaderService,
 	AlphaTabResources,
@@ -257,7 +257,7 @@ export default class MyPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 
 		// 注册 AlphaTex 文档视图
-		this.registerView(VIEW_TYPE_ALPHATEX_DOC, (leaf) => new AlphaTexDocView(leaf, this));
+		this.registerView(VIEW_TYPE_ALPHATEX_DOC, (leaf) => new DocView(leaf, this));
 
 		this.addCommand({
 			id: 'open-alphatex-doc-view',

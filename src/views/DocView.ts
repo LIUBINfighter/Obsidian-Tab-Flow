@@ -3,7 +3,7 @@ import MyPlugin from '../main';
 
 export const VIEW_TYPE_ALPHATEX_DOC = 'alphatex-doc-view';
 
-export class AlphaTexDocView extends ItemView {
+export class DocView extends ItemView {
     plugin: MyPlugin;
 
     constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
