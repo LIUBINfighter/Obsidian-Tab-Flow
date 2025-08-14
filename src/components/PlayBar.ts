@@ -93,16 +93,21 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         layoutToggleBtn.classList.toggle("is-active", isHorizontal);
     }
 
-    // 从全局设置读取可见性（若获取失败则全部显示）
+    // 从运行期覆盖或全局设置读取可见性（覆盖优先）
     let visibility: any = undefined;
+    let runtimeOverride: { components?: Record<string, boolean>; order?: string[] } | undefined = undefined;
+    let plugin: any = undefined;
     try {
         // @ts-ignore - 通过全局 app.plugins 获取本插件实例
         const pluginId = 'tab-flow';
-        const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+        plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
         visibility = plugin?.settings?.playBar?.components;
+        runtimeOverride = plugin?.runtimeUiOverride;
     } catch {}
 
     const show = (key: string, defaultValue = true): boolean => {
+        const overrideVisible = runtimeOverride?.components?.[key];
+        if (typeof overrideVisible === 'boolean') return overrideVisible;
         if (!visibility) return defaultValue;
         const v = visibility[key];
         return typeof v === 'boolean' ? v : defaultValue;
@@ -119,13 +124,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		"progressBar","speed","staveProfile","zoom","audioPlayer"
 	];
 
-	let order: string[] = defaultOrder;
-	try {
-		// @ts-ignore
-		const plugin = (app as any)?.plugins?.getPlugin?.('tab-flow');
-		const saved = plugin?.settings?.playBar?.order;
-		if (Array.isArray(saved) && saved.length > 0) order = saved;
-	} catch {}
+    let order: string[] = defaultOrder;
+    try {
+        const saved = (runtimeOverride?.order && Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0)
+            ? runtimeOverride.order
+            : plugin?.settings?.playBar?.order;
+        if (Array.isArray(saved) && saved.length > 0) order = saved;
+    } catch {}
 
 	const renderers: Record<string, () => void> = {
 		playPause: () => {

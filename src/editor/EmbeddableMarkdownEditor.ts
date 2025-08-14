@@ -114,8 +114,16 @@ export class EmbeddableMarkdownEditor {
 		}
 		const originalOnUpdate = this.editor.onUpdate?.bind(this.editor);
 		this.editor.onUpdate = (update: ViewUpdate, changed: boolean) => {
-			originalOnUpdate?.(update, changed);
-			if (changed) this.options.onChange?.(update);
+			try {
+				// 保护：在视图未就绪或已卸载时不调用后续逻辑，避免 selection 相关错误
+				const hasView = !!(update as any)?.view;
+				const stillLoaded = !!(this as any).editor?.activeCM || !!(this as any)._loaded;
+				if (!hasView || !stillLoaded) return;
+				originalOnUpdate?.(update, changed);
+				if (changed) this.options.onChange?.(update);
+			} catch {
+				// 静默吞掉外部编辑器销毁期间的偶发更新
+			}
 		};
 	}
 

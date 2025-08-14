@@ -15,6 +15,9 @@ export interface AlphaTexInitOptions {
 	tracks?: number[];
 	// callback for two-way binding (provided by main.ts)
 	onUpdateInit?: (partial: Partial<AlphaTexInitOptions>) => void;
+		// runtime UI override bridge (provided by main.ts)
+		setUiOverride?: (override: { components?: Record<string, boolean>; order?: string[] } | null) => void;
+		clearUiOverride?: () => void;
 }
 
 export interface AlphaTexMountHandle {
@@ -63,6 +66,11 @@ export function mountAlphaTexBlock(
 ): AlphaTexMountHandle {
 	const { opts, body } = parseInlineInit(source);
 	const merged: AlphaTexInitOptions = { ...(defaults || {}), ...(opts || {}) };
+
+	// extract optional UI override from init
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const uiOverride: { components?: Record<string, boolean>; order?: string[] } | undefined = (opts as any)?.ui;
+	try { if (uiOverride && defaults?.setUiOverride) defaults.setUiOverride(uiOverride); } catch {}
 
 	// container structure
 	const wrapper = document.createElement("div");
@@ -261,16 +269,23 @@ export function mountAlphaTexBlock(
 			const enabled = (api.metronomeVolume || 0) > 0 ? false : true;
 			api.metronomeVolume = enabled ? 1 : 0;
 			merged.metronome = enabled;
+			try { metroBtn.classList.toggle("is-active", !!enabled); } catch {}
 			defaults?.onUpdateInit?.({ metronome: enabled });
 		};
 
-		controlsEl.appendChild(playPauseBtn);
-		controlsEl.appendChild(stopBtn);
+		// component-level visibility via init.ui.components (defaults to true)
+		const shouldShow = (key: string, def = true) => {
+			const c = uiOverride?.components;
+			return typeof c?.[key] === "boolean" ? !!c?.[key] : def;
+		};
+
+		if (shouldShow("playPause", true)) controlsEl.appendChild(playPauseBtn);
+		if (shouldShow("stop", true)) controlsEl.appendChild(stopBtn);
 		// controlsEl.appendChild(speedIcon);
 		// controlsEl.appendChild(speedInput);
 		// controlsEl.appendChild(zoomIcon);
 		// controlsEl.appendChild(zoomInput);
-		controlsEl.appendChild(metroBtn);
+		if (shouldShow("metronome", true)) controlsEl.appendChild(metroBtn);
     } else if (playerEnabled && !resources.soundFontUri) {
         // compact note, no controls container
         const note = document.createElement("div");
@@ -287,6 +302,8 @@ export function mountAlphaTexBlock(
 			try { rootEl.innerHTML = ""; } catch {}
 			try { fontStyle.remove(); } catch {}
 			try { runtimeStyle.remove(); } catch {}
+				// clear runtime UI override when this block unmounts
+				try { defaults?.clearUiOverride?.(); } catch {}
 		},
 	};
 }
