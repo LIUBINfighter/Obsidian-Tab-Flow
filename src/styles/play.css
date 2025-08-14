@@ -1,0 +1,186 @@
+/* 播放栏自定义按钮样式 */
+.play-bar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 100;
+	height: calc(var(--status-bar-height) * 2);
+	background: var(--status-bar-background);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 -1px 0 var(--background-modifier-border);
+	padding: 0 16px;
+}
+.play-bar-btn:hover,
+.play-bar-btn:focus {
+	background: var(--interactive-hover);
+	color: var(--text-accent);
+	outline: none;
+}
+.play-bar-btn:active {
+	background: var(--background-modifier-selected);
+}
+.play-bar-btn span {
+	display: inline-flex;
+	align-items: center;
+}
+
+.play-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: var(--background-primary);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start; /* 从左到右顺序排列，左对齐 */
+    gap: 6px;
+    box-shadow: 0 -1px 0 var(--background-modifier-border);
+    padding: var(--size-4-2) var(--size-4-2);
+}
+
+/* 播放栏各分区样式 */
+.play-bar-section {
+	display: flex;
+	align-items: center;
+}
+
+.play-controls {
+	gap: 4px;
+	min-width: 40px;
+	width: 60px; /* 固定宽度 */
+	justify-content: flex-start; /* 左侧对齐 */
+	padding-right: 10px;
+}
+
+.play-status {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	min-width: 40px;
+	width: 60px; /* 固定宽度 */
+	justify-content: flex-end; /* 右侧对齐 */
+	padding-left: 10px;
+}
+
+/* 确保按钮符合 Obsidian 的风格 */
+.play-bar .clickable-icon {
+	color: var(--icon-color);
+	padding: 4px;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+}
+
+.play-bar .clickable-icon:hover {
+	color: var(--icon-color-hover);
+	background-color: var(--interactive-hover);
+}
+
+/* 激活态：高亮图标本身而不仅是背景 */
+.play-bar .clickable-icon.is-active {
+    color: var(--interactive-accent);
+    background-color: var(--interactive-hover);
+}
+.play-bar .clickable-icon.is-active svg {
+    stroke: currentColor;
+}
+
+/* 进度条相关样式 */
+/* 简化布局后，进度条容器规则可保留宽度控制 */
+.play-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+    max-width: 800px;
+}
+
+.play-time {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+	min-width: 36px;
+	text-align: center;
+}
+
+.progress-bar-container {
+	position: relative;
+	flex: 1;
+	height: 12px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	max-width: 600px; /* 硬编码进度条容器的最大宽度 */
+	width: 100%; /* 确保它占用可用空间但不超过最大宽度 */
+}
+
+.progress-bar {
+	position: relative;
+	width: 100%;
+	height: 4px;
+	background-color: var(--background-modifier-border);
+	border-radius: 2px;
+	overflow: visible;
+}
+
+.progress-fill {
+	position: absolute;
+	height: 100%;
+	width: 0;
+	background-color: var(--interactive-accent);
+	border-radius: 2px;
+	transition: width 0.1s ease;
+	/* 确保从左边开始填充 */
+	left: 0;
+	top: 0;
+}
+
+.progress-handle {
+	position: absolute;
+	top: 50%;
+	/* 使用transform确保手柄中心对齐到进度位置 */
+	transform: translate(-50%, -50%);
+	width: 12px;
+	height: 12px;
+	background-color: var(--interactive-accent);
+	border-radius: 50%;
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	cursor: grab;
+	z-index: 10; /* 确保手柄在进度条上方 */
+}
+
+/* 拖动状态样式 */
+.progress-handle:active,
+.progress-bar:active .progress-handle {
+	cursor: grabbing;
+	opacity: 1;
+}
+
+.progress-bar:hover .progress-handle,
+.progress-bar:active .progress-handle,
+.progress-bar.dragging .progress-handle,
+.progress-handle.dragging,
+.progress-handle:hover {
+	opacity: 1;
+}
+
+/* 拖动时的增强视觉反馈 */
+.progress-bar.dragging {
+	cursor: grabbing;
+}
+
+.progress-handle.dragging {
+	cursor: grabbing;
+	transform: translate(-50%, -50%) scale(1.2);
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 为内容添加底部边距，避免被播放栏遮挡 */
+.view-content > .tab-view .content {
+	margin-bottom: calc(var(--status-bar-height) * 2 + 8px);
+}

@@ -1,4 +1,4 @@
-# Obsidian Interactive Tabs
+# Obsidian Tab Flow
 
 Play and create your guitar tabs in Obsidian!
 
@@ -94,6 +94,8 @@ This plugin can't automatically download `font`, `soundfont` and `worker.mjs` fo
 Copyright (c) 2025 Jay Bridge and other contributors. All rights reserved.
 
 Licensed under the MPL 2.0 License.
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LIUBINfighter/interactive-tabs)
 
 <!-- ## Packages Using -->
 

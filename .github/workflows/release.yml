@@ -1,4 +1,4 @@
-name: Release Obsidian plugin interactive-tabs
+name: Release Obsidian plugin tab-flow
 
 on:
   push:
@@ -24,9 +24,9 @@ jobs:
 
       - name: Package plugin
         run: |
-          mkdir interactive-tabs
-          cp main.js manifest.json styles.css interactive-tabs/
-          zip -r interactive-tabs.zip interactive-tabs/
+          mkdir tab-flow
+          cp main.js manifest.json styles.css tab-flow/
+          zip -r tab-flow.zip tab-flow/
 
       - name: Package assets
         run: |
@@ -56,4 +56,4 @@ jobs:
           gh release create "$tag" \
             --title="$tag" \
             --draft \
-            main.js manifest.json styles.css interactive-tabs.zip assets.zip
+            main.js manifest.json styles.css tab-flow.zip assets.zip

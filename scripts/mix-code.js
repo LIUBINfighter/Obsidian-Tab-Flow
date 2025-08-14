@@ -7,7 +7,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const srcDir = path.join(__dirname, '../src');
+
+// 解析 --dir 参数，默认为 ../src
+let userDir = '../src';
+for (let i = 2; i < process.argv.length; i++) {
+    if (process.argv[i] === '--dir' && process.argv[i + 1]) {
+        userDir = process.argv[i + 1];
+        break;
+    }
+}
+const srcDir = path.join(__dirname, userDir);
 const stylesFile = path.join(__dirname, '../styles.css');
 
 // 生成简短的时间戳文件名
