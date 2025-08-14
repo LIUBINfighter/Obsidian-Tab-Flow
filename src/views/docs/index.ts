@@ -1,5 +1,8 @@
 import ReadMe from './ReadMe';
 import InMarkdownRender from './InMarkdownRender';
+import Overview from './Overview';
+import MetadataPanel from './Metadata';
+import InstrumentsTuning from './InstrumentsTuning';
 
 export interface DocPanel {
   id: string;
@@ -10,6 +13,9 @@ export interface DocPanel {
 export const panels: DocPanel[] = [
   ReadMe,
   InMarkdownRender,
+  Overview,
+  MetadataPanel,
+  InstrumentsTuning,
 ];
 
 export default panels;
