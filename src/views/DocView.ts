@@ -12,6 +12,7 @@ export class DocView extends ItemView {
     plugin: MyPlugin;
     panels: DocPanel[] = [];
     activeId: string | null = null;
+    private layoutObserver?: ResizeObserver;
 
     constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
         super(leaf);
@@ -62,6 +63,19 @@ export class DocView extends ItemView {
 
         // Layout wrapper
         const layout = container.createDiv({ cls: 'tabflow-doc-layout' });
+        // Observe width changes of the view container to toggle narrow layout per-view
+        try {
+            const applyNarrow = () => {
+                const w = layout.clientWidth;
+                if (w > 0 && w < 600) layout.addClass('is-narrow'); else layout.removeClass('is-narrow');
+            };
+            this.layoutObserver?.disconnect();
+            this.layoutObserver = new ResizeObserver(() => applyNarrow());
+            this.layoutObserver.observe(layout);
+            applyNarrow();
+        } catch {
+            // no-op
+        }
 
         // Left column (tabs)
         const leftCol = layout.createDiv({ cls: 'tabflow-doc-left' });
