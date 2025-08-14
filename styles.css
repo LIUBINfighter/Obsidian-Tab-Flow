@@ -1,70 +1,4 @@
-/* build: build:refactor */
-/* --- SettingTab.css --- */
-.itabs-settings-tabs {
-	display: flex;
-	border-bottom: 1px solid var(--background-modifier-border);
-	margin-bottom: 1em;
-	gap: 0.5em;
-}
-
-.itabs-settings-tab {
-	background: none;
-	border: none;
-	padding: 0.5em 1.5em;
-	cursor: pointer;
-	font-size: 1em;
-	color: var(--text-normal);
-	border-radius: 0.5em 0.5em 0 0;
-	transition: background 0.2s, color 0.2s;
-}
-
-.itabs-settings-tab.active {
-	border-bottom: 2px solid var(--interactive-accent);
-	font-weight: bold;
-	color: var(--interactive-accent);
-	background: var(--background-secondary-alt);
-}
-
-.itabs-settings-tab:hover:not(.active) {
-	background: var(--background-secondary);
-}
-
-.itabs-settings-contents {
-	padding: 1em 0;
-}
-
-.setting-item-description {
-	color: var(--text-muted);
-	font-size: 0.95em;
-	margin-bottom: 0.5em;
-}
-
-pre.setting-item-description {
-	background-color: var(--background-secondary);
-	padding: 10px;
-	border-radius: 5px;
-	overflow-x: auto;
-	font-family: monospace;
-	margin-top: 8px;
-	margin-bottom: 16px;
-}
-
-pre.setting-item-description code {
-	white-space: pre;
-	font-size: 0.85em;
-}
-
-ol.setting-item-description,
-ul.setting-item-description {
-	margin-left: 1.5em;
-	margin-bottom: 0.5em;
-}
-
-ol.setting-item-description li,
-ul.setting-item-description li {
-	margin-bottom: 0.2em;
-}
-
+/* build: build */
 /* --- TrackModal.css --- */
 
 .tracks-modal .setting-item {
@@ -123,8 +57,757 @@ ul.setting-item-description li {
   text-align: center;
 }
 
+/* --- alphatex.css --- */
+.alphatex-block {
+	margin: 0.5rem 0 1rem 0;
+}
+.alphatex-score {
+	width: 100%;
+	overflow: auto;
+}
+.alphatex-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+	/* margin-top: 0.5rem; */
+}
+.alphatex-controls .atx-btn {
+	padding: 0.25rem 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--interactive-normal);
+	color: var(--text-normal);
+	cursor: pointer;
+}
+.alphatex-controls .atx-label {
+	display: inline-flex;
+	gap: 0.25rem;
+	align-items: center;
+}
+.alphatex-error {
+	color: var(--text-error);
+}
+.alphatex-note {
+	color: var(--text-muted);
+}
+
+
+
 /* --- debug.css --- */
 /* .debug-bar {
 	display: none !important;
 } */
 
+/* --- doc.css --- */
+/* Basic layout for TabFlow documentation view */
+.tabflow-doc-header {
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tabflow-doc-header h2 {
+	margin: 0;
+	font-size: 1.5em;
+	font-weight: 600;
+}
+
+.tabflow-doc-header-btns {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+/* Two-column layout: left sidebar (navigation) + main content */
+.tabflow-doc-layout {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+	margin: 12px 16px 0 16px;
+}
+
+.tabflow-doc-layout.is-narrow {
+	display: block;
+}
+
+.tabflow-doc-left {
+	width: 220px;
+	min-width: 160px;
+	max-width: 30%;
+}
+
+.tabflow-doc-main {
+	flex: 1 1 auto;
+	background: transparent;
+	min-width: 0;
+	/* allow content to shrink within flex to avoid overflow */
+}
+
+/* Navigation styling */
+.tabflow-nav {
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px;
+}
+
+.tabflow-nav ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.tabflow-nav .tab-item {
+	padding: 8px 10px;
+	margin: 4px 0;
+	border-radius: 4px;
+	cursor: default;
+	color: var(--text-normal);
+}
+
+.tabflow-nav .tab-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.tabflow-nav .tab-item--active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent, #fff);
+}
+
+/* Main content placeholder */
+.tabflow-doc-main-content {
+	background: var(--background-secondary);
+	border: 1px dashed var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 16px;
+}
+
+/* Embedded AlphaTex markdown editor styling */
+.alphatex-playground {
+	display: flex;
+	gap: 12px;
+}
+
+.alphatex-playground.is-vertical {
+	flex-direction: column;
+}
+
+.alphatex-playground.is-horizontal {
+	flex-direction: row;
+	align-items: stretch;
+}
+
+.alphatex-playground.is-horizontal .inmarkdown-editor,
+.alphatex-playground.is-horizontal .inmarkdown-preview {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+.inmarkdown-editor-cm {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	padding: 6px 8px;
+	margin-bottom: 12px;
+	position: relative;
+}
+
+.inmarkdown-editor-toolbar {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	display: flex;
+	gap: 6px;
+}
+
+.inmarkdown-editor-toolbar .clickable-icon {
+	padding: 4px;
+	border-radius: 4px;
+}
+
+.inmarkdown-editor-toolbar .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+}
+.inmarkdown-editor-toolbar .clickable-icon.is-success {
+    background: var(--background-modifier-success);
+}
+
+.inmarkdown-editor-cm:focus-within {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--interactive-accent) 40%, transparent);
+}
+
+.inmarkdown-editor-cm .cm-editor {
+	background: transparent;
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	line-height: 1.5;
+	max-height: 260px;
+	/* keep a reasonable height */
+	overflow: auto;
+}
+
+.inmarkdown-editor-cm .cm-scroller {
+	padding: 4px 2px;
+}
+
+.inmarkdown-editor-cm .cm-content {
+	padding: 0;
+}
+
+.inmarkdown-preview {
+	margin-top: 4px;
+}
+
+.alphatex-playground.is-horizontal .inmarkdown-preview {
+	margin-top: 0;
+}
+
+/* Viewport fallback: narrow screens force vertical */
+@media (max-width: 720px) {
+	.alphatex-playground.is-horizontal {
+		flex-direction: column;
+	}
+
+	.alphatex-playground.is-horizontal .inmarkdown-preview {
+		margin-top: 4px;
+	}
+}
+
+.tabflow-doc-content {
+	min-height: 320px;
+	padding: 16px;
+	background: var(--background-secondary);
+	border-radius: 4px;
+	max-width: 90ch;
+	margin: 12px 16px;
+}
+
+.tabflow-doc-markdown {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.tabflow-doc-footer {
+	padding: 8px 16px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.playbar-placeholder {
+	color: var(--text-muted);
+}
+
+/* Two-column layout: left navigation + main content */
+.tabflow-doc-layout {
+	display: flex;
+	gap: 16px;
+	align-items: stretch;
+}
+
+.tabflow-doc-layout.is-narrow {
+	display: block;
+}
+
+/* Narrow mode (per-view): make left sidebar full width above content */
+.tabflow-doc-layout.is-narrow .tabflow-doc-left {
+	width: 100%;
+	max-width: none;
+	margin-bottom: 12px;
+}
+
+.tabflow-doc-layout.is-narrow .tabflow-doc-main {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.tabflow-doc-left {
+	width: 240px;
+	min-width: 180px;
+}
+
+.tabflow-doc-main {
+	flex: 1 1 auto;
+	background: transparent;
+	min-width: 0;
+	/* allow content to shrink within flex to avoid overflow */
+}
+
+.tabflow-doc-nav {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px;
+}
+
+.tabflow-doc-tab {
+	padding: 8px 10px;
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--text-normal);
+	margin-bottom: 6px;
+}
+
+.tabflow-doc-tab:hover {
+	background: var(--background-modifier-hover);
+}
+
+.tabflow-doc-tab.active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	font-weight: 600;
+}
+
+.tabflow-doc-main .tabflow-doc-markdown {
+	padding: 12px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* Host wrapper for each playground instance in docs */
+.doc-playground-host {
+	margin: 16px 0 20px 0;
+	/* enable container queries for responsive playground */
+	container-type: inline-size;
+}
+
+/* Container query: if host is narrow, force vertical */
+@container (max-width: 720px) {
+	.doc-playground-host .alphatex-playground.is-horizontal {
+		flex-direction: column;
+	}
+
+	.doc-playground-host .alphatex-playground.is-horizontal .inmarkdown-preview {
+		margin-top: 4px;
+	}
+}
+
+/* Ensure AlphaTex containers do not exceed panel width */
+.alphatex-block {
+	max-width: 100%;
+}
+
+.alphatex-score {
+	width: 100%;
+	max-width: 100%;
+}
+
+.alphatex-score svg {
+	max-width: 100%;
+	height: auto;
+}
+
+/* In-panel prev/next navigation (Hugo-like) */
+.doc-nav {
+	display: flex;
+	gap: 12px;
+	margin-top: 20px;
+	align-items: stretch;
+	flex-wrap: nowrap;
+}
+
+.doc-nav.two .doc-nav-item {
+	flex: 1 1 0;
+}
+
+.doc-nav.one .doc-nav-item {
+	flex: 1 1 100%;
+}
+
+.doc-nav-item {
+	padding: 14px 16px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	background: var(--background-secondary);
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	min-height: 72px;
+	transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.doc-nav-item:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+	transform: translateY(-1px);
+}
+
+.doc-nav-item.is-disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.doc-nav-item--prev {
+	justify-self: start;
+}
+
+.doc-nav-item--next {
+	justify-self: stretch;
+	text-align: left;
+}
+
+.doc-nav-label {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.doc-nav-title {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+@media (max-width: 600px) {
+	.doc-nav {
+		flex-direction: column;
+	}
+}
+
+/* Responsive: keep single column */
+@media (max-width: 900px) {
+	.tabflow-doc-content {
+		padding: 12px;
+		margin: 8px;
+	}
+
+	/* Stack sidebar above main content on narrow screens */
+	.tabflow-doc-layout {
+		display: block;
+		margin: 8px 0;
+	}
+
+	.tabflow-doc-left {
+		width: 100%;
+		max-width: none;
+		margin-bottom: 12px;
+	}
+
+	.tabflow-doc-main {
+		width: 100%;
+		box-sizing: border-box;
+	}
+}
+
+/* --- play.css --- */
+/* 播放栏自定义按钮样式 */
+.play-bar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 100;
+	height: calc(var(--status-bar-height) * 2);
+	background: var(--status-bar-background);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 -1px 0 var(--background-modifier-border);
+	padding: 0 16px;
+}
+.play-bar-btn:hover,
+.play-bar-btn:focus {
+	background: var(--interactive-hover);
+	color: var(--text-accent);
+	outline: none;
+}
+.play-bar-btn:active {
+	background: var(--background-modifier-selected);
+}
+.play-bar-btn span {
+	display: inline-flex;
+	align-items: center;
+}
+
+.play-bar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: var(--background-primary);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start; /* 从左到右顺序排列，左对齐 */
+    gap: 6px;
+    box-shadow: 0 -1px 0 var(--background-modifier-border);
+    padding: var(--size-4-2) var(--size-4-2);
+}
+
+/* 播放栏各分区样式 */
+.play-bar-section {
+	display: flex;
+	align-items: center;
+}
+
+.play-controls {
+	gap: 4px;
+	min-width: 40px;
+	width: 60px; /* 固定宽度 */
+	justify-content: flex-start; /* 左侧对齐 */
+	padding-right: 10px;
+}
+
+.play-status {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	min-width: 40px;
+	width: 60px; /* 固定宽度 */
+	justify-content: flex-end; /* 右侧对齐 */
+	padding-left: 10px;
+}
+
+/* 确保按钮符合 Obsidian 的风格 */
+.play-bar .clickable-icon {
+	color: var(--icon-color);
+	padding: 4px;
+	border-radius: var(--radius-s);
+	cursor: pointer;
+}
+
+.play-bar .clickable-icon:hover {
+	color: var(--icon-color-hover);
+	background-color: var(--interactive-hover);
+}
+
+/* 激活态：高亮图标本身而不仅是背景 */
+.play-bar .clickable-icon.is-active {
+    color: var(--interactive-accent);
+    background-color: var(--interactive-hover);
+}
+.play-bar .clickable-icon.is-active svg {
+    stroke: currentColor;
+}
+
+/* 进度条相关样式 */
+/* 简化布局后，进度条容器规则可保留宽度控制 */
+.play-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 200px;
+    max-width: 800px;
+}
+
+.play-time {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+	min-width: 36px;
+	text-align: center;
+}
+
+.progress-bar-container {
+	position: relative;
+	flex: 1;
+	height: 12px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	max-width: 600px; /* 硬编码进度条容器的最大宽度 */
+	width: 100%; /* 确保它占用可用空间但不超过最大宽度 */
+}
+
+.progress-bar {
+	position: relative;
+	width: 100%;
+	height: 4px;
+	background-color: var(--background-modifier-border);
+	border-radius: 2px;
+	overflow: visible;
+}
+
+.progress-fill {
+	position: absolute;
+	height: 100%;
+	width: 0;
+	background-color: var(--interactive-accent);
+	border-radius: 2px;
+	transition: width 0.1s ease;
+	/* 确保从左边开始填充 */
+	left: 0;
+	top: 0;
+}
+
+.progress-handle {
+	position: absolute;
+	top: 50%;
+	/* 使用transform确保手柄中心对齐到进度位置 */
+	transform: translate(-50%, -50%);
+	width: 12px;
+	height: 12px;
+	background-color: var(--interactive-accent);
+	border-radius: 50%;
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	cursor: grab;
+	z-index: 10; /* 确保手柄在进度条上方 */
+}
+
+/* 拖动状态样式 */
+.progress-handle:active,
+.progress-bar:active .progress-handle {
+	cursor: grabbing;
+	opacity: 1;
+}
+
+.progress-bar:hover .progress-handle,
+.progress-bar:active .progress-handle,
+.progress-bar.dragging .progress-handle,
+.progress-handle.dragging,
+.progress-handle:hover {
+	opacity: 1;
+}
+
+/* 拖动时的增强视觉反馈 */
+.progress-bar.dragging {
+	cursor: grabbing;
+}
+
+.progress-handle.dragging {
+	cursor: grabbing;
+	transform: translate(-50%, -50%) scale(1.2);
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 为内容添加底部边距，避免被播放栏遮挡 */
+.view-content > .tab-view .content {
+	margin-bottom: calc(var(--status-bar-height) * 2 + 8px);
+}
+
+/* --- settingtab.css --- */
+.itabs-settings-tabs {
+	display: flex;
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 1em;
+	gap: 0.5em;
+}
+
+.itabs-settings-tab {
+	background: none;
+	border: none;
+	padding: 0.5em 1.5em;
+	cursor: pointer;
+	font-size: 1em;
+	color: var(--text-normal);
+	border-radius: 0.5em 0.5em 0 0;
+	transition: background 0.2s, color 0.2s;
+}
+
+.itabs-settings-tab.active {
+	border-bottom: 2px solid var(--interactive-accent);
+	font-weight: bold;
+	color: var(--interactive-accent);
+	background: var(--background-secondary-alt);
+}
+
+.itabs-settings-tab:hover:not(.active) {
+	background: var(--background-secondary);
+}
+
+.itabs-settings-contents {
+	padding: 1em 0;
+}
+
+/* 统一去除 setting-item 顶部多余分隔线 */
+.itabs-settings-contents .setting-item.mod-toggle {
+	border-top: none !important;
+	padding: 0;
+}
+
+/* 组件卡片细节样式 */
+.tabflow-card button {
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-normal);
+	border-radius: 6px;
+	padding: 4px 8px;
+}
+
+.tabflow-card button:hover {
+	background: var(--background-secondary-alt);
+}
+
+/* Clickable icon style to replace buttons for order controls */
+.tabflow-card .icon-clickable {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	border-radius: 6px;
+	cursor: pointer;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.tabflow-card .icon-clickable:hover {
+	/* Accent-tinted hover background */
+	background: color-mix(in srgb, var(--interactive-accent) 18%, var(--background-secondary-alt));
+	color: var(--text-on-accent, var(--text-normal));
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--interactive-accent) 35%, transparent) inset;
+}
+
+.tabflow-card .icon-clickable:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+.tabflow-card .icon-clickable:active {
+	background: color-mix(in srgb, var(--interactive-accent) 28%, var(--background-secondary-alt));
+	color: var(--text-on-accent, var(--text-normal));
+}
+
+.tabflow-card.insert-before {
+	box-shadow: 0 2px 0 0 var(--interactive-accent) inset;
+}
+
+.tabflow-card.insert-after {
+	box-shadow: 0 -2px 0 0 var(--interactive-accent) inset;
+}
+
+.tabflow-card.swap-target {
+	background: var(--background-modifier-hover);
+	outline: 2px dashed var(--interactive-accent);
+}
+
+.setting-item-description {
+	color: var(--text-muted);
+	font-size: 0.95em;
+	margin-bottom: 0.5em;
+}
+
+pre.setting-item-description {
+	background-color: var(--background-secondary);
+	padding: 10px;
+	border-radius: 5px;
+	overflow-x: auto;
+	font-family: monospace;
+	margin-top: 8px;
+	margin-bottom: 16px;
+}
+
+pre.setting-item-description code {
+	white-space: pre;
+	font-size: 0.85em;
+}
+
+ol.setting-item-description,
+ul.setting-item-description {
+	margin-left: 1.5em;
+	margin-bottom: 0.5em;
+}
+
+ol.setting-item-description li,
+ul.setting-item-description li {
+	margin-bottom: 0.2em;
+}
