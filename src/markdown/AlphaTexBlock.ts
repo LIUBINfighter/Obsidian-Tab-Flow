@@ -12,6 +12,8 @@ export interface AlphaTexInitOptions {
 	scrollMode?: number | string;
 	// tracks to render (-1 means all)
 	tracks?: number[];
+	// callback for two-way binding (provided by main.ts)
+	onUpdateInit?: (partial: Partial<AlphaTexInitOptions>) => void;
 }
 
 export interface AlphaTexMountHandle {
@@ -47,6 +49,10 @@ function toScrollMode(value: number | string | undefined): number | undefined {
 	};
 	return mapping[key];
 }
+
+// function fromScrollModeEnum(value: number | undefined): string | undefined {
+//   ... (removed UI for scroll mode)
+// }
 
 export function mountAlphaTexBlock(
 	rootEl: HTMLElement,
@@ -197,42 +203,49 @@ export function mountAlphaTexBlock(
 		setIcon(speedIcon, "lucide-gauge");
 		speedIcon.style.marginRight = "0.5em";
 
-		const speedSelect = document.createElement("select");
-		["0.5","0.75","1.0","1.25","1.5","2.0"].forEach((val) => {
-			const opt = document.createElement("option");
-			opt.value = val;
-			opt.innerText = val + "x";
-			if (val === String(merged.speed ?? 1.0)) opt.selected = true;
-			speedSelect.appendChild(opt);
-		});
-		speedSelect.onchange = () => {
-			const v = parseFloat(speedSelect.value);
-			if (!isNaN(v)) api.playbackSpeed = v;
+		const speedInput = document.createElement("input");
+		speedInput.type = "number";
+		speedInput.min = "0.5";
+		speedInput.max = "2";
+		speedInput.step = "0.05";
+		speedInput.value = String(merged.speed ?? 1.0);
+		const applySpeed = () => {
+			const v = parseFloat(speedInput.value);
+			if (!isNaN(v)) {
+				const clamped = Math.max(0.5, Math.min(2.0, v));
+				api.playbackSpeed = clamped;
+				if (speedInput.value !== String(clamped)) speedInput.value = String(clamped);
+				merged.speed = clamped;
+				defaults?.onUpdateInit?.({ speed: clamped });
+			}
 		};
+		speedInput.addEventListener("change", applySpeed);
+		speedInput.addEventListener("blur", applySpeed);
 
 		const zoomIcon = document.createElement("span");
 		setIcon(zoomIcon, "lucide-zoom-in");
 		zoomIcon.style.marginLeft = "1em";
 		zoomIcon.style.marginRight = "0.5em";
-		const zoomSelect = document.createElement("select");
-		[
-			{ label: "50%", value: 0.5 }, { label: "75%", value: 0.75 }, { label: "100%", value: 1 },
-			{ label: "125%", value: 1.25 }, { label: "150%", value: 1.5 }, { label: "200%", value: 2 },
-		].forEach(({label: l, value}) => {
-			const opt = document.createElement("option");
-			opt.value = String(value);
-			opt.innerText = l;
-			if (value === (merged.scale ?? 1)) opt.selected = true;
-			zoomSelect.appendChild(opt);
-		});
-		zoomSelect.onchange = () => {
-			const v = parseFloat(zoomSelect.value);
+		const zoomInput = document.createElement("input");
+		zoomInput.type = "number";
+		zoomInput.min = "0.5";
+		zoomInput.max = "2";
+		zoomInput.step = "0.05";
+		zoomInput.value = String(merged.scale ?? 1.0);
+		const applyScale = () => {
+			const v = parseFloat(zoomInput.value);
 			if (!isNaN(v)) {
-				api.settings.display.scale = v;
+				const clamped = Math.max(0.5, Math.min(2.0, v));
+				api.settings.display.scale = clamped;
 				api.updateSettings();
 				api.render();
+				if (zoomInput.value !== String(clamped)) zoomInput.value = String(clamped);
+				merged.scale = clamped;
+				defaults?.onUpdateInit?.({ scale: clamped });
 			}
 		};
+		zoomInput.addEventListener("change", applyScale);
+		zoomInput.addEventListener("blur", applyScale);
 
 		const metroBtn = document.createElement("button");
 		metroBtn.className = "clickable-icon";
@@ -244,14 +257,16 @@ export function mountAlphaTexBlock(
 		metroBtn.onclick = () => {
 			const enabled = (api.metronomeVolume || 0) > 0 ? false : true;
 			api.metronomeVolume = enabled ? 1 : 0;
+			merged.metronome = enabled;
+			defaults?.onUpdateInit?.({ metronome: enabled });
 		};
 
 		controlsEl.appendChild(playPauseBtn);
 		controlsEl.appendChild(stopBtn);
 		controlsEl.appendChild(speedIcon);
-		controlsEl.appendChild(speedSelect);
+		controlsEl.appendChild(speedInput);
 		controlsEl.appendChild(zoomIcon);
-		controlsEl.appendChild(zoomSelect);
+		controlsEl.appendChild(zoomInput);
 		controlsEl.appendChild(metroBtn);
 	} else {
 		const note = document.createElement("div");

@@ -1,5 +1,6 @@
 import { Plugin, TFile, Notice, requestUrl, MarkdownRenderChild } from "obsidian";
 import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
+import { AlphaTexDocView, VIEW_TYPE_ALPHATEX_DOC } from "./views/AlphaTexDocView";
 import {
 	ResourceLoaderService,
 	AlphaTabResources,
@@ -255,6 +256,19 @@ export default class MyPlugin extends Plugin {
 		// 注册设置面板
 		this.addSettingTab(new SettingTab(this.app, this));
 
+		// 注册 AlphaTex 文档视图
+		this.registerView(VIEW_TYPE_ALPHATEX_DOC, (leaf) => new AlphaTexDocView(leaf, this));
+
+		this.addCommand({
+			id: 'open-alphatex-doc-view',
+			name: 'Open AlphaTex Documentation',
+			callback: async () => {
+				const leaf = this.app.workspace.getLeaf(true);
+				await leaf.setViewState({ type: VIEW_TYPE_ALPHATEX_DOC, active: true });
+				this.app.workspace.revealLeaf(leaf);
+			}
+		});
+
 		// 使用 ResourceLoaderService 加载资源
 		const resourceLoader = new ResourceLoaderService(this.app);
 		this.resources = await resourceLoader.load(this.actualPluginDir);
@@ -300,11 +314,49 @@ export default class MyPlugin extends Plugin {
 						return;
 					}
 
+					// set up two-way binding to init line
+					const section = ctx.getSectionInfo(el);
+					const file = ctx.sourcePath ? this.app.vault.getAbstractFileByPath(ctx.sourcePath) : null;
+					const onUpdateInit = async (partial: any) => {
+						try {
+							if (!section || !file) return;
+							if (!(file instanceof TFile)) return;
+							const raw = await this.app.vault.read(file);
+							const lines = raw.split(/\r?\n/);
+							const start = section.lineStart;
+							const end = section.lineEnd;
+							if (start == null || end == null || start >= lines.length) return;
+							// fenced block is from start..end, replace first content line if it is init, else insert
+							let contentStart = start + 1; // after ```alphatex
+							if (contentStart <= end) {
+								const first = lines[contentStart] ?? "";
+								const m = first.match(/^\s*%%\{\s*init\s*:\s*(\{[\s\S]*\})\s*}\s*%%\s*$/);
+								let initObj: Record<string, any> = {};
+								if (m) {
+									try { initObj = JSON.parse(m[1] || "{}") || {}; } catch {}
+									Object.assign(initObj, partial || {});
+									const ordered: any = {};
+									["scale","speed","scrollMode","metronome"].forEach(k => { if (initObj[k] !== undefined) ordered[k] = initObj[k]; });
+									lines[contentStart] = `%%{init: ${JSON.stringify(ordered)}}%%`;
+								} else {
+									Object.assign(initObj, partial || {});
+									const ordered: any = {};
+									["scale","speed","scrollMode","metronome"].forEach(k => { if ((initObj as any)[k] !== undefined) ordered[k] = (initObj as any)[k]; });
+									lines.splice(contentStart, 0, `%%{init: ${JSON.stringify(ordered)}}%%`);
+                                }
+                            }
+                            await this.app.vault.modify(file, lines.join("\n"));
+						} catch (e) {
+							console.warn("alphatex init write-back failed", e);
+						}
+					};
+
 					const block = mountAlphaTexBlock(el, source, this.resources, {
 						scale: 1.0,
 						speed: 1.0,
 						scrollMode: "Continuous",
 						metronome: false,
+						onUpdateInit,
 					});
 					const child = new MarkdownRenderChild(el);
 					child.onunload = () => block.destroy();
