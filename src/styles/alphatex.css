@@ -10,7 +10,7 @@
 	flex-wrap: wrap;
 	gap: 0.5rem;
 	align-items: center;
-	margin-top: 0.5rem;
+	/* margin-top: 0.5rem; */
 }
 .alphatex-controls .atx-btn {
 	padding: 0.25rem 0.5rem;

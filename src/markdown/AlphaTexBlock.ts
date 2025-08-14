@@ -150,6 +150,17 @@ export function mountAlphaTexBlock(
     wrapper.appendChild(scoreEl);
     rootEl.appendChild(wrapper);
 
+    let errorMessages: string[] = [];
+    let copyBtnAdded = false;
+    const errorIndex = new Map<string, { el: HTMLDivElement; count: number }>();
+    const MAX_ERRORS_TOTAL = 50;
+    const RATE_WINDOW_MS = 1000;
+    const RATE_LIMIT_PER_WINDOW = 30;
+    let rateWindowStart = Date.now();
+    let rateWindowCount = 0;
+    let suppressedCount = 0;
+    let suppressedBanner: HTMLDivElement | null = null;
+
     const formatError = (err: unknown): string => {
         try {
             // Prefer message if present
@@ -162,12 +173,101 @@ export function mountAlphaTexBlock(
         }
     };
 
+    const ensureCopyButton = () => {
+        if (copyBtnAdded) return;
+        copyBtnAdded = true;
+        const btn = document.createElement("button");
+        btn.className = "clickable-icon";
+        btn.setAttribute("type", "button");
+        const icon = document.createElement("span");
+        setIcon(icon, "copy");
+        btn.appendChild(icon);
+        btn.setAttribute("aria-label", "复制错误与原文");
+        btn.title = "复制错误与原文";
+        btn.addEventListener("click", async () => {
+            const mergedText = [
+                "---- AlphaTex Source ----",
+                source,
+                "",
+                "---- Errors ----",
+                ...errorMessages.map((e) => `- ${e}`),
+                "",
+            ].join("\n");
+            try {
+                await navigator.clipboard.writeText(mergedText);
+                try {
+                    setIcon(icon, "check");
+                    btn.classList.add("is-success");
+                    setTimeout(() => { setIcon(icon, "copy"); btn.classList.remove("is-success"); }, 1200);
+                } catch {}
+            } catch {
+                try {
+                    const ta = document.createElement("textarea");
+                    ta.value = mergedText;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand("copy");
+                    ta.remove();
+                    try {
+                        setIcon(icon, "check");
+                        btn.classList.add("is-success");
+                        setTimeout(() => { setIcon(icon, "copy"); btn.classList.remove("is-success"); }, 1200);
+                    } catch {}
+                } catch {}
+            }
+        });
+        // place button at the top of messages
+        messagesEl.appendChild(btn);
+    };
+
     const appendError = (text: string) => {
         try {
+            // Rate limiting
+            const now = Date.now();
+            if (now - rateWindowStart > RATE_WINDOW_MS) {
+                rateWindowStart = now;
+                rateWindowCount = 0;
+                suppressedCount = 0;
+                if (suppressedBanner) { try { suppressedBanner.remove(); } catch {} suppressedBanner = null; }
+            }
+            rateWindowCount++;
+            if (rateWindowCount > RATE_LIMIT_PER_WINDOW) {
+                suppressedCount++;
+                if (!suppressedBanner) {
+                    suppressedBanner = document.createElement("div");
+                    suppressedBanner.className = "alphatex-error";
+                    suppressedBanner.textContent = `Too many errors; further messages are temporarily suppressed`;
+                    messagesEl.appendChild(suppressedBanner);
+                }
+                return;
+            }
+
+            ensureCopyButton();
+
+            // Deduplicate and count
+            const existing = errorIndex.get(text);
+            if (existing) {
+                existing.count++;
+                existing.el.textContent = `${text} (x${existing.count})`;
+                return;
+            }
+
+            if (errorMessages.length >= MAX_ERRORS_TOTAL) {
+                if (!suppressedBanner) {
+                    suppressedBanner = document.createElement("div");
+                    suppressedBanner.className = "alphatex-error";
+                    suppressedBanner.textContent = `Too many errors; further messages are suppressed`;
+                    messagesEl.appendChild(suppressedBanner);
+                }
+                return;
+            }
+
+            errorMessages.push(text);
             const errEl = document.createElement("div");
             errEl.className = "alphatex-error";
             errEl.textContent = text;
             messagesEl.appendChild(errEl);
+            errorIndex.set(text, { el: errEl, count: 1 });
         } catch {}
     };
 
@@ -194,6 +294,14 @@ export function mountAlphaTexBlock(
     const playerEnabled = (String(merged.player || "enable").toLowerCase() !== "disable");
     let destroyed = false;
     let api: alphaTab.AlphaTabApi | null = null;
+    const ERROR_STOP_THRESHOLD = 50;
+    let errorEventsCount = 0;
+    const stopAlphaEngine = (reason?: string) => {
+        if (!api) return;
+        try { api.destroy(); } catch {}
+        api = null;
+        if (reason) appendError(reason);
+    };
 
     const heavyInit = () => {
         if (destroyed) return;
@@ -235,7 +343,14 @@ export function mountAlphaTexBlock(
         });
 
         // Subscribe error events from AlphaTab and surface them in UI
-        try { (api as any).error?.on?.((e: unknown) => appendError(formatError(e))); } catch {}
+        const onApiError = (e: unknown) => {
+            errorEventsCount++;
+            appendError(formatError(e));
+            if (errorEventsCount >= ERROR_STOP_THRESHOLD) {
+                stopAlphaEngine("Too many errors; engine stopped");
+            }
+        };
+        try { (api as any).error?.on?.(onApiError); } catch {}
 
         // apply runtime options
         if (typeof merged.speed === "number" && api.player) {
@@ -253,6 +368,13 @@ export function mountAlphaTexBlock(
 
         // render via convenient tex method; fallback to manual importer if needed
         const renderFromTex = () => {
+            // reset per-render rate window
+            rateWindowStart = Date.now();
+            rateWindowCount = 0;
+            suppressedCount = 0;
+            if (suppressedBanner) { try { suppressedBanner.remove(); } catch {} suppressedBanner = null; }
+            errorMessages = [];
+            errorIndex.clear();
             try {
                 if (typeof (api as any).tex === "function") {
                     (api as any).tex(body);
@@ -275,6 +397,7 @@ export function mountAlphaTexBlock(
                 }
             } catch (e) {
                 appendError(`AlphaTex render error: ${formatError(e)}`);
+                stopAlphaEngine();
             }
         };
 
