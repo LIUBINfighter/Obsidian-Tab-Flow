@@ -40,7 +40,7 @@ export default {
 
     if (plugin) {
       const host = container.createDiv({ cls: 'doc-playground-host' });
-      createAlphaTexPlayground(plugin, host, SAMPLE_PROGRESSION, { layout: 'horizontal' });
+  createAlphaTexPlayground(plugin, host, SAMPLE_PROGRESSION, {});
     } else {
       container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
     }
