@@ -1,20 +1,12 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import MyPlugin from '../main';
+import panelsRegistry, { DocPanel } from './docs';
 
 export const VIEW_TYPE_TABFLOW_DOC = 'tabflow-doc-view';
 // 兼容导出：保留旧名称以避免其它文件立刻出错
 export const VIEW_TYPE_ALPHATEX_DOC = VIEW_TYPE_TABFLOW_DOC;
 
-// 面板类型：render 接受 Obsidian 的容器（这里用 any 以兼容 helper 方法）
-type DocPanel = {
-    id: string;
-    title: string;
-    render: (container: any, plugin?: MyPlugin) => void;
-};
-
-// 导入示例面板（每个面板均独立文件）
-import ReadMePanel from './docs/ReadMe';
-import InMarkdownRenderPanel from './docs/InMarkdownRender';
+// 面板类型与注册列表已集中在 ./docs/index.ts
 
 export class DocView extends ItemView {
     plugin: MyPlugin;
@@ -23,8 +15,8 @@ export class DocView extends ItemView {
 
     constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
         super(leaf);
-        this.plugin = plugin;
-        this.panels = [ReadMePanel, InMarkdownRenderPanel];
+    this.plugin = plugin;
+    this.panels = panelsRegistry;
         if (this.panels.length) this.activeId = this.panels[0].id;
     }
 
