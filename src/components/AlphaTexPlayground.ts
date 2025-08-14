@@ -1,5 +1,5 @@
 import type MyPlugin from '../main';
-import { setIcon, normalizePath, TFile } from 'obsidian';
+import { setIcon, normalizePath, TFile, Notice } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEditor';
 
@@ -61,6 +61,11 @@ export function createAlphaTexPlayground(
 				const ta = document.createElement('textarea'); ta.value = embedded.value; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
 			} catch {}
 		}
+		// feedback: turn into green check briefly
+		try {
+			setIcon(iCopy, 'check'); btnCopy.classList.add('is-success'); btnCopy.setAttr('aria-label', '已复制');
+			setTimeout(() => { setIcon(iCopy, 'copy'); btnCopy.classList.remove('is-success'); btnCopy.setAttr('aria-label', '复制到剪贴板'); }, 1200);
+		} catch {}
 	});
 
 	const btnReset = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
@@ -85,6 +90,66 @@ export function createAlphaTexPlayground(
 			await leaf.openFile(file);
 		} catch (e) { console.warn('[Playground] 创建笔记失败', e); }
 	});
+
+	// Format init JSON button
+	const btnFormat = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
+	const iFmt = document.createElement('span'); setIcon(iFmt, 'code'); btnFormat.appendChild(iFmt); btnFormat.setAttr('aria-label', '格式化 init JSON');
+	btnFormat.addEventListener('click', () => {
+		try {
+			const formatted = formatInitHeader(embedded.value);
+			if (formatted && formatted !== embedded.value) {
+				embedded.set(formatted, false);
+				new Notice('已格式化 init JSON');
+				scheduleRender();
+			} else {
+				new Notice('未检测到 init 或无需格式化');
+			}
+		} catch (e) {
+			console.warn('[Playground] 格式化 init 失败:', e);
+			new Notice('格式化失败');
+		}
+	});
+
+	function formatInitHeader(sourceText: string): string | null {
+		let s = sourceText;
+		if (!s) return null;
+		if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1);
+		const startMatch = s.match(/^\s*%%\{\s*init\s*:/);
+		if (!startMatch) return null;
+		let cursor = startMatch[0].length;
+		const objStart = s.indexOf('{', cursor);
+		if (objStart < 0) return null;
+		let i = objStart, depth = 0, inStr = false, quote: '"' | "'" | null = null;
+		while (i < s.length) {
+			const ch = s[i];
+			if (inStr) {
+				if (ch === '\\') { i += 2; continue; }
+				if (ch === quote) { inStr = false; quote = null; }
+				i++; continue;
+			} else {
+				if (ch === '"' || ch === "'") { inStr = true; quote = ch as '"' | "'"; i++; continue; }
+				if (ch === '{') { depth++; i++; continue; }
+				if (ch === '}') { depth--; i++; if (depth === 0) break; continue; }
+				i++;
+			}
+		}
+		if (depth !== 0) return null;
+		const jsonText = s.slice(objStart, i);
+		let obj: any;
+		try { obj = JSON.parse(jsonText); } catch { return null; }
+		const pretty = JSON.stringify(obj, null, 2);
+		// consume trailing wrapper up to closing %% and optional newline
+		let k = i;
+		while (k < s.length && /\s/.test(s[k])) k++;
+		if (s[k] === '}') { k++; while (k < s.length && /\s/.test(s[k])) k++; }
+		if (s.slice(k, k + 2) === '%%') k += 2;
+		if (s[k] === '\r') k++;
+		if (s[k] === '\n') k++;
+		const consumed = k + (sourceText.length - s.length);
+		const rest = sourceText.slice(consumed);
+		const header = `%%{init: ${pretty} }%%\n`;
+		return header + rest;
+	}
 	if (readOnly) {
 		// 简单只读（利用 CodeMirror DOM 属性）
 		editorContainer.addClass('read-only');

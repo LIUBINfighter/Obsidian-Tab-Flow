@@ -118,6 +118,9 @@
 .inmarkdown-editor-toolbar .clickable-icon:hover {
 	background: var(--background-modifier-hover);
 }
+.inmarkdown-editor-toolbar .clickable-icon.is-success {
+    background: var(--background-modifier-success);
+}
 
 .inmarkdown-editor-cm:focus-within {
 	border-color: var(--interactive-accent);
