@@ -496,30 +496,65 @@ export class SettingTab extends PluginSettingTab {
 							if (m.disabled) (t as any).toggleEl.querySelector('input')?.setAttribute('disabled', 'true');
 						});
 
-						const moveUp = async () => {
-							const cur = getOrder();
-							const i = cur.indexOf(String(key));
-							if (i > 0) {
-								[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
-								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-								(this.plugin.settings.playBar as any).order = cur;
-								await this.plugin.saveSettings();
-								renderCards();
-								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
-							}
-						};
-						const moveDown = async () => {
-							const cur = getOrder();
-							const i = cur.indexOf(String(key));
-							if (i >= 0 && i < cur.length - 1) {
-								[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
-								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-								(this.plugin.settings.playBar as any).order = cur;
-								await this.plugin.saveSettings();
-								renderCards();
-								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
-							}
-						};
+							const getScrollContainer = (el: HTMLElement): HTMLElement | Window => {
+								let node: HTMLElement | null = el.parentElement;
+								while (node) {
+									const hasScrollableSpace = node.scrollHeight > node.clientHeight + 1;
+									const style = getComputedStyle(node);
+									const overflowY = style.overflowY;
+									if (hasScrollableSpace && (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay')) {
+										return node;
+									}
+									node = node.parentElement;
+								}
+								return window;
+							};
+
+							const keepPointerOverRow = async (rowKey: string, update: () => Promise<void> | void) => {
+								const oldRect = card.getBoundingClientRect();
+								const scrollContainer = getScrollContainer(card);
+								await Promise.resolve(update());
+								const newCard = cardsWrap.querySelector(`.tabflow-card[data-key="${rowKey}"]`) as HTMLElement | null;
+								if (!newCard) return;
+								const newRect = newCard.getBoundingClientRect();
+								const delta = newRect.top - oldRect.top;
+								if (delta !== 0) {
+									if (scrollContainer === window) {
+										window.scrollBy(0, delta);
+									} else {
+										(scrollContainer as HTMLElement).scrollTop += delta;
+									}
+								}
+							};
+
+							const moveUp = async () => {
+								const cur = getOrder();
+								const i = cur.indexOf(String(key));
+								if (i > 0) {
+									await keepPointerOverRow(String(key), async () => {
+										[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
+										this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+										(this.plugin.settings.playBar as any).order = cur;
+										await this.plugin.saveSettings();
+										renderCards();
+									});
+									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
+								}
+							};
+							const moveDown = async () => {
+								const cur = getOrder();
+								const i = cur.indexOf(String(key));
+								if (i >= 0 && i < cur.length - 1) {
+									await keepPointerOverRow(String(key), async () => {
+										[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
+										this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+										(this.plugin.settings.playBar as any).order = cur;
+										await this.plugin.saveSettings();
+										renderCards();
+									});
+									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
+								}
+							};
 
 						upIcon.addEventListener('click', () => { moveUp(); });
 						upIcon.addEventListener('keydown', (e: KeyboardEvent) => {
