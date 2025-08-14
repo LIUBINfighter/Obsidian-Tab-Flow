@@ -10,6 +10,7 @@ export interface AlphaTexInitOptions {
 	speed?: number; // 0.5 - 2.0
 	metronome?: boolean;
 	scrollMode?: number | string;
+	player?: "enable" | "disable"; // enable full player or render-only
 	// tracks to render (-1 means all)
 	tracks?: number[];
 	// callback for two-way binding (provided by main.ts)
@@ -97,6 +98,7 @@ export function mountAlphaTexBlock(
 	`;
 	document.head.appendChild(runtimeStyle);
 
+	const playerEnabled = (String(merged.player || "enable").toLowerCase() !== "disable");
 	const api = new alphaTab.AlphaTabApi(scoreEl, {
 		core: {
 			scriptFile: resources.alphaTabWorkerUri || "",
@@ -110,11 +112,11 @@ export function mountAlphaTexBlock(
 			fontDirectory: "",
 		},
 		player: {
-			enablePlayer: true,
-			playerMode: alphaTab.PlayerMode.EnabledAutomatic,
-			enableCursor: true,
-			enableAnimatedBeatCursor: true,
-			soundFont: resources.soundFontUri,
+			enablePlayer: playerEnabled,
+			playerMode: playerEnabled ? alphaTab.PlayerMode.EnabledAutomatic : alphaTab.PlayerMode.Disabled,
+			enableCursor: playerEnabled,
+			enableAnimatedBeatCursor: playerEnabled,
+			soundFont: playerEnabled ? resources.soundFontUri : undefined,
 			scrollMode: toScrollMode(merged.scrollMode) ?? alphaTab.ScrollMode.Continuous,
 			scrollSpeed: 500,
 			scrollOffsetY: -25,
@@ -180,7 +182,7 @@ export function mountAlphaTexBlock(
 	renderFromTex();
 
 	// controls (try to unify style with PlayBar)
-	if (resources.soundFontUri) {
+	if (resources.soundFontUri && playerEnabled) {
 		const playPauseBtn = document.createElement("button");
 		playPauseBtn.className = "clickable-icon";
 		playPauseBtn.setAttribute("type", "button");
@@ -271,7 +273,9 @@ export function mountAlphaTexBlock(
 	} else {
 		const note = document.createElement("div");
 		note.className = "alphatex-note";
-		note.textContent = "SoundFont missing: playback disabled. Rendering only.";
+		note.textContent = playerEnabled
+			? "SoundFont missing: playback disabled. Rendering only."
+			: "Player disabled by init: rendering only.";
 		controlsEl.appendChild(note);
 	}
 
