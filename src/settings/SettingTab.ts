@@ -1000,115 +1000,19 @@ export class SettingTab extends PluginSettingTab {
 							});
 					});
 			} else if (tabId === "about") {
-				tabContents.createEl("h3", { text: "关于" });
-				tabContents.createEl("p", {
-					text: "Tab Flow by Jay Bridge",
-				});
-
-				// 快速打开 AlphaTex 文档视图按钮
-				new Setting(tabContents)
-					.setName("AlphaTex 文档")
-					.setDesc("打开 AlphaTex 快速文档视图，包含语法速查与示例。")
-					.addButton((btn) => {
-						btn.setButtonText("打开文档").onClick(async () => {
-							try {
-								new Notice("尝试打开 AlphaTex 文档视图...");
-								console.log(
-									"[SettingTab] open-doc button clicked"
-								);
-								// 优先通过已注册的命令触发（某些环境命令API可能同步或不可await）
-								try {
-									const execFn =
-										(this.app as any).commands &&
-										(this.app as any).commands
-											.executeCommandById;
-									if (typeof execFn === "function") {
-										const res = execFn.call(
-											(this.app as any).commands,
-											"open-tabflow-doc-view"
-										);
-										console.log(
-											"[SettingTab] executeCommandById returned",
-											res
-										);
-										// 如果命令没有生效（返回 falsy），回退到直接打开视图
-										if (!res) {
-											const leaf =
-												this.app.workspace.getLeaf(
-													true
-												);
-											await leaf.setViewState({
-												type: "tabflow-doc-view",
-												active: true,
-											});
-											this.app.workspace.revealLeaf(leaf);
-										}
-										// 尝试关闭设置面板（优先 API），以便文档视图成为唯一活动视图
-										try {
-											if (
-												(this.app as any).setting &&
-												typeof (this.app as any).setting
-													.close === "function"
-											) {
-												(
-													this.app as any
-												).setting.close();
-											} else if (
-												(this.app as any).workspace &&
-												typeof (this.app as any)
-													.workspace
-													.detachLeavesOfType ===
-													"function"
-											) {
-												(
-													this.app as any
-												).workspace.detachLeavesOfType(
-													"settings"
-												);
-											} else {
-												console.debug(
-													"[SettingTab] no API to close settings view"
-												);
-											}
-										} catch (closeErr) {
-											console.warn(
-												"[SettingTab] failed to close settings view",
-												closeErr
-											);
-										}
-									} else {
-										// commands API 不可用，直接打开视图
-										const leaf =
-											this.app.workspace.getLeaf(true);
-										await leaf.setViewState({
-											type: "tabflow-doc-view",
-											active: true,
-										});
-										this.app.workspace.revealLeaf(leaf);
-									}
-								} catch (innerErr) {
-									console.error(
-										"[SettingTab] executeCommandById error",
-										innerErr
-									);
-									// 回退：直接打开视图
-									const leaf =
-										this.app.workspace.getLeaf(true);
-									await leaf.setViewState({
-										type: "tabflow-doc-view",
-										active: true,
-									});
-									this.app.workspace.revealLeaf(leaf);
-								}
-							} catch (e) {
-								console.error(
-									"[SettingTab] Open AlphaTex doc failed",
-									e
-								);
-								new Notice("打开文档失败，请查看控制台日志");
-							}
-						});
+				// 使用独立模块渲染 about 页
+				try {
+					// 动态导入以避免循环依赖在构建时问题
+					const { renderAboutTab } = await import("./tabs/aboutTab");
+					await renderAboutTab(tabContents, this.plugin, this.app);
+				} catch (e) {
+					console.warn("[SettingTab] failed to load about tab module", e);
+					// 回退到内联实现（最小）
+					tabContents.createEl("h3", { text: "关于" });
+					tabContents.createEl("p", {
+						text: "Tab Flow by Jay Bridge",
 					});
+				}
 			}
 		};
 
