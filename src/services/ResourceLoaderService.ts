@@ -1,5 +1,6 @@
 import { App } from "obsidian";
 import * as path from "path";
+import { fileExists } from "../utils/fileUtils";
 
 export interface AlphaTabResources {
 	bravuraUri?: string; // 使用文件 URL（app 资源路径）
@@ -43,9 +44,9 @@ export class ResourceLoaderService {
 		try {
 			// 检查每个资源文件是否存在，如果不存在则跳过
 			const [bravuraExists, alphaTabExists, soundFontExists] = await Promise.all([
-				this.fileExists(bravuraPath),
-				this.fileExists(alphaTabPath),
-				this.fileExists(soundFontPath)
+				fileExists(bravuraPath, this.app.vault.adapter),
+				fileExists(alphaTabPath, this.app.vault.adapter),
+				fileExists(soundFontPath, this.app.vault.adapter)
 			]);
 
 			// 如果有任何资源不存在，标记为不完整
@@ -89,14 +90,8 @@ export class ResourceLoaderService {
 		}
 	}
 
-	private async fileExists(filePath: string): Promise<boolean> {
-		try {
-			return await this.app.vault.adapter.exists(filePath);
-		} catch (error) {
-			console.error(`[ResourceLoaderService] Error checking if file exists: ${filePath}`, error);
-			return false;
-		}
-	}
+	// file existence check delegated to `src/utils/fileUtils.ts` which
+	// supports both Obsidian adapters and Node fs.
 
 	// 兼容旧实现保留方法（未使用）
 	// private arrayBufferToBase64(buffer: ArrayBuffer): string {
