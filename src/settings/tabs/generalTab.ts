@@ -2,16 +2,17 @@ import { App, Notice, Setting } from "obsidian";
 import TabFlowPlugin from "../../main";
 import { ASSET_FILES } from "../../services/ResourceLoaderService";
 import { vaultPath } from "../../utils";
+import { AssetStatus } from "../../types/assets";
 
-async function collectAssetStatuses(app: App, plugin: TabFlowPlugin) {
+async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
   const pluginId = plugin.manifest.id;
   const assetsDir = vaultPath(".obsidian", "plugins", pluginId, "assets");
   const files = [ASSET_FILES.ALPHA_TAB, ASSET_FILES.BRAVURA, ASSET_FILES.SOUNDFONT];
   const dirExists = await app.vault.adapter.exists(assetsDir);
   if (!dirExists) {
-    return files.map((f) => ({ file: f, exists: false, path: vaultPath(assetsDir, f) }));
+    return files.map((f) => ({ file: f, exists: false, path: vaultPath(assetsDir, f) } as AssetStatus));
   }
-  const statuses: Array<any> = [];
+  const statuses: AssetStatus[] = [];
   for (const f of files) {
     const p = vaultPath(assetsDir, f);
     const exists = await app.vault.adapter.exists(p);
