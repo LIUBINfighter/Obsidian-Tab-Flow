@@ -1,5 +1,5 @@
 // 文档面板：Beat Effects（节拍效果）
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 const SAMPLE_SIMPLE = `// fade in/out, swell; vibrato; tap/slap/pop; dotted/double dotted; pick stroke; grace; tuplets; tremolo picking; crescendo/decrescendo
@@ -41,7 +41,7 @@ const SAMPLE_BEAMING = `:8 3.3{ beam invert } 3.3 | 3.1{ beam up } 3.1 | 3.6{ be
 export default {
 	id: 'beat-effects',
 	title: 'Beat Effects 节拍效果',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Beat Effects（节拍效果）' });
 		container.createEl('p', { text: '演示常见节拍效果、力度、连音/颤音拨、刷弦/分解和弦、计时器、延音/哇音踏板、八度、连线控制等。' });

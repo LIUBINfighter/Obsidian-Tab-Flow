@@ -1,5 +1,5 @@
 // 文档面板：Note Effects（音符效果）
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 const SAMPLE_HARMONICS = `:8 3.3{nh} 3.3{ah} 3.3{ph} 3.3{th} 3.3{sh}`;
@@ -54,7 +54,7 @@ const SAMPLE_SLUR = `(3.3 {slur s1} 4.4).4 7.3.8 8.3.8 10.3 {slur s1} .8`;
 export default {
 	id: 'note-effects',
 	title: 'Note Effects 音符效果',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Note Effects（音符效果）' });
 		container.createEl('p', { text: '演示泛音、颤音/滑音/击勾弦、鬼音/闷音、重音/断奏、连音线、指法、装饰音、弯音、连音、可见性等。' });

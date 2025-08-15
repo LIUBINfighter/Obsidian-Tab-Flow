@@ -1,4 +1,4 @@
-import type MyPlugin from '../main';
+import type TabFlowPlugin from '../main';
 import { setIcon, normalizePath, TFile, Notice } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEditor';
@@ -28,7 +28,7 @@ export interface AlphaTexPlaygroundHandle {
  * 只需提供初始 AlphaTex 文本即可。
  */
 export function createAlphaTexPlayground(
-	plugin: MyPlugin,
+	plugin: TabFlowPlugin,
 	container: HTMLElement,
 	initialSource: string,
 	options: AlphaTexPlaygroundOptions = {}

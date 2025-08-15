@@ -1,5 +1,5 @@
 // 文档面板：ExampleProgression 示例和弦进行与片段
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 // 示例进程（含全局和弦、章节、拍号与多个小节）
@@ -32,7 +32,7 @@ r.4 * 3 0.1.8 2.1.8 |
 export default {
   id: 'example-progression',
   title: '天空之城-指弹',
-  render(container: HTMLElement, plugin?: MyPlugin) {
+  render(container: HTMLElement, plugin?: TabFlowPlugin) {
     container.empty();
     container.createEl('h3', { text: '天空之城-指弹' });
     container.createEl('p', { text: '此页面展示一个包含全局和弦定义、拍号设置与若干小节的 AlphaTex 片段。可直接编辑下方代码尝试修改和弦或音符。' });

@@ -19,11 +19,11 @@
 
 	 ```ts
 	 // <Name> 文档面板
-	 import type MyPlugin from '../../main';
+	 import type TabFlowPlugin from '../../main';
 	 const panel = {
 		 id: '<lower-id>',          // 唯一短标识，建议小写 + 中横线
 		 title: '显示名称',          // 左侧导航显示文字
-		 render(container: HTMLElement, plugin?: MyPlugin) {
+		 render(container: HTMLElement, plugin?: TabFlowPlugin) {
 			 container.empty();
 			 container.createEl('h3', { text: '标题' });
 			 container.createEl('p', { text: '正文或说明。' });
@@ -111,11 +111,11 @@ createAlphaTexPlayground(plugin, container, SOURCE, {
 
 ```ts
 // src/views/docs/Shortcuts.ts
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 export default {
 	id: 'shortcuts',
 	title: '快捷键',
-	render(container: HTMLElement, _plugin?: MyPlugin) {
+	render(container: HTMLElement, _plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: '快捷键' });
 		const ul = container.createEl('ul');

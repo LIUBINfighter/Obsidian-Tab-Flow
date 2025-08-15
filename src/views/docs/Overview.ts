@@ -1,5 +1,5 @@
 // 文档面板：总览
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 const SAMPLE = `\\title "Canon Rock"
@@ -18,7 +18,7 @@ const SAMPLE = `\\title "Canon Rock"
 export default {
 	id: 'overview',
 	title: '总览',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'AlphaTex 总览' });
 		container.createEl('p', {

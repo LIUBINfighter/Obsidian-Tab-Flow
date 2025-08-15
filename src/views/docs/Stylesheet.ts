@@ -1,5 +1,5 @@
 // 文档面板：Stylesheet（样式表相关）
-import type MyPlugin from "../../main";
+import type TabFlowPlugin from "../../main";
 import { createAlphaTexPlayground } from "../../components/AlphaTexPlayground";
 
 const SAMPLE_SHOW_HIDE_DYNAMICS = `\\showDynamics
@@ -41,7 +41,7 @@ const SAMPLE_TRACK_NAMES = `\\singletracktracknamepolicy AllSystems
 export default {
 	id: "stylesheet",
 	title: "Stylesheet 样式表",
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl("h3", { text: "Stylesheet（样式表）" });
 		container.createEl("p", {

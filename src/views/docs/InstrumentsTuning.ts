@@ -1,5 +1,5 @@
 // 文档面板：乐器与调音
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 const SAMPLE = `\\title "Instrument & Tuning"
@@ -19,7 +19,7 @@ const SAMPLE2 = `\\title "Instrument & Tuning (Piano)"
 export default {
 	id: 'instruments-tuning',
 	title: '乐器与调音',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: '乐器与调音（Instrument & Tuning）' });
 		container.createEl('p', {

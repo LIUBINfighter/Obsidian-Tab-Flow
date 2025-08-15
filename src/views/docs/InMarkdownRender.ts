@@ -1,5 +1,5 @@
 // 示例面板：InMarkdownRender
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 const SAMPLE = `%%{init: {"scale":1,"speed":2,"scrollMode":"Continuous","metronome":false,"player":"enable"}}%%
@@ -13,7 +13,7 @@ const SAMPLE = `%%{init: {"scale":1,"speed":2,"scrollMode":"Continuous","metrono
 export default {
 	id: 'in-markdown',
 	title: '文本与曲谱预览',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 
 	if (plugin) {

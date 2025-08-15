@@ -1,5 +1,5 @@
 // 文档面板：Metadata（最小集合）
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 // TODO: 模板与对齐方式后续补充（暂时跳过）
@@ -31,7 +31,7 @@ const SAMPLE = `// Song information (only at the beginning)
 export default {
 	id: 'metadata',
 	title: 'Metadata',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Metadata（曲目信息与全局设置）' });
 		container.createEl('p', {

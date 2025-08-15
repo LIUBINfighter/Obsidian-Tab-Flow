@@ -1,5 +1,5 @@
 // 文档面板：Bar Metadata（小节元数据）
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 const SAMPLE_TS = `\\ts 3 4 | \\ts 4 4 | \\ts 6 8 | \\ts common`;
@@ -31,7 +31,7 @@ const SAMPLE_SIMILE = `3.3*4 | \\simile simple | 3.3*4 | 4.3*4 | \\simile firsto
 export default {
 	id: 'bar-metadata',
 	title: 'Bar Metadata 小节元数据',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Bar Metadata（小节元数据）' });
 		container.createEl('p', { text: '演示拍号、反复与结尾、调号、谱号/八度、小节内变速、三连感、弱起、分段、双小节线、Simile 等。' });

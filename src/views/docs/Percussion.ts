@@ -1,5 +1,5 @@
 // 文档面板：Percussion（打击乐）
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 // 采用最小可视示例：使用标准打击乐映射（示意）
@@ -8,7 +8,7 @@ const SAMPLE_PERC = `\\title "Percussion Basics"\n\\instrument Drums\n\\tuning n
 export default {
 	id: 'percussion',
 	title: 'Percussion 打击乐',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Percussion（打击乐）' });
 		container.createEl('p', { text: '演示最小打击乐谱例（示意）。后续将补充更完整的映射示例。' });

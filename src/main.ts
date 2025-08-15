@@ -22,7 +22,7 @@ export interface AssetStatus {
 	path: string;
 }
 
-export default class MyPlugin extends Plugin {
+export default class TabFlowPlugin extends Plugin {
 	settings: TabFlowSettings;
 	resources!: AlphaTabResources;
 	actualPluginDir?: string;
@@ -83,7 +83,7 @@ export default class MyPlugin extends Plugin {
 	async checkRequiredAssets(): Promise<boolean | AssetStatus[]> {
 		try {
 			if (!this.actualPluginDir) {
-				console.error("[MyPlugin] Plugin directory not found");
+				console.error("[TabFlowPlugin] Plugin directory not found");
 				return false;
 			}
 			
@@ -93,7 +93,7 @@ export default class MyPlugin extends Plugin {
 			// 检查assets目录是否存在
 			const assetsDirExists = await this.app.vault.adapter.exists(assetsDirRelative);
 			if (!assetsDirExists) {
-				console.log("[MyPlugin] Assets directory does not exist:", assetsDirRelative);
+				console.log("[TabFlowPlugin] Assets directory does not exist:", assetsDirRelative);
 				return false;
 			}
 			
@@ -111,9 +111,9 @@ export default class MyPlugin extends Plugin {
 					const exists = await this.app.vault.adapter.exists(filePath);
 					
 					if (!exists) {
-						console.log(`[MyPlugin] Missing asset file: ${filePath}`);
+						console.log(`[TabFlowPlugin] Missing asset file: ${filePath}`);
 					} else {
-						console.log(`[MyPlugin] Found asset file: ${filePath}`);
+						console.log(`[TabFlowPlugin] Found asset file: ${filePath}`);
 					}
 					
 					return {
@@ -135,7 +135,7 @@ export default class MyPlugin extends Plugin {
 			// 返回详细的资产状态列表
 			return assetStatuses;
 		} catch (error) {
-			console.error("[MyPlugin] Error checking assets:", error);
+			console.error("[TabFlowPlugin] Error checking assets:", error);
 			return false;
 		}
 	}
@@ -241,7 +241,7 @@ export default class MyPlugin extends Plugin {
 			
 			return success;
 		} catch (error) {
-			console.error("[MyPlugin] Error downloading assets:", error);
+			console.error("[TabFlowPlugin] Error downloading assets:", error);
 			new Notice(`下载资产文件失败: ${error.message}`);
 			return false;
 		}

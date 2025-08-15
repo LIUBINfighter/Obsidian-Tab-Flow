@@ -1,5 +1,5 @@
 import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
-import MyPlugin from '../main';
+import TabFlowPlugin from '../main';
 import panelsRegistry, { DocPanel } from './docs/index';
 
 export const VIEW_TYPE_TABFLOW_DOC = 'tabflow-doc-view';
@@ -9,12 +9,12 @@ export const VIEW_TYPE_ALPHATEX_DOC = VIEW_TYPE_TABFLOW_DOC;
 // 面板类型与注册列表已集中在 ./docs/index.ts
 
 export class DocView extends ItemView {
-    plugin: MyPlugin;
+    plugin: TabFlowPlugin;
     panels: DocPanel[] = [];
     activeId: string | null = null;
     private layoutObserver?: ResizeObserver;
 
-    constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
+    constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
         super(leaf);
     this.plugin = plugin;
     this.panels = panelsRegistry;

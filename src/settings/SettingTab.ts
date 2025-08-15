@@ -6,7 +6,7 @@ import {
 	normalizePath,
 } from "obsidian";
 import * as path from "path";
-import MyPlugin from "../main";
+import TabFlowPlugin from "../main";
 import { ASSET_FILES } from "../services/ResourceLoaderService";
 
 export interface TabFlowSettings {
@@ -88,10 +88,10 @@ export interface AssetStatus {
 }
 
 export class SettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: TabFlowPlugin;
     private _eventBound = false;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: TabFlowPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
         // 绑定一次全局事件：跳转到本插件设置的“播放器配置”子页签

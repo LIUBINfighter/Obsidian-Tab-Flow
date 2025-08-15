@@ -1,5 +1,5 @@
 // 文档面板：Notes 编写音符
-import type MyPlugin from '../../main';
+import type TabFlowPlugin from '../../main';
 import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
 
 const SAMPLE_SINGLE_NOTES = `// 单音与休止（多个小节用竖线 | 分隔）
@@ -47,7 +47,7 @@ const SAMPLE_ACCIDENTALS = `\\track
 export default {
 	id: 'notes',
 	title: 'Notes 编写音符',
-	render(container: HTMLElement, plugin?: MyPlugin) {
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Notes 编写音符' });
 		container.createEl('p', { text: '下面的示例演示如何在 AlphaTex 中编写一般音符。多个小节用竖线 | 分隔。每个小节对应谱面上的一段。' });
