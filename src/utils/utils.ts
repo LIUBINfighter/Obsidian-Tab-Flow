@@ -3,7 +3,6 @@
 // They remain to maintain compatibility with tests and external code but may
 // be removed in a future release. Prefer using explicit extension arrays where
 // possible.
-export { isGuitarProFile, isAlphaTexFile, isSupportedTabFile } from './fileTypes';
 
 export function registerStyles() {
   // noop for tests and runtime; real style registration happens elsewhere

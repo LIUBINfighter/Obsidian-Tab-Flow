@@ -99,14 +99,14 @@ export class ResourceLoaderService {
 	}
 
 	// 兼容旧实现保留方法（未使用）
-	private arrayBufferToBase64(buffer: ArrayBuffer): string {
-		const bytes = new Uint8Array(buffer);
-		const chunkSize = 0x8000;
-		let binaryString = "";
-		for (let i = 0; i < bytes.length; i += chunkSize) {
-			const chunk = bytes.slice(i, i + chunkSize);
-			binaryString += String.fromCharCode(...chunk);
-		}
-		return btoa(binaryString);
-	}
+	// private arrayBufferToBase64(buffer: ArrayBuffer): string {
+	// 	const bytes = new Uint8Array(buffer);
+	// 	const chunkSize = 0x8000;
+	// 	let binaryString = "";
+	// 	for (let i = 0; i < bytes.length; i += chunkSize) {
+	// 		const chunk = bytes.slice(i, i + chunkSize);
+	// 		binaryString += String.fromCharCode(...chunk);
+	// 	}
+	// 	return btoa(binaryString);
+	// }
 }

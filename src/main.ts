@@ -5,7 +5,6 @@ import {
 	requestUrl,
 	MarkdownRenderChild,
 } from "obsidian";
-// import { isGuitarProFile, isAlphaTexFile, isSupportedTabFile } from "./utils/fileTypes";
 import { TabView, VIEW_TYPE_TAB } from "./views/TabView";
 import { DocView, VIEW_TYPE_TABFLOW_DOC } from "./views/DocView";
 import {
