@@ -437,15 +437,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		}
 	}
 
-	function updateProgressInterval() {
-		updateProgress();
-	}
-
 	// 初始化进度显示
 	updateProgress();
 
 	if (playing) {
-		updateProgressInterval();
+		updateProgress();
 	}
 
 	const originalRemove = bar.remove;
