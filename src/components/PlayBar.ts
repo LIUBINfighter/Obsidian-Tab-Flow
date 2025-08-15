@@ -4,6 +4,7 @@ import { createProgressBar } from "./ProgressBar";
 import type { ProgressBarElement } from "./ProgressBar.types";
 import { createAudioPlayer, AudioPlayerOptions } from "./AudioPlayer";
 import * as alphaTab from "@coderline/alphatab";
+import { formatTime } from "../utils/timeUtils";
 
 export interface PlayBarOptions {
 	app: App;
@@ -405,14 +406,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	order.forEach((key) => { try { renderers[key]?.(); } catch {} });
 
-	// 格式化时间显示（毫秒 -> mm:ss）
-	function formatTime(ms: number): string {
-		if (isNaN(ms) || ms < 0) return "0:00";
-		const totalSeconds = Math.floor(ms / 1000);
-		const minutes = Math.floor(totalSeconds / 60);
-		const seconds = totalSeconds % 60;
-		return `${minutes}:${seconds.toString().padStart(2, "0")}`;
-	}
+	// formatTime imported from utils/timeUtils
 
 	// 更新进度条显示
 	function updateProgress(
