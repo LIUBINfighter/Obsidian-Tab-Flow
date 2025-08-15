@@ -1,5 +1,6 @@
 import { App, Notice, Setting } from "obsidian";
 import TabFlowPlugin from "../../main";
+import { setIcon } from "obsidian";
 import { DEFAULT_SETTINGS, PlayBarComponentVisibility } from "../defaults";
 
 export async function renderPlayerTab(
@@ -117,18 +118,17 @@ export async function renderPlayerTab(
       card.dataset.key = String(key);
       const left = card.createDiv({ attr: { style: "display:flex; align-items:center; gap:8px;" } });
       left.createSpan({ text: "⠿", attr: { style: "cursor:grab; user-select:none;" } });
-      const iconEl = left.createSpan();
-      // @ts-ignore Obsidian setIcon
-      (require("obsidian") as any).setIcon(iconEl, m.icon);
+      const iconEl = left.createSpan(); // Create the span element
+      setIcon(iconEl, m.icon); // Use the imported setIcon function
       left.createEl("strong", { text: m.label });
       if (m.desc)
         left.createSpan({ text: ` - ${m.desc}`, attr: { style: "color:var(--text-muted);font-size:0.9em;" } });
 
       const right = card.createDiv({ attr: { style: "display:flex; align-items:center; gap:6px;" } });
       const upIcon = right.createSpan({ cls: "icon-clickable", attr: { "aria-label": "上移", role: "button", tabindex: "0" } });
-      (require("obsidian") as any).setIcon(upIcon, "lucide-arrow-up");
+      setIcon(upIcon, "lucide-arrow-up");
       const downIcon = right.createSpan({ cls: "icon-clickable", attr: { "aria-label": "下移", role: "button", tabindex: "0" } });
-      (require("obsidian") as any).setIcon(downIcon, "lucide-arrow-down");
+      setIcon(downIcon, "lucide-arrow-down");
 
       new Setting(right).addToggle((t) => {
         const current = !!(comp as any)[key];
