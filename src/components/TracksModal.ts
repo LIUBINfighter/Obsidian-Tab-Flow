@@ -1,7 +1,7 @@
 import { Modal, Setting, App } from "obsidian";
 import * as alphaTab from "@coderline/alphatab";
 import type { TrackEventPayload } from "../events/trackEvents";
-import { EventBus } from "../utils/EventBus";
+import { EventBus } from "../utils";
 import { ScorePersistenceService } from "../services/ScorePersistenceService"; // 导入新的服务
 
 export class TracksModal extends Modal {

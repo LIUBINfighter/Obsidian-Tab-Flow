@@ -4,7 +4,7 @@ import { createProgressBar } from "./ProgressBar";
 import type { ProgressBarElement } from "./ProgressBar.types";
 import { createAudioPlayer, AudioPlayerOptions } from "./AudioPlayer";
 import * as alphaTab from "@coderline/alphatab";
-import { formatTime } from "../utils/timeUtils";
+import { formatTime } from "../utils";
 
 export interface PlayBarOptions {
 	app: App;

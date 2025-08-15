@@ -1,6 +1,6 @@
 import { App } from "obsidian";
 import * as path from "path";
-import { fileExists } from "../utils/fileUtils";
+import { fileExists } from "../utils";
 
 export interface AlphaTabResources {
 	bravuraUri?: string; // 使用文件 URL（app 资源路径）

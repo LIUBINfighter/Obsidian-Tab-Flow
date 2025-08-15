@@ -1,9 +1,7 @@
 import * as alphaTab from "@coderline/alphatab";
 import { setIcon } from "obsidian";
 import type { AlphaTabResources } from "../services/ResourceLoaderService";
-import { parseInlineInit, toScrollMode } from "../utils/alphatexParser";
-import { requestIdle, scheduleInit } from "../utils/concurrency";
-import { formatError } from "../utils/errorUtils";
+import { parseInlineInit, toScrollMode, requestIdle, scheduleInit, formatError } from "../utils";
 
 export interface AlphaTexInitOptions {
 	// display
