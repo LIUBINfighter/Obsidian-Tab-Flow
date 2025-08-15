@@ -1,6 +1,9 @@
 import * as alphaTab from "@coderline/alphatab";
 import { setIcon } from "obsidian";
 import type { AlphaTabResources } from "../services/ResourceLoaderService";
+import { parseInlineInit, toScrollMode } from "../utils/alphatexParser";
+import { requestIdle, scheduleInit } from "../utils/concurrency";
+import { formatError } from "../utils/errorUtils";
 
 export interface AlphaTexInitOptions {
 	// display
@@ -24,100 +27,7 @@ export interface AlphaTexMountHandle {
 	destroy: () => void;
 }
 
-// 并发调度：限制同时进行的 AlphaTabApi 初始化数量，避免主线程长任务堆叠
-const MAX_CONCURRENT_ALPHATAB_INITS = 3;
-let currentInits = 0;
-const initQueue: Array<() => void> = [];
 
-function requestIdle(fn: () => void) {
-    const ric = (window as any).requestIdleCallback as undefined | ((cb: (deadline: any) => void) => number);
-    if (typeof ric === 'function') {
-        ric(() => fn());
-    } else {
-        setTimeout(fn, 0);
-    }
-}
-
-function scheduleInit(task: () => void) {
-    const tryRun = () => {
-        if (currentInits < MAX_CONCURRENT_ALPHATAB_INITS) {
-            currentInits++;
-            requestIdle(() => {
-                try { task(); } finally {
-                    currentInits = Math.max(0, currentInits - 1);
-                    const next = initQueue.shift();
-                    if (next) scheduleInit(next);
-                }
-            });
-        } else {
-            initQueue.push(task);
-        }
-    };
-    tryRun();
-}
-
-function parseInlineInit(source: string): { opts: AlphaTexInitOptions; body: string } {
-    // Robust multi-line parser for leading Mermaid-like init block
-    // Only if it appears at the very beginning (ignoring BOM/whitespace)
-    let s = source;
-    if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1);
-    const start = s.match(/^\s*%%\{\s*init\s*:/);
-    if (!start) return { opts: {}, body: source };
-    let cursor = start[0].length;
-    const objStart = s.indexOf('{', cursor);
-    if (objStart < 0) return { opts: {}, body: source };
-
-    // Scan JSON object with brace counting and string handling
-    let i = objStart;
-    let depth = 0;
-    let inString = false;
-    let quote: '"' | "'" | null = null;
-    while (i < s.length) {
-        const ch = s[i];
-        if (inString) {
-            if (ch === '\\') { i += 2; continue; }
-            if (ch === quote) { inString = false; quote = null; }
-            i++;
-            continue;
-        }
-        if (ch === '"' || ch === "'") { inString = true; quote = ch as '"' | "'"; i++; continue; }
-        if (ch === '{') { depth++; i++; continue; }
-        if (ch === '}') { depth--; i++; if (depth === 0) break; continue; }
-        i++;
-    }
-    if (depth !== 0) return { opts: {}, body: source };
-    const jsonText = s.slice(objStart, i);
-    let opts: AlphaTexInitOptions = {};
-    try { opts = JSON.parse(jsonText) || {}; } catch { return { opts: {}, body: source }; }
-
-    // Consume trailing wrapper: optional spaces, optional extra '}', then closing '%%', then optional newline
-    let k = i;
-    while (k < s.length && /\s/.test(s[k])) k++;
-    if (s[k] === '}') { k++; while (k < s.length && /\s/.test(s[k])) k++; }
-    if (s.slice(k, k + 2) === '%%') k += 2;
-    if (s[k] === '\r') k++;
-    if (s[k] === '\n') k++;
-
-    // Map back to original source length if a BOM was stripped
-    const consumed = k + (source.length - s.length);
-    const body = source.slice(consumed);
-    return { opts, body };
-}
-
-function toScrollMode(value: number | string | undefined): number | undefined {
-	if (value == null) return undefined;
-	if (typeof value === "number") return value;
-	const key = String(value).toLowerCase();
-	// map a few common names to enum values
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const ScrollMode: any = (alphaTab as any).ScrollMode || {};
-	const mapping: Record<string, number | undefined> = {
-		continuous: ScrollMode.Continuous,
-		singlepage: ScrollMode.SinglePage,
-		page: ScrollMode.Page,
-	};
-	return mapping[key];
-}
 
 // function fromScrollModeEnum(value: number | undefined): string | undefined {
 //   ... (removed UI for scroll mode)
