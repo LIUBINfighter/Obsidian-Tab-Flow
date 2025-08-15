@@ -3,11 +3,11 @@ import {
 	PluginSettingTab,
 	Setting,
 	Notice,
-	normalizePath,
 } from "obsidian";
 import * as path from "path";
 import TabFlowPlugin from "../main";
 import { ASSET_FILES } from "../services/ResourceLoaderService";
+import { vaultPath } from "../utils/pathUtils";
 
 export interface TabFlowSettings {
 	mySetting: string;
@@ -140,9 +140,8 @@ export class SettingTab extends PluginSettingTab {
 	/**
 	 * 获取 vault 相对路径（始终正斜杠）
 	 */
-	private vaultPath(...segments: string[]): string {
-		return normalizePath(segments.join("/"));
-	}
+	// Use shared utility
+	// ...existing code...
 
 	/**
 	 * 直接在 SettingTab 中重新实现独立的资产检测，不依赖 plugin.checkRequiredAssets。
@@ -150,7 +149,7 @@ export class SettingTab extends PluginSettingTab {
 	 */
 	private async collectAssetStatuses(): Promise<AssetStatus[]> {
 		const pluginId = this.plugin.manifest.id;
-		const assetsDir = this.vaultPath(
+	const assetsDir = vaultPath(
 			".obsidian",
 			"plugins",
 			pluginId,
@@ -168,13 +167,13 @@ export class SettingTab extends PluginSettingTab {
 			return files.map((f) => ({
 				file: f,
 				exists: false,
-				path: this.vaultPath(assetsDir, f),
+				path: vaultPath(assetsDir, f),
 			}));
 		}
 
 		const statuses: AssetStatus[] = [];
 		for (const f of files) {
-			const p = this.vaultPath(assetsDir, f);
+			const p = vaultPath(assetsDir, f);
 			const exists = await this.app.vault.adapter.exists(p);
 			let size: number | undefined = undefined;
 			if (exists) {
