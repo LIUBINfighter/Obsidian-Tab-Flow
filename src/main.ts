@@ -13,19 +13,11 @@ import {
 	ASSET_FILES,
 } from "./services/ResourceLoaderService";
 import * as path from "path";
-import {
-	SettingTab,
-} from "./settings/OutdatedSettingTab";
+import { SettingTab } from "./settings/SettingTab";
 import { DEFAULT_SETTINGS, TabFlowSettings } from "./settings/defaults";
+import { AssetStatus } from "./types/assets";
 
-/**
- * 资产状态类型
- */
-export interface AssetStatus {
-	file: string;
-	exists: boolean;
-	path: string;
-}
+// AssetStatus moved to src/types/assets.ts
 
 export default class TabFlowPlugin extends Plugin {
 	settings: TabFlowSettings;

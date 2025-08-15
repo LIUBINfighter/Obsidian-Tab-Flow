@@ -1,6 +1,6 @@
 import { App, Notice, Setting } from "obsidian";
 import TabFlowPlugin from "../../main";
-import { DEFAULT_SETTINGS } from "../defaults";
+import { DEFAULT_SETTINGS, PlayBarComponentVisibility } from "../defaults";
 
 export async function renderPlayerTab(
   tabContents: HTMLElement,
@@ -36,7 +36,7 @@ export async function renderPlayerTab(
     attr: { style: "display:flex; flex-direction:column; gap:8px;" },
   });
   const meta: Array<{
-    key: keyof import("../OutdatedSettingTab").PlayBarComponentVisibility | "audioPlayer";
+    key: keyof PlayBarComponentVisibility | "audioPlayer";
     label: string;
     icon: string;
     desc?: string;
