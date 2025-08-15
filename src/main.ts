@@ -15,9 +15,8 @@ import {
 import * as path from "path";
 import {
 	SettingTab,
-	TabFlowSettings,
-	DEFAULT_SETTINGS,
 } from "./settings/OutdatedSettingTab";
+import { DEFAULT_SETTINGS, TabFlowSettings } from "./settings/defaults";
 
 /**
  * 资产状态类型
