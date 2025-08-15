@@ -17,7 +17,7 @@ import {
 	SettingTab,
 	TabFlowSettings,
 	DEFAULT_SETTINGS,
-} from "./settings/SettingTab";
+} from "./settings/OutdatedSettingTab";
 
 /**
  * 资产状态类型
