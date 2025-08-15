@@ -4,7 +4,6 @@ import { FileView, TFile, WorkspaceLeaf, Plugin, Notice } from "obsidian";
 export const VIEW_TYPE_TAB = "tab-view";
 
 import * as alphaTab from "@coderline/alphatab";
-import * as convert from "color-convert";
 
 import { EventBus } from "../utils/EventBus";
 import { AlphaTabService } from "../services/AlphaTabService";
