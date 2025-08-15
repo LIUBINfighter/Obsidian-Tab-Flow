@@ -5,15 +5,13 @@ export const VIEW_TYPE_TAB = "tab-view";
 
 import * as alphaTab from "@coderline/alphatab";
 
-import { EventBus } from "../utils/EventBus";
+import { EventBus, isMessy, formatTime, setupHorizontalScroll } from "../utils";
 import { AlphaTabService } from "../services/AlphaTabService";
 import { ExternalMediaService } from "../services/ExternalMediaService";
 import { createPlayBar } from "../components/PlayBar";
-import { isMessy } from "../utils/tabViewHelpers";
-import { formatTime } from "../utils/timeUtils";
-import { setupHorizontalScroll } from "../utils/scrollUtils"; // use consolidated scroll utils
 import { ScorePersistenceService } from "../services/ScorePersistenceService"; // 导入新的服务
 import { TracksModal } from "../components/TracksModal"; // 导入 TracksModal
+import { createDebugBar } from "../components/DebugBar";
 
 export type AlphaTabResources = {
 	bravuraUri: string;
@@ -244,7 +242,6 @@ export class TabView extends FileView {
 			}
 			if (existing) return;
 
-			const { createDebugBar } = require("../components/DebugBar");
 			const debugBar = createDebugBar({
 				app: this.app,
 				api: this.alphaTabService.getApi(),
@@ -347,10 +344,32 @@ export class TabView extends FileView {
 			})
 		);
 
+		// Listen for playbar components/order changes triggered by settings UI
+		this.registerEvent(
+			(this.app.workspace as any).on("tabflow:playbar-components-changed", () => {
+				try {
+					this._mountPlayBarInternal();
+					this.configureScrollElement();
+				} catch (e) {
+					console.warn("[TabView] Failed to apply playbar components change:", e);
+				}
+			})
+		);
+
 		// 监听设置变化，实时响应 Debug Bar 挂载/卸载
 		this.settingsChangeHandler = () => {
 			this._renderDebugBarIfEnabled();
 		};
+		// Listen for debugbar toggle events from SettingTab
+		this.registerEvent(
+			(this.app.workspace as any).on("tabflow:debugbar-toggle", (_visible: boolean) => {
+				try {
+					this._renderDebugBarIfEnabled();
+				} catch (e) {
+					console.warn("[TabView] Failed to apply debugbar toggle:", e);
+				}
+			})
+		);
 		// Debugbar 可见性通过 settingsChangeHandler 响应，这里监听通用的 layout-change 以重新评估
 		this.registerEvent(
 			this.app.workspace.on("layout-change", this.settingsChangeHandler)
