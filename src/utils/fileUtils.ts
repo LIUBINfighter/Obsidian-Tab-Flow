@@ -1,13 +1,17 @@
-import { promises as fs } from 'fs';
-
-type AdapterLike = { exists?: (p: string) => Promise<boolean> };
+type AdapterLike = {
+    exists?: (p: string) => Promise<boolean>;
+    read?: (p: string) => Promise<string | ArrayBuffer | Uint8Array | unknown>;
+};
 
 /**
- * Check whether a file exists. If an Obsidian adapter is provided and exposes
- * an `exists` method, it will be used. Otherwise falls back to Node fs.stat.
+ * Check whether a file exists using an Obsidian-compatible adapter.
  *
- * @param path - file path to check
- * @param adapter - optional Obsidian vault adapter (adapter.exists(path): Promise<boolean>)
+ * Behavior:
+ * - If adapter.exists is available, use it.
+ * - Else if adapter.read is available, attempt to read the file and treat success as existence.
+ * - Otherwise return false.
+ *
+ * Note: Node's fs dependency intentionally removed to avoid conflicts with Obsidian.
  */
 export async function fileExists(path: string, adapter?: AdapterLike): Promise<boolean> {
     if (adapter && typeof adapter.exists === 'function') {
@@ -18,10 +22,15 @@ export async function fileExists(path: string, adapter?: AdapterLike): Promise<b
         }
     }
 
-    try {
-        const st = await fs.stat(path);
-        return !!st;
-    } catch {
-        return false;
+    if (adapter && typeof adapter.read === 'function') {
+        try {
+            await adapter.read(path);
+            return true;
+        } catch {
+            return false;
+        }
     }
+
+    // No adapter available — we intentionally don't use Node fs here.
+    return false;
 }

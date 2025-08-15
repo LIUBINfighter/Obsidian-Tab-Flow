@@ -43,6 +43,15 @@ export class ResourceLoaderService {
 
 		try {
 			// 检查每个资源文件是否存在，如果不存在则跳过
+			// NOTE: fileExists expects an Obsidian-compatible adapter (e.g. app.vault.adapter).
+			// We intentionally pass `this.app.vault.adapter` so the existence check
+			// runs in the same environment Obsidian uses for file IO. The utility
+			// implementation no longer falls back to Node's fs at runtime to avoid
+			// cross-environment issues (Electron renderer / browser contexts).
+			//
+			// If you need Node fs behavior for local scripts/tests, inject a test
+			// adapter that wraps Node's fs (do not change production plugin code to
+			// import fs directly).
 			const [bravuraExists, alphaTabExists, soundFontExists] = await Promise.all([
 				fileExists(bravuraPath, this.app.vault.adapter),
 				fileExists(alphaTabPath, this.app.vault.adapter),
