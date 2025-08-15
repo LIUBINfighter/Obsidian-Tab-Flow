@@ -1,5 +1,5 @@
 import * as alphaTab from "@coderline/alphatab";
-import { convertSamplesToWavBlobUrl } from "../utils/audioUtils";
+import { convertSamplesToWavBlobUrl } from "../utils";
 
 /**
  * 导出相关事件注册与处理

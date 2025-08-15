@@ -6,7 +6,7 @@ export function parseInlineInit(source: string): { opts: AlphaTexInitOptions; bo
     if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1);
     const start = s.match(/^\s*%%\{\s*init\s*:/);
     if (!start) return { opts: {}, body: source };
-    let cursor = start[0].length;
+    const cursor = start[0].length;
     const objStart = s.indexOf('{', cursor);
     if (objStart < 0) return { opts: {}, body: source };
 

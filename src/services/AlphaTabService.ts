@@ -2,10 +2,9 @@
 
 import * as alphaTab from "@coderline/alphatab";
 import { App } from "obsidian";
-import { EventBus } from "../utils/EventBus";
+import { EventBus, convertSamplesToWavBlobUrl } from "../utils";
 import { ScrollConfigProxy } from "../services/ScrollConfigProxy";
 import * as convert from "color-convert";
-import { convertSamplesToWavBlobUrl } from "../utils/audioUtils";
 
 export class AlphaTabService {
 	private api: alphaTab.AlphaTabApi;

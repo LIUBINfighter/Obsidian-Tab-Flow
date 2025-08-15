@@ -1,6 +1,6 @@
 // ExternalMediaService.ts - 外部音频集成服务
 import * as alphaTab from "@coderline/alphatab";
-import { EventBus } from "../utils/EventBus";
+import { EventBus } from "../utils";
 
 /**
  * 外部媒体集成服务

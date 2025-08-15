@@ -7,7 +7,7 @@ import {
 import * as path from "path";
 import TabFlowPlugin from "../main";
 import { ASSET_FILES } from "../services/ResourceLoaderService";
-import { vaultPath } from "../utils/pathUtils";
+import { vaultPath } from "../utils";
 
 export interface TabFlowSettings {
 	mySetting: string;
