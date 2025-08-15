@@ -56,7 +56,18 @@ export async function renderGeneralTab(
     attr: { style: `font-weight: bold; color: ${allOk ? "var(--text-success)" : "var(--text-error)"}; margin-bottom: 10px;` },
   });
 
-  const list = assetsStatusContainer.createEl("ul", { attr: { style: "margin:0;padding-left:20px;" } });
+    const list = assetsStatusContainer.createEl("ul", { attr: { style: "margin:0;padding-left:20px;" } });
+    tabContents.createEl("div", {
+      text: "预期文件结构:",
+      cls: "setting-item-description",
+      attr: { style: "margin-top:20px;font-weight:bold;" },
+    });
+    const pre = tabContents.createEl("pre", {
+      cls: "setting-item-description",
+    });
+    pre.createEl("code", {
+      text: `.obsidian/tab-flow/\n├── main.js\n├── data.json(optional)\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
+    });
   statuses.forEach((s) => {
     const li = list.createEl("li");
     const color = s.exists ? "var(--text-success)" : "var(--text-error)";
