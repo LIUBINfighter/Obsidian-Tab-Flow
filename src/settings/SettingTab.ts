@@ -53,9 +53,23 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 			audioPlayer: false,
 		},
 		order: [
-			"playPause", "stop", "metronome", "countIn", "tracks", "refresh",
-			"locateCursor", "layoutToggle", "exportMenu", "toTop", "toBottom", "openSettings",
-			"progressBar", "speed", "staveProfile", "zoom", "audioPlayer"
+			"playPause",
+			"stop",
+			"metronome",
+			"countIn",
+			"tracks",
+			"refresh",
+			"locateCursor",
+			"layoutToggle",
+			"exportMenu",
+			"toTop",
+			"toBottom",
+			"openSettings",
+			"progressBar",
+			"speed",
+			"staveProfile",
+			"zoom",
+			"audioPlayer",
 		],
 	},
 };
@@ -89,32 +103,38 @@ export interface AssetStatus {
 
 export class SettingTab extends PluginSettingTab {
 	plugin: TabFlowPlugin;
-    private _eventBound = false;
+	private _eventBound = false;
 
 	constructor(app: App, plugin: TabFlowPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
-        // 绑定一次全局事件：跳转到本插件设置的“播放器配置”子页签
-        if (!this._eventBound) {
-            // @ts-ignore
-            this.app.workspace.on('tabflow:open-plugin-settings-player', async () => {
-                try {
-                    // 打开设置面板并定位到本插件设置页
-                    // @ts-ignore
-                    this.app.setting.open();
-                    // @ts-ignore 可能存在的API：openTabById
-                    if (this.app.setting.openTabById) {
-                        // @ts-ignore
-                        this.app.setting.openTabById(this.plugin.manifest.id);
-                    }
-                    // 提示 display 使用 player 作为默认活动子页签
-                    (this as any)._forceActiveInnerTab = 'player';
-                    // 如果当前就是本插件设置页，强制重绘
-                    try { await this.display(); } catch {}
-                } catch {}
-            });
-            this._eventBound = true;
-        }
+		// 绑定一次全局事件：跳转到本插件设置的“播放器配置”子页签
+		if (!this._eventBound) {
+			// @ts-ignore
+			this.app.workspace.on("tabflow:open-plugin-settings-player",
+				async () => {
+					try {
+						// 打开设置面板并定位到本插件设置页
+						// @ts-ignore
+						this.app.setting.open();
+						// @ts-ignore 可能存在的API：openTabById
+						if (this.app.setting.openTabById) {
+							// @ts-ignore
+							this.app.setting.openTabById(
+								this.plugin.manifest.id
+							);
+						}
+						// 提示 display 使用 player 作为默认活动子页签
+						(this as any)._forceActiveInnerTab = "player";
+						// 如果当前就是本插件设置页，强制重绘
+						try {
+							await this.display();
+						} catch {}
+					} catch {}
+				}
+			);
+			this._eventBound = true;
+		}
 	}
 
 	/**
@@ -190,8 +210,8 @@ export class SettingTab extends PluginSettingTab {
 			{ id: "about", name: "关于" },
 		];
 
-        let activeTab = (this as any)._forceActiveInnerTab || "general";
-        (this as any)._forceActiveInnerTab = undefined;
+		let activeTab = (this as any)._forceActiveInnerTab || "general";
+		(this as any)._forceActiveInnerTab = undefined;
 
 		const renderTab = async (tabId: string) => {
 			tabContents.empty();
@@ -221,8 +241,9 @@ export class SettingTab extends PluginSettingTab {
 				assetsStatusContainer.createEl("div", {
 					text: allOk ? "✅ 所有资产文件已安装" : "❌ 资产文件不完整",
 					attr: {
-						style: `font-weight: bold; color: ${allOk ? "var(--text-success)" : "var(--text-error)"
-							}; margin-bottom: 10px;`,
+						style: `font-weight: bold; color: ${
+							allOk ? "var(--text-success)" : "var(--text-error)"
+						}; margin-bottom: 10px;`,
 					},
 				});
 
@@ -239,10 +260,13 @@ export class SettingTab extends PluginSettingTab {
 						s.size != null
 							? ` - ${(s.size / 1024).toFixed(1)} KB`
 							: "";
-					li.innerHTML = `<span style="color:${color}">${icon} ${s.file
-						}</span> - ${descriptions[s.file] || "资源文件"
-						} <span style="color:${color};font-style:italic;">(${s.exists ? "已安装" : "未安装"
-						})</span>${sizeText}`;
+					li.innerHTML = `<span style="color:${color}">${icon} ${
+						s.file
+					}</span> - ${
+						descriptions[s.file] || "资源文件"
+					} <span style="color:${color};font-style:italic;">(${
+						s.exists ? "已安装" : "未安装"
+					})</span>${sizeText}`;
 				});
 
 				if (this.plugin.settings.lastAssetsCheck) {
@@ -256,21 +280,6 @@ export class SettingTab extends PluginSettingTab {
 						},
 					});
 				}
-
-				// 文件处理设置
-				tabContents.createEl("h3", { text: "文件处理设置" });
-				
-				new Setting(tabContents)
-					.setName("自动打开 AlphaTex 文件")
-					.setDesc("启用后，双击 .alphatab 或 .alphatex 文件时会自动使用 TabView 打开。禁用时只能通过右键菜单「Preview in AlphaTab」打开。")
-					.addToggle((toggle) => {
-						toggle.setValue(this.plugin.settings.autoOpenAlphaTexFiles ?? false)
-							.onChange(async (value) => {
-								this.plugin.settings.autoOpenAlphaTexFiles = value;
-								await this.plugin.saveSettings();
-								new Notice(value ? "已启用自动打开 AlphaTex 文件" : "已禁用自动打开 AlphaTex 文件，需重启 Obsidian 生效");
-							});
-					});
 
 				// 操作按钮区域
 				const actionSetting = new Setting(tabContents)
@@ -416,198 +425,438 @@ export class SettingTab extends PluginSettingTab {
 					text: `.obsidian/tab-flow/\n├── main.js\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
 				});
 			} else if (tabId === "player") {
-
+				// new Setting(tabContents)
+				// 	.setName("自动打开 AlphaTex 文件")
+				// 	.setDesc(
+				// 		"启用后，双击 .alphatab 或 .alphatex 文件时会自动使用 TabView 打开。禁用时只能通过右键菜单「Preview in AlphaTab」打开。"
+				// 	)
+				// 	.addToggle((toggle) => {
+				// 		toggle
+				// 			.setValue(
+				// 				this.plugin.settings.autoOpenAlphaTexFiles ??
+				// 					false
+				// 			)
+				// 			.onChange(async (value) => {
+				// 				this.plugin.settings.autoOpenAlphaTexFiles =
+				// 					value;
+				// 				await this.plugin.saveSettings();
+				// 				new Notice(
+				// 					value
+				// 						? "已启用自动打开 AlphaTex 文件"
+				// 						: "已禁用自动打开 AlphaTex 文件，需重启 Obsidian 生效"
+				// 				);
+				// 			});
+				// 	});
 
 				// 可视化编辑（推荐）：组件卡片（拖拽/上下移动/开关）
-				tabContents.createEl("h4", { text: "可视化编辑（拖拽排序 + 开关）" });
+				tabContents.createEl("h4", {
+					text: "可视化编辑（拖拽排序 + 开关）",
+				});
 				// 恢复默认设置按钮
 				new Setting(tabContents)
 					.setName("恢复默认")
 					.setDesc("重置播放栏组件的显示开关与顺序为默认配置")
 					.addButton((btn) => {
-						btn.setButtonText("恢复默认")
-							.onClick(async () => {
-								try {
-									this.plugin.settings.playBar = {
-										components: JSON.parse(JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})),
-										order: (DEFAULT_SETTINGS.playBar?.order || []).slice(),
-									};
-									await this.plugin.saveSettings();
-									renderCards();
+						btn.setButtonText("恢复默认").onClick(async () => {
+							try {
+								this.plugin.settings.playBar = {
+									components: JSON.parse(
+										JSON.stringify(
+											DEFAULT_SETTINGS.playBar
+												?.components || {}
+										)
+									),
+									order: (
+										DEFAULT_SETTINGS.playBar?.order || []
+									).slice(),
+								};
+								await this.plugin.saveSettings();
+								renderCards();
 
-									// 通知视图即时应用
-									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
-									new Notice("已恢复默认设置");
-								} catch (e) {
-									new Notice("恢复默认失败: " + e);
-								}
-							});
+								// 通知视图即时应用
+								try {
+									/* @ts-ignore */ this.app.workspace.trigger(
+										"tabflow:playbar-components-changed"
+									);
+								} catch {}
+								new Notice("已恢复默认设置");
+							} catch (e) {
+								new Notice("恢复默认失败: " + e);
+							}
+						});
 					});
-				const cardsWrap = tabContents.createDiv({ attr: { style: "display:flex; flex-direction:column; gap:8px;" } });
-				const meta: Array<{ key: keyof PlayBarComponentVisibility | 'audioPlayer'; label: string; icon: string; desc?: string; disabled?: boolean }> = [
-					{ key: 'playPause', label: '播放/暂停', icon: 'play' },
-					{ key: 'stop', label: '停止', icon: 'square' },
-					{ key: 'metronome', label: '节拍器', icon: 'lucide-music-2' },
-					{ key: 'countIn', label: '预备拍', icon: 'lucide-timer' },
-					{ key: 'tracks', label: '选择音轨', icon: 'lucide-layers' },
-					{ key: 'refresh', label: '刷新/重建播放器', icon: 'lucide-refresh-ccw' },
-					{ key: 'locateCursor', label: '滚动到光标', icon: 'lucide-crosshair' },
-					{ key: 'layoutToggle', label: '布局切换', icon: 'lucide-layout' },
-					{ key: 'exportMenu', label: '导出菜单', icon: 'lucide-download' },
-					{ key: 'toTop', label: '回到顶部', icon: 'lucide-chevrons-up' },
-					{ key: 'toBottom', label: '回到底部', icon: 'lucide-chevrons-down' },
-					{ key: 'openSettings', label: '打开设置', icon: 'settings' },
-					{ key: 'progressBar', label: '进度条', icon: 'lucide-line-chart' },
-					{ key: 'speed', label: '速度选择', icon: 'lucide-gauge' },
-					{ key: 'staveProfile', label: '谱表选择', icon: 'lucide-list-music' },
-					{ key: 'zoom', label: '缩放选择', icon: 'lucide-zoom-in' },
-					{ key: 'audioPlayer', label: '原生音频播放器（实验性）', icon: 'audio-file', disabled: true, desc: '暂不可用，存在与 AlphaTab 播放器冲突风险' },
+				const cardsWrap = tabContents.createDiv({
+					attr: {
+						style: "display:flex; flex-direction:column; gap:8px;",
+					},
+				});
+				const meta: Array<{
+					key: keyof PlayBarComponentVisibility | "audioPlayer";
+					label: string;
+					icon: string;
+					desc?: string;
+					disabled?: boolean;
+				}> = [
+					{ key: "playPause", label: "播放/暂停", icon: "play" },
+					{ key: "stop", label: "停止", icon: "square" },
+					{
+						key: "metronome",
+						label: "节拍器",
+						icon: "lucide-music-2",
+					},
+					{ key: "countIn", label: "预备拍", icon: "lucide-timer" },
+					{ key: "tracks", label: "选择音轨", icon: "lucide-layers" },
+					{
+						key: "refresh",
+						label: "刷新/重建播放器",
+						icon: "lucide-refresh-ccw",
+					},
+					{
+						key: "locateCursor",
+						label: "滚动到光标",
+						icon: "lucide-crosshair",
+					},
+					{
+						key: "layoutToggle",
+						label: "布局切换",
+						icon: "lucide-layout",
+					},
+					{
+						key: "exportMenu",
+						label: "导出菜单",
+						icon: "lucide-download",
+					},
+					{
+						key: "toTop",
+						label: "回到顶部",
+						icon: "lucide-chevrons-up",
+					},
+					{
+						key: "toBottom",
+						label: "回到底部",
+						icon: "lucide-chevrons-down",
+					},
+					{
+						key: "openSettings",
+						label: "打开设置",
+						icon: "settings",
+					},
+					{
+						key: "progressBar",
+						label: "进度条",
+						icon: "lucide-line-chart",
+					},
+					{ key: "speed", label: "速度选择", icon: "lucide-gauge" },
+					{
+						key: "staveProfile",
+						label: "谱表选择",
+						icon: "lucide-list-music",
+					},
+					{ key: "zoom", label: "缩放选择", icon: "lucide-zoom-in" },
+					{
+						key: "audioPlayer",
+						label: "原生音频播放器（实验性）",
+						icon: "audio-file",
+						disabled: true,
+						desc: "暂不可用，存在与 AlphaTab 播放器冲突风险",
+					},
 				];
 
 				const getOrder = (): string[] => {
 					const def = [
-						"playPause", "stop", "metronome", "countIn", "tracks", "refresh",
-						"locateCursor", "layoutToggle", "exportMenu", "toTop", "toBottom", "openSettings",
-						"progressBar", "speed", "staveProfile", "zoom", "audioPlayer"
+						"playPause",
+						"stop",
+						"metronome",
+						"countIn",
+						"tracks",
+						"refresh",
+						"locateCursor",
+						"layoutToggle",
+						"exportMenu",
+						"toTop",
+						"toBottom",
+						"openSettings",
+						"progressBar",
+						"speed",
+						"staveProfile",
+						"zoom",
+						"audioPlayer",
 					];
 					const saved = this.plugin.settings.playBar?.order;
-					return Array.isArray(saved) && saved.length ? saved.slice() : def.slice();
+					return Array.isArray(saved) && saved.length
+						? saved.slice()
+						: def.slice();
 				};
 
 				let draggingKey: string | null = null;
 				const clearDndHighlights = () => {
-					const cards = cardsWrap.querySelectorAll('.tabflow-card');
+					const cards = cardsWrap.querySelectorAll(".tabflow-card");
 					cards.forEach((el) => {
-						el.classList.remove('insert-before', 'insert-after', 'swap-target');
-						(el as HTMLElement).style.background = '';
+						el.classList.remove(
+							"insert-before",
+							"insert-after",
+							"swap-target"
+						);
+						(el as HTMLElement).style.background = "";
 					});
 				};
 				const renderCards = () => {
 					cardsWrap.empty();
-					const order = getOrder().filter(k => meta.some(m => m.key === (k as any)));
-					const comp = this.plugin.settings.playBar?.components || ({} as any);
+					const order = getOrder().filter((k) =>
+						meta.some((m) => m.key === (k as any))
+					);
+					const comp =
+						this.plugin.settings.playBar?.components || ({} as any);
 					order.forEach((key) => {
-						const m = meta.find(x => x.key === (key as any));
+						const m = meta.find((x) => x.key === (key as any));
 						if (!m) return;
-						const card = cardsWrap.createDiv({ cls: 'tabflow-card', attr: { draggable: 'true', style: 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--background-modifier-border); border-radius:6px;' } });
+						const card = cardsWrap.createDiv({
+							cls: "tabflow-card",
+							attr: {
+								draggable: "true",
+								style: "display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--background-modifier-border); border-radius:6px;",
+							},
+						});
 						card.dataset.key = String(key);
-						const left = card.createDiv({ attr: { style: 'display:flex; align-items:center; gap:8px;' } });
-						left.createSpan({ text: '⠿', attr: { style: 'cursor:grab; user-select:none;' } });
+						const left = card.createDiv({
+							attr: {
+								style: "display:flex; align-items:center; gap:8px;",
+							},
+						});
+						left.createSpan({
+							text: "⠿",
+							attr: { style: "cursor:grab; user-select:none;" },
+						});
 						const iconEl = left.createSpan();
 						// @ts-ignore Obsidian setIcon
-						(require('obsidian') as any).setIcon(iconEl, m.icon);
-						left.createEl('strong', { text: m.label });
-						if (m.desc) left.createSpan({ text: ` - ${m.desc}`, attr: { style: 'color:var(--text-muted);font-size:0.9em;' } });
-						const right = card.createDiv({ attr: { style: 'display:flex; align-items:center; gap:6px;' } });
-						const upIcon = right.createSpan({ cls: 'icon-clickable', attr: { 'aria-label': '上移', role: 'button', tabindex: '0' } });
-						(require('obsidian') as any).setIcon(upIcon, 'lucide-arrow-up');
-						const downIcon = right.createSpan({ cls: 'icon-clickable', attr: { 'aria-label': '下移', role: 'button', tabindex: '0' } });
-						(require('obsidian') as any).setIcon(downIcon, 'lucide-arrow-down');
-						new Setting(right).addToggle(t => {
-							const current = !!(comp as any)[key];
-							t.setValue(m.disabled ? false : current).onChange(async (v) => {
-								this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-								(this.plugin.settings.playBar.components as any)[key] = m.disabled ? false : v;
-								await this.plugin.saveSettings();
-								try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
+						(require("obsidian") as any).setIcon(iconEl, m.icon);
+						left.createEl("strong", { text: m.label });
+						if (m.desc)
+							left.createSpan({
+								text: ` - ${m.desc}`,
+								attr: {
+									style: "color:var(--text-muted);font-size:0.9em;",
+								},
 							});
-							if (m.disabled) (t as any).toggleEl.querySelector('input')?.setAttribute('disabled', 'true');
+						const right = card.createDiv({
+							attr: {
+								style: "display:flex; align-items:center; gap:6px;",
+							},
+						});
+						const upIcon = right.createSpan({
+							cls: "icon-clickable",
+							attr: {
+								"aria-label": "上移",
+								role: "button",
+								tabindex: "0",
+							},
+						});
+						(require("obsidian") as any).setIcon(
+							upIcon,
+							"lucide-arrow-up"
+						);
+						const downIcon = right.createSpan({
+							cls: "icon-clickable",
+							attr: {
+								"aria-label": "下移",
+								role: "button",
+								tabindex: "0",
+							},
+						});
+						(require("obsidian") as any).setIcon(
+							downIcon,
+							"lucide-arrow-down"
+						);
+						new Setting(right).addToggle((t) => {
+							const current = !!(comp as any)[key];
+							t.setValue(m.disabled ? false : current).onChange(
+								async (v) => {
+									this.plugin.settings.playBar = this.plugin
+										.settings.playBar || {
+										components: {} as any,
+									};
+									(
+										this.plugin.settings.playBar
+											.components as any
+									)[key] = m.disabled ? false : v;
+									await this.plugin.saveSettings();
+									try {
+										/* @ts-ignore */ this.app.workspace.trigger(
+											"tabflow:playbar-components-changed"
+										);
+									} catch {}
+								}
+							);
+							if (m.disabled)
+								(t as any).toggleEl
+									.querySelector("input")
+									?.setAttribute("disabled", "true");
 						});
 
-							const getScrollContainer = (el: HTMLElement): HTMLElement | Window => {
-								let node: HTMLElement | null = el.parentElement;
-								while (node) {
-									const hasScrollableSpace = node.scrollHeight > node.clientHeight + 1;
-									const style = getComputedStyle(node);
-									const overflowY = style.overflowY;
-									if (hasScrollableSpace && (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay')) {
-										return node;
-									}
-									node = node.parentElement;
+						const getScrollContainer = (
+							el: HTMLElement
+						): HTMLElement | Window => {
+							let node: HTMLElement | null = el.parentElement;
+							while (node) {
+								const hasScrollableSpace =
+									node.scrollHeight > node.clientHeight + 1;
+								const style = getComputedStyle(node);
+								const overflowY = style.overflowY;
+								if (
+									hasScrollableSpace &&
+									(overflowY === "auto" ||
+										overflowY === "scroll" ||
+										overflowY === "overlay")
+								) {
+									return node;
 								}
-								return window;
-							};
+								node = node.parentElement;
+							}
+							return window;
+						};
 
-							const keepPointerOverRow = async (rowKey: string, update: () => Promise<void> | void) => {
-								const oldRect = card.getBoundingClientRect();
-								const scrollContainer = getScrollContainer(card);
-								await Promise.resolve(update());
-								const newCard = cardsWrap.querySelector(`.tabflow-card[data-key="${rowKey}"]`) as HTMLElement | null;
-								if (!newCard) return;
-								const newRect = newCard.getBoundingClientRect();
-								const delta = newRect.top - oldRect.top;
-								if (delta !== 0) {
-									if (scrollContainer === window) {
-										window.scrollBy(0, delta);
-									} else {
-										(scrollContainer as HTMLElement).scrollTop += delta;
-									}
+						const keepPointerOverRow = async (
+							rowKey: string,
+							update: () => Promise<void> | void
+						) => {
+							const oldRect = card.getBoundingClientRect();
+							const scrollContainer = getScrollContainer(card);
+							await Promise.resolve(update());
+							const newCard = cardsWrap.querySelector(
+								`.tabflow-card[data-key="${rowKey}"]`
+							) as HTMLElement | null;
+							if (!newCard) return;
+							const newRect = newCard.getBoundingClientRect();
+							const delta = newRect.top - oldRect.top;
+							if (delta !== 0) {
+								if (scrollContainer === window) {
+									window.scrollBy(0, delta);
+								} else {
+									(
+										scrollContainer as HTMLElement
+									).scrollTop += delta;
 								}
-							};
+							}
+						};
 
-							const moveUp = async () => {
-								const cur = getOrder();
-								const i = cur.indexOf(String(key));
-								if (i > 0) {
-									await keepPointerOverRow(String(key), async () => {
-										[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
-										this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-										(this.plugin.settings.playBar as any).order = cur;
+						const moveUp = async () => {
+							const cur = getOrder();
+							const i = cur.indexOf(String(key));
+							if (i > 0) {
+								await keepPointerOverRow(
+									String(key),
+									async () => {
+										[cur[i - 1], cur[i]] = [
+											cur[i],
+											cur[i - 1],
+										];
+										this.plugin.settings.playBar = this
+											.plugin.settings.playBar || {
+											components: {} as any,
+										};
+										(
+											this.plugin.settings.playBar as any
+										).order = cur;
 										await this.plugin.saveSettings();
 										renderCards();
-									});
-									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
-								}
-							};
-							const moveDown = async () => {
-								const cur = getOrder();
-								const i = cur.indexOf(String(key));
-								if (i >= 0 && i < cur.length - 1) {
-									await keepPointerOverRow(String(key), async () => {
-										[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
-										this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
-										(this.plugin.settings.playBar as any).order = cur;
+									}
+								);
+								try {
+									/* @ts-ignore */ this.app.workspace.trigger(
+										"tabflow:playbar-components-changed"
+									);
+								} catch {}
+							}
+						};
+						const moveDown = async () => {
+							const cur = getOrder();
+							const i = cur.indexOf(String(key));
+							if (i >= 0 && i < cur.length - 1) {
+								await keepPointerOverRow(
+									String(key),
+									async () => {
+										[cur[i + 1], cur[i]] = [
+											cur[i],
+											cur[i + 1],
+										];
+										this.plugin.settings.playBar = this
+											.plugin.settings.playBar || {
+											components: {} as any,
+										};
+										(
+											this.plugin.settings.playBar as any
+										).order = cur;
 										await this.plugin.saveSettings();
 										renderCards();
-									});
-									try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
+									}
+								);
+								try {
+									/* @ts-ignore */ this.app.workspace.trigger(
+										"tabflow:playbar-components-changed"
+									);
+								} catch {}
+							}
+						};
+
+						upIcon.addEventListener("click", () => {
+							moveUp();
+						});
+						upIcon.addEventListener(
+							"keydown",
+							(e: KeyboardEvent) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault();
+									moveUp();
 								}
-							};
-
-						upIcon.addEventListener('click', () => { moveUp(); });
-						upIcon.addEventListener('keydown', (e: KeyboardEvent) => {
-							if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveUp(); }
+							}
+						);
+						downIcon.addEventListener("click", () => {
+							moveDown();
 						});
-						downIcon.addEventListener('click', () => { moveDown(); });
-						downIcon.addEventListener('keydown', (e: KeyboardEvent) => {
-							if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveDown(); }
-						});
+						downIcon.addEventListener(
+							"keydown",
+							(e: KeyboardEvent) => {
+								if (e.key === "Enter" || e.key === " ") {
+									e.preventDefault();
+									moveDown();
+								}
+							}
+						);
 
-						card.addEventListener('dragstart', (e) => {
+						card.addEventListener("dragstart", (e) => {
 							draggingKey = String(key);
-							(e.dataTransfer as DataTransfer).effectAllowed = 'move';
+							(e.dataTransfer as DataTransfer).effectAllowed =
+								"move";
 						});
-						card.addEventListener('dragover', (e) => {
+						card.addEventListener("dragover", (e) => {
 							e.preventDefault();
-							(e.dataTransfer as DataTransfer).dropEffect = 'move';
+							(e.dataTransfer as DataTransfer).dropEffect =
+								"move";
 							clearDndHighlights();
 							const rect = card.getBoundingClientRect();
 							const offsetY = (e as DragEvent).clientY - rect.top;
 							const ratio = offsetY / rect.height;
 							if (ratio < 0.33) {
-								card.classList.add('insert-before');
+								card.classList.add("insert-before");
 							} else if (ratio > 0.66) {
-								card.classList.add('insert-after');
+								card.classList.add("insert-after");
 							} else {
-								card.classList.add('swap-target');
+								card.classList.add("swap-target");
 							}
 						});
-						card.addEventListener('dragleave', () => { clearDndHighlights(); });
-						card.addEventListener('dragend', () => { clearDndHighlights(); });
-						card.addEventListener('drop', async () => {
-							const isInsertBefore = card.classList.contains('insert-before');
-							const isInsertAfter = card.classList.contains('insert-after');
-							const isSwap = card.classList.contains('swap-target');
+						card.addEventListener("dragleave", () => {
+							clearDndHighlights();
+						});
+						card.addEventListener("dragend", () => {
+							clearDndHighlights();
+						});
+						card.addEventListener("drop", async () => {
+							const isInsertBefore =
+								card.classList.contains("insert-before");
+							const isInsertAfter =
+								card.classList.contains("insert-after");
+							const isSwap =
+								card.classList.contains("swap-target");
 							clearDndHighlights();
 							if (!draggingKey || draggingKey === key) return;
 							const list = getOrder();
@@ -623,18 +872,21 @@ export class SettingTab extends PluginSettingTab {
 								if (from < insertIndex) insertIndex -= 1;
 								cur.splice(insertIndex, 0, moved);
 							}
-							this.plugin.settings.playBar = this.plugin.settings.playBar || { components: {} as any };
+							this.plugin.settings.playBar = this.plugin.settings
+								.playBar || { components: {} as any };
 							(this.plugin.settings.playBar as any).order = cur;
 							await this.plugin.saveSettings();
 							renderCards();
-							try { /* @ts-ignore */ this.app.workspace.trigger('tabflow:playbar-components-changed'); } catch { }
+							try {
+								/* @ts-ignore */ this.app.workspace.trigger(
+									"tabflow:playbar-components-changed"
+								);
+							} catch {}
 							draggingKey = null;
 						});
 					});
 				};
 				renderCards();
-
-
 
 				// PlayBar 组件可见性
 				// tabContents.createEl("h4", { text: "播放栏组件" });
@@ -722,21 +974,32 @@ export class SettingTab extends PluginSettingTab {
 
 				new Setting(tabContents)
 					.setName("显示 Debug Bar（开发者选项）")
-					.setDesc("启用后在视图顶部显示调试栏，用于实验功能和问题诊断。")
+					.setDesc(
+						"启用后在视图顶部显示调试栏，用于实验功能和问题诊断。"
+					)
 					.addToggle((toggle) => {
-						toggle.setValue(this.plugin.settings.showDebugBar ?? false)
+						toggle
+							.setValue(
+								this.plugin.settings.showDebugBar ?? false
+							)
 							.onChange(async (value) => {
 								this.plugin.settings.showDebugBar = value;
 								await this.plugin.saveSettings();
 								// 实时通知工作区：调试栏开关变化
 								try {
 									// @ts-ignore - Obsidian 支持触发自定义事件
-									this.app.workspace.trigger('tabflow:debugbar-toggle', value);
-								} catch { }
-								new Notice(value ? "已启用 Debug Bar" : "已隐藏 Debug Bar");
+									this.app.workspace.trigger(
+										"tabflow:debugbar-toggle",
+										value
+									);
+								} catch {}
+								new Notice(
+									value
+										? "已启用 Debug Bar"
+										: "已隐藏 Debug Bar"
+								);
 							});
 					});
-
 			} else if (tabId === "about") {
 				tabContents.createEl("h3", { text: "关于" });
 				tabContents.createEl("p", {
@@ -750,48 +1013,100 @@ export class SettingTab extends PluginSettingTab {
 					.addButton((btn) => {
 						btn.setButtonText("打开文档").onClick(async () => {
 							try {
-								new Notice('尝试打开 AlphaTex 文档视图...');
-								console.log('[SettingTab] open-doc button clicked');
+								new Notice("尝试打开 AlphaTex 文档视图...");
+								console.log(
+									"[SettingTab] open-doc button clicked"
+								);
 								// 优先通过已注册的命令触发（某些环境命令API可能同步或不可await）
 								try {
-									const execFn = (this.app as any).commands && (this.app as any).commands.executeCommandById;
-									if (typeof execFn === 'function') {
-										const res = execFn.call((this.app as any).commands, 'open-tabflow-doc-view');
-										console.log('[SettingTab] executeCommandById returned', res);
+									const execFn =
+										(this.app as any).commands &&
+										(this.app as any).commands
+											.executeCommandById;
+									if (typeof execFn === "function") {
+										const res = execFn.call(
+											(this.app as any).commands,
+											"open-tabflow-doc-view"
+										);
+										console.log(
+											"[SettingTab] executeCommandById returned",
+											res
+										);
 										// 如果命令没有生效（返回 falsy），回退到直接打开视图
 										if (!res) {
-											const leaf = this.app.workspace.getLeaf(true);
-											await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
+											const leaf =
+												this.app.workspace.getLeaf(
+													true
+												);
+											await leaf.setViewState({
+												type: "tabflow-doc-view",
+												active: true,
+											});
 											this.app.workspace.revealLeaf(leaf);
 										}
 										// 尝试关闭设置面板（优先 API），以便文档视图成为唯一活动视图
 										try {
-											if ((this.app as any).setting && typeof (this.app as any).setting.close === 'function') {
-												(this.app as any).setting.close();
-											} else if ((this.app as any).workspace && typeof (this.app as any).workspace.detachLeavesOfType === 'function') {
-												(this.app as any).workspace.detachLeavesOfType('settings');
+											if (
+												(this.app as any).setting &&
+												typeof (this.app as any).setting
+													.close === "function"
+											) {
+												(
+													this.app as any
+												).setting.close();
+											} else if (
+												(this.app as any).workspace &&
+												typeof (this.app as any)
+													.workspace
+													.detachLeavesOfType ===
+													"function"
+											) {
+												(
+													this.app as any
+												).workspace.detachLeavesOfType(
+													"settings"
+												);
 											} else {
-												console.debug('[SettingTab] no API to close settings view');
+												console.debug(
+													"[SettingTab] no API to close settings view"
+												);
 											}
 										} catch (closeErr) {
-											console.warn('[SettingTab] failed to close settings view', closeErr);
+											console.warn(
+												"[SettingTab] failed to close settings view",
+												closeErr
+											);
 										}
 									} else {
 										// commands API 不可用，直接打开视图
-										const leaf = this.app.workspace.getLeaf(true);
-										await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
+										const leaf =
+											this.app.workspace.getLeaf(true);
+										await leaf.setViewState({
+											type: "tabflow-doc-view",
+											active: true,
+										});
 										this.app.workspace.revealLeaf(leaf);
 									}
 								} catch (innerErr) {
-									console.error('[SettingTab] executeCommandById error', innerErr);
+									console.error(
+										"[SettingTab] executeCommandById error",
+										innerErr
+									);
 									// 回退：直接打开视图
-									const leaf = this.app.workspace.getLeaf(true);
-									await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
+									const leaf =
+										this.app.workspace.getLeaf(true);
+									await leaf.setViewState({
+										type: "tabflow-doc-view",
+										active: true,
+									});
 									this.app.workspace.revealLeaf(leaf);
 								}
 							} catch (e) {
-								console.error('[SettingTab] Open AlphaTex doc failed', e);
-								new Notice('打开文档失败，请查看控制台日志');
+								console.error(
+									"[SettingTab] Open AlphaTex doc failed",
+									e
+								);
+								new Notice("打开文档失败，请查看控制台日志");
 							}
 						});
 					});
