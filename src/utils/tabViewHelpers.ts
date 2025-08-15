@@ -23,6 +23,3 @@ export function isMessy(t?: string): boolean {
         return false;
     }
 }
-
-// formatTime 已被移动到 src/utils/timeUtils.ts，保留轻量的重导出以兼容旧引用
-export { formatTime } from "./timeUtils";
