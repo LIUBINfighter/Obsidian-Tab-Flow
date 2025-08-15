@@ -17,7 +17,7 @@ vi.mock('fs', () => ({
   readFileSync: vi.fn((path: string) => {
     if (path.includes('manifest.json')) {
       return JSON.stringify({
-        id: 'interactive-tabs',
+        id: 'obsidian-tab-flow',
         name: 'Interactive Tabs',
         version: '1.0.0'
       });
@@ -87,7 +87,7 @@ describe('AlphaTabPlugin Integration', () => {
 
     // Create plugin instance
     plugin = new AlphaTabPlugin(mockApp, {
-      id: 'interactive-tabs',
+      id: 'obsidian-tab-flow',
       name: 'Interactive Tabs',
       version: '1.0.0',
       minAppVersion: '0.15.0',
@@ -295,7 +295,7 @@ describe('AlphaTabPlugin Integration', () => {
   describe('Error Handling', () => {
     it('should handle missing manifest directory', async () => {
       const pluginWithEmptyDir = new AlphaTabPlugin(mockApp, {
-        id: 'interactive-tabs',
+        id: 'obsidian-tab-flow',
         name: 'Interactive Tabs',
         version: '1.0.0',
         minAppVersion: '0.15.0',
@@ -402,7 +402,7 @@ describe('AlphaTabPlugin Integration', () => {
 
       // Create a new plugin instance to test with mocked utils
       const testPlugin = new AlphaTabPlugin(mockApp, {
-        id: 'interactive-tabs',
+        id: 'obsidian-tab-flow',
         name: 'Interactive Tabs',
         version: '1.0.0',
         minAppVersion: '0.15.0',

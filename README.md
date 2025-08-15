@@ -65,7 +65,7 @@ If you have any feature requests / bugs to report, feel free to have an issue.
 
 If you have done something brilliant, then go for a pull request.
 
-<!-- If you want to add a new language to interactive-tabs, see this guide first. -->
+<!-- If you want to add a new language to obsidian-tab-flow, see this guide first. -->
 
 <!-- ## How to Build -->
 
@@ -95,7 +95,7 @@ Copyright (c) 2025 Jay Bridge and other contributors. All rights reserved.
 
 Licensed under the MPL 2.0 License.
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LIUBINfighter/interactive-tabs)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LIUBINfighter/obsidian-tab-flow)
 
 <!-- ## Packages Using -->
 

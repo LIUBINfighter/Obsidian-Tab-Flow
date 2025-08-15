@@ -152,7 +152,7 @@ export class AlphaTabSettingTab extends PluginSettingTab {
 
 		// 添加资产下载 URL 信息
 		const version = this.plugin.manifest.version;
-		const assetsUrl = `https://github.com/LIUBINfighter/interactive-tabs/releases/download/${version}/assets.zip`;
+		const assetsUrl = `https://github.com/LIUBINfighter/obsidian-tab-flow/releases/download/${version}/assets.zip`;
 
 		new Setting(containerEl)
 			.setName("资源下载链接")

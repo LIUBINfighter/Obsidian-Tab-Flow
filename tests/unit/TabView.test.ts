@@ -26,7 +26,7 @@ describe('TabView', () => {
       actualPluginDir: '/mock/plugin/dir',
       manifest: {
         dir: '/mock/plugin/dir',
-        id: 'interactive-tabs'
+        id: 'obsidian-tab-flow'
       },
       themeMode: 'dark',
       app: {

@@ -369,7 +369,7 @@ export class SettingTab extends PluginSettingTab {
 
 				// tabContents.createEl("div", { text: "这些文件保存在插件目录 assets/ 下。", cls: "setting-item-description" });
 				// const version = this.plugin.manifest?.version ?? "latest";
-				// const assetsZipUrl = `https://github.com/LIUBINfighter/interactive-tabs/releases/download/${version}/assets.zip`;
+				// const assetsZipUrl = `https://github.com/LIUBINfighter/obsidian-tab-flow/releases/download/${version}/assets.zip`;
 				// new Setting(tabContents)
 				// 	.setName("资源下载链接")
 				// 	.setDesc("自动下载失败时，可手动下载并解压到插件目录")

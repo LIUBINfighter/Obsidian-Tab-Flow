@@ -96,7 +96,7 @@ export class Plugin {
   app: any;
   manifest: any = { 
     dir: '/mock/plugin/dir', 
-    id: 'interactive-tabs'
+    id: 'obsidian-tab-flow'
   };
   
   constructor(app?: any, manifest?: any) {
@@ -231,7 +231,7 @@ export class MockAdapter {
   read(path: string): Promise<string> {
     if (path.includes('manifest.json')) {
       return Promise.resolve(JSON.stringify({
-        id: 'interactive-tabs',
+        id: 'obsidian-tab-flow',
         name: 'Interactive Tabs',
         version: '1.0.0'
       }));

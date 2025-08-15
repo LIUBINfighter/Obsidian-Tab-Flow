@@ -63,7 +63,7 @@ export default class MyPlugin extends Plugin {
 		console.log("插件路径:", normalizedPluginDir);
 		console.log("目标路径:", normalizedPath);
 		
-		// 预期的结果是：.obsidian/plugins/interactive-tabs/assets/文件名
+		// 预期的结果是：.obsidian/plugins/obsidian-tab-flow/assets/文件名
 		if (normalizedPath.startsWith(normalizedPluginDir)) {
 			// 从绝对路径中移除插件目录部分，得到相对路径
 			return normalizedPath;
@@ -190,7 +190,7 @@ export default class MyPlugin extends Plugin {
 					}
 					
 					// 文件路径处理，获取相对于vault的路径
-					// 从actualPluginDir计算相对路径 (.obsidian/plugins/interactive-tabs/assets/...)
+					// 从actualPluginDir计算相对路径 (.obsidian/plugins/obsidian-tab-flow/assets/...)
 					// 解析出相对于插件目录的路径
 					const relativeToVault = this.getRelativePathToVault(asset.path);
 					

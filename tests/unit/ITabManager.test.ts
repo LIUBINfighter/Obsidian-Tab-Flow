@@ -103,7 +103,7 @@ describe('ITabManager', () => {
     mockPluginInstance = {
       manifest: {
         dir: '/mock/plugin/dir',
-        id: 'interactive-tabs'
+        id: 'obsidian-tab-flow'
       },
       actualPluginDir: '/mock/plugin/dir'
     };

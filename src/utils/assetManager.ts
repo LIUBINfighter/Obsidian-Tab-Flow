@@ -15,7 +15,7 @@ export const REQUIRED_ASSETS = [
 ];
 
 // 资产包的下载URL
-const ASSETS_PACKAGE_URL = (version: string) => `https://github.com/LIUBINfightere/interactive-tabs/releases/download/${version}/assets.zip`;
+const ASSETS_PACKAGE_URL = (version: string) => `https://github.com/LIUBINfightere/obsidian-tab-flow/releases/download/${version}/assets.zip`;
 
 /**
  * 检查插件目录中是否存在所有必需的资产文件
