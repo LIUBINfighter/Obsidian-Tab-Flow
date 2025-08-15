@@ -10,8 +10,9 @@ import { EventBus } from "../utils/EventBus";
 import { AlphaTabService } from "../services/AlphaTabService";
 import { ExternalMediaService } from "../services/ExternalMediaService";
 import { createPlayBar } from "../components/PlayBar";
-import { isMessy, formatTime } from "../utils/tabViewHelpers";
-import { setupHorizontalScroll } from "../utils/horizontalScrollHelper"; // 导入新的工具函数
+import { isMessy } from "../utils/tabViewHelpers";
+import { formatTime } from "../utils/timeUtils";
+import { setupHorizontalScroll } from "../utils/scrollUtils"; // use consolidated scroll utils
 import { ScorePersistenceService } from "../services/ScorePersistenceService"; // 导入新的服务
 import { TracksModal } from "../components/TracksModal"; // 导入 TracksModal
 
