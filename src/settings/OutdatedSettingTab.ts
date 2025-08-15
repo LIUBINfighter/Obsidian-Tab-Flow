@@ -8,71 +8,7 @@ import * as path from "path";
 import TabFlowPlugin from "../main";
 import { ASSET_FILES } from "../services/ResourceLoaderService";
 import { vaultPath } from "../utils";
-
-export interface TabFlowSettings {
-	mySetting: string;
-	assetsDownloaded?: boolean;
-	lastAssetsCheck?: number;
-	simpleAssetCheck?: boolean;
-	/** 开发者选项：显示 Debug Bar */
-	showDebugBar?: boolean;
-	/** 自动打开 AlphaTex 文件 */
-	autoOpenAlphaTexFiles?: boolean;
-	/** 播放栏配置 */
-	playBar?: {
-		components: PlayBarComponentVisibility;
-		order?: string[];
-	};
-}
-
-export const DEFAULT_SETTINGS: TabFlowSettings = {
-	mySetting: "default",
-	simpleAssetCheck: false, // 默认使用详细资产状态检查
-	assetsDownloaded: false,
-	lastAssetsCheck: 0,
-	showDebugBar: false,
-	autoOpenAlphaTexFiles: false, // 默认不自动打开 AlphaTex 文件
-	playBar: {
-		components: {
-			playPause: true,
-			stop: true,
-			tracks: true,
-			refresh: true,
-			locateCursor: true,
-			layoutToggle: true,
-			exportMenu: true,
-			toTop: true,
-			toBottom: true,
-			openSettings: true,
-			metronome: true,
-			countIn: true,
-			speed: true,
-			staveProfile: true,
-			zoom: true,
-			progressBar: true,
-			audioPlayer: false,
-		},
-		order: [
-			"playPause",
-			"stop",
-			"metronome",
-			"countIn",
-			"tracks",
-			"refresh",
-			"locateCursor",
-			"layoutToggle",
-			"exportMenu",
-			"toTop",
-			"toBottom",
-			"openSettings",
-			"progressBar",
-			"speed",
-			"staveProfile",
-			"zoom",
-			"audioPlayer",
-		],
-	},
-};
+import { DEFAULT_SETTINGS, TabFlowSettings } from "./defaults";
 
 export interface PlayBarComponentVisibility {
 	playPause: boolean;

@@ -1,6 +1,6 @@
 import { App, Notice, Setting } from "obsidian";
 import TabFlowPlugin from "../../main";
-import { DEFAULT_SETTINGS } from "../OutdatedSettingTab";
+import { DEFAULT_SETTINGS } from "../defaults";
 
 export async function renderPlayerTab(
   tabContents: HTMLElement,
