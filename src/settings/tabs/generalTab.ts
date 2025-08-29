@@ -3,6 +3,7 @@ import TabFlowPlugin from "../../main";
 import { ASSET_FILES } from "../../services/ResourceLoaderService";
 import { vaultPath } from "../../utils";
 import { AssetStatus } from "../../types/assets";
+import { t } from "../../i18n";
 
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
   const pluginId = plugin.manifest.id;
@@ -34,31 +35,31 @@ export async function renderGeneralTab(
   app: App,
   renderTab: (id: string) => Promise<void>
 ): Promise<void> {
-  tabContents.createEl("h3", { text: "资源文件管理" });
+  tabContents.createEl("h3", { text: t("assetManagement.assetFileManagement") });
 
   const assetsStatusContainer = tabContents.createDiv({
     cls: "setting-item-description",
     attr: { style: "margin-bottom: 1em; padding: 10px; border-radius: 5px; background-color: var(--background-secondary);" },
   });
-  assetsStatusContainer.createEl("strong", { text: "资产文件状态检查中..." });
+  assetsStatusContainer.createEl("strong", { text: t("status.assetsCheckInProgress") });
 
   const statuses = await collectAssetStatuses(app, plugin);
   const descriptions: Record<string, string> = {
-    [ASSET_FILES.ALPHA_TAB]: "AlphaTab 主脚本",
-    [ASSET_FILES.BRAVURA]: "乐谱字体文件",
-    [ASSET_FILES.SOUNDFONT]: "音色库文件",
+    [ASSET_FILES.ALPHA_TAB]: t("status.alphaTabMainScript"),
+    [ASSET_FILES.BRAVURA]: t("status.musicFontFile"),
+    [ASSET_FILES.SOUNDFONT]: t("status.soundFontFile"),
   };
 
   assetsStatusContainer.empty();
   const allOk = statuses.every((s) => s.exists);
   assetsStatusContainer.createEl("div", {
-    text: allOk ? "✅ 所有资产文件已安装" : "❌ 资产文件不完整",
+    text: allOk ? `✅ ${t("status.allAssetsInstalled")}` : `❌ ${t("status.assetsIncomplete")}`,
     attr: { style: `font-weight: bold; color: ${allOk ? "var(--text-success)" : "var(--text-error)"}; margin-bottom: 10px;` },
   });
 
     const list = assetsStatusContainer.createEl("ul", { attr: { style: "margin:0;padding-left:20px;" } });
     tabContents.createEl("div", {
-      text: "预期文件结构:",
+      text: t("status.expectedFileStructure"),
       cls: "setting-item-description",
       attr: { style: "margin-top:20px;font-weight:bold;" },
     });
@@ -73,37 +74,37 @@ export async function renderGeneralTab(
     const color = s.exists ? "var(--text-success)" : "var(--text-error)";
     const icon = s.exists ? "✅" : "❌";
     const sizeText = s.size != null ? ` - ${(s.size / 1024).toFixed(1)} KB` : "";
-    li.innerHTML = `<span style="color:${color}">${icon} ${s.file}</span> - ${descriptions[s.file] || "资源文件"} <span style="color:${color};font-style:italic;">(${s.exists ? "已安装" : "未安装"})</span>${sizeText}`;
+    li.innerHTML = `<span style="color:${color}">${icon} ${s.file}</span> - ${descriptions[s.file] || t("assetManagement.assetFileManagement")} <span style="color:${color};font-style:italic;">(${s.exists ? t("status.installed") : t("status.notInstalled")})</span>${sizeText}`;
   });
 
   const actionSetting = new Setting(tabContents)
-    .setName(allOk ? "重新下载资产文件" : "下载缺失的资产文件")
-    .setDesc(allOk ? "如怀疑文件损坏，可重新下载" : "下载后需重启 Obsidian");
+    .setName(allOk ? t("assetManagement.redownloadAssets") : t("assetManagement.downloadMissingAssets"))
+    .setDesc(allOk ? t("assetManagement.ifSuspectCorruption") : t("assetManagement.restartRequired"));
   const buttons = actionSetting.controlEl.createDiv({ attr: { style: "display:flex;gap:8px;" } });
 
-  const downloadBtn = buttons.createEl("button", { text: allOk ? "重新下载" : "下载资源文件", cls: "mod-cta" });
-  const restartBtn = buttons.createEl("button", { text: "重启 Obsidian", cls: "mod-warning", attr: { style: plugin.settings.assetsDownloaded ? "" : "display:none;" } });
+  const downloadBtn = buttons.createEl("button", { text: allOk ? t("assetManagement.redownload") : t("assetManagement.downloadMissingAssets"), cls: "mod-cta" });
+  const restartBtn = buttons.createEl("button", { text: t("assetManagement.restartObsidian"), cls: "mod-warning", attr: { style: plugin.settings.assetsDownloaded ? "" : "display:none;" } });
 
   downloadBtn.onclick = async () => {
     downloadBtn.disabled = true;
-    downloadBtn.textContent = "正在下载...";
+    downloadBtn.textContent = t("assetManagement.downloading");
     const ok = await plugin.downloadAssets?.();
     if (ok) {
-      new Notice("资源文件已下载，必要时请重启 Obsidian 应用");
+      new Notice(t("assetManagement.assetsDownloaded"));
       restartBtn.style.display = "inline-block";
       await renderTab("general");
     } else {
       downloadBtn.disabled = false;
-      downloadBtn.textContent = allOk ? "重新下载" : "重试下载";
+      downloadBtn.textContent = allOk ? t("assetManagement.redownload") : t("assetManagement.retryDownload");
     }
   };
 
-  const openDirBtn = buttons.createEl("button", { text: "打开插件根目录", cls: "mod-info" });
+  const openDirBtn = buttons.createEl("button", { text: t("assetManagement.openPluginRootDir"), cls: "mod-info" });
   openDirBtn.onclick = () => {
     try {
       const basePath = (app.vault.adapter as any).getBasePath?.();
       if (!basePath) {
-        new Notice("仅支持桌面端 Obsidian");
+        new Notice(t("assetManagement.desktopOnly"));
         return;
       }
       const pluginDir = require("path").join(basePath, ".obsidian", "plugins", plugin.manifest.id);
@@ -112,12 +113,12 @@ export async function renderGeneralTab(
       const { shell } = require("electron");
       shell.showItemInFolder(mainJsPath);
     } catch (e) {
-      new Notice("打开目录失败: " + e);
+      new Notice(t("assetManagement.openDirFailed") + e);
     }
   };
 
   restartBtn.onclick = () => {
-    if (confirm("确定要重启 Obsidian 吗？请确认已保存全部内容。")) {
+    if (confirm(t("assetManagement.confirmRestart"))) {
       // @ts-ignore
       app.commands.executeCommandById("app:reload");
     }

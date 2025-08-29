@@ -181,7 +181,7 @@ export class TabView extends FileView {
 				this.audioEl = audioEl;
 				this._setupAudioIntegrationInternal().catch((err) => {
 					console.error("[TabView] 外部音频集成失败:", err);
-					new Notice("音频加载失败，无法播放。");
+					new Notice(t("errors.audioLoadFailed", undefined, "音频加载失败，无法播放。"));
 				});
 			},
 		});

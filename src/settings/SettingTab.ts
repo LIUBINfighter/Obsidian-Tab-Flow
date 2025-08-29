@@ -1,5 +1,6 @@
 import { App, PluginSettingTab } from "obsidian";
 import TabFlowPlugin from "../main";
+import { t } from "../i18n";
 
 /**
  * 新的 SettingTab：将三个子页签的渲染逻辑委派给 tabs/* 下的模块。
@@ -43,9 +44,9 @@ export class SettingTab extends PluginSettingTab {
 		const contentsEl = containerEl.createDiv({ cls: "itabs-settings-contents" });
 
 		const tabList = [
-			{ id: "general", name: "资产管理" },
-			{ id: "player", name: "播放器配置" },
-			{ id: "about", name: "关于" },
+			{ id: "general", name: t("settings.tabs.general") },
+			{ id: "player", name: t("settings.tabs.player") },
+			{ id: "about", name: t("settings.tabs.about") },
 		];
 
 		let activeTab = (this as any)._forceActiveInnerTab || "general";

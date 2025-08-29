@@ -3,6 +3,7 @@ import * as alphaTab from "@coderline/alphatab";
 import type { TrackEventPayload } from "../events/trackEvents";
 import { EventBus } from "../utils";
 import { ScorePersistenceService } from "../services/ScorePersistenceService"; // 导入新的服务
+import { t } from "../i18n";
 
 export class TracksModal extends Modal {
 	private selectedTracks: Set<alphaTab.model.Track>;
@@ -68,7 +69,7 @@ export class TracksModal extends Modal {
 		titleBar.style.zIndex = "10";
 		// 标题
 		const titleText = document.createElement("span");
-		titleText.textContent = "选择要显示的音轨";
+		titleText.textContent = t("tracks.chooseTracksToDisplay");
 		titleText.style.fontWeight = "bold";
 		// 按钮容器
 		const btnGroup = document.createElement("div");
@@ -76,7 +77,7 @@ export class TracksModal extends Modal {
 		btnGroup.style.gap = "0.5em";
 		// 应用按钮
 		const applyBtn = document.createElement("button");
-		applyBtn.textContent = "应用";
+		applyBtn.textContent = t("common.apply");
 		applyBtn.className = "mod-cta";
 		applyBtn.onclick = () => {
 			this.onSelectTrack();
@@ -84,7 +85,7 @@ export class TracksModal extends Modal {
 		};
 		// 取消按钮
 		const cancelBtn = document.createElement("button");
-		cancelBtn.textContent = "取消";
+		cancelBtn.textContent = t("common.cancel");
 		cancelBtn.onclick = () => {
 			this.close();
 		};
@@ -106,7 +107,7 @@ export class TracksModal extends Modal {
 		this.tracks.forEach((track) => {
 			const trackSetting = new Setting(scrollContainer)
 				.setName(track.name)
-				.setDesc(track.shortName || `Track ${track.index + 1}`);
+				.setDesc(track.shortName || t("tracks.trackNumber", { number: track.index + 1 }));
 
 			// 为每个轨道的setting添加CSS类
 			trackSetting.settingEl.addClass("track-item");
@@ -139,7 +140,7 @@ export class TracksModal extends Modal {
 				const updateSoloUI = () => {
 					const isSolo = track.playbackInfo.isSolo;
 					btn.setIcon(isSolo ? "star" : "star-off").setTooltip(
-						isSolo ? "取消独奏" : "独奏"
+						isSolo ? t("tracks.unsolo") : t("tracks.solo")
 					);
 					btn.extraSettingsEl.toggleClass("active", isSolo);
 				};
@@ -189,7 +190,7 @@ export class TracksModal extends Modal {
 				const updateMuteUI = () => {
 					const isMute = track.playbackInfo.isMute;
 					btn.setIcon(isMute ? "volume-x" : "volume-2").setTooltip(
-						isMute ? "取消静音" : "静音"
+						isMute ? t("tracks.unmute") : t("tracks.mute")
 					);
 					btn.extraSettingsEl.toggleClass("active", isMute);
 				};
@@ -229,7 +230,7 @@ export class TracksModal extends Modal {
 			const volumeDiv = document.createElement("div");
 			volumeDiv.className = "track-param-row";
 			const volumeLabel = document.createElement("span");
-			volumeLabel.textContent = "音量";
+			volumeLabel.textContent = t("tracks.volume");
 			const volumeSlider = document.createElement("input");
 			volumeSlider.type = "range";
 			volumeSlider.min = "0";
@@ -309,7 +310,7 @@ export class TracksModal extends Modal {
 			const transposeDiv = document.createElement("div");
 			transposeDiv.className = "track-param-row";
 			const transposeLabel = document.createElement("span");
-			transposeLabel.textContent = "全局移调";
+			transposeLabel.textContent = t("tracks.globalTranspose");
 			const transposeSlider = document.createElement("input");
 			transposeSlider.type = "range";
 			transposeSlider.min = "-12";
@@ -382,7 +383,7 @@ export class TracksModal extends Modal {
 			const transposeAudioDiv = document.createElement("div");
 			transposeAudioDiv.className = "track-param-row";
 			const transposeAudioLabel = document.createElement("span");
-			transposeAudioLabel.textContent = "音频移调";
+			transposeAudioLabel.textContent = t("tracks.audioTranspose");
 			const transposeAudioSlider = document.createElement("input");
 			transposeAudioSlider.type = "range";
 			transposeAudioSlider.min = "-12";

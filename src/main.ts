@@ -16,7 +16,7 @@ import * as path from "path";
 import { SettingTab } from "./settings/SettingTab";
 import { DEFAULT_SETTINGS, TabFlowSettings } from "./settings/defaults";
 import { AssetStatus } from "./types/assets";
-import { loadTranslations } from "./i18n";
+import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from "./i18n";
 
 // AssetStatus moved to src/types/assets.ts
 
@@ -29,6 +29,8 @@ export default class TabFlowPlugin extends Plugin {
 		components?: Record<string, boolean>;
 		order?: string[] | string;
 	} | null;
+	// 语言变化监听器清理函数
+	private languageChangeCleanup?: () => void;
 
 	// 加载和保存设置的方法
 	async loadSettings() {
@@ -52,7 +54,7 @@ export default class TabFlowPlugin extends Plugin {
 		// 获取插件目录相对于vault的路径
 		// 通常插件目录是 vault/.obsidian/plugins/plugin-id/
 		if (!this.actualPluginDir) {
-			throw new Error("插件目录未定义");
+			throw new Error(t("errors.pluginDirNotDefined", undefined, "插件目录未定义"));
 		}
 
 		// 使用manifest.dir作为基础计算相对路径
@@ -61,8 +63,9 @@ export default class TabFlowPlugin extends Plugin {
 		const normalizedPath = absolutePath.replace(/\\/g, "/");
 
 		// 打印调试信息
-		console.log("插件路径:", normalizedPluginDir);
-		console.log("目标路径:", normalizedPath);
+		console.log(t("debug.pluginPath", { path: normalizedPluginDir }, "插件路径: {path}"));
+		// 打印调试信息
+		console.log(t("debug.targetPath", { path: normalizedPath }, "目标路径: {path}"));
 
 		// 预期的结果是：.obsidian/plugins/obsidian-tab-flow/assets/文件名
 		if (normalizedPath.startsWith(normalizedPluginDir)) {
@@ -160,11 +163,9 @@ export default class TabFlowPlugin extends Plugin {
 	async downloadAssets(): Promise<boolean> {
 		try {
 			if (!this.actualPluginDir) {
-				new Notice("无法确定插件目录，下载失败");
+				new Notice(t("assets.download.pluginDirNotFound", undefined, "无法确定插件目录，下载失败"));
 				return false;
-			}
-
-			console.log("当前插件路径:", this.actualPluginDir);
+			}			console.log(t("debug.currentPluginPath", { path: this.actualPluginDir }, "当前插件路径: {path}"));
 
 			// 使用Obsidian API创建资产目录
 			const assetsDir = path.join(this.actualPluginDir, "assets");
@@ -177,7 +178,7 @@ export default class TabFlowPlugin extends Plugin {
 
 			try {
 				await this.app.vault.adapter.mkdir(assetsDirRelative);
-				console.log("资产目录创建成功:", assetsDirRelative);
+				console.log(t("debug.assetsDirCreated", { path: assetsDirRelative }, "资产目录创建成功: {path}"));
 			} catch (err) {
 				console.log("创建目录时出错（可能已存在）:", err);
 			}
@@ -278,15 +279,15 @@ export default class TabFlowPlugin extends Plugin {
 				this.settings.assetsDownloaded = true;
 				this.settings.lastAssetsCheck = Date.now();
 				await this.saveSettings();
-				new Notice("所有资产文件下载成功！");
+				new Notice(t("assets.download.success", undefined, "所有资产文件下载成功！"));
 			} else {
-				new Notice("部分资产文件下载失败，请检查网络连接后重试");
+				new Notice(t("assets.download.partialFailure", undefined, "部分资产文件下载失败，请检查网络连接后重试"));
 			}
 
 			return success;
 		} catch (error) {
 			console.error("[TabFlowPlugin] Error downloading assets:", error);
-			new Notice(`下载资产文件失败: ${error.message}`);
+			new Notice(t("assets.download.failed", { error: error.message }, `下载资产文件失败: ${error.message}`));
 			return false;
 		}
 	}
@@ -296,6 +297,14 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 加载翻译系统
 		loadTranslations(this.app);
+
+		// 设置语言变化监听器
+		this.languageChangeCleanup = addLanguageChangeListener((language) => {
+			console.log(`[TabFlow] Language changed to: ${language}`);
+			// 当语言变化时，可以在这里添加刷新UI或重新加载组件的逻辑
+			// 例如：刷新设置面板、更新菜单项文本等
+			this.refreshLanguageDependentUI();
+		});
 
 		// 存储实际的插件目录路径
 		this.actualPluginDir = this.manifest.dir || "";
@@ -313,7 +322,7 @@ export default class TabFlowPlugin extends Plugin {
 
 		this.addCommand({
 			id: "open-tabflow-doc-view",
-			name: "Open AlphaTex Documentation",
+			name: t("commands.openDocumentation", undefined, "Open AlphaTex Documentation"),
 			callback: async () => {
 				const leaf = this.app.workspace.getLeaf(true);
 				await leaf.setViewState({
@@ -331,7 +340,7 @@ export default class TabFlowPlugin extends Plugin {
 		// 检查资源是否完整，如果不完整则显示通知
 		if (!this.resources.resourcesComplete) {
 			new Notice(
-				"AlphaTab 插件资源文件不完整，某些功能可能无法正常工作。请在插件设置中下载资源文件。",
+				t("assets.incomplete", undefined, "AlphaTab 插件资源文件不完整，某些功能可能无法正常工作。请在插件设置中下载资源文件。"),
 				10000
 			);
 		}
@@ -376,20 +385,20 @@ export default class TabFlowPlugin extends Plugin {
 							const holder = el.createEl("div");
 							holder.addClass("alphatex-block");
 							const msg = holder.createEl("div", {
-								text: "AlphaTab 资源缺失，无法渲染此代码块。",
+								text: t("alphatex.missingResources", undefined, "AlphaTab 资源缺失，无法渲染此代码块。"),
 							});
 							const btn = holder.createEl("button", {
-								text: "下载资源",
+								text: t("common.download", undefined, "下载资源"),
 							});
 							btn.addEventListener("click", async () => {
 								btn.setAttr("disabled", "true");
-								btn.setText("下载中...");
+								btn.setText(t("common.downloading", undefined, "下载中..."));
 								const ok = await this.downloadAssets();
 								btn.removeAttribute("disabled");
 								btn.setText(
 									ok
-										? "下载完成，请刷新预览"
-										: "下载失败，重试"
+										? t("common.downloadComplete", undefined, "下载完成，请刷新预览")
+										: t("common.downloadFailed", undefined, "下载失败，重试")
 								);
 							});
 							return;
@@ -485,7 +494,7 @@ export default class TabFlowPlugin extends Plugin {
 				menu.addSeparator();
 
 				menu.addItem((item) => {
-					item.setTitle("Create a new AlphaTab file")
+					item.setTitle(t("fileMenu.createNewAlphaTab", undefined, "Create a new AlphaTab file"))
 						.setIcon("plus")
 						.onClick(async () => {
 							const parent =
@@ -494,7 +503,7 @@ export default class TabFlowPlugin extends Plugin {
 											path.dirname(file.path)
 									  )
 									: file;
-							const baseName = "New guitar tab";
+							const baseName = t("fileMenu.newFileBaseName", undefined, "New guitar tab");
 							let filename = `${baseName}.alphatab`;
 							let i = 1;
 							const parentPath =
@@ -525,7 +534,7 @@ export default class TabFlowPlugin extends Plugin {
 				// Preview 菜单项 - 在当前面板预览
 				if (file instanceof TFile) {
 					menu.addItem((item) => {
-						item.setTitle("Preview")
+						item.setTitle(t("fileMenu.preview", undefined, "Preview"))
 							.setIcon("eye")
 							.onClick(async () => {
 								const leaf = this.app.workspace.getLeaf(false);
@@ -541,7 +550,7 @@ export default class TabFlowPlugin extends Plugin {
 				// Open editor & Preview 菜单项 - 左栏编辑器，右栏预览
 				if (file instanceof TFile) {
 					menu.addItem((item) => {
-						item.setTitle("Open editor & Preview")
+						item.setTitle(t("fileMenu.openEditorAndPreview", undefined, "Open editor & Preview"))
 							.setIcon("layout-sidebar-right")
 							.onClick(async () => {
 								// 在左栏打开默认编辑器
@@ -596,7 +605,36 @@ export default class TabFlowPlugin extends Plugin {
 		);
 	}
 
+	/**
+	 * 刷新依赖语言的UI组件
+	 */
+	private refreshLanguageDependentUI(): void {
+		try {
+			// 刷新设置面板（如果打开的话）
+			const settingTabs = (this.app as any).setting?.activeTab;
+			if (settingTabs && settingTabs.id === 'tabflow') {
+				// 重新渲染设置标签页
+				(this.app as any).setting?.openTabById?.('tabflow');
+			}
+
+			// 触发自定义事件，通知其他组件语言已变化
+			this.app.workspace.trigger('tabflow:language-changed', {
+				language: getCurrentLanguageCode(),
+			});
+
+			console.log('[TabFlow] Language-dependent UI refreshed');
+		} catch (error) {
+			console.warn('[TabFlow] Failed to refresh language-dependent UI:', error);
+		}
+	}
+
 	onunload() {
+		// 清理语言变化监听器
+		if (this.languageChangeCleanup) {
+			this.languageChangeCleanup();
+			this.languageChangeCleanup = undefined;
+		}
+
 		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
 		// 不再在 onunload 时主动 detach leaves，避免插件更新导致视图位置丢失
 		console.log("AlphaTab Plugin Unloaded");
