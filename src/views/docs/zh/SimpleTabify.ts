@@ -1,4 +1,4 @@
-import { DocPanel } from './index';
+import { DocPanel } from '../index';
 
 const SimpleTabifyPanel: DocPanel = {
   id: 'simple-tabify',

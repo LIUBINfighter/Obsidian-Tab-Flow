@@ -1,6 +1,6 @@
 // 示例面板：InMarkdownRender
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE = `%%{init: {"scale":1,"speed":2,"scrollMode":"Continuous","metronome":false,"player":"enable"}}%%
 

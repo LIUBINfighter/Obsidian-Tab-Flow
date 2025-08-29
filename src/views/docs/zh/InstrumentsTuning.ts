@@ -1,6 +1,6 @@
 // 文档面板：乐器与调音
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE = `\\title "Instrument & Tuning"
 \\instrument ElectricGuitarClean

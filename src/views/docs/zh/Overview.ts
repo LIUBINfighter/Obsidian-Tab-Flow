@@ -1,6 +1,6 @@
 // 文档面板：总览
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE = `\\title "Canon Rock"
 \\subtitle "JerryC"

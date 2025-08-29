@@ -1,6 +1,6 @@
 // 文档面板：Note Effects（音符效果）
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE_HARMONICS = `:8 3.3{nh} 3.3{ah} 3.3{ph} 3.3{th} 3.3{sh}`;
 

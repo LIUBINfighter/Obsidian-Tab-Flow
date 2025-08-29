@@ -12,6 +12,7 @@ import { createPlayBar } from "../components/PlayBar";
 import { ScorePersistenceService } from "../services/ScorePersistenceService"; // 导入新的服务
 import { TracksModal } from "../components/TracksModal"; // 导入 TracksModal
 import { createDebugBar } from "../components/DebugBar";
+import { t } from "i18n";
 
 export type AlphaTabResources = {
 	bravuraUri: string;
