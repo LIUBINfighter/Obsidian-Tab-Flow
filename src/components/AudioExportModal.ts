@@ -1,4 +1,5 @@
 import { Modal, App, Setting, Notice } from "obsidian";
+import { t } from "../i18n";
 
 export class AudioExportModal extends Modal {
     constructor(app: App, public audioUrl: string, public fileName: string) {
@@ -16,14 +17,14 @@ export class AudioExportModal extends Modal {
                     [blob.type]: blob
                 })
             ]);
-            new Notice("音频已复制到剪贴板，可直接粘贴到笔记");
+            new Notice(t('export.audioCopied'));
         } catch (e) {
-            new Notice("复制到剪贴板失败: " + (e?.message || e));
+            new Notice(t('export.copyFailed') + ": " + (e?.message || e));
         }
     }
 
     onOpen() {
-        this.titleEl.setText("音频导出预览");
+        this.titleEl.setText(t('export.audioExportPreview'));
         this.contentEl.empty();
 
         const audio = document.createElement("audio");
@@ -33,9 +34,9 @@ export class AudioExportModal extends Modal {
         this.contentEl.appendChild(audio);
 
         new Setting(this.contentEl)
-            .setName("保存到本地")
+            .setName(t('export.saveToLocal'))
             .addButton(btn => {
-                btn.setButtonText("保存")
+                btn.setButtonText(t('common.save'))
                     .setCta()
                     .onClick(() => {
                         const a = document.createElement("a");
