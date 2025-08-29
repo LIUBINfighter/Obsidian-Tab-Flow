@@ -2,6 +2,7 @@ import type TabFlowPlugin from '../main';
 import { setIcon, normalizePath, TFile, Notice } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEditor';
+import { t } from '../i18n';
 
 export interface AlphaTexPlaygroundOptions {
 	placeholder?: string;
@@ -33,7 +34,7 @@ export function createAlphaTexPlayground(
 	initialSource: string,
 	options: AlphaTexPlaygroundOptions = {}
 ): AlphaTexPlaygroundHandle {
-	const { placeholder = '输入 AlphaTex 内容...', debounceMs = 350, readOnly = false, onChange, alphaTabOptions = {}, layout = 'vertical', className = '' } = options;
+	const { placeholder = t('playground.placeholder'), debounceMs = 350, readOnly = false, onChange, alphaTabOptions = {}, layout = 'vertical', className = '' } = options;
 
 	container.empty();
 	const wrapper = container.createDiv({ cls: 'alphatex-playground inmarkdown-wrapper' });
@@ -52,7 +53,7 @@ export function createAlphaTexPlayground(
 	// Editor toolbar (top-right icons)
 	const toolbar = editorWrap.createDiv({ cls: 'inmarkdown-editor-toolbar' });
 	const btnCopy = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iCopy = document.createElement('span'); setIcon(iCopy, 'copy'); btnCopy.appendChild(iCopy); btnCopy.setAttr('aria-label', '复制到剪贴板');
+	const iCopy = document.createElement('span'); setIcon(iCopy, 'copy'); btnCopy.appendChild(iCopy); btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
 	btnCopy.addEventListener('click', async () => {
 		try {
 			await navigator.clipboard.writeText(embedded.value);
@@ -63,17 +64,17 @@ export function createAlphaTexPlayground(
 		}
 		// feedback: turn into green check briefly
 		try {
-			setIcon(iCopy, 'check'); btnCopy.classList.add('is-success'); btnCopy.setAttr('aria-label', '已复制');
-			setTimeout(() => { setIcon(iCopy, 'copy'); btnCopy.classList.remove('is-success'); btnCopy.setAttr('aria-label', '复制到剪贴板'); }, 1200);
+			setIcon(iCopy, 'check'); btnCopy.classList.add('is-success'); btnCopy.setAttr('aria-label', t('playground.copied'));
+			setTimeout(() => { setIcon(iCopy, 'copy'); btnCopy.classList.remove('is-success'); btnCopy.setAttr('aria-label', t('playground.copyToClipboard')); }, 1200);
 		} catch {}
 	});
 
 	const btnReset = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iReset = document.createElement('span'); setIcon(iReset, 'rotate-ccw'); btnReset.appendChild(iReset); btnReset.setAttr('aria-label', '重置为默认内容');
+	const iReset = document.createElement('span'); setIcon(iReset, 'rotate-ccw'); btnReset.appendChild(iReset); btnReset.setAttr('aria-label', t('playground.resetToDefault'));
 	btnReset.addEventListener('click', () => { try { embedded.set(initialSource, false); scheduleRender(); } catch {} });
 
 	const btnNewNote = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iNew = document.createElement('span'); setIcon(iNew, 'file-plus'); btnNewNote.appendChild(iNew); btnNewNote.setAttr('aria-label', '根据此文本创建新的笔记');
+	const iNew = document.createElement('span'); setIcon(iNew, 'file-plus'); btnNewNote.appendChild(iNew); btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
 	btnNewNote.addEventListener('click', async () => {
 		try {
 			const now = new Date();
@@ -93,20 +94,20 @@ export function createAlphaTexPlayground(
 
 	// Format init JSON button
 	const btnFormat = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iFmt = document.createElement('span'); setIcon(iFmt, 'code'); btnFormat.appendChild(iFmt); btnFormat.setAttr('aria-label', '格式化 init JSON');
+	const iFmt = document.createElement('span'); setIcon(iFmt, 'code'); btnFormat.appendChild(iFmt); btnFormat.setAttr('aria-label', t('playground.formatInitJson'));
 	btnFormat.addEventListener('click', () => {
 		try {
 			const formatted = formatInitHeader(embedded.value);
 			if (formatted && formatted !== embedded.value) {
 				embedded.set(formatted, false);
-				new Notice('已格式化 init JSON');
+				new Notice(t('playground.initJsonFormatted'));
 				scheduleRender();
 			} else {
-				new Notice('未检测到 init 或无需格式化');
+				new Notice(t('playground.noInitDetected'));
 			}
 		} catch (e) {
 			console.warn('[Playground] 格式化 init 失败:', e);
-			new Notice('格式化失败');
+			new Notice(t('playground.formatFailed'));
 		}
 	});
 
@@ -184,19 +185,19 @@ export function createAlphaTexPlayground(
 		const resources: AlphaTabResources | undefined = (plugin as unknown as { resources?: AlphaTabResources }).resources;
 		if (!resources || !resources.bravuraUri || !resources.alphaTabWorkerUri) {
 			const holder = previewWrap.createDiv({ cls: 'alphatex-block' });
-			holder.createEl('div', { text: 'AlphaTab 资源缺失，无法渲染预览。' });
-			const btn = holder.createEl('button', { text: '下载资源' });
+			holder.createEl('div', { text: t('playground.resourcesMissing') });
+			const btn = holder.createEl('button', { text: t('playground.downloadResources') });
 			btn.addEventListener('click', async () => {
 				btn.setAttr('disabled', 'true');
-				btn.setText('下载中...');
+				btn.setText(t('playground.downloading'));
 				try {
 					interface Downloader { downloadAssets?: () => Promise<boolean> }
 					const ok = await (plugin as unknown as Downloader).downloadAssets?.();
 					btn.removeAttribute('disabled');
-					btn.setText(ok ? '下载完成，点击重新渲染' : '下载失败，重试');
+					btn.setText(ok ? t('playground.downloadCompleted') : t('playground.downloadFailed'));
 				} catch (e) {
 					btn.removeAttribute('disabled');
-					btn.setText('下载失败，重试');
+					btn.setText(t('playground.downloadFailed'));
 				}
 			});
 			return;
@@ -216,7 +217,7 @@ export function createAlphaTexPlayground(
 		} catch (e) {
 			console.warn('[Playground] AlphaTex 渲染失败:', e);
 			const err = previewWrap.createDiv({ cls: 'alphatex-block' });
-			err.createEl('div', { cls: 'alphatex-error', text: 'AlphaTab 引擎报错：' + String((e as any)?.message || e) });
+			err.createEl('div', { cls: 'alphatex-error', text: t('playground.engineError') + String((e as any)?.message || e) });
 		}
 	}
 

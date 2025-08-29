@@ -5,6 +5,7 @@ import type { ProgressBarElement } from "./ProgressBar.types";
 import { createAudioPlayer, AudioPlayerOptions } from "./AudioPlayer";
 import * as alphaTab from "@coderline/alphatab";
 import { formatTime } from "../utils";
+import { t } from "../i18n";
 
 export interface PlayBarOptions {
 	app: App;
@@ -54,7 +55,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, playing ? "pause" : "play");
 		playPauseBtn.appendChild(iconSpan);
-		playPauseBtn.setAttribute("aria-label", playing ? "暂停" : "播放");
+		playPauseBtn.setAttribute("aria-label", playing ? t('playback.pause') : t('playback.play'));
 	}
 
 	function updateMetronomeBtn() {
@@ -65,7 +66,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		metronomeBtn.appendChild(iconSpan);
 		metronomeBtn.setAttribute(
 			"aria-label",
-			metronomeOn ? "关闭节拍器" : "开启节拍器"
+			metronomeOn ? t('settings.disableMetronome') : t('settings.enableMetronome')
 		);
 		metronomeBtn.classList.toggle("is-active", metronomeOn);
 	}
@@ -78,7 +79,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		countInBtn.appendChild(iconSpan);
 		countInBtn.setAttribute(
 			"aria-label",
-			countInOn ? "关闭预备拍" : "开启预备拍"
+			countInOn ? t('settings.disableCountIn') : t('settings.enableCountIn')
 		);
 		countInBtn.classList.toggle("is-active", countInOn);
 	}
@@ -90,7 +91,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
         const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
         setIcon(iconSpan, isHorizontal ? "lucide-panels-top-left" : "lucide-layout");
         layoutToggleBtn.appendChild(iconSpan);
-        layoutToggleBtn.setAttribute("aria-label", isHorizontal ? "布局: 横向" : "布局: 页面");
+        layoutToggleBtn.setAttribute("aria-label", isHorizontal ? t('settings.horizontalLayout') : t('settings.pageLayout'));
         layoutToggleBtn.classList.toggle("is-active", isHorizontal);
     }
 
@@ -176,7 +177,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const stopIcon = document.createElement('span');
 			setIcon(stopIcon, 'square');
 			stopBtn.appendChild(stopIcon);
-			stopBtn.setAttribute('aria-label', '停止');
+			stopBtn.setAttribute('aria-label', t('playback.stop'));
 			stopBtn.onclick = () => {
 				playing = false;
 				eventBus?.publish('命令:停止');
@@ -218,7 +219,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'lucide-layers');
 			btn.appendChild(icon);
-			btn.setAttribute('aria-label', '选择音轨');
+			btn.setAttribute('aria-label', t('tracks.selectTracks'));
 			btn.onclick = () => eventBus?.publish('命令:选择音轨');
 			bar.appendChild(btn);
 		},
@@ -230,7 +231,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'lucide-refresh-ccw');
 			btn.appendChild(icon);
-			btn.setAttribute('aria-label', '刷新播放器');
+			btn.setAttribute('aria-label', t('navigation.refreshPlayer'));
 			btn.onclick = () => eventBus?.publish('命令:重新构造AlphaTabApi');
 			bar.appendChild(btn);
 		},
@@ -242,7 +243,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'lucide-crosshair');
 			btn.appendChild(icon);
-			btn.setAttribute('aria-label', '滚动到光标');
+			btn.setAttribute('aria-label', t('navigation.scrollToCursor'));
 			btn.onclick = () => eventBus?.publish('命令:滚动到光标');
 			bar.appendChild(btn);
 		},
@@ -267,7 +268,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'lucide-download');
 			exportChooserBtn.appendChild(icon);
-			exportChooserBtn.setAttribute('aria-label', '导出');
+			exportChooserBtn.setAttribute('aria-label', t('export.export'));
 			exportChooserBtn.onclick = () => {
 				try {
 					// eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -288,7 +289,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'lucide-chevrons-up');
 			btn.appendChild(icon);
-			btn.setAttribute('aria-label', '回到顶部');
+			btn.setAttribute('aria-label', t('navigation.toTop'));
 			btn.onclick = () => eventBus?.publish('命令:滚动到顶部');
 			bar.appendChild(btn);
 		},
@@ -300,7 +301,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'lucide-chevrons-down');
 			btn.appendChild(icon);
-			btn.setAttribute('aria-label', '回到底部');
+			btn.setAttribute('aria-label', t('navigation.toBottom'));
 			btn.onclick = () => eventBus?.publish('命令:滚动到底部');
 			bar.appendChild(btn);
 		},
@@ -312,7 +313,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'settings');
 			openSettingsBtn.appendChild(icon);
-            openSettingsBtn.setAttribute('aria-label', '打开设置');
+            openSettingsBtn.setAttribute('aria-label', t('settings.openSettings'));
             openSettingsBtn.onclick = () => {
                 try {
                     // 直达本插件SettingTab的“播放器配置”页签
@@ -374,10 +375,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			bar.appendChild(staveIcon);
 			const select = document.createElement('select');
 			[
-				{ name: '五线+六线', value: alphaTab.StaveProfile.ScoreTab },
-				{ name: '仅五线谱', value: alphaTab.StaveProfile.Score },
-				{ name: '仅六线谱', value: alphaTab.StaveProfile.Tab },
-				{ name: '混合六线谱', value: alphaTab.StaveProfile.TabMixed },
+				{ name: t('settings.scoreTab'), value: alphaTab.StaveProfile.ScoreTab },
+				{ name: t('settings.scoreOnly'), value: alphaTab.StaveProfile.Score },
+				{ name: t('settings.tabOnly'), value: alphaTab.StaveProfile.Tab },
+				{ name: t('settings.tabMixed'), value: alphaTab.StaveProfile.TabMixed },
 			].forEach((item) => { const opt = document.createElement('option'); opt.value = String(item.value); opt.innerText = item.name; select.appendChild(opt); });
 			select.onchange = () => eventBus?.publish('命令:设置谱表', parseInt(select.value));
 			bar.appendChild(select);
