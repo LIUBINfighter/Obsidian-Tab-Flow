@@ -127,5 +127,22 @@
     "openDirFailed": "打开目录失败",
     "confirmRestart": "确定要重启 Obsidian 吗？请确认已保存全部内容。",
     "restartObsidian": "重启 Obsidian"
+  },
+  "playground": {
+    "placeholder": "输入 AlphaTex 内容...",
+    "copyToClipboard": "复制到剪贴板",
+    "copied": "已复制",
+    "resetToDefault": "重置为默认内容",
+    "createNewNote": "根据此文本创建新的笔记",
+    "formatInitJson": "格式化 init JSON",
+    "initJsonFormatted": "已格式化 init JSON",
+    "noInitDetected": "未检测到 init 或无需格式化",
+    "formatFailed": "格式化失败",
+    "resourcesMissing": "AlphaTab 资源缺失，无法渲染预览。",
+    "downloadResources": "下载资源",
+    "downloading": "下载中...",
+    "downloadCompleted": "下载完成，点击重新渲染",
+    "downloadFailed": "下载失败，重试",
+    "engineError": "AlphaTab 引擎报错："
   }
 }

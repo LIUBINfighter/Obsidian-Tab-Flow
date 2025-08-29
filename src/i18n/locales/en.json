@@ -127,5 +127,22 @@
     "openDirFailed": "Failed to open directory",
     "confirmRestart": "Are you sure you want to restart Obsidian? Please make sure all content is saved.",
     "restartObsidian": "Restart Obsidian"
+  },
+  "playground": {
+    "placeholder": "Enter AlphaTex content...",
+    "copyToClipboard": "Copy to clipboard",
+    "copied": "Copied",
+    "resetToDefault": "Reset to default content",
+    "createNewNote": "Create new note from this text",
+    "formatInitJson": "Format init JSON",
+    "initJsonFormatted": "Init JSON formatted",
+    "noInitDetected": "No init detected or no formatting needed",
+    "formatFailed": "Formatting failed",
+    "resourcesMissing": "AlphaTab resources missing, unable to render preview.",
+    "downloadResources": "Download resources",
+    "downloading": "Downloading...",
+    "downloadCompleted": "Download completed, click to re-render",
+    "downloadFailed": "Download failed, retry",
+    "engineError": "AlphaTab engine error:"
   }
 }
