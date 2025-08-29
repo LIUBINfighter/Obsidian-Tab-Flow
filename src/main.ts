@@ -16,6 +16,7 @@ import * as path from "path";
 import { SettingTab } from "./settings/SettingTab";
 import { DEFAULT_SETTINGS, TabFlowSettings } from "./settings/defaults";
 import { AssetStatus } from "./types/assets";
+import { loadTranslations } from "./i18n";
 
 // AssetStatus moved to src/types/assets.ts
 
@@ -292,6 +293,9 @@ export default class TabFlowPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+
+		// 加载翻译系统
+		loadTranslations(this.app);
 
 		// 存储实际的插件目录路径
 		this.actualPluginDir = this.manifest.dir || "";
