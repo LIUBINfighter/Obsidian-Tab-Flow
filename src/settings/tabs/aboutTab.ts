@@ -1,24 +1,25 @@
 import { App, Notice, Setting } from "obsidian";
 import TabFlowPlugin from "../../main";
+import { t } from "../../i18n";
 
 export async function renderAboutTab(
   tabContents: HTMLElement,
   plugin: TabFlowPlugin,
   app: App
 ): Promise<void> {
-  tabContents.createEl("h3", { text: "关于" });
+  tabContents.createEl("h3", { text: t('settings.tabs.about') });
   tabContents.createEl("p", {
-    text: "Tab Flow by Jay Bridge",
+    text: t('settings.about.title'),
   });
 
   // 快速打开 AlphaTex 文档视图按钮
   new Setting(tabContents)
-    .setName("AlphaTex 文档")
-    .setDesc("打开 AlphaTex 快速文档视图，包含语法速查与示例。")
+    .setName(t('settings.about.alphaTexDoc'))
+    .setDesc(t('settings.about.alphaTexDocDesc'))
     .addButton((btn) => {
-      btn.setButtonText("打开文档").onClick(async () => {
+      btn.setButtonText(t('settings.about.openDoc')).onClick(async () => {
         try {
-          new Notice("尝试打开 AlphaTex 文档视图...");
+          new Notice(t('settings.about.openingDoc'));
           // 优先通过已注册的命令触发
           try {
             const execFn = (app as any).commands && (app as any).commands.executeCommandById;
@@ -53,7 +54,7 @@ export async function renderAboutTab(
           }
         } catch (e) {
           console.error("[SettingTab] Open AlphaTex doc failed", e);
-          new Notice("打开文档失败，请查看控制台日志");
+          new Notice(t('settings.about.openDocFailed'));
         }
       });
     });

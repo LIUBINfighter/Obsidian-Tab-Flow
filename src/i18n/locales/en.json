@@ -13,7 +13,11 @@
     "warning": "Warning",
     "info": "Info",
     "confirm": "Confirm",
-    "reset": "Reset"
+    "reset": "Reset",
+    "download": "Download",
+    "downloading": "Downloading...",
+    "downloadComplete": "Download Complete",
+    "downloadFailed": "Download Failed"
   },
   "playback": {
     "play": "Play",
@@ -33,7 +37,8 @@
     "unmute": "Unmute",
     "volume": "Volume",
     "globalTranspose": "Global Transpose",
-    "audioTranspose": "Audio Transpose"
+    "audioTranspose": "Audio Transpose",
+    "trackNumber": "Track {{number}}"
   },
   "export": {
     "export": "Export",
@@ -82,7 +87,57 @@
     "scrollSpeed": "Speed:",
     "yOffset": "Y Offset:",
     "nativeScroll": "Native Scroll:",
-    "useNativeBrowserSmoothScroll": "Use browser native smooth scroll"
+    "useNativeBrowserSmoothScroll": "Use browser native smooth scroll",
+    "tabs": {
+      "general": "Asset Management",
+      "player": "Player Settings",
+      "about": "About"
+    },
+    "about": {
+      "title": "Tab Flow by Jay Bridge",
+      "alphaTexDoc": "AlphaTex Documentation",
+      "alphaTexDocDesc": "Open AlphaTex quick documentation view, including syntax reference and examples.",
+      "openDoc": "Open Documentation",
+      "openingDoc": "Attempting to open AlphaTex documentation view...",
+      "openDocFailed": "Failed to open documentation, please check console logs"
+    },
+    "player": {
+      "visualEditorTitle": "Visual Editor (Drag & Drop + Toggle)",
+      "resetToDefault": "Reset to Default",
+      "resetToDefaultDesc": "Reset playbar component visibility and order to default configuration",
+      "resetToDefaultSuccess": "Default settings restored",
+      "resetToDefaultFailed": "Failed to reset to default",
+      "components": {
+        "playPause": "Play/Pause",
+        "stop": "Stop",
+        "metronome": "Metronome",
+        "countIn": "Count-in",
+        "tracks": "Select Tracks",
+        "refresh": "Refresh/Rebuild Player",
+        "locateCursor": "Scroll to Cursor",
+        "layoutToggle": "Layout Toggle",
+        "exportMenu": "Export Menu",
+        "toTop": "To Top",
+        "toBottom": "To Bottom",
+        "openSettings": "Open Settings",
+        "progressBar": "Progress Bar",
+        "speed": "Speed Selection",
+        "staveProfile": "Stave Selection",
+        "zoom": "Zoom Selection",
+        "audioPlayer": "Native Audio Player (Experimental)",
+        "audioPlayerDesc": "Not available, may conflict with AlphaTab player"
+      },
+      "moveUp": "Move Up",
+      "moveDown": "Move Down",
+      "debugBar": {
+        "title": "Debug Bar",
+        "description": "Developer options for showing/hiding Debug Bar (experimental and diagnostic purposes)",
+        "showDebugBar": "Show Debug Bar (Developer Option)",
+        "showDebugBarDesc": "When enabled, displays a debug bar at the top of the view for experimental features and diagnostics.",
+        "debugBarEnabled": "Debug Bar enabled",
+        "debugBarDisabled": "Debug Bar hidden"
+      }
+    }
   },
   "navigation": {
     "refreshPlayer": "Refresh Player",
@@ -144,5 +199,26 @@
     "downloadCompleted": "Download completed, click to re-render",
     "downloadFailed": "Download failed, retry",
     "engineError": "AlphaTab engine error:"
+  },
+  "assets": {
+    "incomplete": "AlphaTab plugin resources are incomplete, some features may not work properly. Please download the resource files in the plugin settings.",
+    "download": {
+      "pluginDirNotFound": "Unable to determine plugin directory, download failed",
+      "success": "All asset files downloaded successfully!",
+      "partialFailure": "Some asset files failed to download, please check your network connection and try again",
+      "failed": "Failed to download asset files: {{error}}"
+    }
+  },
+  "alphatex": {
+    "missingResources": "AlphaTab resources missing, unable to render this code block."
+  },
+  "fileMenu": {
+    "createNewAlphaTab": "Create a new AlphaTab file",
+    "preview": "Preview",
+    "openEditorAndPreview": "Open editor & Preview",
+    "newFileBaseName": "New guitar tab"
+  },
+  "commands": {
+    "openDocumentation": "Open AlphaTex Documentation"
   }
 }

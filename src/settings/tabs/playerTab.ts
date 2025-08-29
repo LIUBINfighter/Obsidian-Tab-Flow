@@ -2,19 +2,20 @@ import { App, Notice, Setting } from "obsidian";
 import TabFlowPlugin from "../../main";
 import { setIcon } from "obsidian";
 import { DEFAULT_SETTINGS, PlayBarComponentVisibility } from "../defaults";
+import { t } from "../../i18n";
 
 export async function renderPlayerTab(
   tabContents: HTMLElement,
   plugin: TabFlowPlugin,
   app: App
 ): Promise<void> {
-  tabContents.createEl("h4", { text: "可视化编辑（拖拽排序 + 开关）" });
+  tabContents.createEl("h4", { text: t("settings.player.visualEditorTitle") });
 
   new Setting(tabContents)
-    .setName("恢复默认")
-    .setDesc("重置播放栏组件的显示开关与顺序为默认配置")
+    .setName(t("settings.player.resetToDefault"))
+    .setDesc(t("settings.player.resetToDefaultDesc"))
     .addButton((btn) => {
-      btn.setButtonText("恢复默认").onClick(async () => {
+      btn.setButtonText(t("settings.player.resetToDefault")).onClick(async () => {
         try {
           plugin.settings.playBar = {
             components: JSON.parse(
@@ -26,9 +27,9 @@ export async function renderPlayerTab(
           try {
             /* @ts-ignore */ app.workspace.trigger("tabflow:playbar-components-changed");
           } catch {}
-          new Notice("已恢复默认设置");
+          new Notice(t("settings.player.resetToDefaultSuccess"));
         } catch (e) {
-          new Notice("恢复默认失败: " + e);
+          new Notice(t("settings.player.resetToDefaultFailed") + ": " + e);
         }
       });
     });
@@ -43,28 +44,28 @@ export async function renderPlayerTab(
     desc?: string;
     disabled?: boolean;
   }> = [
-    { key: "playPause", label: "播放/暂停", icon: "play" },
-    { key: "stop", label: "停止", icon: "square" },
-    { key: "metronome", label: "节拍器", icon: "lucide-music-2" },
-    { key: "countIn", label: "预备拍", icon: "lucide-timer" },
-    { key: "tracks", label: "选择音轨", icon: "lucide-layers" },
-    { key: "refresh", label: "刷新/重建播放器", icon: "lucide-refresh-ccw" },
-    { key: "locateCursor", label: "滚动到光标", icon: "lucide-crosshair" },
-    { key: "layoutToggle", label: "布局切换", icon: "lucide-layout" },
-    { key: "exportMenu", label: "导出菜单", icon: "lucide-download" },
-    { key: "toTop", label: "回到顶部", icon: "lucide-chevrons-up" },
-    { key: "toBottom", label: "回到底部", icon: "lucide-chevrons-down" },
-    { key: "openSettings", label: "打开设置", icon: "settings" },
-    { key: "progressBar", label: "进度条", icon: "lucide-line-chart" },
-    { key: "speed", label: "速度选择", icon: "lucide-gauge" },
-    { key: "staveProfile", label: "谱表选择", icon: "lucide-list-music" },
-    { key: "zoom", label: "缩放选择", icon: "lucide-zoom-in" },
+    { key: "playPause", label: t("settings.player.components.playPause"), icon: "play" },
+    { key: "stop", label: t("settings.player.components.stop"), icon: "square" },
+    { key: "metronome", label: t("settings.player.components.metronome"), icon: "lucide-music-2" },
+    { key: "countIn", label: t("settings.player.components.countIn"), icon: "lucide-timer" },
+    { key: "tracks", label: t("settings.player.components.tracks"), icon: "lucide-layers" },
+    { key: "refresh", label: t("settings.player.components.refresh"), icon: "lucide-refresh-ccw" },
+    { key: "locateCursor", label: t("settings.player.components.locateCursor"), icon: "lucide-crosshair" },
+    { key: "layoutToggle", label: t("settings.player.components.layoutToggle"), icon: "lucide-layout" },
+    { key: "exportMenu", label: t("settings.player.components.exportMenu"), icon: "lucide-download" },
+    { key: "toTop", label: t("settings.player.components.toTop"), icon: "lucide-chevrons-up" },
+    { key: "toBottom", label: t("settings.player.components.toBottom"), icon: "lucide-chevrons-down" },
+    { key: "openSettings", label: t("settings.player.components.openSettings"), icon: "settings" },
+    { key: "progressBar", label: t("settings.player.components.progressBar"), icon: "lucide-line-chart" },
+    { key: "speed", label: t("settings.player.components.speed"), icon: "lucide-gauge" },
+    { key: "staveProfile", label: t("settings.player.components.staveProfile"), icon: "lucide-list-music" },
+    { key: "zoom", label: t("settings.player.components.zoom"), icon: "lucide-zoom-in" },
     {
       key: "audioPlayer",
-      label: "原生音频播放器（实验性）",
+      label: t("settings.player.components.audioPlayer"),
       icon: "audio-file",
       disabled: true,
-      desc: "暂不可用，存在与 AlphaTab 播放器冲突风险",
+      desc: t("settings.player.components.audioPlayerDesc"),
     },
   ];
 
@@ -125,9 +126,9 @@ export async function renderPlayerTab(
         left.createSpan({ text: ` - ${m.desc}`, attr: { style: "color:var(--text-muted);font-size:0.9em;" } });
 
       const right = card.createDiv({ attr: { style: "display:flex; align-items:center; gap:6px;" } });
-      const upIcon = right.createSpan({ cls: "icon-clickable", attr: { "aria-label": "上移", role: "button", tabindex: "0" } });
+      const upIcon = right.createSpan({ cls: "icon-clickable", attr: { "aria-label": t("settings.player.moveUp"), role: "button", tabindex: "0" } });
       setIcon(upIcon, "lucide-arrow-up");
-      const downIcon = right.createSpan({ cls: "icon-clickable", attr: { "aria-label": "下移", role: "button", tabindex: "0" } });
+      const downIcon = right.createSpan({ cls: "icon-clickable", attr: { "aria-label": t("settings.player.moveDown"), role: "button", tabindex: "0" } });
       setIcon(downIcon, "lucide-arrow-down");
 
       new Setting(right).addToggle((t) => {
@@ -278,15 +279,15 @@ export async function renderPlayerTab(
   renderCards();
 
   // Debug Bar section
-  tabContents.createEl("h3", { text: "Debug Bar" });
+  tabContents.createEl("h3", { text: t("settings.player.debugBar.title") });
   tabContents.createEl("div", {
-    text: "以下为开发者选项，用于显示/隐藏 Debug Bar（实验与诊断用途）",
+    text: t("settings.player.debugBar.description"),
     cls: "setting-item-description",
   });
 
   new Setting(tabContents)
-    .setName("显示 Debug Bar（开发者选项）")
-    .setDesc("启用后在视图顶部显示调试栏，用于实验功能和问题诊断。")
+    .setName(t("settings.player.debugBar.showDebugBar"))
+    .setDesc(t("settings.player.debugBar.showDebugBarDesc"))
     .addToggle((toggle) => {
       toggle
         .setValue(plugin.settings.showDebugBar ?? false)
@@ -297,7 +298,7 @@ export async function renderPlayerTab(
             // @ts-ignore
             app.workspace.trigger("tabflow:debugbar-toggle", value);
           } catch {}
-          new Notice(value ? "已启用 Debug Bar" : "已隐藏 Debug Bar");
+          new Notice(value ? t("settings.player.debugBar.debugBarEnabled") : t("settings.player.debugBar.debugBarDisabled"));
         });
     });
 }
