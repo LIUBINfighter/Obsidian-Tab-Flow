@@ -1,6 +1,6 @@
 // 文档面板：Bar Metadata（小节元数据）
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE_TS = `\\ts 3 4 | \\ts 4 4 | \\ts 6 8 | \\ts common`;
 

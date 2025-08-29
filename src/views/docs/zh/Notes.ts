@@ -1,6 +1,6 @@
 // 文档面板：Notes 编写音符
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE_SINGLE_NOTES = `// 单音与休止（多个小节用竖线 | 分隔）
 0.6.2 1.5.4 3.4.4 |

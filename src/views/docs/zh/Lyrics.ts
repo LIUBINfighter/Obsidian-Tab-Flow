@@ -1,6 +1,6 @@
 // 文档面板：Lyrics（歌词）
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE_SIMPLE = `\\title "With Lyrics"\n\\instrument piano\n.\n\\lyrics "Do Re Mi Fa So La Ti"\nC4 D4 E4 F4 | G4 A4 B4 r`;
 

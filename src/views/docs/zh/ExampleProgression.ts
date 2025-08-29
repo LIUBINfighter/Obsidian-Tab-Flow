@@ -1,6 +1,6 @@
 // 文档面板：ExampleProgression 示例和弦进行与片段
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 // 示例进程（含全局和弦、章节、拍号与多个小节）
 const SAMPLE_PROGRESSION = `// 设置全局的和弦

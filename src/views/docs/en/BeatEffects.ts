@@ -1,6 +1,6 @@
-// 文档面板：Beat Effects（节拍效果）
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+// Documentation Panel: Beat Effects
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 const SAMPLE_SIMPLE = `// fade in/out, swell; vibrato; tap/slap/pop; dotted/double dotted; pick stroke; grace; tuplets; tremolo picking; crescendo/decrescendo
 3.3{f} 3.3{fo} 3.3{vs} |
@@ -40,24 +40,24 @@ const SAMPLE_BEAMING = `:8 3.3{ beam invert } 3.3 | 3.1{ beam up } 3.1 | 3.6{ be
 
 export default {
 	id: 'beat-effects',
-	title: 'Beat Effects 节拍效果',
+	title: 'Beat Effects',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Beat Effects（节拍效果）' });
-		container.createEl('p', { text: '演示常见节拍效果、力度、连音/颤音拨、刷弦/分解和弦、计时器、延音/哇音踏板、八度、连线控制等。' });
+		container.createEl('h3', { text: 'Beat Effects' });
+		container.createEl('p', { text: 'Demonstrates common beat effects, dynamics, hammer-on/pull-off/tremolo picking, brush/arpeggio chords, timer, sustain/wah pedals, ottava, beaming control, etc.' });
 
 		const sections: Array<[string, string]> = [
-			['常见效果（概览）', SAMPLE_SIMPLE],
-			['力度（Dynamics）', SAMPLE_DYNAMICS],
-			['Tuplet 范围', SAMPLE_TUPLET_RANGE],
+			['Common Effects (Overview)', SAMPLE_SIMPLE],
+			['Dynamics', SAMPLE_DYNAMICS],
+			['Tuplet Range', SAMPLE_TUPLET_RANGE],
 			['Tremolo / Whammy Bar', SAMPLE_TREMOLO_WB],
-			['Whammy 精确模式', SAMPLE_TREMOLO_WB_EXACT],
-			['刷弦/分解和弦', SAMPLE_BRUSH_ARP],
-			['和弦标注（ch）', SAMPLE_CHORDS],
-			['计时器（timer）', SAMPLE_TIMER],
-			['延音与 Wah 踏板', SAMPLE_SUSTAIN_WAH],
-			['Barré 与 Ottava', SAMPLE_BARRE_OTTAVA],
-			['连线/分线（Beaming）', SAMPLE_BEAMING],
+			['Whammy Exact Mode', SAMPLE_TREMOLO_WB_EXACT],
+			['Brush/Arpeggio Chords', SAMPLE_BRUSH_ARP],
+			['Chord Labels (ch)', SAMPLE_CHORDS],
+			['Timer', SAMPLE_TIMER],
+			['Sustain & Wah Pedals', SAMPLE_SUSTAIN_WAH],
+			['Barré & Ottava', SAMPLE_BARRE_OTTAVA],
+			['Beaming', SAMPLE_BEAMING],
 		];
 
 		for (const [title, sample] of sections) {
@@ -69,7 +69,7 @@ export default {
 		}
 
 		if (!plugin) {
-			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
+			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
 	}
 };

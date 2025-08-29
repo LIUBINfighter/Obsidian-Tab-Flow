@@ -1,6 +1,6 @@
 // 文档面板：Metadata（最小集合）
-import type TabFlowPlugin from '../../main';
-import { createAlphaTexPlayground } from '../../components/AlphaTexPlayground';
+import type TabFlowPlugin from '../../../main';
+import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 // TODO: 模板与对齐方式后续补充（暂时跳过）
 const SAMPLE = `// Song information (only at the beginning)
