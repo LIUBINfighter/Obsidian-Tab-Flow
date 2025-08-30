@@ -90,13 +90,11 @@ export default class TabFlowPlugin extends Plugin {
 
 			// 使用相对路径而非绝对路径
 			const assetsDirRelative = path.join(
-        this.vault.configDir,
+				this.app.vault.configDir,
 				"plugins",
 				this.manifest.id,
 				"assets"
 			);
-			// TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
-			// 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
 
 			// 检查assets目录是否存在
 			const assetsDirExists = await this.app.vault.adapter.exists(
@@ -170,10 +168,8 @@ export default class TabFlowPlugin extends Plugin {
 
 			// 使用Obsidian API创建资产目录
 			const assetsDir = path.join(this.actualPluginDir, "assets");
-			// TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
-			// 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
 			const assetsDirRelative = path.join(
-				".obsidian",
+				this.app.vault.configDir,
 				"plugins",
 				this.manifest.id,
 				"assets"

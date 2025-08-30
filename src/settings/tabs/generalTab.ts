@@ -7,9 +7,7 @@ import { t } from "../../i18n";
 
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
   const pluginId = plugin.manifest.id;
-  // TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
-  // 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
-  const assetsDir = vaultPath(".obsidian", "plugins", pluginId, "assets");
+  const assetsDir = vaultPath(app.vault.configDir, "plugins", pluginId, "assets");
   const files = [ASSET_FILES.ALPHA_TAB, ASSET_FILES.BRAVURA, ASSET_FILES.SOUNDFONT];
   const dirExists = await app.vault.adapter.exists(assetsDir);
   if (!dirExists) {
@@ -69,9 +67,7 @@ export async function renderGeneralTab(
       cls: "setting-item-description",
     });
     pre.createEl("code", {
-      // TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
-      // 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
-      text: `.obsidian/tab-flow/\n├── main.js\n├── data.json(optional)\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
+      text: `${app.vault.configDir}/tab-flow/\n├── main.js\n├── data.json(optional)\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
     });
   statuses.forEach((s) => {
     const li = list.createEl("li");
@@ -134,7 +130,7 @@ export async function renderGeneralTab(
       }
       // TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
       // 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
-      const pluginDir = require("path").join(basePath, ".obsidian", "plugins", plugin.manifest.id);
+      const pluginDir = require("path").join(basePath, app.vault.configDir, "plugins", plugin.manifest.id);
       const mainJsPath = require("path").join(pluginDir, "main.js");
       // @ts-ignore
       const { shell } = require("electron");
