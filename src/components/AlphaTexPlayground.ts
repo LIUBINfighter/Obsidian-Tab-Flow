@@ -86,9 +86,12 @@ export function createAlphaTexPlayground(
 			// ensure folder
 			try { if (!(await plugin.app.vault.adapter.exists(folder))) await plugin.app.vault.createFolder(folder); } catch {}
 			const content = `\`\`\`alphatex\n${embedded.value}\n\`\`\``.replace(/`/g, '`');
-			// TO FIX: 不应该使用类型转换，应该使用 instanceof 检查
-			// 原因: 类型转换会绕过TypeScript的类型检查，可能导致运行时错误
-			const file = await plugin.app.vault.create(filePath, content) as TFile;
+			// vault.create() 已经返回 Promise<TFile>，不需要类型转换
+			const file = await plugin.app.vault.create(filePath, content);
+			// 使用类型守卫确保是 TFile 实例
+			if (!(file instanceof TFile)) {
+				throw new Error('创建的文件不是有效的 TFile 实例');
+			}
 			const leaf = plugin.app.workspace.getLeaf(true);
 			await leaf.openFile(file);
 		} catch (e) { console.warn('[Playground] 创建笔记失败', e); }
