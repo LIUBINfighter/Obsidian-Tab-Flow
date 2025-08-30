@@ -16,12 +16,10 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 
-	if (plugin) {
-		createAlphaTexPlayground(plugin, container, SAMPLE, {});
-	} else {
-		container.createEl('div', { text: '缺少 plugin 上下文，无法渲染。' });
-	}
-	}
+		if (plugin) {
+			createAlphaTexPlayground(plugin, container, SAMPLE, {});
+		} else {
+			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染。' });
+		}
+	},
 };
-
-

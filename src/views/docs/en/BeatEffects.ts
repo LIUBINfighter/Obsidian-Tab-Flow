@@ -30,7 +30,7 @@ const SAMPLE_CHORDS = `(1.1 3.2 5.3 3.4 1.5){ch "A#add9"} (1.1 3.2 5.3 3.4 1.5)*
 
 const SAMPLE_TIMER = `\\tempo 120
 .
-3.3.4 { timer } 3.3.4*3 | \\\ro 3.3.4 { timer } 3.3.4*3 | 3.3.4 { timer } 3.3.4*3 | \\\jump DaCapoAlFine 3.3.4 { timer } 3.3.4*3`;
+3.3.4 { timer } 3.3.4*3 | \\\ro 3.3.4 { timer } 3.3.4*3 | 3.3.4 { timer } 3.3.4*3 | \\jump DaCapoAlFine 3.3.4 { timer } 3.3.4*3`;
 
 const SAMPLE_SUSTAIN_WAH = `3.3{string} 3.3{spd} 3.3 3.3 {spu} | 3.3 3.3{waho} 3.3 3.3 {wahc}`;
 
@@ -44,7 +44,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Beat Effects' });
-		container.createEl('p', { text: 'Demonstrates common beat effects, dynamics, hammer-on/pull-off/tremolo picking, brush/arpeggio chords, timer, sustain/wah pedals, ottava, beaming control, etc.' });
+		container.createEl('p', {
+			text: 'Demonstrates common beat effects, dynamics, hammer-on/pull-off/tremolo picking, brush/arpeggio chords, timer, sustain/wah pedals, ottava, beaming control, etc.',
+		});
 
 		const sections: Array<[string, string]> = [
 			['Common Effects (Overview)', SAMPLE_SIMPLE],
@@ -71,7 +73,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
-	}
+	},
 };
-
-

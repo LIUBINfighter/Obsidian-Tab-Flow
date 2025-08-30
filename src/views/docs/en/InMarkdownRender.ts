@@ -21,7 +21,5 @@ export default {
 		} else {
 			container.createEl('div', { text: 'Plugin context missing, cannot render.' });
 		}
-	}
+	},
 };
-
-

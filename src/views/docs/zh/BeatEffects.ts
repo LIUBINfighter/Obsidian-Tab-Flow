@@ -30,7 +30,7 @@ const SAMPLE_CHORDS = `(1.1 3.2 5.3 3.4 1.5){ch "A#add9"} (1.1 3.2 5.3 3.4 1.5)*
 
 const SAMPLE_TIMER = `\\tempo 120
 .
-3.3.4 { timer } 3.3.4*3 | \\\ro 3.3.4 { timer } 3.3.4*3 | 3.3.4 { timer } 3.3.4*3 | \\\jump DaCapoAlFine 3.3.4 { timer } 3.3.4*3`;
+3.3.4 { timer } 3.3.4*3 | \\\ro 3.3.4 { timer } 3.3.4*3 | 3.3.4 { timer } 3.3.4*3 | \\jump DaCapoAlFine 3.3.4 { timer } 3.3.4*3`;
 
 const SAMPLE_SUSTAIN_WAH = `3.3{string} 3.3{spd} 3.3 3.3 {spu} | 3.3 3.3{waho} 3.3 3.3 {wahc}`;
 
@@ -44,7 +44,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Beat Effects（节拍效果）' });
-		container.createEl('p', { text: '演示常见节拍效果、力度、连音/颤音拨、刷弦/分解和弦、计时器、延音/哇音踏板、八度、连线控制等。' });
+		container.createEl('p', {
+			text: '演示常见节拍效果、力度、连音/颤音拨、刷弦/分解和弦、计时器、延音/哇音踏板、八度、连线控制等。',
+		});
 
 		const sections: Array<[string, string]> = [
 			['常见效果（概览）', SAMPLE_SIMPLE],
@@ -71,7 +73,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
 		}
-	}
+	},
 };
-
-

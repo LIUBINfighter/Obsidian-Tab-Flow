@@ -35,14 +35,22 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'Metadata (Song Information & Global Settings)' });
 		container.createEl('p', {
-			text: 'Metadata uses the format \\tag value and is generally written at the beginning of the score. It specifies global information (title, artist, tempo, etc.) and performance-related settings (instrument, capo, tuning). If metadata is included, the section must end with a dot (.).'
+			text: 'Metadata uses the format \\tag value and is generally written at the beginning of the score. It specifies global information (title, artist, tempo, etc.) and performance-related settings (instrument, capo, tuning). If metadata is included, the section must end with a dot (.).',
 		});
 		const ul = container.createEl('ul');
-		ul.createEl('li', { text: '\\title / \\subtitle / \\artist / \\album etc.: Song information displayed on the score.' });
+		ul.createEl('li', {
+			text: '\\title / \\subtitle / \\artist / \\album etc.: Song information displayed on the score.',
+		});
 		ul.createEl('li', { text: '\\tempo: Global tempo (BPM), with optional label text.' });
-		ul.createEl('li', { text: '\\instrument: Specify timbre using GM number or name; attempts to infer default tuning when \\tuning is not specified.' });
-		ul.createEl('li', { text: '\\tuning: Specify pitch for each string (e.g., E4 B3 G3 D3 A2 E2).' });
-		container.createEl('p', { text: 'The example below includes common metadata fields, followed by two bars of content after the dot (.) for quick verification.' });
+		ul.createEl('li', {
+			text: '\\instrument: Specify timbre using GM number or name; attempts to infer default tuning when \\tuning is not specified.',
+		});
+		ul.createEl('li', {
+			text: '\\tuning: Specify pitch for each string (e.g., E4 B3 G3 D3 A2 E2).',
+		});
+		container.createEl('p', {
+			text: 'The example below includes common metadata fields, followed by two bars of content after the dot (.) for quick verification.',
+		});
 
 		if (plugin) {
 			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
@@ -50,7 +58,5 @@ export default {
 		} else {
 			container.createEl('div', { text: 'Plugin context missing, cannot render.' });
 		}
-	}
+	},
 };
-
-

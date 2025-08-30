@@ -131,7 +131,7 @@
 	background: var(--background-modifier-hover);
 }
 .inmarkdown-editor-toolbar .clickable-icon.is-success {
-    background: var(--background-modifier-success);
+	background: var(--background-modifier-success);
 }
 
 .inmarkdown-editor-cm:focus-within {
@@ -327,7 +327,10 @@
 	display: flex;
 	flex-direction: column;
 	min-height: 72px;
-	transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+	transition:
+		background 120ms ease,
+		border-color 120ms ease,
+		transform 120ms ease;
 }
 
 .doc-nav-item:hover {

@@ -1,6 +1,6 @@
 // AudioPlayer.ts - 原生音频播放器组件，支持 alphaTab 官方外部音频同步
-import { App } from "obsidian";
-import * as alphaTab from "@coderline/alphatab";
+import { App } from 'obsidian';
+import * as alphaTab from '@coderline/alphatab';
 
 export interface AudioPlayerOptions {
 	app: App;
@@ -19,11 +19,11 @@ export function createAudioPlayer(options: AudioPlayerOptions): HTMLDivElement {
 	const { onAudioCreated, onTimeUpdate, onPlay, onPause, onSeek } = options;
 
 	// 创建主容器
-	const container = document.createElement("div");
-	container.className = "audio-player-container";
+	const container = document.createElement('div');
+	container.className = 'audio-player-container';
 
 	// 创建audio元素
-	const audio = document.createElement("audio");
+	const audio = document.createElement('audio');
 	audio.id = `alphatab-audio-player-${Date.now()}`;
 	audio.controls = true;
 
@@ -60,10 +60,7 @@ export function createAudioPlayer(options: AudioPlayerOptions): HTMLDivElement {
 /**
  * 设置alphaTab与audio元素的双向同步
  */
-export function setupAlphaTabAudioSync(
-	api: alphaTab.AlphaTabApi,
-	audio: HTMLAudioElement
-): void {
+export function setupAlphaTabAudioSync(api: alphaTab.AlphaTabApi, audio: HTMLAudioElement): void {
 	// 设置播放器模式为外部媒体控制
 	api.settings.player.playerMode = alphaTab.PlayerMode.EnabledExternalMedia;
 	api.updateSettings();
@@ -90,17 +87,17 @@ export function setupAlphaTabAudioSync(
 			audio.currentTime = time / 1000;
 		},
 		play() {
-			audio.play().catch(e => console.error("Audio play failed:", e));
+			audio.play().catch((e) => console.error('Audio play failed:', e));
 		},
 		pause() {
 			audio.pause();
-		}
+		},
 	};
 
 	// 设置处理器
 	(api.player!.output as alphaTab.synth.IExternalMediaSynthOutput).handler = handler;
 
-	console.debug("[AudioPlayer] AlphaTab audio synchronization setup completed");
+	console.debug('[AudioPlayer] AlphaTab audio synchronization setup completed');
 }
 
 /**
@@ -156,16 +153,16 @@ export function setupAudioEventListeners(
 	audio.addEventListener('volumechange', onVolumeChange);
 	audio.addEventListener('ratechange', onRateChange);
 
-	console.debug("[AudioPlayer] Audio event listeners setup completed");
+	console.debug('[AudioPlayer] Audio event listeners setup completed');
 }
 
 // 音量和播放速度变化处理函数
 function onVolumeChange(this: HTMLAudioElement) {
 	// 这里可以添加音量变化的处理逻辑
-	console.debug("[AudioPlayer] Volume changed:", this.volume);
+	console.debug('[AudioPlayer] Volume changed:', this.volume);
 }
 
 function onRateChange(this: HTMLAudioElement) {
 	// 这里可以添加播放速度变化的处理逻辑
-	console.debug("[AudioPlayer] Playback rate changed:", this.playbackRate);
+	console.debug('[AudioPlayer] Playback rate changed:', this.playbackRate);
 }

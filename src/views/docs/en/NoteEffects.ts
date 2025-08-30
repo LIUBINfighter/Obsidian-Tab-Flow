@@ -57,7 +57,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Note Effects' });
-		container.createEl('p', { text: 'Demonstrates harmonics, trill/slide/hammer-on, ghost/dead notes, accents/staccato, palm mute/let ring, fingering, ornaments, bends, ties, visibility, slurs, etc.' });
+		container.createEl('p', {
+			text: 'Demonstrates harmonics, trill/slide/hammer-on, ghost/dead notes, accents/staccato, palm mute/let ring, fingering, ornaments, bends, ties, visibility, slurs, etc.',
+		});
 
 		const sections: Array<[string, string]> = [
 			['Harmonics', SAMPLE_HARMONICS],
@@ -91,7 +93,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
-	}
+	},
 };
-
-

@@ -13,7 +13,9 @@
 	font-size: 1em;
 	color: var(--text-normal);
 	border-radius: 0.5em 0.5em 0 0;
-	transition: background 0.2s, color 0.2s;
+	transition:
+		background 0.2s,
+		color 0.2s;
 }
 
 .itabs-settings-tab.active {

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
+// ## 1. 参数解析和初始化
 // 解析 --dir 参数，默认为 ../src
 let userDir = '../src';
 for (let i = 2; i < process.argv.length; i++) {
@@ -19,6 +19,7 @@ for (let i = 2; i < process.argv.length; i++) {
 const srcDir = path.join(__dirname, userDir);
 const stylesFile = path.join(__dirname, '../styles.css');
 const readmeFile = path.join(__dirname, '../README.md');
+const githubWorkflowsDir = path.join(__dirname, '../.github/workflows');
 
 // 生成简短的时间戳文件名
 function getShortTimestamp() {
@@ -46,6 +47,7 @@ if (!fs.existsSync(srcDir)) {
     process.exit(1);
 }
 
+// ## 2. 文件扫描函数
 function getAllTsFiles(dir) {
     let results = [];
     const list = fs.readdirSync(dir);
@@ -61,8 +63,28 @@ function getAllTsFiles(dir) {
     return results;
 }
 
+function getAllYmlFiles(dir) {
+    let results = [];
+    if (!fs.existsSync(dir)) {
+        return results;
+    }
+    const list = fs.readdirSync(dir);
+    list.forEach(file => {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat && stat.isDirectory()) {
+            results = results.concat(getAllYmlFiles(filePath));
+        } else if (file.endsWith('.yml') || file.endsWith('.yaml')) {
+            results.push(filePath);
+        }
+    });
+    return results;
+}
+
+// ## 3. 文件合并函数
 function mergeFiles() {
-    const files = getAllTsFiles(srcDir);
+    const tsFiles = getAllTsFiles(srcDir);
+    const ymlFiles = getAllYmlFiles(githubWorkflowsDir);
     let merged = '';
 
     // 在开头写入所有被合并的文档相对路径
@@ -71,7 +93,7 @@ function mergeFiles() {
         const relPath = path.relative(process.cwd(), readmeFile).replace(/\\/g, '/');
         merged += `// - ./${relPath}\n`;
     }
-    files.forEach(file => {
+    tsFiles.forEach(file => {
         const relPath = path.relative(process.cwd(), file).replace(/\\/g, '/');
         merged += `// - ./${relPath}\n`;
     });
@@ -79,30 +101,52 @@ function mergeFiles() {
         const relPath = path.relative(process.cwd(), stylesFile).replace(/\\/g, '/');
         merged += `// - ./${relPath}\n`;
     }
+    ymlFiles.forEach(file => {
+        const relPath = path.relative(process.cwd(), file).replace(/\\/g, '/');
+        merged += `// - ./${relPath}\n`;
+    });
     merged += '\n';
 
     // 合并 README.md
     if (fs.existsSync(readmeFile)) {
+        merged += '## README.md\n\n';
         const relPath = path.relative(process.cwd(), readmeFile).replace(/\\/g, '/');
         merged += `// <-- ./${relPath} -->\n`;
-        merged += fs.readFileSync(readmeFile, 'utf-8') + '\n';
+        merged += fs.readFileSync(readmeFile, 'utf-8') + '\n\n';
     }
 
-    files.forEach(file => {
-        const relPath = path.relative(process.cwd(), file).replace(/\\/g, '/');
-        merged += `// <-- ./${relPath} -->\n`;
-        merged += fs.readFileSync(file, 'utf-8') + '\n';
-    });
+    // 合并 TypeScript 文件
+    if (tsFiles.length > 0) {
+        merged += '## TypeScript Source Files\n\n';
+        tsFiles.forEach(file => {
+            const relPath = path.relative(process.cwd(), file).replace(/\\/g, '/');
+            merged += `// <-- ./${relPath} -->\n`;
+            merged += fs.readFileSync(file, 'utf-8') + '\n\n';
+        });
+    }
 
     // 合并 styles.css
     if (fs.existsSync(stylesFile)) {
+        merged += '## Styles\n\n';
         const relPath = path.relative(process.cwd(), stylesFile).replace(/\\/g, '/');
         merged += `// <-- ./${relPath} -->\n`;
-        merged += fs.readFileSync(stylesFile, 'utf-8') + '\n';
+        merged += fs.readFileSync(stylesFile, 'utf-8') + '\n\n';
+    }
+
+    // 合并 GitHub Actions yml 文件
+    if (ymlFiles.length > 0) {
+        merged += '## GitHub Actions Workflows\n\n';
+        ymlFiles.forEach(file => {
+            const relPath = path.relative(process.cwd(), file).replace(/\\/g, '/');
+            merged += `# <-- ./${relPath} -->\n`;
+            merged += fs.readFileSync(file, 'utf-8') + '\n\n';
+        });
     }
 
     fs.writeFileSync(outputFile, merged, 'utf-8');
-    console.log(`Merged ${files.length} ts files${fs.existsSync(stylesFile) ? ', styles.css' : ''}${fs.existsSync(readmeFile) ? ', README.md' : ''} into ${outputFile}`);
+    const ymlCount = ymlFiles.length;
+    console.log(`Merged ${tsFiles.length} ts files${fs.existsSync(stylesFile) ? ', styles.css' : ''}${fs.existsSync(readmeFile) ? ', README.md' : ''}${ymlCount > 0 ? `, ${ymlCount} yml files` : ''} into ${outputFile}`);
 }
 
+// ## 4. 主执行部分
 mergeFiles();

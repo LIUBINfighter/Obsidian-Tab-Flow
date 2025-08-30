@@ -50,11 +50,15 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Notes 编写音符' });
-		container.createEl('p', { text: '下面的示例演示如何在 AlphaTex 中编写一般音符。多个小节用竖线 | 分隔。每个小节对应谱面上的一段。' });
+		container.createEl('p', {
+			text: '下面的示例演示如何在 AlphaTex 中编写一般音符。多个小节用竖线 | 分隔。每个小节对应谱面上的一段。',
+		});
 
 		// Single notes and rests
 		container.createEl('h4', { text: 'Single notes and rests（单音与休止）' });
-		container.createEl('p', { text: '音符格式为 fret.string.duration；休止用 r 替代品格（fret）。时值：1=全音符，2=二分，4=四分，8=八分，依此类推。' });
+		container.createEl('p', {
+			text: '音符格式为 fret.string.duration；休止用 r 替代品格（fret）。时值：1=全音符，2=二分，4=四分，8=八分，依此类推。',
+		});
 		if (plugin) {
 			const host1 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host1, SAMPLE_SINGLE_NOTES);
@@ -62,7 +66,9 @@ export default {
 
 		// Chords
 		container.createEl('h4', { text: 'Chords（和弦）' });
-		container.createEl('p', { text: '同一拍内的多个音符用括号括起：(fret.string fret.string ...).duration。' });
+		container.createEl('p', {
+			text: '同一拍内的多个音符用括号括起：(fret.string fret.string ...).duration。',
+		});
 		if (plugin) {
 			const host2 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host2, SAMPLE_CHORDS, {});
@@ -70,7 +76,9 @@ export default {
 
 		// Duration Ranges
 		container.createEl('h4', { text: 'Duration Ranges（时值范围）' });
-		container.createEl('p', { text: '用 :duration 开始一个时值范围，之后的若干音符共享该时值；AlphaTex 也会记住最近一次明确设置的时值。' });
+		container.createEl('p', {
+			text: '用 :duration 开始一个时值范围，之后的若干音符共享该时值；AlphaTex 也会记住最近一次明确设置的时值。',
+		});
 		if (plugin) {
 			const host3 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host3, SAMPLE_DURATION_RANGES, {});
@@ -86,7 +94,9 @@ export default {
 
 		// Multiple voices
 		container.createEl('h4', { text: 'Multiple voices（多声部）' });
-		container.createEl('p', { text: '使用 \\voice 开启新声部。在同一轨中可并行编写多个独立声部；AlphaTab 会尽力合并不同声部的小节数量差异。' });
+		container.createEl('p', {
+			text: '使用 \\voice 开启新声部。在同一轨中可并行编写多个独立声部；AlphaTab 会尽力合并不同声部的小节数量差异。',
+		});
 		if (plugin) {
 			const host5 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host5, SAMPLE_MULTIPLE_VOICES, {});
@@ -94,7 +104,9 @@ export default {
 
 		// Accidentals
 		container.createEl('h4', { text: 'Accidentals（变音记号）' });
-		container.createEl('p', { text: '默认（\\accidentals explicit）按写入音高使用变音；可切换为 \\accidentals auto。也可在音符效果中用 acc 指定（如 forceSharp/forceFlat 等）。' });
+		container.createEl('p', {
+			text: '默认（\\accidentals explicit）按写入音高使用变音；可切换为 \\accidentals auto。也可在音符效果中用 acc 指定（如 forceSharp/forceFlat 等）。',
+		});
 		if (plugin) {
 			const host6 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host6, SAMPLE_ACCIDENTALS, {});
@@ -103,7 +115,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
 		}
-	}
+	},
 };
-
-

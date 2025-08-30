@@ -23,25 +23,33 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'Instruments & Tuning' });
 		container.createEl('p', {
-			text: 'In AlphaTex, you can specify playback timbre with \\instrument and set the pitch of each string with \\tuning (starting from the lowest string). If only \\instrument is set without \\tuning, AlphaTab will attempt to apply default tuning based on the instrument type.'
+			text: 'In AlphaTex, you can specify playback timbre with \\instrument and set the pitch of each string with \\tuning (starting from the lowest string). If only \\instrument is set without \\tuning, AlphaTab will attempt to apply default tuning based on the instrument type.',
 		});
 		const ul = container.createEl('ul');
-		ul.createEl('li', { text: '\\instrument supports GM numbers or names (like ElectricGuitarClean, piano, etc.).' });
-		ul.createEl('li', { text: '\\tuning uses note names + octaves (like E4 B3 G3 D3 A2 E2) for stringed instrument fretboard positioning and pitch.' });
-		container.createEl('p', { text: 'Below are two minimal examples: the first is electric guitar (stringed, using fret.string); the second is piano (non-stringed, using note names and octaves like C4 D4).' });
+		ul.createEl('li', {
+			text: '\\instrument supports GM numbers or names (like ElectricGuitarClean, piano, etc.).',
+		});
+		ul.createEl('li', {
+			text: '\\tuning uses note names + octaves (like E4 B3 G3 D3 A2 E2) for stringed instrument fretboard positioning and pitch.',
+		});
+		container.createEl('p', {
+			text: 'Below are two minimal examples: the first is electric guitar (stringed, using fret.string); the second is piano (non-stringed, using note names and octaves like C4 D4).',
+		});
 
 		if (plugin) {
-			container.createEl('h4', { text: 'Example 1: Electric Guitar (Standard 6-string tuning)' });
+			container.createEl('h4', {
+				text: 'Example 1: Electric Guitar (Standard 6-string tuning)',
+			});
 			const playgroundHost1 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, playgroundHost1, SAMPLE, {});
 
-			container.createEl('h4', { text: 'Example 2: Piano (Non-stringed, note names and octaves)' });
+			container.createEl('h4', {
+				text: 'Example 2: Piano (Non-stringed, note names and octaves)',
+			});
 			const playgroundHost2 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, playgroundHost2, SAMPLE2, {});
 		} else {
 			container.createEl('div', { text: 'Plugin context missing, cannot render.' });
 		}
-	}
+	},
 };
-
-

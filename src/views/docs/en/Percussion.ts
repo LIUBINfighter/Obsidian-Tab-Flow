@@ -11,7 +11,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Percussion' });
-		container.createEl('p', { text: 'Demonstrates minimal percussion example (illustrative). More complete mapping examples will be added later.' });
+		container.createEl('p', {
+			text: 'Demonstrates minimal percussion example (illustrative). More complete mapping examples will be added later.',
+		});
 
 		if (plugin) {
 			const host = container.createDiv({ cls: 'doc-playground-host' });
@@ -19,7 +21,5 @@ export default {
 		} else {
 			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
-	}
+	},
 };
-
-

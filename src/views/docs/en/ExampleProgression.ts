@@ -30,19 +30,23 @@ r.4 * 3 0.1.8 2.1.8 |
 (2.1 2.6).8{ch "F"} 4.5 3.3 2.2 2.2 3.3 2.1 3.3 |`;
 
 export default {
-  id: 'example-progression',
-  title: 'Castle in the Sky - Fingerstyle',
-  render(container: HTMLElement, plugin?: TabFlowPlugin) {
-    container.empty();
-    container.createEl('h3', { text: 'Castle in the Sky - Fingerstyle' });
-    container.createEl('p', { text: 'This page shows an AlphaTex fragment with global chord definitions, time signature settings, and several bars. You can directly edit the code below to try modifying chords or notes.' });
-    container.createEl('p', { text: 'Key points: 1) Use \\chord to define reusable chords; 2) Use {ch "name"} to label current chord at notes; 3) :8 means subsequent notes inherit eighth note duration; 4) *N can repeat beats; 5) | separates bars.' });
+	id: 'example-progression',
+	title: 'Castle in the Sky - Fingerstyle',
+	render(container: HTMLElement, plugin?: TabFlowPlugin) {
+		container.empty();
+		container.createEl('h3', { text: 'Castle in the Sky - Fingerstyle' });
+		container.createEl('p', {
+			text: 'This page shows an AlphaTex fragment with global chord definitions, time signature settings, and several bars. You can directly edit the code below to try modifying chords or notes.',
+		});
+		container.createEl('p', {
+			text: 'Key points: 1) Use \\chord to define reusable chords; 2) Use {ch "name"} to label current chord at notes; 3) :8 means subsequent notes inherit eighth note duration; 4) *N can repeat beats; 5) | separates bars.',
+		});
 
-    if (plugin) {
-      const host = container.createDiv({ cls: 'doc-playground-host' });
-  createAlphaTexPlayground(plugin, host, SAMPLE_PROGRESSION, {});
-    } else {
-      container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
-    }
-  }
+		if (plugin) {
+			const host = container.createDiv({ cls: 'doc-playground-host' });
+			createAlphaTexPlayground(plugin, host, SAMPLE_PROGRESSION, {});
+		} else {
+			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
+		}
+	},
 };
