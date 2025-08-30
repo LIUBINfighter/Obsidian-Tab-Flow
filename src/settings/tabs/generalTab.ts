@@ -4,6 +4,9 @@ import { ASSET_FILES } from "../../services/ResourceLoaderService";
 import { vaultPath } from "../../utils";
 import { AssetStatus } from "../../types/assets";
 import { t } from "../../i18n";
+import path from "path";
+// @ts-ignore
+import { shell } from "electron";
 
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
   const pluginId = plugin.manifest.id;
@@ -130,10 +133,9 @@ export async function renderGeneralTab(
       }
       // TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
       // 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
-      const pluginDir = require("path").join(basePath, app.vault.configDir, "plugins", plugin.manifest.id);
-      const mainJsPath = require("path").join(pluginDir, "main.js");
+      const pluginDir = path.join(basePath, app.vault.configDir, "plugins", plugin.manifest.id);
+      const mainJsPath = path.join(pluginDir, "main.js");
       // @ts-ignore
-      const { shell } = require("electron");
       shell.showItemInFolder(mainJsPath);
     } catch (e) {
       new Notice(t("assetManagement.openDirFailed") + e);
