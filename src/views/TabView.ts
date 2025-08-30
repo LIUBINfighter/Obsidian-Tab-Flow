@@ -218,7 +218,6 @@ export class TabView extends FileView {
 				app: this.app,
 				api: this.alphaTabService.getApi(),
 				isAudioLoaded: this.isAudioLoaded.bind(this),
-				onTrackModal: () => {},
 				eventBus: this.eventBus,
 				getScoreTitle: this.getScoreTitle.bind(this),
 			});
@@ -497,7 +496,9 @@ export class TabView extends FileView {
 			if (this.audioEl) {
 				try {
 					this.audioEl.pause();
-				} catch {}
+				} catch {
+					// Ignore audio pause errors
+				}
 			}
 			if (this.audioObjectUrl && this.audioObjectUrl.startsWith('blob:')) {
 				URL.revokeObjectURL(this.audioObjectUrl);

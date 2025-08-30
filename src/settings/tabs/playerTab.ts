@@ -28,7 +28,9 @@ export async function renderPlayerTab(
 						/* @ts-ignore */ app.workspace.trigger(
 							'tabflow:playbar-components-changed'
 						);
-					} catch {}
+					} catch {
+						// Ignore workspace trigger errors
+					}
 					new Notice(t('settings.player.resetToDefaultSuccess'));
 				} catch (e) {
 					new Notice(t('settings.player.resetToDefaultFailed') + ': ' + e);
@@ -198,7 +200,9 @@ export async function renderPlayerTab(
 						/* @ts-ignore */ app.workspace.trigger(
 							'tabflow:playbar-components-changed'
 						);
-					} catch {}
+					} catch {
+						// Ignore workspace trigger errors
+					}
 				});
 				if (m.disabled)
 					(t as any).toggleEl.querySelector('input')?.setAttribute('disabled', 'true');
@@ -260,7 +264,9 @@ export async function renderPlayerTab(
 						/* @ts-ignore */ app.workspace.trigger(
 							'tabflow:playbar-components-changed'
 						);
-					} catch {}
+					} catch {
+						// Ignore workspace trigger errors
+					}
 				}
 			};
 
@@ -281,7 +287,9 @@ export async function renderPlayerTab(
 						/* @ts-ignore */ app.workspace.trigger(
 							'tabflow:playbar-components-changed'
 						);
-					} catch {}
+					} catch {
+						// Ignore workspace trigger errors
+					}
 				}
 			};
 
@@ -322,7 +330,6 @@ export async function renderPlayerTab(
 			card.addEventListener('dragleave', () => clearDndHighlights());
 			card.addEventListener('dragend', () => clearDndHighlights());
 			card.addEventListener('drop', async () => {
-				const isInsertBefore = card.classList.contains('insert-before');
 				const isInsertAfter = card.classList.contains('insert-after');
 				const isSwap = card.classList.contains('swap-target');
 				clearDndHighlights();
@@ -346,7 +353,9 @@ export async function renderPlayerTab(
 				renderCards();
 				try {
 					/* @ts-ignore */ app.workspace.trigger('tabflow:playbar-components-changed');
-				} catch {}
+				} catch {
+					// Ignore workspace trigger errors
+				}
 				draggingKey = null;
 			});
 		});
@@ -370,7 +379,9 @@ export async function renderPlayerTab(
 				try {
 					// @ts-ignore
 					app.workspace.trigger('tabflow:debugbar-toggle', value);
-				} catch {}
+				} catch {
+					// Ignore workspace trigger errors
+				}
 				new Notice(
 					value
 						? t('settings.player.debugBar.debugBarEnabled')

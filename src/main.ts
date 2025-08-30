@@ -343,7 +343,9 @@ export default class TabFlowPlugin extends Plugin {
 				style.textContent = `@font-face { font-family: 'alphaTab'; src: url(${this.resources.bravuraUri}); }`;
 				if (!document.getElementById(style.id)) document.head.appendChild(style);
 			}
-		} catch {}
+		} catch {
+			// Ignore font loading errors
+		}
 
 		// 只在有足够资源的情况下注册视图
 		if (this.resources.bravuraUri && this.resources.alphaTabWorkerUri) {
@@ -366,7 +368,7 @@ export default class TabFlowPlugin extends Plugin {
 					if (!this.resources.bravuraUri || !this.resources.alphaTabWorkerUri) {
 						const holder = el.createEl('div');
 						holder.addClass('alphatex-block');
-						const msg = holder.createEl('div', {
+						holder.createEl('div', {
 							text: t(
 								'alphatex.missingResources',
 								undefined,
@@ -413,7 +415,9 @@ export default class TabFlowPlugin extends Plugin {
 						) => {
 							try {
 								(this as any).runtimeUiOverride = override || null;
-							} catch {}
+							} catch {
+								// Ignore UI override errors
+							}
 							try {
 								this.app.workspace.trigger('tabflow:playbar-components-changed');
 							} catch {

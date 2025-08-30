@@ -30,7 +30,7 @@ const SAMPLE_CHORDS = `(1.1 3.2 5.3 3.4 1.5){ch "A#add9"} (1.1 3.2 5.3 3.4 1.5)*
 
 const SAMPLE_TIMER = `\\tempo 120
 .
-3.3.4 { timer } 3.3.4*3 | \\\ro 3.3.4 { timer } 3.3.4*3 | 3.3.4 { timer } 3.3.4*3 | \\\jump DaCapoAlFine 3.3.4 { timer } 3.3.4*3`;
+3.3.4 { timer } 3.3.4*3 | \\\ro 3.3.4 { timer } 3.3.4*3 | 3.3.4 { timer } 3.3.4*3 | \\jump DaCapoAlFine 3.3.4 { timer } 3.3.4*3`;
 
 const SAMPLE_SUSTAIN_WAH = `3.3{string} 3.3{spd} 3.3 3.3 {spu} | 3.3 3.3{waho} 3.3 3.3 {wahc}`;
 

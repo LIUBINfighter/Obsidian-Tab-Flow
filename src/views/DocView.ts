@@ -135,9 +135,13 @@ export class DocView extends ItemView {
 								const ev = new Event('input', { bubbles: true });
 								search.dispatchEvent(ev);
 							}
-						} catch {}
+						} catch {
+							// Ignore search input errors
+						}
 					}, 120);
-				} catch {}
+				} catch {
+					// Ignore settings fallback errors
+				}
 			}
 		};
 		// Layout wrapper

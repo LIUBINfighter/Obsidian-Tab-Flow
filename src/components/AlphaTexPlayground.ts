@@ -77,7 +77,9 @@ export function createAlphaTexPlayground(
 				ta.select();
 				document.execCommand('copy');
 				ta.remove();
-			} catch {}
+			} catch {
+				// Ignore clipboard fallback errors
+			}
 		}
 		// feedback: turn into green check briefly
 		try {
@@ -89,7 +91,9 @@ export function createAlphaTexPlayground(
 				btnCopy.classList.remove('is-success');
 				btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
 			}, 1200);
-		} catch {}
+		} catch {
+			// Ignore UI feedback errors
+		}
 	});
 
 	const btnReset = toolbar.createEl('button', {
@@ -104,7 +108,9 @@ export function createAlphaTexPlayground(
 		try {
 			embedded.set(initialSource, false);
 			scheduleRender();
-		} catch {}
+		} catch {
+			// Ignore reset errors
+		}
 	});
 
 	const btnNewNote = toolbar.createEl('button', {
@@ -127,7 +133,9 @@ export function createAlphaTexPlayground(
 			try {
 				if (!(await plugin.app.vault.adapter.exists(folder)))
 					await plugin.app.vault.createFolder(folder);
-			} catch {}
+			} catch {
+				// Ignore folder creation errors
+			}
 			const content = `\`\`\`alphatex\n${embedded.value}\n\`\`\``.replace(/`/g, '`');
 			// vault.create() 已经返回 Promise<TFile>，不需要类型转换
 			const file = await plugin.app.vault.create(filePath, content);

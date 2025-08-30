@@ -2,18 +2,18 @@ import { Notice, App } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 // import { dispatchUIEvent } from "../events/dispatch";
 import { ScrollConfigProxy } from '../services/ScrollConfigProxy';
+import { AudioExportModal } from './AudioExportModal';
 
 export interface DebugBarOptions {
 	app: App; // 新增
 	api: alphaTab.AlphaTabApi;
 	isAudioLoaded: () => boolean;
-	onTrackModal: () => void;
 	eventBus: { publish: (event: string, payload?: unknown) => void };
 	getScoreTitle: () => string;
 }
 
 export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
-	const { app, api, isAudioLoaded, onTrackModal, eventBus, getScoreTitle } = options;
+	const { app, api, isAudioLoaded, eventBus, getScoreTitle } = options;
 	const debugBar = document.createElement('div');
 	debugBar.className = 'debug-bar';
 
@@ -217,7 +217,6 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 				onExportFinish: (type: string, success: boolean, msg?: string) => {
 					if (type === 'audio' && success && msg) {
 						// 弹出 Obsidian 原生 Modal
-						const { AudioExportModal } = require('./AudioExportModal');
 						const fileName = (getScoreTitle?.() || 'audio') + '.wav';
 						new AudioExportModal(app, msg, fileName).open();
 						new Notice('音频导出完成，已弹出播放器');

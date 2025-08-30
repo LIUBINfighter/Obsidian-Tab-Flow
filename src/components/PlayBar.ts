@@ -42,11 +42,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let metronomeBtn: HTMLButtonElement | null = null;
 	let countInBtn: HTMLButtonElement | null = null;
 	let openSettingsBtn: HTMLButtonElement | null = null;
-	const locateCursorBtn: HTMLButtonElement | null = null;
+	// const locateCursorBtn: HTMLButtonElement | null = null; // Not used
 	let layoutToggleBtn: HTMLButtonElement | null = null;
 	let exportChooserBtn: HTMLButtonElement | null = null;
-	const toTopBtn: HTMLButtonElement | null = null;
-	const toBottomBtn: HTMLButtonElement | null = null;
+	// const toTopBtn: HTMLButtonElement | null = null; // Not used
+	// const toBottomBtn: HTMLButtonElement | null = null; // Not used
 
 	// 内部函数
 	function updatePlayPauseButton() {
@@ -122,7 +122,9 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
 		visibility = plugin?.settings?.playBar?.components;
 		runtimeOverride = plugin?.runtimeUiOverride;
-	} catch {}
+	} catch {
+		// Ignore plugin access errors
+	}
 
 	const show = (key: string, defaultValue = true): boolean => {
 		const overrideVisible = runtimeOverride?.components?.[key];
@@ -195,7 +197,9 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				);
 			}
 		}
-	} catch {}
+	} catch {
+		// Ignore order parsing errors
+	}
 
 	const renderers: Record<string, () => void> = {
 		playPause: () => {
@@ -389,9 +393,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 									const ev = new Event('input', { bubbles: true });
 									search.dispatchEvent(ev);
 								}
-							} catch {}
+							} catch {
+								// Ignore search input errors
+							}
 						}, 120);
-					} catch {}
+					} catch {
+						// Ignore settings fallback errors
+					}
 				}
 			};
 			bar.appendChild(openSettingsBtn);
@@ -489,7 +497,9 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	order.forEach((key) => {
 		try {
 			renderers[key]?.();
-		} catch {}
+		} catch {
+			// Ignore renderer errors
+		}
 	});
 
 	// formatTime imported from utils/timeUtils

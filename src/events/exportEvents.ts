@@ -33,9 +33,8 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			const exporter = await api.exportAudio(options);
 			const chunks: Float32Array[] = [];
 			try {
-				while (true) {
-					const chunk = await exporter.render(500);
-					if (!chunk) break;
+				let chunk;
+				while ((chunk = await exporter.render(500))) {
 					chunks.push(chunk.samples);
 				}
 			} finally {

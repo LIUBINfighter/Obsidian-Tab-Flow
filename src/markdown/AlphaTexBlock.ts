@@ -1,7 +1,7 @@
 import * as alphaTab from '@coderline/alphatab';
 import { setIcon } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
-import { parseInlineInit, toScrollMode, requestIdle, scheduleInit, formatError } from '../utils';
+import { parseInlineInit, toScrollMode, scheduleInit } from '../utils';
 
 export interface AlphaTexInitOptions {
 	// display
@@ -47,7 +47,9 @@ export function mountAlphaTexBlock(
 		| undefined = (opts as any)?.ui;
 	try {
 		if (uiOverride && defaults?.setUiOverride) defaults.setUiOverride(uiOverride);
-	} catch {}
+	} catch {
+		// Ignore UI override setup errors
+	}
 
 	// container structure
 	const wrapper = document.createElement('div');
@@ -70,7 +72,6 @@ export function mountAlphaTexBlock(
 	const RATE_LIMIT_PER_WINDOW = 30;
 	let rateWindowStart = Date.now();
 	let rateWindowCount = 0;
-	let suppressedCount = 0;
 	let suppressedBanner: HTMLDivElement | null = null;
 
 	const formatError = (err: unknown): string => {
@@ -114,7 +115,9 @@ export function mountAlphaTexBlock(
 						setIcon(icon, 'copy');
 						btn.classList.remove('is-success');
 					}, 1200);
-				} catch {}
+				} catch {
+					// Ignore icon update errors
+				}
 			} catch {
 				try {
 					const ta = document.createElement('textarea');
@@ -130,8 +133,12 @@ export function mountAlphaTexBlock(
 							setIcon(icon, 'copy');
 							btn.classList.remove('is-success');
 						}, 1200);
-					} catch {}
-				} catch {}
+					} catch {
+						// Ignore icon update errors
+					}
+				} catch {
+					// Ignore clipboard fallback errors
+				}
 			}
 		});
 		// place button at the top of messages
@@ -145,17 +152,17 @@ export function mountAlphaTexBlock(
 			if (now - rateWindowStart > RATE_WINDOW_MS) {
 				rateWindowStart = now;
 				rateWindowCount = 0;
-				suppressedCount = 0;
 				if (suppressedBanner) {
 					try {
 						suppressedBanner.remove();
-					} catch {}
+					} catch {
+						// Ignore DOM removal errors
+					}
 					suppressedBanner = null;
 				}
 			}
 			rateWindowCount++;
 			if (rateWindowCount > RATE_LIMIT_PER_WINDOW) {
-				suppressedCount++;
 				if (!suppressedBanner) {
 					suppressedBanner = document.createElement('div');
 					suppressedBanner.className = 'alphatex-error';
@@ -191,7 +198,9 @@ export function mountAlphaTexBlock(
 			errEl.textContent = text;
 			messagesEl.appendChild(errEl);
 			errorIndex.set(text, { el: errEl, count: 1 });
-		} catch {}
+		} catch {
+			// Ignore error display errors
+		}
 	};
 
 	// AlphaTabApi setup (theme-aware colors)
@@ -225,7 +234,9 @@ export function mountAlphaTexBlock(
 		if (!api) return;
 		try {
 			api.destroy();
-		} catch {}
+		} catch {
+			// Ignore API destroy errors
+		}
 		api = null;
 		if (reason) appendError(reason);
 	};
@@ -282,7 +293,9 @@ export function mountAlphaTexBlock(
 		};
 		try {
 			(api as any).error?.on?.(onApiError);
-		} catch {}
+		} catch {
+			// Ignore error event subscription errors
+		}
 
 		// apply runtime options
 		if (typeof merged.speed === 'number' && api.player) {
@@ -296,18 +309,21 @@ export function mountAlphaTexBlock(
 		try {
 			(api.settings.player as any).scrollElement = wrapper as unknown as HTMLElement;
 			api.updateSettings();
-		} catch {}
+		} catch {
+			// Ignore scroll element setup errors
+		}
 
 		// render via convenient tex method; fallback to manual importer if needed
 		const renderFromTex = () => {
 			// reset per-render rate window
 			rateWindowStart = Date.now();
 			rateWindowCount = 0;
-			suppressedCount = 0;
 			if (suppressedBanner) {
 				try {
 					suppressedBanner.remove();
-				} catch {}
+				} catch {
+					// Ignore banner removal errors
+				}
 				suppressedBanner = null;
 			}
 			errorMessages = [];
@@ -330,7 +346,9 @@ export function mountAlphaTexBlock(
 						if (Array.isArray(errs) && errs.length > 0) {
 							errs.forEach((er: unknown) => appendError(formatError(er)));
 						}
-					} catch {}
+					} catch {
+						// Ignore importer error retrieval errors
+					}
 				}
 			} catch (e) {
 				appendError(`AlphaTex render error: ${formatError(e)}`);
@@ -354,9 +372,13 @@ export function mountAlphaTexBlock(
 					if (selected.length > 0) {
 						(api as any).renderTracks(selected);
 					}
-				} catch {}
+				} catch {
+					// Ignore track filtering errors
+				}
 			});
-		} catch {}
+		} catch {
+			// Ignore score loaded event subscription errors
+		}
 
 		renderFromTex();
 
@@ -443,7 +465,9 @@ export function mountAlphaTexBlock(
 				merged.metronome = enabled;
 				try {
 					metroBtn.classList.toggle('is-active', !!enabled);
-				} catch {}
+				} catch {
+					// Ignore class toggle errors
+				}
 			};
 
 			// component-level visibility via init.ui.components (defaults to true)
@@ -468,7 +492,9 @@ export function mountAlphaTexBlock(
 					btn.onclick = () => {
 						try {
 							(api as any).scrollToCursor?.();
-						} catch {}
+						} catch {
+							// Ignore scroll to cursor errors
+						}
 					};
 					controlsEl.appendChild(btn);
 				},
@@ -505,7 +531,9 @@ export function mountAlphaTexBlock(
 									? '布局: 横向'
 									: '布局: 页面'
 							);
-						} catch {}
+						} catch {
+							// Ignore layout toggle errors
+						}
 					};
 					controlsEl.appendChild(btn);
 				},
@@ -521,7 +549,9 @@ export function mountAlphaTexBlock(
 						try {
 							(api as any).tickPosition = 0;
 							(api as any).scrollToCursor?.();
-						} catch {}
+						} catch {
+							// Ignore scroll to top errors
+						}
 					};
 					controlsEl.appendChild(btn);
 				},
@@ -542,7 +572,9 @@ export function mountAlphaTexBlock(
 							const endTick = last.start + last.calculateDuration();
 							(api as any).tickPosition = endTick;
 							(api as any).scrollToCursor?.();
-						} catch {}
+						} catch {
+							// Ignore scroll to end errors
+						}
 					};
 					controlsEl.appendChild(btn);
 				},
@@ -596,7 +628,9 @@ export function mountAlphaTexBlock(
 				if (shouldShow(key, true))
 					try {
 						renderers[key]?.();
-					} catch {}
+					} catch {
+						// Ignore track selection errors
+					}
 			});
 			// controlsEl.appendChild(speedIcon);
 			// controlsEl.appendChild(speedInput);
@@ -621,20 +655,28 @@ export function mountAlphaTexBlock(
 			destroyed = true;
 			try {
 				api?.destroy();
-			} catch {}
+			} catch {
+				// Ignore API destroy errors
+			}
 			// 使用 DOM API 替代 innerHTML，避免安全风险
 			try {
 				while (rootEl.firstChild) {
 					rootEl.removeChild(rootEl.firstChild);
 				}
-			} catch {}
+			} catch {
+				// Ignore DOM cleanup errors
+			}
 			try {
 				runtimeStyle.remove();
-			} catch {}
+			} catch {
+				// Ignore style removal errors
+			}
 			// clear runtime UI override when this block unmounts
 			try {
 				defaults?.clearUiOverride?.();
-			} catch {}
+			} catch {
+				// Ignore UI override clear errors
+			}
 		},
 	};
 }

@@ -13,7 +13,7 @@ export interface ProgressBarOptions {
  * @returns 进度条容器元素
  */
 export function createProgressBar(options: ProgressBarOptions): HTMLDivElement {
-	const { getCurrentTime, getDuration, seekTo } = options;
+	const { getCurrentTime, getDuration } = options;
 
 	// 进度条容器
 	const progressContainer = document.createElement('div');

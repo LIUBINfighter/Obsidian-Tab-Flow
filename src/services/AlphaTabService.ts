@@ -156,7 +156,7 @@ export class AlphaTabService {
 				} & Partial<alphaTab.synth.AudioExportOptions>
 			) => {
 				try {
-					const { fileName, ...options } = payload || {};
+					const options = payload || {};
 					const wavUrl = await this.exportAudioToWav(options);
 					this.eventBus.publish('状态:音频导出完成', wavUrl);
 				} catch (e) {
@@ -359,12 +359,16 @@ export class AlphaTabService {
 			if (this.api) {
 				try {
 					this.api.destroy();
-				} catch {}
+				} catch {
+					// Ignore API destroy errors
+				}
 			}
 			if (this.scrollProxy) {
 				try {
 					this.scrollProxy.destroy();
-				} catch {}
+				} catch {
+					// Ignore scroll proxy destroy errors
+				}
 			}
 			const style = window.getComputedStyle(this.element);
 			this.api = new alphaTab.AlphaTabApi(this.element, {
@@ -439,9 +443,8 @@ export class AlphaTabService {
 		const exporter = await this.api.exportAudio(exportOptions);
 		const chunks: Float32Array[] = [];
 		try {
-			while (true) {
-				const chunk = await exporter.render(500);
-				if (!chunk) break;
+			let chunk: any;
+			while ((chunk = await exporter.render(500))) {
 				chunks.push(chunk.samples);
 			}
 		} finally {

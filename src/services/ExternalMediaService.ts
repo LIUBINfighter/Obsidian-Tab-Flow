@@ -128,44 +128,43 @@ export class ExternalMediaService {
 	 */
 	private setupExternalMediaHandler(): void {
 		if (!this.mediaElement || !this.api.player || !this.api.player.output) return;
-		const self = this;
 		const handler: alphaTab.synth.IExternalMediaHandler = {
 			get backingTrackDuration() {
-				if (!self.mediaElement) return 0;
-				const duration = self.mediaElement.duration;
+				if (!this.mediaElement) return 0;
+				const duration = this.mediaElement.duration;
 				return Number.isFinite(duration) ? duration * 1000 : 0;
 			},
 			get playbackRate() {
-				return self.mediaElement?.playbackRate || 1;
+				return this.mediaElement?.playbackRate || 1;
 			},
 			set playbackRate(value: number) {
-				if (self.mediaElement) {
-					self.mediaElement.playbackRate = value;
+				if (this.mediaElement) {
+					this.mediaElement.playbackRate = value;
 				}
 			},
 			get masterVolume() {
-				return self.mediaElement?.volume || 1;
+				return this.mediaElement?.volume || 1;
 			},
 			set masterVolume(value: number) {
-				if (self.mediaElement) {
-					self.mediaElement.volume = value;
+				if (this.mediaElement) {
+					this.mediaElement.volume = value;
 				}
 			},
-			seekTo(time: number) {
-				if (self.mediaElement) {
-					self.mediaElement.currentTime = time / 1000;
+			seekTo: (time: number) => {
+				if (this.mediaElement) {
+					this.mediaElement.currentTime = time / 1000;
 				}
 			},
-			play() {
-				if (self.mediaElement) {
-					self.mediaElement.play().catch((err) => {
+			play: () => {
+				if (this.mediaElement) {
+					this.mediaElement.play().catch((err) => {
 						console.error('[ExternalMediaService] 播放外部媒体失败:', err);
 					});
 				}
 			},
-			pause() {
-				if (self.mediaElement) {
-					self.mediaElement.pause();
+			pause: () => {
+				if (this.mediaElement) {
+					this.mediaElement.pause();
 				}
 			},
 		};

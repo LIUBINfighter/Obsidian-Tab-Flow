@@ -29,8 +29,12 @@ export class SettingTab extends PluginSettingTab {
 					(this as any)._forceActiveInnerTab = 'player';
 					try {
 						await this.display();
-					} catch {}
-				} catch {}
+					} catch {
+						// Ignore display errors
+					}
+				} catch {
+					// Ignore event binding errors
+				}
 			});
 			this._eventBound = true;
 		}

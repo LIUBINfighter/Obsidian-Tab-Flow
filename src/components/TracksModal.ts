@@ -1,6 +1,6 @@
 import { Modal, Setting, App } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
-import type { TrackEventPayload } from '../events/trackEvents';
+// import type { TrackEventPayload } from '../events/trackEvents'; // Not used
 import { EventBus } from '../utils';
 import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 导入新的服务
 import { t } from '../i18n';
@@ -42,7 +42,9 @@ export class TracksModal extends Modal {
 					}
 				}
 			}
-		} catch {}
+		} catch {
+			// Ignore track settings loading errors
+		}
 		this.contentEl.empty();
 		this.titleEl.setText('');
 		// 创建标题栏容器
@@ -102,7 +104,7 @@ export class TracksModal extends Modal {
 
 			// 静音/独奏按钮
 			// 独奏按钮
-			const soloBtn = trackSetting.addExtraButton((btn) => {
+			trackSetting.addExtraButton((btn) => {
 				// 若有保存的状态，先同步到本地对象以便初始 UI 正确
 				try {
 					const idxKey = String(track.index);
@@ -111,7 +113,9 @@ export class TracksModal extends Modal {
 						// @ts-ignore
 						track.playbackInfo.isSolo = s.solo;
 					}
-				} catch {}
+				} catch {
+					// Ignore solo settings loading errors
+				}
 				const updateSoloUI = () => {
 					const isSolo = track.playbackInfo.isSolo;
 					btn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
@@ -150,7 +154,7 @@ export class TracksModal extends Modal {
 			});
 
 			// 静音按钮
-			const muteBtn = trackSetting.addExtraButton((btn) => {
+			trackSetting.addExtraButton((btn) => {
 				// 若有保存的状态，先同步到本地对象以便初始 UI 正确
 				try {
 					const idxKey = String(track.index);
@@ -159,7 +163,9 @@ export class TracksModal extends Modal {
 						// @ts-ignore
 						track.playbackInfo.isMute = s.mute;
 					}
-				} catch {}
+				} catch {
+					// Ignore mute settings loading errors
+				}
 				const updateMuteUI = () => {
 					const isMute = track.playbackInfo.isMute;
 					btn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(

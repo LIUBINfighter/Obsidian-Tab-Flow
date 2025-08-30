@@ -61,19 +61,27 @@ export class ExportChooserModal extends Modal {
 					onOk(url);
 					try {
 						this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
-					} catch {}
+					} catch {
+						// Ignore unsubscribe errors
+					}
 					try {
 						this.eventBus.unsubscribe?.('状态:音频导出失败', failHandler);
-					} catch {}
+					} catch {
+						// Ignore unsubscribe errors
+					}
 				};
 				const failHandler = (err?: any) => {
 					new Notice('音频导出失败' + (err ? ': ' + String(err) : ''));
 					try {
 						this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
-					} catch {}
+					} catch {
+						// Ignore unsubscribe errors
+					}
 					try {
 						this.eventBus.unsubscribe?.('状态:音频导出失败', failHandler);
-					} catch {}
+					} catch {
+						// Ignore unsubscribe errors
+					}
 				};
 				this.eventBus.subscribe('状态:音频导出完成', okHandler);
 				this.eventBus.subscribe('状态:音频导出失败', failHandler);

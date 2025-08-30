@@ -27,7 +27,9 @@ async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<As
 			try {
 				const data = await app.vault.adapter.readBinary(p);
 				size = data.byteLength;
-			} catch {}
+			} catch {
+				// Ignore file read errors
+			}
 		}
 		statuses.push({ file: f, exists, path: p, size });
 	}
