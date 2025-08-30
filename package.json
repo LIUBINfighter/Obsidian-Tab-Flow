@@ -9,6 +9,7 @@
 		"build": "node ./scripts/merge-styles.js --dir src/styles && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"mix": "node ./scripts/mix-code.js --dir ../src",
+		"clean": "node ./scripts/clean-mix.js",
 		"test": "vitest",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest --coverage",
