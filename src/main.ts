@@ -164,7 +164,7 @@ export default class TabFlowPlugin extends Plugin {
 			if (!this.actualPluginDir) {
 				new Notice(t("assets.download.pluginDirNotFound", undefined, "无法确定插件目录，下载失败"));
 				return false;
-			}			console.log(t("debug.currentPluginPath", { path: this.actualPluginDir }, "当前插件路径: {path}"));
+			}			console.debug(t("debug.currentPluginPath", { path: this.actualPluginDir }, "当前插件路径: {path}"));
 
 			// 使用Obsidian API创建资产目录
 			const assetsDir = path.join(this.actualPluginDir, "assets");
@@ -177,9 +177,9 @@ export default class TabFlowPlugin extends Plugin {
 
 			try {
 				await this.app.vault.adapter.mkdir(assetsDirRelative);
-				console.log(t("debug.assetsDirCreated", { path: assetsDirRelative }, "资产目录创建成功: {path}"));
+				console.debug(t("debug.assetsDirCreated", { path: assetsDirRelative }, "资产目录创建成功: {path}"));
 			} catch (err) {
-				console.log("创建目录时出错（可能已存在）:", err);
+				console.debug("创建目录时出错（可能已存在）:", err);
 			}
 
 			// 使用固定版本号0.0.5，而不是当前插件版本
@@ -204,7 +204,7 @@ export default class TabFlowPlugin extends Plugin {
 			];
 
 			// 获取plugins目录的完整路径
-			console.log("插件目录:", this.actualPluginDir);
+			console.debug("插件目录:", this.actualPluginDir);
 
 			// 并行下载所有资产文件
 			const downloadPromises = assets.map(async (asset) => {
@@ -242,7 +242,7 @@ export default class TabFlowPlugin extends Plugin {
 							response.arrayBuffer
 						);
 
-						console.log(
+						console.debug(
 							`Downloaded ${asset.url} to ${relativeToVault}`
 						);
 
@@ -299,7 +299,7 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 设置语言变化监听器
 		this.languageChangeCleanup = addLanguageChangeListener((language) => {
-			console.log(`[TabFlow] Language changed to: ${language}`);
+			console.debug(`[TabFlow] Language changed to: ${language}`);
 			// 当语言变化时，可以在这里添加刷新UI或重新加载组件的逻辑
 			// 例如：刷新设置面板、更新菜单项文本等
 			this.refreshLanguageDependentUI();
@@ -307,8 +307,8 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 存储实际的插件目录路径
 		this.actualPluginDir = this.manifest.dir || "";
-		console.log("插件实际路径:", this.actualPluginDir);
-		console.log("Manifest ID:", this.manifest.id);
+		console.debug("插件实际路径:", this.actualPluginDir);
+		console.debug("Manifest ID:", this.manifest.id);
 
 		// 注册设置面板
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -636,6 +636,6 @@ export default class TabFlowPlugin extends Plugin {
 
 		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
 		// 不再在 onunload 时主动 detach leaves，避免插件更新导致视图位置丢失
-		console.log("AlphaTab Plugin Unloaded");
+		console.debug("AlphaTab Plugin Unloaded");
 	}
 }

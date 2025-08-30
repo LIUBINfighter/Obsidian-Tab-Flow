@@ -58,11 +58,11 @@ public async load(pluginDir: string): Promise<AlphaTabResources> {
 // 如果有任何资源不存在，标记为不完整
 if (!bravuraExists || !alphaTabExists || !soundFontExists) {
   resources.resourcesComplete = false;
-  console.log("[ResourceLoaderService] Some resources are missing.");
+  console.debug("[ResourceLoaderService] Some resources are missing.");
   
-  if (!bravuraExists) console.log(`Missing: ${ASSET_FILES.BRAVURA}`);
-  if (!alphaTabExists) console.log(`Missing: ${ASSET_FILES.ALPHA_TAB}`);
-  if (!soundFontExists) console.log(`Missing: ${ASSET_FILES.SOUNDFONT}`);
+  if (!bravuraExists) console.debug(`Missing: ${ASSET_FILES.BRAVURA}`);
+  if (!alphaTabExists) console.debug(`Missing: ${ASSET_FILES.ALPHA_TAB}`);
+  if (!soundFontExists) console.debug(`Missing: ${ASSET_FILES.SOUNDFONT}`);
 }
 ```
 
@@ -161,7 +161,7 @@ async downloadAssets(): Promise<boolean> {
     try {
       await this.app.vault.adapter.mkdir(assetsDirRelative);
     } catch (err) {
-      console.log("创建目录时出错（可能已存在）:", err);
+      console.debug("创建目录时出错（可能已存在）:", err);
     }
 
     // 使用固定版本号下载

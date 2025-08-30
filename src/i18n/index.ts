@@ -61,7 +61,7 @@ function getLanguageFromNewAPI(): string | null {
   try {
     if (isGetLanguageAPISupported()) {
       const language = (window as unknown as { getLanguage: () => string }).getLanguage();
-      // console.log(`[TabFlow i18n] Detected language via getLanguage API: ${language}`);
+      // console.debug(`[TabFlow i18n] Detected language via getLanguage API: ${language}`);
       return language;
     }
   } catch (error) {

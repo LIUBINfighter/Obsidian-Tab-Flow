@@ -61,13 +61,13 @@ export class ResourceLoaderService {
 			// 如果有任何资源不存在，标记为不完整
 			if (!bravuraExists || !alphaTabExists || !soundFontExists) {
 				resources.resourcesComplete = false;
-				// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+				// TO FIX: 应该限制 console.debug 的数量，避免污染开发者控制台
 				// 原因: 过多的日志会影响性能并使调试变得困难
-				console.log("[ResourceLoaderService] Some resources are missing. Plugin will load with limited functionality.");
+				console.debug("[ResourceLoaderService] Some resources are missing. Plugin will load with limited functionality.");
 
-				if (!bravuraExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.BRAVURA}`);
-				if (!alphaTabExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.ALPHA_TAB}`);
-				if (!soundFontExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.SOUNDFONT}`);
+				if (!bravuraExists) console.debug(`[ResourceLoaderService] Missing: ${ASSET_FILES.BRAVURA}`);
+				if (!alphaTabExists) console.debug(`[ResourceLoaderService] Missing: ${ASSET_FILES.ALPHA_TAB}`);
+				if (!soundFontExists) console.debug(`[ResourceLoaderService] Missing: ${ASSET_FILES.SOUNDFONT}`);
 			}
 
 			// 使用 Obsidian 资源 URL（可被缓存/共享）
@@ -81,15 +81,15 @@ export class ResourceLoaderService {
 
 			if (soundFontExists) {
 				resources.soundFontUri = this.app.vault.adapter.getResourcePath(soundFontPath);
-				// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+				// TO FIX: 应该限制 console.debug 的数量，避免污染开发者控制台
 				// 原因: 过多的日志会影响性能并使调试变得困难
-				console.log("[ResourceLoaderService] SoundFont URI: ", resources.soundFontUri);
+				console.debug("[ResourceLoaderService] SoundFont URI: ", resources.soundFontUri);
 			}
 
 			if (resources.resourcesComplete) {
-				// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+				// TO FIX: 应该限制 console.debug 的数量，避免污染开发者控制台
 				// 原因: 过多的日志会影响性能并使调试变得困难
-				console.log("[ResourceLoaderService] All resources loaded successfully.");
+				console.debug("[ResourceLoaderService] All resources loaded successfully.");
 			}
 
 			return resources;
