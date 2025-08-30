@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/LIUBINfighter/Obsidian-Tab-Flow/tree/master/docs
+    about: Read the documentation for usage guides and development information
+  - name: 💬 Discussions
+    url: https://github.com/LIUBINfighter/Obsidian-Tab-Flow/discussions
+    about: Join community discussions, share your tabs, and get help from other users
+  - name: 🌐 Testing Website
+    url: https://liubinfighter.github.io/alphatab-vue/
+    about: Try out features and see the roadmap at our testing website
