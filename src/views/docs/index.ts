@@ -40,7 +40,7 @@ const panelConfigs: Array<{ id: string, module: string }> = [
   { id: 'percussion', module: 'Percussion' },
   { id: 'syncPoints', module: 'SyncPoints' },
   { id: 'exampleProgression', module: 'ExampleProgression' },
-  { id: 'simpleTabify', module: 'SimpleTabify' },
+  // { id: 'simpleTabify', module: 'SimpleTabify' }, // 暂时不挂载，simpleTabify项目还未推出
 ];
 
 // 异步加载所有面板
@@ -48,6 +48,9 @@ export async function loadDocPanels(): Promise<DocPanel[]> {
   const panels: DocPanel[] = [];
   
   for (const config of panelConfigs) {
+    // 暂时跳过 simpleTabify，项目还未推出
+    if (config.id === 'simpleTabify') continue;
+    
     try {
       const module = await importDocPanel(config.module);
       panels.push(module.default);
@@ -74,7 +77,7 @@ import Lyrics from './en/Lyrics';
 import Percussion from './en/Percussion';
 import SyncPoints from './en/SyncPoints';
 import ExampleProgression from './en/ExampleProgression';
-import SimpleTabifyPanel from './en/SimpleTabify';
+// import SimpleTabifyPanel from './en/SimpleTabify'; // 暂时不挂载，simpleTabify项目还未推出
 
 export const panels: DocPanel[] = [
   ReadMe,
@@ -91,7 +94,7 @@ export const panels: DocPanel[] = [
   Percussion,
   SyncPoints,
   ExampleProgression,
-  SimpleTabifyPanel,
+  // SimpleTabifyPanel, // 暂时不挂载，simpleTabify项目还未推出
 ];
 
 export default panels;
