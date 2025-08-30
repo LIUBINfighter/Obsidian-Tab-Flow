@@ -189,25 +189,31 @@ export async function renderPlayerTab(
 			});
 			setIcon(downIcon, 'lucide-arrow-down');
 
-			new Setting(right).addToggle((t) => {
-				const current = !!(comp as any)[key];
-				t.setValue(m.disabled ? false : current).onChange(async (v) => {
-					plugin.settings.playBar = plugin.settings.playBar || { components: {} as any };
-					(plugin.settings.playBar as any).components =
-						plugin.settings.playBar?.components || {};
-					(plugin.settings.playBar as any).components[key] = m.disabled ? false : v;
-					await plugin.saveSettings();
-					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:playbar-components-changed'
-						);
-					} catch {
-						// Ignore workspace trigger errors
-					}
-				});
-				if (m.disabled)
-					(t as any).toggleEl.querySelector('input')?.setAttribute('disabled', 'true');
-			}).setClass('tabflow-no-border');
+			new Setting(right)
+				.addToggle((t) => {
+					const current = !!(comp as any)[key];
+					t.setValue(m.disabled ? false : current).onChange(async (v) => {
+						plugin.settings.playBar = plugin.settings.playBar || {
+							components: {} as any,
+						};
+						(plugin.settings.playBar as any).components =
+							plugin.settings.playBar?.components || {};
+						(plugin.settings.playBar as any).components[key] = m.disabled ? false : v;
+						await plugin.saveSettings();
+						try {
+							/* @ts-ignore */ app.workspace.trigger(
+								'tabflow:playbar-components-changed'
+							);
+						} catch {
+							// Ignore workspace trigger errors
+						}
+					});
+					if (m.disabled)
+						(t as any).toggleEl
+							.querySelector('input')
+							?.setAttribute('disabled', 'true');
+				})
+				.setClass('tabflow-no-border');
 
 			const getScrollContainer = (el: HTMLElement): HTMLElement | Window => {
 				let node: HTMLElement | null = el.parentElement;
