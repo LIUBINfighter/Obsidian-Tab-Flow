@@ -45,7 +45,7 @@ export async function renderGeneralTab(
 	tabContents.createEl('h3', { text: t('assetManagement.assetFileManagement') });
 
 	const assetsStatusContainer = tabContents.createDiv({
-		cls: 'setting-item-description',
+		cls: 'tabflow-setting-description',
 		attr: {
 			style: 'margin-bottom: 1em; padding: 10px; border-radius: 5px; background-color: var(--background-secondary);',
 		},
@@ -73,11 +73,11 @@ export async function renderGeneralTab(
 	});
 	tabContents.createEl('div', {
 		text: t('status.expectedFileStructure'),
-		cls: 'setting-item-description',
+		cls: 'tabflow-setting-description',
 		attr: { style: 'margin-top:20px;font-weight:bold;' },
 	});
 	const pre = tabContents.createEl('pre', {
-		cls: 'setting-item-description',
+		cls: 'tabflow-setting-description',
 	});
 	pre.createEl('code', {
 		text: `${app.vault.configDir}/tab-flow/\n├── main.js\n├── data.json(optional)\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
