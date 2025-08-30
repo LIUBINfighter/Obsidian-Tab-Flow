@@ -191,14 +191,14 @@ export function mountAlphaTexBlock(
 	// Cursor and highlight styles (aligned with TabView)
 	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
 	const runtimeStyle = document.createElement("style");
-	// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-	// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-	runtimeStyle.innerHTML = `
+	// 使用 DOM API 替代 innerHTML，避免安全风险
+	const styleContent = `
 		.alphatex-block .at-cursor-bar { background: ${accent}; opacity: 0.2; }
 		.alphatex-block .at-selection div { background: ${accent}; opacity: 0.4; }
 		.alphatex-block .at-cursor-beat { background: ${accent}; width: 3px; }
 		.alphatex-block .at-highlight * { fill: ${accent}; stroke: ${accent}; }
 	`;
+	runtimeStyle.appendChild(document.createTextNode(styleContent));
 	document.head.appendChild(runtimeStyle);
 
     const playerEnabled = (String(merged.player || "enable").toLowerCase() !== "disable");
@@ -538,9 +538,12 @@ export function mountAlphaTexBlock(
 	                if (destroyed) return;
 	                destroyed = true;
 	    try { api?.destroy(); } catch {}
-	                // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-	                // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-	                try { rootEl.innerHTML = ""; } catch {}
+	                // 使用 DOM API 替代 innerHTML，避免安全风险
+	                try {
+	                    while (rootEl.firstChild) {
+	                        rootEl.removeChild(rootEl.firstChild);
+	                    }
+	                } catch {}
 	                try { runtimeStyle.remove(); } catch {}
 	                        // clear runtime UI override when this block unmounts
 	                        try { defaults?.clearUiOverride?.(); } catch {}

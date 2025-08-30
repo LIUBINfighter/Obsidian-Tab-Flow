@@ -21,21 +21,11 @@ export function createAudioPlayer(options: AudioPlayerOptions): HTMLDivElement {
 	// 创建主容器
 	const container = document.createElement("div");
 	container.className = "audio-player-container";
-	// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
-	// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
-	container.style.display = 'flex';
-	container.style.alignItems = 'center';
-	container.style.width = '100%';
-	container.style.gap = '8px';
 
 	// 创建audio元素
 	const audio = document.createElement("audio");
 	audio.id = `alphatab-audio-player-${Date.now()}`;
 	audio.controls = true;
-	// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
-	// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
-	audio.style.width = '100%';
-	audio.style.height = '32px';
 
 	// 添加事件监听器
 	audio.addEventListener('timeupdate', () => {

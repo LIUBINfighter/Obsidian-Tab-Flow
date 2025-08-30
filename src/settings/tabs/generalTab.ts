@@ -78,9 +78,28 @@ export async function renderGeneralTab(
     const color = s.exists ? "var(--text-success)" : "var(--text-error)";
     const icon = s.exists ? "✅" : "❌";
     const sizeText = s.size != null ? ` - ${(s.size / 1024).toFixed(1)} KB` : "";
-    // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-    // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-    li.innerHTML = `<span style="color:${color}">${icon} ${s.file}</span> - ${descriptions[s.file] || t("assetManagement.assetFileManagement")} <span style="color:${color};font-style:italic;">(${s.exists ? t("status.installed") : t("status.notInstalled")})</span>${sizeText}`;
+
+    // 使用 DOM API 替代 innerHTML，避免安全风险
+    // 创建第一个span元素（文件名和图标）
+    const fileSpan = document.createElement("span");
+    fileSpan.style.color = color;
+    fileSpan.textContent = `${icon} ${s.file}`;
+    li.appendChild(fileSpan);
+
+    // 添加分隔符
+    li.appendChild(document.createTextNode(` - ${descriptions[s.file] || t("assetManagement.assetFileManagement")} `));
+
+    // 创建第二个span元素（状态）
+    const statusSpan = document.createElement("span");
+    statusSpan.style.color = color;
+    statusSpan.style.fontStyle = "italic";
+    statusSpan.textContent = `(${s.exists ? t("status.installed") : t("status.notInstalled")})`;
+    li.appendChild(statusSpan);
+
+    // 添加文件大小信息
+    if (sizeText) {
+      li.appendChild(document.createTextNode(sizeText));
+    }
   });
 
   const actionSetting = new Setting(tabContents)

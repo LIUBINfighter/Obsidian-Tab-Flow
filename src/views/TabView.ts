@@ -267,16 +267,14 @@ export class TabView extends FileView {
 		`;
 		this._fontStyle = this.containerEl.ownerDocument.createElement("style");
 		this._fontStyle.id = `alphatab-font-style-${TabView.instanceId}`;
-		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-		this._fontStyle.innerHTML = fontFaceRule;
+		// 使用 DOM API 替代 innerHTML，避免安全风险
+		this._fontStyle.appendChild(document.createTextNode(fontFaceRule));
 		this.containerEl.ownerDocument.head.appendChild(this._fontStyle);
 
 		const cls = `alphatab-${TabView.instanceId++}`;
 		const styles = this.containerEl.createEl("style");
-		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-		styles.innerHTML = `
+		// 使用 DOM API 替代 innerHTML，避免安全风险
+		const styleContent = `
 		.${cls} .at-cursor-bar {
 			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
 			opacity: 0.2
@@ -294,9 +292,10 @@ export class TabView extends FileView {
 			stroke: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
 		}
 		`;
-		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-		styles.innerHTML += `.tabflow-hide-statusbar .status-bar { display: none !important; }`;
+		styles.appendChild(document.createTextNode(styleContent));
+		// 使用 DOM API 替代 innerHTML，避免安全风险
+		const additionalStyle = `.tabflow-hide-statusbar .status-bar { display: none !important; }`;
+		styles.appendChild(document.createTextNode(additionalStyle));
 		this._styles = styles;
 
 		// 添加标记类以隐藏状态栏

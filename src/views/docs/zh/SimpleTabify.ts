@@ -4,18 +4,48 @@ const SimpleTabifyPanel: DocPanel = {
   id: 'simple-tabify',
   title: 'SimpleTabify 服务介绍',
   render(container: HTMLElement) {
-    // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-    // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-    container.innerHTML = `
-      <h2>SimpleTabify 服务</h2>
-      <p>SimpleTabify 是一个用于将乐谱转换为标准格式的服务，支持多种输入和输出格式，方便音乐创作者和爱好者使用。</p>
-      <ul>
-        <li>支持多种乐谱格式转换</li>
-        <li>易于集成和使用</li>
-        <li>高效、准确</li>
-      </ul>
-      <p>更多信息请访问 <a href="https://github.com/your-repo/SimpleTabify" target="_blank">SimpleTabify 项目主页</a>。</p>
-    `;
+    // 使用 DOM API 替代 innerHTML，避免安全风险
+    // 清空容器
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+
+    // 创建标题
+    const h2 = document.createElement('h2');
+    h2.textContent = 'SimpleTabify 服务';
+    container.appendChild(h2);
+
+    // 创建描述段落
+    const p1 = document.createElement('p');
+    p1.textContent = 'SimpleTabify 是一个用于将乐谱转换为标准格式的服务，支持多种输入和输出格式，方便音乐创作者和爱好者使用。';
+    container.appendChild(p1);
+
+    // 创建列表
+    const ul = document.createElement('ul');
+    const li1 = document.createElement('li');
+    li1.textContent = '支持多种乐谱格式转换';
+    ul.appendChild(li1);
+
+    const li2 = document.createElement('li');
+    li2.textContent = '易于集成和使用';
+    ul.appendChild(li2);
+
+    const li3 = document.createElement('li');
+    li3.textContent = '高效、准确';
+    ul.appendChild(li3);
+
+    container.appendChild(ul);
+
+    // 创建链接段落
+    const p2 = document.createElement('p');
+    p2.textContent = '更多信息请访问 ';
+    const link = document.createElement('a');
+    link.href = 'https://github.com/your-repo/SimpleTabify';
+    link.target = '_blank';
+    link.textContent = 'SimpleTabify 项目主页';
+    p2.appendChild(link);
+    p2.appendChild(document.createTextNode('。'));
+    container.appendChild(p2);
   }
 };
 

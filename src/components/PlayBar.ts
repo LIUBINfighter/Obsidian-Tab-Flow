@@ -51,9 +51,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	// 内部函数
 	function updatePlayPauseButton() {
 		if (!playPauseBtn) return;
-		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-		playPauseBtn.innerHTML = "";
+		// 使用 DOM API 替代 innerHTML，避免安全风险
+		while (playPauseBtn.firstChild) {
+			playPauseBtn.removeChild(playPauseBtn.firstChild);
+		}
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, playing ? "pause" : "play");
 		playPauseBtn.appendChild(iconSpan);
@@ -62,9 +63,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateMetronomeBtn() {
 		if (!metronomeBtn) return;
-		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-		metronomeBtn.innerHTML = "";
+		// 使用 DOM API 替代 innerHTML，避免安全风险
+		while (metronomeBtn.firstChild) {
+			metronomeBtn.removeChild(metronomeBtn.firstChild);
+		}
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, "lucide-music-2");
 		metronomeBtn.appendChild(iconSpan);
@@ -77,9 +79,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateCountInBtn() {
 		if (!countInBtn) return;
-		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-		countInBtn.innerHTML = "";
+		// 使用 DOM API 替代 innerHTML，避免安全风险
+		while (countInBtn.firstChild) {
+			countInBtn.removeChild(countInBtn.firstChild);
+		}
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, countInOn ? "lucide-timer" : "lucide-timer-off");
 		countInBtn.appendChild(iconSpan);
@@ -92,9 +95,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
     function updateLayoutToggleBtn() {
         if (!layoutToggleBtn) return;
-        // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-        // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-        layoutToggleBtn.innerHTML = "";
+        // 使用 DOM API 替代 innerHTML，避免安全风险
+        while (layoutToggleBtn.firstChild) {
+            layoutToggleBtn.removeChild(layoutToggleBtn.firstChild);
+        }
         const iconSpan = document.createElement("span");
         const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
         setIcon(iconSpan, isHorizontal ? "lucide-panels-top-left" : "lucide-layout");
@@ -363,10 +367,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		speed: () => {
 			if (!show('speed')) return;
 			const speedIcon = document.createElement('span');
+			speedIcon.className = 'speed-icon';
 			setIcon(speedIcon, 'lucide-gauge');
-			// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
-			// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
-			speedIcon.style.marginRight = '0.5em';
 			bar.appendChild(speedIcon);
 			const select = document.createElement('select');
 			['0.5','0.75','1.0','1.25','1.5','2.0'].forEach((val) => {
@@ -379,11 +381,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		staveProfile: () => {
 			if (!show('staveProfile')) return;
 			const staveIcon = document.createElement('span');
+			staveIcon.className = 'stave-icon';
 			setIcon(staveIcon, 'lucide-list-music');
-			// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
-			// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
-			staveIcon.style.marginLeft = '1em';
-			staveIcon.style.marginRight = '0.5em';
 			bar.appendChild(staveIcon);
 			const select = document.createElement('select');
 			[
@@ -398,11 +397,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		zoom: () => {
 			if (!show('zoom')) return;
 			const zoomIcon = document.createElement('span');
+			zoomIcon.className = 'zoom-icon';
 			setIcon(zoomIcon, 'lucide-zoom-in');
-			// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
-			// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
-			zoomIcon.style.marginLeft = '1em';
-			zoomIcon.style.marginRight = '0.5em';
 			bar.appendChild(zoomIcon);
 			const select = document.createElement('select');
 			[

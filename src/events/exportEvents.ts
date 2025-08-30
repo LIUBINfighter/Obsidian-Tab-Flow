@@ -113,16 +113,16 @@ export function registerExportEventHandlers(
             const win = window.open('', '_blank');
             if (!win) throw new Error("无法打开打印窗口");
             win.document.write('<html><head><title>乐谱打印</title>');
+            // 使用 DOM API 替代 outerHTML，避免安全风险
             // 复制样式
             document.querySelectorAll('style,link[rel="stylesheet"]').forEach(style => {
-                // TO FIX: 使用 outerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-                // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-                win.document.write(style.outerHTML);
+                const clonedStyle = style.cloneNode(true) as HTMLElement;
+                win.document.head.appendChild(clonedStyle);
             });
             win.document.write('</head><body>');
-            // TO FIX: 使用 outerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
-            // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
-            win.document.write(el.outerHTML);
+            // 复制乐谱元素
+            const clonedEl = el.cloneNode(true) as HTMLElement;
+            win.document.body.appendChild(clonedEl);
             win.document.write('</body></html>');
             win.document.close();
             win.focus();
