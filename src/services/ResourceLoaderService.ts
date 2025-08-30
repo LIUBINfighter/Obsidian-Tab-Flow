@@ -61,8 +61,10 @@ export class ResourceLoaderService {
 			// 如果有任何资源不存在，标记为不完整
 			if (!bravuraExists || !alphaTabExists || !soundFontExists) {
 				resources.resourcesComplete = false;
+				// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+				// 原因: 过多的日志会影响性能并使调试变得困难
 				console.log("[ResourceLoaderService] Some resources are missing. Plugin will load with limited functionality.");
-				
+
 				if (!bravuraExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.BRAVURA}`);
 				if (!alphaTabExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.ALPHA_TAB}`);
 				if (!soundFontExists) console.log(`[ResourceLoaderService] Missing: ${ASSET_FILES.SOUNDFONT}`);
@@ -79,10 +81,14 @@ export class ResourceLoaderService {
 
 			if (soundFontExists) {
 				resources.soundFontUri = this.app.vault.adapter.getResourcePath(soundFontPath);
+				// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+				// 原因: 过多的日志会影响性能并使调试变得困难
 				console.log("[ResourceLoaderService] SoundFont URI: ", resources.soundFontUri);
 			}
 
 			if (resources.resourcesComplete) {
+				// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+				// 原因: 过多的日志会影响性能并使调试变得困难
 				console.log("[ResourceLoaderService] All resources loaded successfully.");
 			}
 

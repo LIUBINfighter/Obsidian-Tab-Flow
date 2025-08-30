@@ -4,6 +4,8 @@ const SimpleTabifyPanel: DocPanel = {
   id: 'simple-tabify',
   title: 'SimpleTabify 服务介绍',
   render(container: HTMLElement) {
+    // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+    // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
     container.innerHTML = `
       <h2>SimpleTabify 服务</h2>
       <p>SimpleTabify 是一个用于将乐谱转换为标准格式的服务，支持多种输入和输出格式，方便音乐创作者和爱好者使用。</p>

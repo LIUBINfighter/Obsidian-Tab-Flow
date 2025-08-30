@@ -150,6 +150,8 @@ export class EmbeddableMarkdownEditor {
 }
 
 function resolveEditorPrototype(app: App): any {
+	// TO FIX: 不应该使用类型转换，应该使用 instanceof 检查
+	// 原因: 类型转换会绕过TypeScript的类型检查，可能导致运行时错误
 	const widgetEditorView = (app as any).embedRegistry.embedByExtension.md({ app, containerEl: createDiv() }, null as unknown as TFile, '');
 	(widgetEditorView as any).editable = true;
 	(widgetEditorView as any).showEditor();

@@ -115,9 +115,13 @@ export function registerExportEventHandlers(
             win.document.write('<html><head><title>乐谱打印</title>');
             // 复制样式
             document.querySelectorAll('style,link[rel="stylesheet"]').forEach(style => {
+                // TO FIX: 使用 outerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+                // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
                 win.document.write(style.outerHTML);
             });
             win.document.write('</head><body>');
+            // TO FIX: 使用 outerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+            // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
             win.document.write(el.outerHTML);
             win.document.write('</body></html>');
             win.document.close();

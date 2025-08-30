@@ -7,6 +7,8 @@ import { t } from "../../i18n";
 
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
   const pluginId = plugin.manifest.id;
+  // TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
+  // 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
   const assetsDir = vaultPath(".obsidian", "plugins", pluginId, "assets");
   const files = [ASSET_FILES.ALPHA_TAB, ASSET_FILES.BRAVURA, ASSET_FILES.SOUNDFONT];
   const dirExists = await app.vault.adapter.exists(assetsDir);
@@ -67,6 +69,8 @@ export async function renderGeneralTab(
       cls: "setting-item-description",
     });
     pre.createEl("code", {
+      // TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
+      // 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
       text: `.obsidian/tab-flow/\n├── main.js\n├── data.json(optional)\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,
     });
   statuses.forEach((s) => {
@@ -74,6 +78,8 @@ export async function renderGeneralTab(
     const color = s.exists ? "var(--text-success)" : "var(--text-error)";
     const icon = s.exists ? "✅" : "❌";
     const sizeText = s.size != null ? ` - ${(s.size / 1024).toFixed(1)} KB` : "";
+    // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+    // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
     li.innerHTML = `<span style="color:${color}">${icon} ${s.file}</span> - ${descriptions[s.file] || t("assetManagement.assetFileManagement")} <span style="color:${color};font-style:italic;">(${s.exists ? t("status.installed") : t("status.notInstalled")})</span>${sizeText}`;
   });
 
@@ -107,6 +113,8 @@ export async function renderGeneralTab(
         new Notice(t("assetManagement.desktopOnly"));
         return;
       }
+      // TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
+      // 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
       const pluginDir = require("path").join(basePath, ".obsidian", "plugins", plugin.manifest.id);
       const mainJsPath = require("path").join(pluginDir, "main.js");
       // @ts-ignore

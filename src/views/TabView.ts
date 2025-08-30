@@ -267,11 +267,15 @@ export class TabView extends FileView {
 		`;
 		this._fontStyle = this.containerEl.ownerDocument.createElement("style");
 		this._fontStyle.id = `alphatab-font-style-${TabView.instanceId}`;
+		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
 		this._fontStyle.innerHTML = fontFaceRule;
 		this.containerEl.ownerDocument.head.appendChild(this._fontStyle);
 
 		const cls = `alphatab-${TabView.instanceId++}`;
 		const styles = this.containerEl.createEl("style");
+		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
 		styles.innerHTML = `
 		.${cls} .at-cursor-bar {
 			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
@@ -290,6 +294,8 @@ export class TabView extends FileView {
 			stroke: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
 		}
 		`;
+		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
 		styles.innerHTML += `.tabflow-hide-statusbar .status-bar { display: none !important; }`;
 		this._styles = styles;
 

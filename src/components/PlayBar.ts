@@ -51,6 +51,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	// 内部函数
 	function updatePlayPauseButton() {
 		if (!playPauseBtn) return;
+		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
 		playPauseBtn.innerHTML = "";
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, playing ? "pause" : "play");
@@ -60,6 +62,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateMetronomeBtn() {
 		if (!metronomeBtn) return;
+		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
 		metronomeBtn.innerHTML = "";
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, "lucide-music-2");
@@ -73,6 +77,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateCountInBtn() {
 		if (!countInBtn) return;
+		// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+		// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
 		countInBtn.innerHTML = "";
 		const iconSpan = document.createElement("span");
 		setIcon(iconSpan, countInOn ? "lucide-timer" : "lucide-timer-off");
@@ -86,6 +92,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
     function updateLayoutToggleBtn() {
         if (!layoutToggleBtn) return;
+        // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+        // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
         layoutToggleBtn.innerHTML = "";
         const iconSpan = document.createElement("span");
         const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
@@ -356,6 +364,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			if (!show('speed')) return;
 			const speedIcon = document.createElement('span');
 			setIcon(speedIcon, 'lucide-gauge');
+			// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+			// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
 			speedIcon.style.marginRight = '0.5em';
 			bar.appendChild(speedIcon);
 			const select = document.createElement('select');
@@ -370,6 +380,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			if (!show('staveProfile')) return;
 			const staveIcon = document.createElement('span');
 			setIcon(staveIcon, 'lucide-list-music');
+			// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+			// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
 			staveIcon.style.marginLeft = '1em';
 			staveIcon.style.marginRight = '0.5em';
 			bar.appendChild(staveIcon);
@@ -387,6 +399,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			if (!show('zoom')) return;
 			const zoomIcon = document.createElement('span');
 			setIcon(zoomIcon, 'lucide-zoom-in');
+			// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+			// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
 			zoomIcon.style.marginLeft = '1em';
 			zoomIcon.style.marginRight = '0.5em';
 			bar.appendChild(zoomIcon);

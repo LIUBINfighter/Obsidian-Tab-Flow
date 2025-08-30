@@ -72,6 +72,8 @@ export class DocView extends ItemView {
             attr: { target: '_blank', rel: 'noopener', 'aria-label': 'GitHub' },
             cls: 'mod-cta'
         });
+        // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+        // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
         githubBtn.innerHTML = `
             <svg width="22" height="22" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;">
                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38

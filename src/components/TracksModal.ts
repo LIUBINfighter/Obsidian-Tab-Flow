@@ -59,6 +59,8 @@ export class TracksModal extends Modal {
 		this.titleEl.setText("");
 		// 创建标题栏容器
 		const titleBar = document.createElement("div");
+		// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+		// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
 		titleBar.style.display = "flex";
 		titleBar.style.alignItems = "center";
 		titleBar.style.justifyContent = "space-between";
@@ -70,9 +72,13 @@ export class TracksModal extends Modal {
 		// 标题
 		const titleText = document.createElement("span");
 		titleText.textContent = t("tracks.chooseTracksToDisplay");
+		// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+		// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
 		titleText.style.fontWeight = "bold";
 		// 按钮容器
 		const btnGroup = document.createElement("div");
+		// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+		// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
 		btnGroup.style.display = "flex";
 		btnGroup.style.gap = "0.5em";
 		// 应用按钮
@@ -97,6 +103,8 @@ export class TracksModal extends Modal {
 
 		// 创建滚动容器
 		const scrollContainer = document.createElement("div");
+		// TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+		// 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
 		scrollContainer.style.overflowY = "auto";
 		scrollContainer.style.maxHeight = "50vh";
 		scrollContainer.style.paddingRight = "4px";

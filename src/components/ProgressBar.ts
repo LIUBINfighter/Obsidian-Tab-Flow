@@ -42,9 +42,13 @@ export function createProgressBar(options: ProgressBarOptions): HTMLDivElement {
         const duration = durationOverride !== undefined ? durationOverride : getDuration();
         if (duration > 0) {
             const progress = (currentTime / duration) * 100;
+            // TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+            // 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
             progressFill.style.width = `${progress}%`;
             progressHandle.style.left = `${progress}%`;
         } else {
+            // TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+            // 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
             progressFill.style.width = "0%";
             progressHandle.style.left = "0%";
         }

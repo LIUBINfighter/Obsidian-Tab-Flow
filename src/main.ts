@@ -63,8 +63,12 @@ export default class TabFlowPlugin extends Plugin {
 		const normalizedPath = absolutePath.replace(/\\/g, "/");
 
 		// 打印调试信息
+		// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+		// 原因: 过多的日志会影响性能并使调试变得困难
 		console.log(t("debug.pluginPath", { path: normalizedPluginDir }, "插件路径: {path}"));
 		// 打印调试信息
+		// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+		// 原因: 过多的日志会影响性能并使调试变得困难
 		console.log(t("debug.targetPath", { path: normalizedPath }, "目标路径: {path}"));
 
 		// 预期的结果是：.obsidian/plugins/obsidian-tab-flow/assets/文件名
@@ -90,6 +94,8 @@ export default class TabFlowPlugin extends Plugin {
 			}
 
 			// 使用相对路径而非绝对路径
+			// TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
+			// 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
 			const assetsDirRelative = path.join(
 				".obsidian",
 				"plugins",
@@ -102,6 +108,8 @@ export default class TabFlowPlugin extends Plugin {
 				assetsDirRelative
 			);
 			if (!assetsDirExists) {
+				// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+				// 原因: 过多的日志会影响性能并使调试变得困难
 				console.log(
 					"[TabFlowPlugin] Assets directory does not exist:",
 					assetsDirRelative
@@ -125,10 +133,14 @@ export default class TabFlowPlugin extends Plugin {
 					);
 
 					if (!exists) {
+						// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+						// 原因: 过多的日志会影响性能并使调试变得困难
 						console.log(
 							`[TabFlowPlugin] Missing asset file: ${filePath}`
 						);
 					} else {
+						// TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+						// 原因: 过多的日志会影响性能并使调试变得困难
 						console.log(
 							`[TabFlowPlugin] Found asset file: ${filePath}`
 						);
@@ -169,6 +181,8 @@ export default class TabFlowPlugin extends Plugin {
 
 			// 使用Obsidian API创建资产目录
 			const assetsDir = path.join(this.actualPluginDir, "assets");
+			// TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
+			// 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
 			const assetsDirRelative = path.join(
 				".obsidian",
 				"plugins",

@@ -30,6 +30,8 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
     // 布局模式切换按钮
     const layoutLabel = document.createElement("label");
     layoutLabel.innerText = "布局:";
+    // TO FIX: 避免在JavaScript中分配样式，应该将样式移到CSS中
+    // 原因: 样式应该在CSS文件中定义，以便主题和代码片段更容易适应
     layoutLabel.style.marginLeft = "1em";
     debugBar.appendChild(layoutLabel);
     const layoutSelect = document.createElement("select");

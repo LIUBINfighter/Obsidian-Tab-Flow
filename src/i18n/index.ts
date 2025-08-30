@@ -61,6 +61,8 @@ function getLanguageFromNewAPI(): string | null {
   try {
     if (isGetLanguageAPISupported()) {
       const language = (window as unknown as { getLanguage: () => string }).getLanguage();
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Detected language via getLanguage API: ${language}`);
       return language;
     }
@@ -79,6 +81,8 @@ function getLanguageFromMoment(): string | null {
     const momentWindow = window as unknown as { moment?: { locale: () => string } };
     if (momentWindow.moment) {
       const locale = momentWindow.moment.locale();
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Detected language via moment.locale(): ${locale}`);
       return locale;
     }
@@ -99,6 +103,8 @@ function setupLanguageChangeListener(app: App): void {
     const listener = () => {
       const newLanguage = getCurrentLanguage(app);
       if (newLanguage !== currentLanguage) {
+        // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+        // 原因: 过多的日志会影响性能并使调试变得困难
         console.log(`[TabFlow i18n] Language changed from ${currentLanguage} to ${newLanguage}`);
         currentLanguage = newLanguage;
 
@@ -116,6 +122,8 @@ function setupLanguageChangeListener(app: App): void {
     // 注册监听器
     app.workspace.on('layout-change', listener);
 
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log('[TabFlow i18n] Language change listener registered');
   } catch (error) {
     console.warn('[TabFlow i18n] Failed to setup language change listener:', error);
@@ -131,54 +139,82 @@ function getCurrentLanguage(app: App): SupportedLanguage {
   try {
     // 优先使用Obsidian 1.8+的新getLanguage API
     const newAPILanguage = getLanguageFromNewAPI();
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log(`[TabFlow i18n] New API result: ${newAPILanguage}`);
 
     if (newAPILanguage) {
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Using getLanguage API language: ${newAPILanguage}`);
       if (newAPILanguage.startsWith('zh') || newAPILanguage === 'zh-cn') {
+        // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+        // 原因: 过多的日志会影响性能并使调试变得困难
         console.log(`[TabFlow i18n] Detected Chinese language: ${newAPILanguage}`);
         return 'zh';
       }
       // 对于其他语言，默认使用英文
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Detected non-Chinese language: ${newAPILanguage}, using English`);
       return 'en';
     }
 
     // 降级到moment.js方法
     const momentLanguage = getLanguageFromMoment();
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log(`[TabFlow i18n] Moment API result: ${momentLanguage}`);
 
     if (momentLanguage) {
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Using moment.locale language: ${momentLanguage}`);
       if (momentLanguage.startsWith('zh') || momentLanguage === 'zh-cn') {
+        // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+        // 原因: 过多的日志会影响性能并使调试变得困难
         console.log(`[TabFlow i18n] Detected Chinese language from moment: ${momentLanguage}`);
         return 'zh';
       }
       // 对于其他语言，默认使用英文
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Detected non-Chinese language from moment: ${momentLanguage}, using English`);
       return 'en';
     }
 
     // 如果都获取不到，使用传统方法作为最后的fallback
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log('[TabFlow i18n] Both new API and moment.locale() not available, falling back to legacy detection');
 
     // 检查HTML文档的lang属性（Obsidian会设置这个）
     const htmlLang = document.documentElement.lang;
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log(`[TabFlow i18n] HTML lang attribute: ${htmlLang}`);
     if (htmlLang && htmlLang.startsWith('zh')) {
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Detected Chinese from HTML lang: ${htmlLang}`);
       return 'zh';
     }
 
     // 检查浏览器语言
     const browserLang = navigator.language;
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log(`[TabFlow i18n] Browser language: ${browserLang}`);
     if (browserLang && browserLang.startsWith('zh')) {
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Detected Chinese from browser language: ${browserLang}`);
       return 'zh';
     }
 
     // 默认返回英文
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log('[TabFlow i18n] No Chinese detected, defaulting to English');
     return 'en';
   } catch (error) {
@@ -197,6 +233,8 @@ export function loadTranslations(app: App): void {
     currentLanguage = getCurrentLanguage(app);
     isInitialized = true;
 
+    // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+    // 原因: 过多的日志会影响性能并使调试变得困难
     console.log(`[TabFlow i18n] Loaded translations for language: ${currentLanguage}`);
 
     // 设置语言变化监听器
@@ -316,6 +354,8 @@ export function reloadTranslations(app: App): void {
   try {
     const newLanguage = getCurrentLanguage(app);
     if (newLanguage !== currentLanguage) {
+      // TO FIX: 应该限制 console.log 的数量，避免污染开发者控制台
+      // 原因: 过多的日志会影响性能并使调试变得困难
       console.log(`[TabFlow i18n] Manually reloading translations: ${currentLanguage} -> ${newLanguage}`);
       currentLanguage = newLanguage;
 

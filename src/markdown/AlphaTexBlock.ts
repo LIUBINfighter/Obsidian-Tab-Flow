@@ -191,6 +191,8 @@ export function mountAlphaTexBlock(
 	// Cursor and highlight styles (aligned with TabView)
 	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
 	const runtimeStyle = document.createElement("style");
+	// TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+	// 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
 	runtimeStyle.innerHTML = `
 		.alphatex-block .at-cursor-bar { background: ${accent}; opacity: 0.2; }
 		.alphatex-block .at-selection div { background: ${accent}; opacity: 0.4; }
@@ -532,15 +534,17 @@ export function mountAlphaTexBlock(
     scheduleInit(heavyInit);
 
 	return {
-		destroy: () => {
-			if (destroyed) return;
-			destroyed = true;
-            try { api?.destroy(); } catch {}
-			try { rootEl.innerHTML = ""; } catch {}
-			try { runtimeStyle.remove(); } catch {}
-				// clear runtime UI override when this block unmounts
-				try { defaults?.clearUiOverride?.(); } catch {}
-		},
+	        destroy: () => {
+	                if (destroyed) return;
+	                destroyed = true;
+	    try { api?.destroy(); } catch {}
+	                // TO FIX: 使用 innerHTML 存在安全风险，应该使用 DOM API 或 Obsidian helper functions
+	                // 原因: https://docs.obsidian.md/Plugins/User+interface/HTML+elements
+	                try { rootEl.innerHTML = ""; } catch {}
+	                try { runtimeStyle.remove(); } catch {}
+	                        // clear runtime UI override when this block unmounts
+	                        try { defaults?.clearUiOverride?.(); } catch {}
+	        },
 	};
 }
 
