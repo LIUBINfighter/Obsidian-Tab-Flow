@@ -150,9 +150,13 @@ export class EmbeddableMarkdownEditor {
 }
 
 function resolveEditorPrototype(app: App): any {
-	// TO FIX: 不应该使用类型转换，应该使用 instanceof 检查
-	// 原因: 类型转换会绕过TypeScript的类型检查，可能导致运行时错误
-	const widgetEditorView = (app as any).embedRegistry.embedByExtension.md({ app, containerEl: createDiv() }, null as unknown as TFile, '');
+	// 使用类型守卫替代类型转换，避免绕过TypeScript类型检查
+	const embedRegistry = (app as { embedRegistry?: { embedByExtension?: { md?: (options: any, file: TFile | null, extension: string) => any } } }).embedRegistry;
+	if (!embedRegistry?.embedByExtension?.md) {
+		throw new Error('Obsidian embed registry not available or markdown embedder not found');
+	}
+
+	const widgetEditorView = embedRegistry.embedByExtension.md({ app, containerEl: createDiv() }, null as unknown as TFile, '');
 	(widgetEditorView as any).editable = true;
 	(widgetEditorView as any).showEditor();
 	const MarkdownEditor = Object.getPrototypeOf(Object.getPrototypeOf((widgetEditorView as any).editMode!));
