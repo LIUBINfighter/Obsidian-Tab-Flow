@@ -3,7 +3,7 @@
 	"name": "Tab Flow",
 	"version": "0.1.1",
 	"minAppVersion": "1.8.0",
-	"description": "",
+	"description": "Interactive guitar tablature player for Obsidian using AlphaTab.js. Play, create, and export guitar tabs with support for multiple formats.",
 	"author": "Jay Bridge",
 	"authorUrl": "https://github.com/LIUBINfighter",
 	"fundingUrl": "",
