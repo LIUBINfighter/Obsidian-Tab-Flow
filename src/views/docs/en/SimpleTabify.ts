@@ -46,6 +46,7 @@ const SimpleTabifyPanel: DocPanel = {
     p2.appendChild(link);
     p2.appendChild(document.createTextNode('.'));
     container.appendChild(p2);
+
   }
 };
 

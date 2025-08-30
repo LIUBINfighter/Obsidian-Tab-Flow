@@ -63,7 +63,6 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
             // @ts-ignore
             // TO FIX: 避免尽可能地转换为 any 类型
             // 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-            (alphaTab as any).io.IOHelper.writeInt32LE(buffer, samples * 4);
             for (const c of chunks) {
                 const bytes = new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
                 buffer.write(bytes, 0, bytes.length);

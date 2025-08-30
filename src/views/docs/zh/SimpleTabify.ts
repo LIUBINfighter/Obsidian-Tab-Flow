@@ -4,7 +4,6 @@ const SimpleTabifyPanel: DocPanel = {
   id: 'simple-tabify',
   title: 'SimpleTabify 服务介绍',
   render(container: HTMLElement) {
-    // 使用 DOM API 替代 innerHTML，避免安全风险
     // 清空容器
     while (container.firstChild) {
       container.removeChild(container.firstChild);
@@ -46,6 +45,7 @@ const SimpleTabifyPanel: DocPanel = {
     p2.appendChild(link);
     p2.appendChild(document.createTextNode('。'));
     container.appendChild(p2);
+
   }
 };
 
