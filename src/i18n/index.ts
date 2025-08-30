@@ -4,7 +4,7 @@ import zhTranslations from './locales/zh.json';
 
 // 翻译数据类型定义
 export interface TranslationData {
-  [key: string]: string | TranslationData;
+	[key: string]: string | TranslationData;
 }
 
 // 支持的语言类型
@@ -12,8 +12,8 @@ export type SupportedLanguage = 'en' | 'zh';
 
 // 翻译映射
 const translations: Record<SupportedLanguage, TranslationData> = {
-  en: enTranslations,
-  zh: zhTranslations,
+	en: enTranslations,
+	zh: zhTranslations,
 };
 
 // 当前语言状态
@@ -29,20 +29,20 @@ const languageChangeListeners: Array<(language: SupportedLanguage) => void> = []
  * @returns 找到的值或undefined
  */
 function getNestedValue(obj: TranslationData, path: string): string | undefined {
-  const keys = path.split('.');
-  let current: TranslationData | string = obj;
+	const keys = path.split('.');
+	let current: TranslationData | string = obj;
 
-  for (const key of keys) {
-    if (typeof current === 'string') {
-      return undefined;
-    }
-    current = current[key];
-    if (current === undefined) {
-      return undefined;
-    }
-  }
+	for (const key of keys) {
+		if (typeof current === 'string') {
+			return undefined;
+		}
+		current = current[key];
+		if (current === undefined) {
+			return undefined;
+		}
+	}
 
-  return typeof current === 'string' ? current : undefined;
+	return typeof current === 'string' ? current : undefined;
 }
 
 /**
@@ -50,7 +50,7 @@ function getNestedValue(obj: TranslationData, path: string): string | undefined 
  * @returns 是否支持新API
  */
 function isGetLanguageAPISupported(): boolean {
-  return typeof (window as unknown as { getLanguage?: () => string }).getLanguage === 'function';
+	return typeof (window as unknown as { getLanguage?: () => string }).getLanguage === 'function';
 }
 
 /**
@@ -58,16 +58,16 @@ function isGetLanguageAPISupported(): boolean {
  * @returns 语言代码或null（如果API不可用或出错）
  */
 function getLanguageFromNewAPI(): string | null {
-  try {
-    if (isGetLanguageAPISupported()) {
-      const language = (window as unknown as { getLanguage: () => string }).getLanguage();
-      // console.debug(`[TabFlow i18n] Detected language via getLanguage API: ${language}`);
-      return language;
-    }
-  } catch (error) {
-    console.warn('[TabFlow i18n] Failed to get language from getLanguage API:', error);
-  }
-  return null;
+	try {
+		if (isGetLanguageAPISupported()) {
+			const language = (window as unknown as { getLanguage: () => string }).getLanguage();
+			// console.debug(`[TabFlow i18n] Detected language via getLanguage API: ${language}`);
+			return language;
+		}
+	} catch (error) {
+		console.warn('[TabFlow i18n] Failed to get language from getLanguage API:', error);
+	}
+	return null;
 }
 
 /**
@@ -75,17 +75,17 @@ function getLanguageFromNewAPI(): string | null {
  * @returns 语言代码或null
  */
 function getLanguageFromMoment(): string | null {
-  try {
-    const momentWindow = window as unknown as { moment?: { locale: () => string } };
-    if (momentWindow.moment) {
-      const locale = momentWindow.moment.locale();
-      console.debug(`[TabFlow i18n] Detected language via moment.locale(): ${locale}`);
-      return locale;
-    }
-  } catch (error) {
-    console.warn('[TabFlow i18n] Failed to get language from moment.locale():', error);
-  }
-  return null;
+	try {
+		const momentWindow = window as unknown as { moment?: { locale: () => string } };
+		if (momentWindow.moment) {
+			const locale = momentWindow.moment.locale();
+			console.debug(`[TabFlow i18n] Detected language via moment.locale(): ${locale}`);
+			return locale;
+		}
+	} catch (error) {
+		console.warn('[TabFlow i18n] Failed to get language from moment.locale():', error);
+	}
+	return null;
 }
 
 /**
@@ -93,33 +93,35 @@ function getLanguageFromMoment(): string | null {
  * @param app Obsidian App实例
  */
 function setupLanguageChangeListener(app: App): void {
-  try {
-    // 监听Obsidian的语言变化事件
-    // Obsidian会在语言变化时触发layout-change事件
-    const listener = () => {
-      const newLanguage = getCurrentLanguage(app);
-      if (newLanguage !== currentLanguage) {
-        console.debug(`[TabFlow i18n] Language changed from ${currentLanguage} to ${newLanguage}`);
-        currentLanguage = newLanguage;
+	try {
+		// 监听Obsidian的语言变化事件
+		// Obsidian会在语言变化时触发layout-change事件
+		const listener = () => {
+			const newLanguage = getCurrentLanguage(app);
+			if (newLanguage !== currentLanguage) {
+				console.debug(
+					`[TabFlow i18n] Language changed from ${currentLanguage} to ${newLanguage}`
+				);
+				currentLanguage = newLanguage;
 
-        // 通知所有监听器
-        languageChangeListeners.forEach(listener => {
-          try {
-            listener(newLanguage);
-          } catch (error) {
-            console.error('[TabFlow i18n] Error in language change listener:', error);
-          }
-        });
-      }
-    };
+				// 通知所有监听器
+				languageChangeListeners.forEach((listener) => {
+					try {
+						listener(newLanguage);
+					} catch (error) {
+						console.error('[TabFlow i18n] Error in language change listener:', error);
+					}
+				});
+			}
+		};
 
-    // 注册监听器
-    app.workspace.on('layout-change', listener);
+		// 注册监听器
+		app.workspace.on('layout-change', listener);
 
-    console.debug('[TabFlow i18n] Language change listener registered');
-  } catch (error) {
-    console.warn('[TabFlow i18n] Failed to setup language change listener:', error);
-  }
+		console.debug('[TabFlow i18n] Language change listener registered');
+	} catch (error) {
+		console.warn('[TabFlow i18n] Failed to setup language change listener:', error);
+	}
 }
 
 /**
@@ -128,62 +130,70 @@ function setupLanguageChangeListener(app: App): void {
  * @returns 支持的语言代码
  */
 function getCurrentLanguage(app: App): SupportedLanguage {
-  try {
-    // 优先使用Obsidian 1.8+的新getLanguage API
-    const newAPILanguage = getLanguageFromNewAPI();
-    console.debug(`[TabFlow i18n] New API result: ${newAPILanguage}`);
+	try {
+		// 优先使用Obsidian 1.8+的新getLanguage API
+		const newAPILanguage = getLanguageFromNewAPI();
+		console.debug(`[TabFlow i18n] New API result: ${newAPILanguage}`);
 
-    if (newAPILanguage) {
-      console.debug(`[TabFlow i18n] Using getLanguage API language: ${newAPILanguage}`);
-      if (newAPILanguage.startsWith('zh') || newAPILanguage === 'zh-cn') {
-        console.debug(`[TabFlow i18n] Detected Chinese language: ${newAPILanguage}`);
-        return 'zh';
-      }
-      // 对于其他语言，默认使用英文
-      console.debug(`[TabFlow i18n] Detected non-Chinese language: ${newAPILanguage}, using English`);
-      return 'en';
-    }
+		if (newAPILanguage) {
+			console.debug(`[TabFlow i18n] Using getLanguage API language: ${newAPILanguage}`);
+			if (newAPILanguage.startsWith('zh') || newAPILanguage === 'zh-cn') {
+				console.debug(`[TabFlow i18n] Detected Chinese language: ${newAPILanguage}`);
+				return 'zh';
+			}
+			// 对于其他语言，默认使用英文
+			console.debug(
+				`[TabFlow i18n] Detected non-Chinese language: ${newAPILanguage}, using English`
+			);
+			return 'en';
+		}
 
-    // 降级到moment.js方法
-    const momentLanguage = getLanguageFromMoment();
+		// 降级到moment.js方法
+		const momentLanguage = getLanguageFromMoment();
 
-    console.debug(`[TabFlow i18n] Moment API result: ${momentLanguage}`);
+		console.debug(`[TabFlow i18n] Moment API result: ${momentLanguage}`);
 
-    if (momentLanguage) {
-      console.debug(`[TabFlow i18n] Using moment.locale language: ${momentLanguage}`);
-      if (momentLanguage.startsWith('zh') || momentLanguage === 'zh-cn') {
-        console.debug(`[TabFlow i18n] Detected Chinese language from moment: ${momentLanguage}`);
-        return 'zh';
-      }
-      console.debug(`[TabFlow i18n] Detected non-Chinese language from moment: ${momentLanguage}, using English`);
-      return 'en';
-    }
+		if (momentLanguage) {
+			console.debug(`[TabFlow i18n] Using moment.locale language: ${momentLanguage}`);
+			if (momentLanguage.startsWith('zh') || momentLanguage === 'zh-cn') {
+				console.debug(
+					`[TabFlow i18n] Detected Chinese language from moment: ${momentLanguage}`
+				);
+				return 'zh';
+			}
+			console.debug(
+				`[TabFlow i18n] Detected non-Chinese language from moment: ${momentLanguage}, using English`
+			);
+			return 'en';
+		}
 
-    console.debug('[TabFlow i18n] Both new API and moment.locale() not available, falling back to legacy detection');
+		console.debug(
+			'[TabFlow i18n] Both new API and moment.locale() not available, falling back to legacy detection'
+		);
 
-    // 检查HTML文档的lang属性（Obsidian会设置这个）
-    const htmlLang = document.documentElement.lang;
-    console.debug(`[TabFlow i18n] HTML lang attribute: ${htmlLang}`);
-    if (htmlLang && htmlLang.startsWith('zh')) {
-      console.debug(`[TabFlow i18n] Detected Chinese from HTML lang: ${htmlLang}`);
-      return 'zh';
-    }
+		// 检查HTML文档的lang属性（Obsidian会设置这个）
+		const htmlLang = document.documentElement.lang;
+		console.debug(`[TabFlow i18n] HTML lang attribute: ${htmlLang}`);
+		if (htmlLang && htmlLang.startsWith('zh')) {
+			console.debug(`[TabFlow i18n] Detected Chinese from HTML lang: ${htmlLang}`);
+			return 'zh';
+		}
 
-    // 检查浏览器语言
-    const browserLang = navigator.language;
-    console.debug(`[TabFlow i18n] Browser language: ${browserLang}`);
-    if (browserLang && browserLang.startsWith('zh')) {
-      console.debug(`[TabFlow i18n] Detected Chinese from browser language: ${browserLang}`);
-      return 'zh';
-    }
+		// 检查浏览器语言
+		const browserLang = navigator.language;
+		console.debug(`[TabFlow i18n] Browser language: ${browserLang}`);
+		if (browserLang && browserLang.startsWith('zh')) {
+			console.debug(`[TabFlow i18n] Detected Chinese from browser language: ${browserLang}`);
+			return 'zh';
+		}
 
-    // 默认返回英文
-    console.debug('[TabFlow i18n] No Chinese detected, defaulting to English');
-    return 'en';
-  } catch (error) {
-    console.warn('[TabFlow i18n] Failed to get current language:', error);
-    return 'en';
-  }
+		// 默认返回英文
+		console.debug('[TabFlow i18n] No Chinese detected, defaulting to English');
+		return 'en';
+	} catch (error) {
+		console.warn('[TabFlow i18n] Failed to get current language:', error);
+		return 'en';
+	}
 }
 
 /**
@@ -191,21 +201,21 @@ function getCurrentLanguage(app: App): SupportedLanguage {
  * @param app Obsidian App实例
  */
 export function loadTranslations(app: App): void {
-  try {
-    appInstance = app;
-    currentLanguage = getCurrentLanguage(app);
-    isInitialized = true;
+	try {
+		appInstance = app;
+		currentLanguage = getCurrentLanguage(app);
+		isInitialized = true;
 
-    console.debug(`[TabFlow i18n] Loaded translations for language: ${currentLanguage}`);
+		console.debug(`[TabFlow i18n] Loaded translations for language: ${currentLanguage}`);
 
-    // 设置语言变化监听器
-    setupLanguageChangeListener(app);
-  } catch (error) {
-    console.error('[TabFlow i18n] Failed to load translations:', error);
-    // 出错时使用英文作为fallback
-    currentLanguage = 'en';
-    isInitialized = true;
-  }
+		// 设置语言变化监听器
+		setupLanguageChangeListener(app);
+	} catch (error) {
+		console.error('[TabFlow i18n] Failed to load translations:', error);
+		// 出错时使用英文作为fallback
+		currentLanguage = 'en';
+		isInitialized = true;
+	}
 }
 
 /**
@@ -216,40 +226,42 @@ export function loadTranslations(app: App): void {
  * @returns 翻译后的文本
  */
 export function t(key: string, params?: Record<string, unknown>, fallback?: string): string {
-  // 如果未初始化，使用英文作为默认语言
-  if (!isInitialized) {
-    console.warn('[TabFlow i18n] Translations not loaded, using English as fallback');
-    currentLanguage = 'en';
-  }
+	// 如果未初始化，使用英文作为默认语言
+	if (!isInitialized) {
+		console.warn('[TabFlow i18n] Translations not loaded, using English as fallback');
+		currentLanguage = 'en';
+	}
 
-  try {
-    // 首先尝试当前语言
-    let translation = getNestedValue(translations[currentLanguage], key);
+	try {
+		// 首先尝试当前语言
+		let translation = getNestedValue(translations[currentLanguage], key);
 
-    // 如果当前语言没有找到，尝试英文fallback
-    if (translation === undefined && currentLanguage !== 'en') {
-      translation = getNestedValue(translations.en, key);
-    }
+		// 如果当前语言没有找到，尝试英文fallback
+		if (translation === undefined && currentLanguage !== 'en') {
+			translation = getNestedValue(translations.en, key);
+		}
 
-    // 如果还是没找到，返回自定义fallback或原始key
-    if (translation === undefined) {
-      const finalFallback = fallback || key;
-      console.warn(`[TabFlow i18n] Translation not found for key: ${key}, using fallback: ${finalFallback}`);
-      return finalFallback;
-    }
+		// 如果还是没找到，返回自定义fallback或原始key
+		if (translation === undefined) {
+			const finalFallback = fallback || key;
+			console.warn(
+				`[TabFlow i18n] Translation not found for key: ${key}, using fallback: ${finalFallback}`
+			);
+			return finalFallback;
+		}
 
-    // 如果有参数，进行模板替换
-    if (params && typeof translation === 'string') {
-      translation = translation.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
-        return params[paramKey] !== undefined ? String(params[paramKey]) : match;
-      });
-    }
+		// 如果有参数，进行模板替换
+		if (params && typeof translation === 'string') {
+			translation = translation.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
+				return params[paramKey] !== undefined ? String(params[paramKey]) : match;
+			});
+		}
 
-    return translation;
-  } catch (error) {
-    console.error(`[TabFlow i18n] Error translating key "${key}":`, error);
-    return fallback || key;
-  }
+		return translation;
+	} catch (error) {
+		console.error(`[TabFlow i18n] Error translating key "${key}":`, error);
+		return fallback || key;
+	}
 }
 
 /**
@@ -257,7 +269,7 @@ export function t(key: string, params?: Record<string, unknown>, fallback?: stri
  * @returns 当前语言代码
  */
 export function getCurrentLanguageCode(): SupportedLanguage {
-  return currentLanguage;
+	return currentLanguage;
 }
 
 /**
@@ -266,7 +278,7 @@ export function getCurrentLanguageCode(): SupportedLanguage {
  * @returns 是否支持
  */
 export function isLanguageSupported(language: string): language is SupportedLanguage {
-  return language === 'en' || language === 'zh';
+	return language === 'en' || language === 'zh';
 }
 
 /**
@@ -274,7 +286,7 @@ export function isLanguageSupported(language: string): language is SupportedLang
  * @returns 支持的语言数组
  */
 export function getSupportedLanguages(): SupportedLanguage[] {
-  return ['en', 'zh'];
+	return ['en', 'zh'];
 }
 
 /**
@@ -283,11 +295,11 @@ export function getSupportedLanguages(): SupportedLanguage[] {
  * @returns 语言显示名称
  */
 export function getLanguageDisplayName(language: SupportedLanguage): string {
-  const displayNames: Record<SupportedLanguage, string> = {
-    en: 'English',
-    zh: '中文',
-  };
-  return displayNames[language];
+	const displayNames: Record<SupportedLanguage, string> = {
+		en: 'English',
+		zh: '中文',
+	};
+	return displayNames[language];
 }
 
 /**
@@ -295,16 +307,18 @@ export function getLanguageDisplayName(language: SupportedLanguage): string {
  * @param listener 监听器函数
  * @returns 取消监听的函数
  */
-export function addLanguageChangeListener(listener: (language: SupportedLanguage) => void): () => void {
-  languageChangeListeners.push(listener);
+export function addLanguageChangeListener(
+	listener: (language: SupportedLanguage) => void
+): () => void {
+	languageChangeListeners.push(listener);
 
-  // 返回取消监听的函数
-  return () => {
-    const index = languageChangeListeners.indexOf(listener);
-    if (index > -1) {
-      languageChangeListeners.splice(index, 1);
-    }
-  };
+	// 返回取消监听的函数
+	return () => {
+		const index = languageChangeListeners.indexOf(listener);
+		if (index > -1) {
+			languageChangeListeners.splice(index, 1);
+		}
+	};
 }
 
 /**
@@ -312,24 +326,29 @@ export function addLanguageChangeListener(listener: (language: SupportedLanguage
  * @param app Obsidian App实例
  */
 export function reloadTranslations(app: App): void {
-  try {
-    const newLanguage = getCurrentLanguage(app);
-    if (newLanguage !== currentLanguage) {
-      console.debug(`[TabFlow i18n] Manually reloading translations: ${currentLanguage} -> ${newLanguage}`);
-      currentLanguage = newLanguage;
+	try {
+		const newLanguage = getCurrentLanguage(app);
+		if (newLanguage !== currentLanguage) {
+			console.debug(
+				`[TabFlow i18n] Manually reloading translations: ${currentLanguage} -> ${newLanguage}`
+			);
+			currentLanguage = newLanguage;
 
-      // 通知所有监听器
-      languageChangeListeners.forEach(listener => {
-        try {
-          listener(newLanguage);
-        } catch (error) {
-          console.error('[TabFlow i18n] Error in language change listener during reload:', error);
-        }
-      });
-    }
-  } catch (error) {
-    console.error('[TabFlow i18n] Failed to reload translations:', error);
-  }
+			// 通知所有监听器
+			languageChangeListeners.forEach((listener) => {
+				try {
+					listener(newLanguage);
+				} catch (error) {
+					console.error(
+						'[TabFlow i18n] Error in language change listener during reload:',
+						error
+					);
+				}
+			});
+		}
+	} catch (error) {
+		console.error('[TabFlow i18n] Failed to reload translations:', error);
+	}
 }
 
 /**
@@ -337,7 +356,7 @@ export function reloadTranslations(app: App): void {
  * @returns App实例或null
  */
 export function getAppInstance(): App | null {
-  return appInstance;
+	return appInstance;
 }
 
 // 导出翻译数据（用于调试或扩展）

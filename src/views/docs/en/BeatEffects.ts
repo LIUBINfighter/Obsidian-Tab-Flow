@@ -44,7 +44,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Beat Effects' });
-		container.createEl('p', { text: 'Demonstrates common beat effects, dynamics, hammer-on/pull-off/tremolo picking, brush/arpeggio chords, timer, sustain/wah pedals, ottava, beaming control, etc.' });
+		container.createEl('p', {
+			text: 'Demonstrates common beat effects, dynamics, hammer-on/pull-off/tremolo picking, brush/arpeggio chords, timer, sustain/wah pedals, ottava, beaming control, etc.',
+		});
 
 		const sections: Array<[string, string]> = [
 			['Common Effects (Overview)', SAMPLE_SIMPLE],
@@ -71,7 +73,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
-	}
+	},
 };
-
-

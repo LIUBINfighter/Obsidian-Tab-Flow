@@ -16,7 +16,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Lyrics' });
-		container.createEl('p', { text: 'Demonstrates basic lyrics, syllable combining, delayed start, and comment syntax.' });
+		container.createEl('p', {
+			text: 'Demonstrates basic lyrics, syllable combining, delayed start, and comment syntax.',
+		});
 
 		const sections: Array<[string, string]> = [
 			['Basic Lyrics', SAMPLE_SIMPLE],
@@ -36,7 +38,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
-	}
+	},
 };
-
-

@@ -34,11 +34,20 @@ export function createAlphaTexPlayground(
 	initialSource: string,
 	options: AlphaTexPlaygroundOptions = {}
 ): AlphaTexPlaygroundHandle {
-	const { placeholder = t('playground.placeholder'), debounceMs = 350, readOnly = false, onChange, alphaTabOptions = {}, layout = 'vertical', className = '' } = options;
+	const {
+		placeholder = t('playground.placeholder'),
+		debounceMs = 350,
+		readOnly = false,
+		onChange,
+		alphaTabOptions = {},
+		layout = 'vertical',
+		className = '',
+	} = options;
 
 	container.empty();
 	const wrapper = container.createDiv({ cls: 'alphatex-playground inmarkdown-wrapper' });
-	if (layout === 'horizontal') wrapper.classList.add('is-horizontal'); else wrapper.classList.add('is-vertical');
+	if (layout === 'horizontal') wrapper.classList.add('is-horizontal');
+	else wrapper.classList.add('is-vertical');
 	if (className) wrapper.classList.add(className);
 
 	// 编辑器容器
@@ -53,38 +62,72 @@ export function createAlphaTexPlayground(
 	// Editor toolbar (top-right icons)
 	const toolbar = editorWrap.createDiv({ cls: 'inmarkdown-editor-toolbar' });
 	const btnCopy = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iCopy = document.createElement('span'); setIcon(iCopy, 'copy'); btnCopy.appendChild(iCopy); btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
+	const iCopy = document.createElement('span');
+	setIcon(iCopy, 'copy');
+	btnCopy.appendChild(iCopy);
+	btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
 	btnCopy.addEventListener('click', async () => {
 		try {
 			await navigator.clipboard.writeText(embedded.value);
 		} catch {
 			try {
-				const ta = document.createElement('textarea'); ta.value = embedded.value; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+				const ta = document.createElement('textarea');
+				ta.value = embedded.value;
+				document.body.appendChild(ta);
+				ta.select();
+				document.execCommand('copy');
+				ta.remove();
 			} catch {}
 		}
 		// feedback: turn into green check briefly
 		try {
-			setIcon(iCopy, 'check'); btnCopy.classList.add('is-success'); btnCopy.setAttr('aria-label', t('playground.copied'));
-			setTimeout(() => { setIcon(iCopy, 'copy'); btnCopy.classList.remove('is-success'); btnCopy.setAttr('aria-label', t('playground.copyToClipboard')); }, 1200);
+			setIcon(iCopy, 'check');
+			btnCopy.classList.add('is-success');
+			btnCopy.setAttr('aria-label', t('playground.copied'));
+			setTimeout(() => {
+				setIcon(iCopy, 'copy');
+				btnCopy.classList.remove('is-success');
+				btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
+			}, 1200);
 		} catch {}
 	});
 
-	const btnReset = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iReset = document.createElement('span'); setIcon(iReset, 'rotate-ccw'); btnReset.appendChild(iReset); btnReset.setAttr('aria-label', t('playground.resetToDefault'));
-	btnReset.addEventListener('click', () => { try { embedded.set(initialSource, false); scheduleRender(); } catch {} });
+	const btnReset = toolbar.createEl('button', {
+		attr: { type: 'button' },
+		cls: 'clickable-icon',
+	});
+	const iReset = document.createElement('span');
+	setIcon(iReset, 'rotate-ccw');
+	btnReset.appendChild(iReset);
+	btnReset.setAttr('aria-label', t('playground.resetToDefault'));
+	btnReset.addEventListener('click', () => {
+		try {
+			embedded.set(initialSource, false);
+			scheduleRender();
+		} catch {}
+	});
 
-	const btnNewNote = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iNew = document.createElement('span'); setIcon(iNew, 'file-plus'); btnNewNote.appendChild(iNew); btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
+	const btnNewNote = toolbar.createEl('button', {
+		attr: { type: 'button' },
+		cls: 'clickable-icon',
+	});
+	const iNew = document.createElement('span');
+	setIcon(iNew, 'file-plus');
+	btnNewNote.appendChild(iNew);
+	btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
 	btnNewNote.addEventListener('click', async () => {
 		try {
 			const now = new Date();
 			const pad = (n: number) => String(n).padStart(2, '0');
-			const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+			const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 			const folder = 'Alphatex Playground';
 			const baseName = `Playground-${stamp}.md`;
 			const filePath = normalizePath(`${folder}/${baseName}`);
 			// ensure folder
-			try { if (!(await plugin.app.vault.adapter.exists(folder))) await plugin.app.vault.createFolder(folder); } catch {}
+			try {
+				if (!(await plugin.app.vault.adapter.exists(folder)))
+					await plugin.app.vault.createFolder(folder);
+			} catch {}
 			const content = `\`\`\`alphatex\n${embedded.value}\n\`\`\``.replace(/`/g, '`');
 			// vault.create() 已经返回 Promise<TFile>，不需要类型转换
 			const file = await plugin.app.vault.create(filePath, content);
@@ -94,12 +137,20 @@ export function createAlphaTexPlayground(
 			}
 			const leaf = plugin.app.workspace.getLeaf(true);
 			await leaf.openFile(file);
-		} catch (e) { console.warn('[Playground] 创建笔记失败', e); }
+		} catch (e) {
+			console.warn('[Playground] 创建笔记失败', e);
+		}
 	});
 
 	// Format init JSON button
-	const btnFormat = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iFmt = document.createElement('span'); setIcon(iFmt, 'code'); btnFormat.appendChild(iFmt); btnFormat.setAttr('aria-label', t('playground.formatInitJson'));
+	const btnFormat = toolbar.createEl('button', {
+		attr: { type: 'button' },
+		cls: 'clickable-icon',
+	});
+	const iFmt = document.createElement('span');
+	setIcon(iFmt, 'code');
+	btnFormat.appendChild(iFmt);
+	btnFormat.setAttr('aria-label', t('playground.formatInitJson'));
 	btnFormat.addEventListener('click', () => {
 		try {
 			const formatted = formatInitHeader(embedded.value);
@@ -119,35 +170,66 @@ export function createAlphaTexPlayground(
 	function formatInitHeader(sourceText: string): string | null {
 		let s = sourceText;
 		if (!s) return null;
-		if (s.charCodeAt(0) === 0xFEFF) s = s.slice(1);
+		if (s.charCodeAt(0) === 0xfeff) s = s.slice(1);
 		const startMatch = s.match(/^\s*%%\{\s*init\s*:/);
 		if (!startMatch) return null;
-		let cursor = startMatch[0].length;
+		const cursor = startMatch[0].length;
 		const objStart = s.indexOf('{', cursor);
 		if (objStart < 0) return null;
-		let i = objStart, depth = 0, inStr = false, quote: '"' | "'" | null = null;
+		let i = objStart,
+			depth = 0,
+			inStr = false,
+			quote: '"' | "'" | null = null;
 		while (i < s.length) {
 			const ch = s[i];
 			if (inStr) {
-				if (ch === '\\') { i += 2; continue; }
-				if (ch === quote) { inStr = false; quote = null; }
-				i++; continue;
+				if (ch === '\\') {
+					i += 2;
+					continue;
+				}
+				if (ch === quote) {
+					inStr = false;
+					quote = null;
+				}
+				i++;
+				continue;
 			} else {
-				if (ch === '"' || ch === "'") { inStr = true; quote = ch as '"' | "'"; i++; continue; }
-				if (ch === '{') { depth++; i++; continue; }
-				if (ch === '}') { depth--; i++; if (depth === 0) break; continue; }
+				if (ch === '"' || ch === "'") {
+					inStr = true;
+					quote = ch as '"' | "'";
+					i++;
+					continue;
+				}
+				if (ch === '{') {
+					depth++;
+					i++;
+					continue;
+				}
+				if (ch === '}') {
+					depth--;
+					i++;
+					if (depth === 0) break;
+					continue;
+				}
 				i++;
 			}
 		}
 		if (depth !== 0) return null;
 		const jsonText = s.slice(objStart, i);
 		let obj: any;
-		try { obj = JSON.parse(jsonText); } catch { return null; }
+		try {
+			obj = JSON.parse(jsonText);
+		} catch {
+			return null;
+		}
 		const pretty = JSON.stringify(obj, null, 2);
 		// consume trailing wrapper up to closing %% and optional newline
 		let k = i;
 		while (k < s.length && /\s/.test(s[k])) k++;
-		if (s[k] === '}') { k++; while (k < s.length && /\s/.test(s[k])) k++; }
+		if (s[k] === '}') {
+			k++;
+			while (k < s.length && /\s/.test(s[k])) k++;
+		}
 		if (s.slice(k, k + 2) === '%%') k += 2;
 		if (s[k] === '\r') k++;
 		if (s[k] === '\n') k++;
@@ -172,7 +254,9 @@ export function createAlphaTexPlayground(
 	function scheduleRender() {
 		if (debounceTimer) window.clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
-			const ric = (window as any).requestIdleCallback as undefined | ((cb: (deadline: any) => void) => number);
+			const ric = (window as any).requestIdleCallback as
+				| undefined
+				| ((cb: (deadline: any) => void) => number);
 			if (typeof ric === 'function') {
 				ric(() => renderPreview());
 			} else {
@@ -184,10 +268,16 @@ export function createAlphaTexPlayground(
 
 	async function renderPreview() {
 		// 清理旧实例
-		try { mounted?.destroy?.(); } catch (e) { /* ignore */ }
+		try {
+			mounted?.destroy?.();
+		} catch (e) {
+			/* ignore */
+		}
 		previewWrap.empty();
 
-		const resources: AlphaTabResources | undefined = (plugin as unknown as { resources?: AlphaTabResources }).resources;
+		const resources: AlphaTabResources | undefined = (
+			plugin as unknown as { resources?: AlphaTabResources }
+		).resources;
 		if (!resources || !resources.bravuraUri || !resources.alphaTabWorkerUri) {
 			const holder = previewWrap.createDiv({ cls: 'alphatex-block' });
 			holder.createEl('div', { text: t('playground.resourcesMissing') });
@@ -196,10 +286,14 @@ export function createAlphaTexPlayground(
 				btn.setAttr('disabled', 'true');
 				btn.setText(t('playground.downloading'));
 				try {
-					interface Downloader { downloadAssets?: () => Promise<boolean> }
+					interface Downloader {
+						downloadAssets?: () => Promise<boolean>;
+					}
 					const ok = await (plugin as unknown as Downloader).downloadAssets?.();
 					btn.removeAttribute('disabled');
-					btn.setText(ok ? t('playground.downloadCompleted') : t('playground.downloadFailed'));
+					btn.setText(
+						ok ? t('playground.downloadCompleted') : t('playground.downloadFailed')
+					);
 				} catch (e) {
 					btn.removeAttribute('disabled');
 					btn.setText(t('playground.downloadFailed'));
@@ -222,7 +316,10 @@ export function createAlphaTexPlayground(
 		} catch (e) {
 			console.warn('[Playground] AlphaTex 渲染失败:', e);
 			const err = previewWrap.createDiv({ cls: 'alphatex-block' });
-			err.createEl('div', { cls: 'alphatex-error', text: t('playground.engineError') + String((e as any)?.message || e) });
+			err.createEl('div', {
+				cls: 'alphatex-error',
+				text: t('playground.engineError') + String((e as any)?.message || e),
+			});
 		}
 	}
 
@@ -232,7 +329,11 @@ export function createAlphaTexPlayground(
 	// 观察移除，销毁实例
 	const observer = new MutationObserver(() => {
 		if (!document.body.contains(wrapper)) {
-			try { mounted?.destroy?.(); } catch (e) { /* ignore */ }
+			try {
+				mounted?.destroy?.();
+			} catch (e) {
+				/* ignore */
+			}
 			observer.disconnect();
 		}
 	});
@@ -240,9 +341,16 @@ export function createAlphaTexPlayground(
 
 	return {
 		getValue: () => embedded.value,
-		setValue: (v: string) => { embedded.set(v, false); scheduleRender(); },
+		setValue: (v: string) => {
+			embedded.set(v, false);
+			scheduleRender();
+		},
 		destroy: () => {
-			try { mounted?.destroy?.(); } catch (e) { /* silent */ }
+			try {
+				mounted?.destroy?.();
+			} catch (e) {
+				/* silent */
+			}
 			observer.disconnect();
 			wrapper.detach();
 		},

@@ -1,11 +1,11 @@
 // PlayBar.ts - 底部固定播放栏组件
-import { App, setIcon } from "obsidian";
-import { createProgressBar } from "./ProgressBar";
-import type { ProgressBarElement } from "./ProgressBar.types";
-import { createAudioPlayer, AudioPlayerOptions } from "./AudioPlayer";
-import * as alphaTab from "@coderline/alphatab";
-import { formatTime } from "../utils";
-import { t } from "../i18n";
+import { App, setIcon } from 'obsidian';
+import { createProgressBar } from './ProgressBar';
+import type { ProgressBarElement } from './ProgressBar.types';
+import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
+import * as alphaTab from '@coderline/alphatab';
+import { formatTime } from '../utils';
+import { t } from '../i18n';
 
 export interface PlayBarOptions {
 	app: App;
@@ -31,22 +31,22 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let playing = initialPlaying;
 	let metronomeOn = false;
 	let countInOn = false;
-    let layoutMode: number = alphaTab.LayoutMode.Page;
+	let layoutMode: number = alphaTab.LayoutMode.Page;
 
-	const bar = document.createElement("div");
-	bar.className = "play-bar nav-buttons-container";
+	const bar = document.createElement('div');
+	bar.className = 'play-bar nav-buttons-container';
 
-    // 控件引用
-    let playPauseBtn: HTMLButtonElement | null = null;
-    let stopBtn: HTMLButtonElement | null = null;
-    let metronomeBtn: HTMLButtonElement | null = null;
-    let countInBtn: HTMLButtonElement | null = null;
-    let openSettingsBtn: HTMLButtonElement | null = null;
-    let locateCursorBtn: HTMLButtonElement | null = null;
-    let layoutToggleBtn: HTMLButtonElement | null = null;
-    let exportChooserBtn: HTMLButtonElement | null = null;
-    let toTopBtn: HTMLButtonElement | null = null;
-    let toBottomBtn: HTMLButtonElement | null = null;
+	// 控件引用
+	let playPauseBtn: HTMLButtonElement | null = null;
+	let stopBtn: HTMLButtonElement | null = null;
+	let metronomeBtn: HTMLButtonElement | null = null;
+	let countInBtn: HTMLButtonElement | null = null;
+	let openSettingsBtn: HTMLButtonElement | null = null;
+	const locateCursorBtn: HTMLButtonElement | null = null;
+	let layoutToggleBtn: HTMLButtonElement | null = null;
+	let exportChooserBtn: HTMLButtonElement | null = null;
+	const toTopBtn: HTMLButtonElement | null = null;
+	const toBottomBtn: HTMLButtonElement | null = null;
 
 	// 内部函数
 	function updatePlayPauseButton() {
@@ -55,10 +55,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		while (playPauseBtn.firstChild) {
 			playPauseBtn.removeChild(playPauseBtn.firstChild);
 		}
-		const iconSpan = document.createElement("span");
-		setIcon(iconSpan, playing ? "pause" : "play");
+		const iconSpan = document.createElement('span');
+		setIcon(iconSpan, playing ? 'pause' : 'play');
 		playPauseBtn.appendChild(iconSpan);
-		playPauseBtn.setAttribute("aria-label", playing ? t('playback.pause') : t('playback.play'));
+		playPauseBtn.setAttribute('aria-label', playing ? t('playback.pause') : t('playback.play'));
 	}
 
 	function updateMetronomeBtn() {
@@ -67,14 +67,14 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		while (metronomeBtn.firstChild) {
 			metronomeBtn.removeChild(metronomeBtn.firstChild);
 		}
-		const iconSpan = document.createElement("span");
-		setIcon(iconSpan, "lucide-music-2");
+		const iconSpan = document.createElement('span');
+		setIcon(iconSpan, 'lucide-music-2');
 		metronomeBtn.appendChild(iconSpan);
 		metronomeBtn.setAttribute(
-			"aria-label",
+			'aria-label',
 			metronomeOn ? t('settings.disableMetronome') : t('settings.enableMetronome')
 		);
-		metronomeBtn.classList.toggle("is-active", metronomeOn);
+		metronomeBtn.classList.toggle('is-active', metronomeOn);
 	}
 
 	function updateCountInBtn() {
@@ -83,49 +83,54 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		while (countInBtn.firstChild) {
 			countInBtn.removeChild(countInBtn.firstChild);
 		}
-		const iconSpan = document.createElement("span");
-		setIcon(iconSpan, countInOn ? "lucide-timer" : "lucide-timer-off");
+		const iconSpan = document.createElement('span');
+		setIcon(iconSpan, countInOn ? 'lucide-timer' : 'lucide-timer-off');
 		countInBtn.appendChild(iconSpan);
 		countInBtn.setAttribute(
-			"aria-label",
+			'aria-label',
 			countInOn ? t('settings.disableCountIn') : t('settings.enableCountIn')
 		);
-		countInBtn.classList.toggle("is-active", countInOn);
+		countInBtn.classList.toggle('is-active', countInOn);
 	}
 
-    function updateLayoutToggleBtn() {
-        if (!layoutToggleBtn) return;
-        // 使用 DOM API 替代 innerHTML，避免安全风险
-        while (layoutToggleBtn.firstChild) {
-            layoutToggleBtn.removeChild(layoutToggleBtn.firstChild);
-        }
-        const iconSpan = document.createElement("span");
-        const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
-        setIcon(iconSpan, isHorizontal ? "lucide-panels-top-left" : "lucide-layout");
-        layoutToggleBtn.appendChild(iconSpan);
-        layoutToggleBtn.setAttribute("aria-label", isHorizontal ? t('settings.horizontalLayout') : t('settings.pageLayout'));
-        layoutToggleBtn.classList.toggle("is-active", isHorizontal);
-    }
+	function updateLayoutToggleBtn() {
+		if (!layoutToggleBtn) return;
+		// 使用 DOM API 替代 innerHTML，避免安全风险
+		while (layoutToggleBtn.firstChild) {
+			layoutToggleBtn.removeChild(layoutToggleBtn.firstChild);
+		}
+		const iconSpan = document.createElement('span');
+		const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
+		setIcon(iconSpan, isHorizontal ? 'lucide-panels-top-left' : 'lucide-layout');
+		layoutToggleBtn.appendChild(iconSpan);
+		layoutToggleBtn.setAttribute(
+			'aria-label',
+			isHorizontal ? t('settings.horizontalLayout') : t('settings.pageLayout')
+		);
+		layoutToggleBtn.classList.toggle('is-active', isHorizontal);
+	}
 
-    // 从运行期覆盖或全局设置读取可见性（覆盖优先）
-    let visibility: any = undefined;
-    let runtimeOverride: { components?: Record<string, boolean>; order?: string[] | string } | undefined = undefined;
-    let plugin: any = undefined;
-    try {
-        // @ts-ignore - 通过全局 app.plugins 获取本插件实例
-        const pluginId = 'tab-flow';
-        plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-        visibility = plugin?.settings?.playBar?.components;
-        runtimeOverride = plugin?.runtimeUiOverride;
-    } catch {}
+	// 从运行期覆盖或全局设置读取可见性（覆盖优先）
+	let visibility: any = undefined;
+	let runtimeOverride:
+		| { components?: Record<string, boolean>; order?: string[] | string }
+		| undefined = undefined;
+	let plugin: any = undefined;
+	try {
+		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
+		const pluginId = 'tab-flow';
+		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+		visibility = plugin?.settings?.playBar?.components;
+		runtimeOverride = plugin?.runtimeUiOverride;
+	} catch {}
 
-    const show = (key: string, defaultValue = true): boolean => {
-        const overrideVisible = runtimeOverride?.components?.[key];
-        if (typeof overrideVisible === 'boolean') return overrideVisible;
-        if (!visibility) return defaultValue;
-        const v = visibility[key];
-        return typeof v === 'boolean' ? v : defaultValue;
-    };
+	const show = (key: string, defaultValue = true): boolean => {
+		const overrideVisible = runtimeOverride?.components?.[key];
+		if (typeof overrideVisible === 'boolean') return overrideVisible;
+		if (!visibility) return defaultValue;
+		const v = visibility[key];
+		return typeof v === 'boolean' ? v : defaultValue;
+	};
 
 	// ---------- 统一按顺序渲染组件 ----------
 	let progressBar: ProgressBarElement | null = null;
@@ -133,39 +138,64 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let totalTimeDisplay: HTMLSpanElement | null = null;
 
 	const defaultOrder = [
-		"playPause","stop","metronome","countIn","tracks","refresh",
-		"locateCursor","layoutToggle","exportMenu","toTop","toBottom","openSettings",
-		"progressBar","speed","staveProfile","zoom","audioPlayer"
+		'playPause',
+		'stop',
+		'metronome',
+		'countIn',
+		'tracks',
+		'refresh',
+		'locateCursor',
+		'layoutToggle',
+		'exportMenu',
+		'toTop',
+		'toBottom',
+		'openSettings',
+		'progressBar',
+		'speed',
+		'staveProfile',
+		'zoom',
+		'audioPlayer',
 	];
 
-    let order: string[] = defaultOrder;
-    try {
-        const rawOrder = (runtimeOverride?.order && ((Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0) || typeof runtimeOverride.order === 'string'))
-            ? runtimeOverride.order
-            : plugin?.settings?.playBar?.order;
+	let order: string[] = defaultOrder;
+	try {
+		const rawOrder =
+			runtimeOverride?.order &&
+			((Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0) ||
+				typeof runtimeOverride.order === 'string')
+				? runtimeOverride.order
+				: plugin?.settings?.playBar?.order;
 
-        if (Array.isArray(rawOrder) && rawOrder.length > 0) {
-            order = rawOrder as string[];
-        } else if (typeof rawOrder === 'string' && rawOrder.trim().length > 0) {
-            // 解析数字序列，例如 "2,1,3" -> 映射到默认键序列的索引
-            const indices = rawOrder.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
-            // 将 1 基或 0 基的索引都容忍：1..N 或 0..N-1
-            const looksOneBased = indices.some(n => n === 1) || indices.every(n => n > 0);
-            const normalized = indices.map(n => looksOneBased ? n - 1 : n).filter(n => n >= 0 && n < defaultOrder.length);
-            if (normalized.length > 0) {
-                order = normalized.map(i => defaultOrder[i]);
-                // 当使用数字序列时，默认只渲染这组组件：将其它组件视作隐藏
-                runtimeOverride = runtimeOverride || {};
-                runtimeOverride.components = runtimeOverride.components || {};
-                const allowed = new Set(order);
-                defaultOrder.forEach(k => {
-                    if (!allowed.has(k)) (runtimeOverride!.components as Record<string, boolean>)[k] = false;
-                });
-                // 确保已选择的键默认显示
-                order.forEach(k => (runtimeOverride!.components as Record<string, boolean>)[k] = true);
-            }
-        }
-    } catch {}
+		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
+			order = rawOrder as string[];
+		} else if (typeof rawOrder === 'string' && rawOrder.trim().length > 0) {
+			// 解析数字序列，例如 "2,1,3" -> 映射到默认键序列的索引
+			const indices = rawOrder
+				.split(',')
+				.map((s) => parseInt(s.trim(), 10))
+				.filter((n) => !isNaN(n));
+			// 将 1 基或 0 基的索引都容忍：1..N 或 0..N-1
+			const looksOneBased = indices.some((n) => n === 1) || indices.every((n) => n > 0);
+			const normalized = indices
+				.map((n) => (looksOneBased ? n - 1 : n))
+				.filter((n) => n >= 0 && n < defaultOrder.length);
+			if (normalized.length > 0) {
+				order = normalized.map((i) => defaultOrder[i]);
+				// 当使用数字序列时，默认只渲染这组组件：将其它组件视作隐藏
+				runtimeOverride = runtimeOverride || {};
+				runtimeOverride.components = runtimeOverride.components || {};
+				const allowed = new Set(order);
+				defaultOrder.forEach((k) => {
+					if (!allowed.has(k))
+						(runtimeOverride!.components as Record<string, boolean>)[k] = false;
+				});
+				// 确保已选择的键默认显示
+				order.forEach(
+					(k) => ((runtimeOverride!.components as Record<string, boolean>)[k] = true)
+				);
+			}
+		}
+	} catch {}
 
 	const renderers: Record<string, () => void> = {
 		playPause: () => {
@@ -266,7 +296,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			layoutToggleBtn.setAttribute('type', 'button');
 			updateLayoutToggleBtn();
 			layoutToggleBtn.onclick = () => {
-				layoutMode = layoutMode === alphaTab.LayoutMode.Page ? alphaTab.LayoutMode.Horizontal : alphaTab.LayoutMode.Page;
+				layoutMode =
+					layoutMode === alphaTab.LayoutMode.Page
+						? alphaTab.LayoutMode.Horizontal
+						: alphaTab.LayoutMode.Page;
 				eventBus?.publish('命令:切换布局', layoutMode);
 				updateLayoutToggleBtn();
 			};
@@ -286,10 +319,20 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 					// eslint-disable-next-line @typescript-eslint/no-var-requires
 					const { ExportChooserModal } = require('./ExportChooserModal');
 					const getTitle = () => {
-						try { return (document.querySelector('.view-header-title')?.textContent || '').trim() || 'Untitled'; } catch { return 'Untitled'; }
+						try {
+							return (
+								(
+									document.querySelector('.view-header-title')?.textContent || ''
+								).trim() || 'Untitled'
+							);
+						} catch {
+							return 'Untitled';
+						}
 					};
 					new ExportChooserModal({ app, eventBus, getFileName: getTitle }).open();
-				} catch (e) { console.error('[PlayBar] 打开导出选择器失败:', e); }
+				} catch (e) {
+					console.error('[PlayBar] 打开导出选择器失败:', e);
+				}
 			};
 			bar.appendChild(exportChooserBtn);
 		},
@@ -325,30 +368,32 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			const icon = document.createElement('span');
 			setIcon(icon, 'settings');
 			openSettingsBtn.appendChild(icon);
-            openSettingsBtn.setAttribute('aria-label', t('settings.openSettings'));
-            openSettingsBtn.onclick = () => {
-                try {
-                    // 直达本插件SettingTab的“播放器配置”页签
-                    // @ts-ignore
-                    app.workspace.trigger('tabflow:open-plugin-settings-player');
-                } catch {
-                    try {
-                        // 退化处理
-                        // @ts-ignore
-                        app.commands.executeCommandById('app:open-settings');
-                        setTimeout(() => {
-                            try {
-                                const search = document.querySelector('input.setting-search-input') as HTMLInputElement | null;
-                                if (search) {
-                                    search.value = 'Tab Flow';
-                                    const ev = new Event('input', { bubbles: true });
-                                    search.dispatchEvent(ev);
-                                }
-                            } catch {}
-                        }, 120);
-                    } catch {}
-                }
-            };
+			openSettingsBtn.setAttribute('aria-label', t('settings.openSettings'));
+			openSettingsBtn.onclick = () => {
+				try {
+					// 直达本插件SettingTab的“播放器配置”页签
+					// @ts-ignore
+					app.workspace.trigger('tabflow:open-plugin-settings-player');
+				} catch {
+					try {
+						// 退化处理
+						// @ts-ignore
+						app.commands.executeCommandById('app:open-settings');
+						setTimeout(() => {
+							try {
+								const search = document.querySelector(
+									'input.setting-search-input'
+								) as HTMLInputElement | null;
+								if (search) {
+									search.value = 'Tab Flow';
+									const ev = new Event('input', { bubbles: true });
+									search.dispatchEvent(ev);
+								}
+							} catch {}
+						}, 120);
+					} catch {}
+				}
+			};
 			bar.appendChild(openSettingsBtn);
 		},
 		progressBar: () => {
@@ -357,7 +402,11 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			currentTimeDisplay.className = 'play-time current-time';
 			currentTimeDisplay.textContent = '0:00';
 			bar.appendChild(currentTimeDisplay);
-			progressBar = createProgressBar({ getCurrentTime, getDuration, seekTo }) as ProgressBarElement;
+			progressBar = createProgressBar({
+				getCurrentTime,
+				getDuration,
+				seekTo,
+			}) as ProgressBarElement;
 			bar.appendChild(progressBar);
 			totalTimeDisplay = document.createElement('span');
 			totalTimeDisplay.className = 'play-time total-time';
@@ -371,9 +420,12 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			setIcon(speedIcon, 'lucide-gauge');
 			bar.appendChild(speedIcon);
 			const select = document.createElement('select');
-			['0.5','0.75','1.0','1.25','1.5','2.0'].forEach((val) => {
+			['0.5', '0.75', '1.0', '1.25', '1.5', '2.0'].forEach((val) => {
 				const opt = document.createElement('option');
-				opt.value = val; opt.innerText = val + 'x'; if (val === '1.0') opt.selected = true; select.appendChild(opt);
+				opt.value = val;
+				opt.innerText = val + 'x';
+				if (val === '1.0') opt.selected = true;
+				select.appendChild(opt);
 			});
 			select.onchange = () => eventBus?.publish('命令:设置速度', parseFloat(select.value));
 			bar.appendChild(select);
@@ -390,7 +442,12 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				{ name: t('settings.scoreOnly'), value: alphaTab.StaveProfile.Score },
 				{ name: t('settings.tabOnly'), value: alphaTab.StaveProfile.Tab },
 				{ name: t('settings.tabMixed'), value: alphaTab.StaveProfile.TabMixed },
-			].forEach((item) => { const opt = document.createElement('option'); opt.value = String(item.value); opt.innerText = item.name; select.appendChild(opt); });
+			].forEach((item) => {
+				const opt = document.createElement('option');
+				opt.value = String(item.value);
+				opt.innerText = item.name;
+				select.appendChild(opt);
+			});
 			select.onchange = () => eventBus?.publish('命令:设置谱表', parseInt(select.value));
 			bar.appendChild(select);
 		},
@@ -402,43 +459,53 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			bar.appendChild(zoomIcon);
 			const select = document.createElement('select');
 			[
-				{ label: '50%', value: 0.5 }, { label: '75%', value: 0.75 }, { label: '100%', value: 1 },
-				{ label: '125%', value: 1.25 }, { label: '150%', value: 1.5 }, { label: '200%', value: 2 },
-			].forEach(({label: l, value}) => { const opt = document.createElement('option'); opt.value = String(value); opt.innerText = l; if (value===1) opt.selected = true; select.appendChild(opt); });
+				{ label: '50%', value: 0.5 },
+				{ label: '75%', value: 0.75 },
+				{ label: '100%', value: 1 },
+				{ label: '125%', value: 1.25 },
+				{ label: '150%', value: 1.5 },
+				{ label: '200%', value: 2 },
+			].forEach(({ label: l, value }) => {
+				const opt = document.createElement('option');
+				opt.value = String(value);
+				opt.innerText = l;
+				if (value === 1) opt.selected = true;
+				select.appendChild(opt);
+			});
 			select.onchange = () => eventBus?.publish('命令:设置缩放', parseFloat(select.value));
 			bar.appendChild(select);
 		},
 		audioPlayer: () => {
 			if (!show('audioPlayer', false)) return;
-			const audioContainer = createAudioPlayer({ app: options.app, onAudioCreated: options.onAudioCreated, ...(options.audioPlayerOptions || {}) } as AudioPlayerOptions);
+			const audioContainer = createAudioPlayer({
+				app: options.app,
+				onAudioCreated: options.onAudioCreated,
+				...(options.audioPlayerOptions || {}),
+			} as AudioPlayerOptions);
 			bar.appendChild(audioContainer);
 		},
 	};
 
-	order.forEach((key) => { try { renderers[key]?.(); } catch {} });
+	order.forEach((key) => {
+		try {
+			renderers[key]?.();
+		} catch {}
+	});
 
 	// formatTime imported from utils/timeUtils
 
 	// 更新进度条显示
-	function updateProgress(
-		currentTimeOverride?: number,
-		durationOverride?: number
-	) {
+	function updateProgress(currentTimeOverride?: number, durationOverride?: number) {
 		if (!progressBar || !currentTimeDisplay || !totalTimeDisplay) return;
 		try {
 			const currentTime =
-				currentTimeOverride !== undefined
-					? currentTimeOverride
-					: getCurrentTime();
-			const duration =
-				durationOverride !== undefined
-					? durationOverride
-					: getDuration();
+				currentTimeOverride !== undefined ? currentTimeOverride : getCurrentTime();
+			const duration = durationOverride !== undefined ? durationOverride : getDuration();
 			currentTimeDisplay.textContent = formatTime(currentTime);
 			totalTimeDisplay.textContent = formatTime(duration);
 			progressBar.updateProgress(currentTime, duration);
 		} catch (error) {
-			console.error("[PlayBar] 更新进度条出错:", error);
+			console.error('[PlayBar] 更新进度条出错:', error);
 		}
 	}
 

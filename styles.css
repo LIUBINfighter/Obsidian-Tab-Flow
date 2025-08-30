@@ -1,88 +1,87 @@
 /* build: build */
 /* --- TrackModal.css --- */
-
 .tracks-modal .setting-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
-  margin-bottom: 1em;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	margin-bottom: 1em;
 }
 
 .tracks-modal .track-header {
-  display: flex;
-  align-items: center;
-  gap: 1em;
+	display: flex;
+	align-items: center;
+	gap: 1em;
 }
 
 .tracks-modal .track-name {
-  font-weight: bold;
-  flex: 1 1 auto;
+	font-weight: bold;
+	flex: 1 1 auto;
 }
 
 .tracks-modal .track-btns {
-  display: flex;
-  gap: 0.5em;
+	display: flex;
+	gap: 0.5em;
 }
 
 .tracks-modal .track-btns button,
 .tracks-modal .setting-item-extra-button {
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 1.1em;
-  padding: 0.2em 0.5em;
-  border-radius: 4px;
-  transition: background 0.2s;
+	border: none;
+	background: none;
+	cursor: pointer;
+	font-size: 1.1em;
+	padding: 0.2em 0.5em;
+	border-radius: 4px;
+	transition: background 0.2s;
 }
 
 .tracks-modal .track-btns .active,
 .tracks-modal .setting-item-extra-button.active {
-  background: var(--interactive-accent, #4caf50);
-  color: #fff;
+	background: var(--interactive-accent, #4caf50);
+	color: #fff;
 }
 
 .tracks-modal .track-param-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  margin-left: 2em;
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	margin-left: 2em;
 }
 
-.tracks-modal input[type="range"] {
-  width: 120px;
+.tracks-modal input[type='range'] {
+	width: 120px;
 }
 
-.tracks-modal input[type="number"] {
-  width: 3em;
-  text-align: center;
+.tracks-modal input[type='number'] {
+	width: 3em;
+	text-align: center;
 }
 
 /* 音轨模态框标题栏样式 */
 .tracks-modal .modal-title-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1em;
-  position: sticky;
-  top: 0;
-  background: var(--background-primary, #fff);
-  z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1em;
+	position: sticky;
+	top: 0;
+	background: var(--background-primary, #fff);
+	z-index: 10;
 }
 
 .tracks-modal .modal-title-text {
-  font-weight: bold;
+	font-weight: bold;
 }
 
 .tracks-modal .modal-button-group {
-  display: flex;
-  gap: 0.5em;
+	display: flex;
+	gap: 0.5em;
 }
 
 /* 音轨模态框滚动容器样式 */
 .tracks-modal .tracks-scroll-container {
-  overflow-y: auto;
-  max-height: 50vh;
-  padding-right: 4px;
+	overflow-y: auto;
+	max-height: 50vh;
+	padding-right: 4px;
 }
 
 /* --- alphatex.css --- */
@@ -118,8 +117,6 @@
 .alphatex-note {
 	color: var(--text-muted);
 }
-
-
 
 /* --- debug.css --- */
 /* .debug-bar {
@@ -298,7 +295,7 @@
 	background: var(--background-modifier-hover);
 }
 .inmarkdown-editor-toolbar .clickable-icon.is-success {
-    background: var(--background-modifier-success);
+	background: var(--background-modifier-success);
 }
 
 .inmarkdown-editor-cm:focus-within {
@@ -494,7 +491,10 @@
 	display: flex;
 	flex-direction: column;
 	min-height: 72px;
-	transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+	transition:
+		background 120ms ease,
+		border-color 120ms ease,
+		transform 120ms ease;
 }
 
 .doc-nav-item:hover {
@@ -590,19 +590,19 @@
 }
 
 .play-bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 100;
-    background: var(--background-primary);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start; /* 从左到右顺序排列，左对齐 */
-    gap: 6px;
-    box-shadow: 0 -1px 0 var(--background-modifier-border);
-    padding: var(--size-4-2) var(--size-4-2);
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 100;
+	background: var(--background-primary);
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start; /* 从左到右顺序排列，左对齐 */
+	gap: 6px;
+	box-shadow: 0 -1px 0 var(--background-modifier-border);
+	padding: var(--size-4-2) var(--size-4-2);
 }
 
 /* 播放栏各分区样式 */
@@ -643,21 +643,21 @@
 
 /* 激活态：高亮图标本身而不仅是背景 */
 .play-bar .clickable-icon.is-active {
-    color: var(--interactive-accent);
-    background-color: var(--interactive-hover);
+	color: var(--interactive-accent);
+	background-color: var(--interactive-hover);
 }
 .play-bar .clickable-icon.is-active svg {
-    stroke: currentColor;
+	stroke: currentColor;
 }
 
 /* 进度条相关样式 */
 /* 简化布局后，进度条容器规则可保留宽度控制 */
 .play-progress-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 200px;
-    max-width: 800px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 200px;
+	max-width: 800px;
 }
 
 .play-time {
@@ -791,7 +791,9 @@
 	font-size: 1em;
 	color: var(--text-normal);
 	border-radius: 0.5em 0.5em 0 0;
-	transition: background 0.2s, color 0.2s;
+	transition:
+		background 0.2s,
+		color 0.2s;
 }
 
 .itabs-settings-tab.active {
@@ -905,3 +907,4 @@ ol.setting-item-description li,
 ul.setting-item-description li {
 	margin-bottom: 0.2em;
 }
+

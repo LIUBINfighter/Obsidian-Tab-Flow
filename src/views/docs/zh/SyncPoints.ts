@@ -5,8 +5,8 @@ export default {
 	render(container: HTMLElement) {
 		container.empty();
 		container.createEl('h3', { text: 'Sync Points（外部媒体同步点）' });
-		container.createEl('p', { text: '开发中：将提供基于 \n\\sync BarIndex Occurence MillisecondOffset [Ratio] 的示例，并与外部音频同步演示对接。' });
-	}
+		container.createEl('p', {
+			text: '开发中：将提供基于 \n\\sync BarIndex Occurence MillisecondOffset [Ratio] 的示例，并与外部音频同步演示对接。',
+		});
+	},
 };
-
-

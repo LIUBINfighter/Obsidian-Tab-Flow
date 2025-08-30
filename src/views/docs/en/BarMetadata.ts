@@ -34,7 +34,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Bar Metadata' });
-		container.createEl('p', { text: 'Demonstrates time signatures, repeats and endings, key signatures, clef/ottava, tempo changes within bars, triplet feel, anacrusis, sections, double bar lines, simile marks, etc.' });
+		container.createEl('p', {
+			text: 'Demonstrates time signatures, repeats and endings, key signatures, clef/ottava, tempo changes within bars, triplet feel, anacrusis, sections, double bar lines, simile marks, etc.',
+		});
 
 		const sections: Array<[string, string]> = [
 			['Time Signatures', SAMPLE_TS],
@@ -61,7 +63,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
-	}
+	},
 };
-
-

@@ -1,4 +1,4 @@
-import * as alphaTab from "@coderline/alphatab";
+import * as alphaTab from '@coderline/alphatab';
 
 /**
  * 设置元素的滚轮事件，使其在横向布局时将垂直滚轮转写为水平滚动。
@@ -6,10 +6,7 @@ import * as alphaTab from "@coderline/alphatab";
  * @param api alphaTab API 实例，用于判断布局模式
  * @returns 一个函数，调用此函数可移除事件监听
  */
-export function setupHorizontalScroll(
-	element: HTMLElement,
-	api: alphaTab.AlphaTabApi
-): () => void {
+export function setupHorizontalScroll(element: HTMLElement, api: alphaTab.AlphaTabApi): () => void {
 	const handler = (e: WheelEvent) => {
 		// 不干预缩放/系统快捷
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -18,8 +15,7 @@ export function setupHorizontalScroll(
 		// TO FIX: 避免尽可能地转换为 any 类型
 		// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
 		const isHorizontalLayout =
-			api.settings?.display?.layoutMode ===
-			(alphaTab as any).LayoutMode?.Horizontal;
+			api.settings?.display?.layoutMode === (alphaTab as any).LayoutMode?.Horizontal;
 		if (!isHorizontalLayout) return;
 
 		const target = element;
@@ -27,15 +23,12 @@ export function setupHorizontalScroll(
 		if (!canScrollHoriz) return;
 
 		// 归一化 delta
-		const unit =
-			e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? target.clientWidth : 1;
-		const primaryDelta =
-			Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+		const unit = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? target.clientWidth : 1;
+		const primaryDelta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
 		const dx = primaryDelta * unit;
 
 		const atStart = target.scrollLeft <= 0;
-		const atEnd =
-			target.scrollLeft + target.clientWidth >= target.scrollWidth - 1;
+		const atEnd = target.scrollLeft + target.clientWidth >= target.scrollWidth - 1;
 		const goingLeft = dx < 0;
 		const goingRight = dx > 0;
 
@@ -47,11 +40,11 @@ export function setupHorizontalScroll(
 		e.stopPropagation();
 	};
 
-	element.addEventListener("wheel", handler, { passive: false });
+	element.addEventListener('wheel', handler, { passive: false });
 
 	return () => {
 		// TO FIX: 避免尽可能地转换为 any 类型
 		// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-		element.removeEventListener("wheel", handler as any);
+		element.removeEventListener('wheel', handler as any);
 	};
 }

@@ -34,7 +34,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Bar Metadata（小节元数据）' });
-		container.createEl('p', { text: '演示拍号、反复与结尾、调号、谱号/八度、小节内变速、三连感、弱起、分段、双小节线、Simile 等。' });
+		container.createEl('p', {
+			text: '演示拍号、反复与结尾、调号、谱号/八度、小节内变速、三连感、弱起、分段、双小节线、Simile 等。',
+		});
 
 		const sections: Array<[string, string]> = [
 			['拍号（Time Signatures）', SAMPLE_TS],
@@ -61,7 +63,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
 		}
-	}
+	},
 };
-
-

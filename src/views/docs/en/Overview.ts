@@ -22,13 +22,21 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'AlphaTex Overview' });
 		container.createEl('p', {
-			text: 'AlphaTex is AlphaTab\'s text-based notation format. It typically contains (optional) metadata, (required) musical content, and (optional) sync points for external audio/video synchronization. Sections are separated by a single dot (.).'
+			text: "AlphaTex is AlphaTab's text-based notation format. It typically contains (optional) metadata, (required) musical content, and (optional) sync points for external audio/video synchronization. Sections are separated by a single dot (.).",
 		});
 		const list = container.createEl('ul');
-		list.createEl('li', { text: 'Song Metadata: Global song information like title, artist, tempo.' });
-		list.createEl('li', { text: 'Song Contents: Main musical content (tracks, staves, bars, beats, notes), bars separated by |.' });
-		list.createEl('li', { text: 'Sync Points: Time alignment points with external media (advanced, optional).' });
-		container.createEl('p', { text: 'Below is an example snippet (Canon Rock). You can directly edit the text and the preview will refresh automatically.' });
+		list.createEl('li', {
+			text: 'Song Metadata: Global song information like title, artist, tempo.',
+		});
+		list.createEl('li', {
+			text: 'Song Contents: Main musical content (tracks, staves, bars, beats, notes), bars separated by |.',
+		});
+		list.createEl('li', {
+			text: 'Sync Points: Time alignment points with external media (advanced, optional).',
+		});
+		container.createEl('p', {
+			text: 'Below is an example snippet (Canon Rock). You can directly edit the text and the preview will refresh automatically.',
+		});
 
 		if (plugin) {
 			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
@@ -36,7 +44,5 @@ export default {
 		} else {
 			container.createEl('div', { text: 'Plugin context missing, cannot render.' });
 		}
-	}
+	},
 };
-
-

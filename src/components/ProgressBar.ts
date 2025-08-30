@@ -2,9 +2,9 @@
 // 用于音频/乐谱播放进度显示与拖动
 
 export interface ProgressBarOptions {
-    getCurrentTime: () => number;
-    getDuration: () => number;
-    seekTo: (position: number) => void;
+	getCurrentTime: () => number;
+	getDuration: () => number;
+	seekTo: (position: number) => void;
 }
 
 /**
@@ -13,84 +13,85 @@ export interface ProgressBarOptions {
  * @returns 进度条容器元素
  */
 export function createProgressBar(options: ProgressBarOptions): HTMLDivElement {
-    const { getCurrentTime, getDuration, seekTo } = options;
+	const { getCurrentTime, getDuration, seekTo } = options;
 
-    // 进度条容器
-    const progressContainer = document.createElement("div");
-    progressContainer.className = "progress-bar-container";
+	// 进度条容器
+	const progressContainer = document.createElement('div');
+	progressContainer.className = 'progress-bar-container';
 
-    // 进度条
-    const progressBar = document.createElement("div");
-    progressBar.className = "progress-bar";
+	// 进度条
+	const progressBar = document.createElement('div');
+	progressBar.className = 'progress-bar';
 
-    // 进度条填充部分
-    const progressFill = document.createElement("div");
-    progressFill.className = "progress-fill";
+	// 进度条填充部分
+	const progressFill = document.createElement('div');
+	progressFill.className = 'progress-fill';
 
-    // 进度条拖动手柄
-    const progressHandle = document.createElement("div");
-    progressHandle.className = "progress-handle";
+	// 进度条拖动手柄
+	const progressHandle = document.createElement('div');
+	progressHandle.className = 'progress-handle';
 
-    // 组装进度条
-    progressBar.appendChild(progressFill);
-    progressBar.appendChild(progressHandle);
-    progressContainer.appendChild(progressBar);
+	// 组装进度条
+	progressBar.appendChild(progressFill);
+	progressBar.appendChild(progressHandle);
+	progressContainer.appendChild(progressBar);
 
-    // 更新进度条显示
-    function updateProgress(currentTimeOverride?: number, durationOverride?: number) {
-        const currentTime = currentTimeOverride !== undefined ? currentTimeOverride : getCurrentTime();
-        const duration = durationOverride !== undefined ? durationOverride : getDuration();
-        if (duration > 0) {
-            const progress = (currentTime / duration) * 100;
-            // 动态样式：根据播放进度实时更新进度条宽度和手柄位置
-            // 这是必要的动态计算，不能移到CSS中
-            progressFill.style.width = `${progress}%`;
-            progressHandle.style.left = `${progress}%`;
-        } else {
-            // 动态样式：重置进度条到初始状态
-            // 这是必要的动态计算，不能移到CSS中
-            progressFill.style.width = "0%";
-            progressHandle.style.left = "0%";
-        }
-    }
+	// 更新进度条显示
+	function updateProgress(currentTimeOverride?: number, durationOverride?: number) {
+		const currentTime =
+			currentTimeOverride !== undefined ? currentTimeOverride : getCurrentTime();
+		const duration = durationOverride !== undefined ? durationOverride : getDuration();
+		if (duration > 0) {
+			const progress = (currentTime / duration) * 100;
+			// 动态样式：根据播放进度实时更新进度条宽度和手柄位置
+			// 这是必要的动态计算，不能移到CSS中
+			progressFill.style.width = `${progress}%`;
+			progressHandle.style.left = `${progress}%`;
+		} else {
+			// 动态样式：重置进度条到初始状态
+			// 这是必要的动态计算，不能移到CSS中
+			progressFill.style.width = '0%';
+			progressHandle.style.left = '0%';
+		}
+	}
 
-    // 禁止进度条被点击和拖动（临时方案，事件回调有问题，后续如需恢复请解开下方注释）
-    // progressBar.addEventListener("mousedown", (e) => {
-    //     handleProgressInteraction(e);
-    //     progressBar.classList.add("dragging");
-    //     document.addEventListener("mousemove", handleProgressInteraction);
-    //     document.addEventListener(
-    //         "mouseup",
-    //         () => {
-    //             progressBar.classList.remove("dragging");
-    //             document.removeEventListener("mousemove", handleProgressInteraction);
-    //         },
-    //         { once: true }
-    //     );
-    //     e.preventDefault();
-    // });
-    // progressHandle.addEventListener("mousedown", (e) => {
-    //     progressBar.classList.add("dragging");
-    //     progressHandle.classList.add("dragging");
-    //     document.addEventListener("mousemove", handleProgressInteraction);
-    //     document.addEventListener(
-    //         "mouseup",
-    //         () => {
-    //             progressBar.classList.remove("dragging");
-    //             progressHandle.classList.remove("dragging");
-    //             document.removeEventListener("mousemove", handleProgressInteraction);
-    //         },
-    //         { once: true }
-    //     );
-    //     e.stopPropagation();
-    //     e.preventDefault();
-    // });
+	// 禁止进度条被点击和拖动（临时方案，事件回调有问题，后续如需恢复请解开下方注释）
+	// progressBar.addEventListener("mousedown", (e) => {
+	//     handleProgressInteraction(e);
+	//     progressBar.classList.add("dragging");
+	//     document.addEventListener("mousemove", handleProgressInteraction);
+	//     document.addEventListener(
+	//         "mouseup",
+	//         () => {
+	//             progressBar.classList.remove("dragging");
+	//             document.removeEventListener("mousemove", handleProgressInteraction);
+	//         },
+	//         { once: true }
+	//     );
+	//     e.preventDefault();
+	// });
+	// progressHandle.addEventListener("mousedown", (e) => {
+	//     progressBar.classList.add("dragging");
+	//     progressHandle.classList.add("dragging");
+	//     document.addEventListener("mousemove", handleProgressInteraction);
+	//     document.addEventListener(
+	//         "mouseup",
+	//         () => {
+	//             progressBar.classList.remove("dragging");
+	//             progressHandle.classList.remove("dragging");
+	//             document.removeEventListener("mousemove", handleProgressInteraction);
+	//         },
+	//         { once: true }
+	//     );
+	//     e.stopPropagation();
+	//     e.preventDefault();
+	// });
 
-    // 提供外部主动更新方法
-    (progressContainer as any).updateProgress = updateProgress;
+	// 提供外部主动更新方法
+	(progressContainer as any).updateProgress = updateProgress;
 
-    // 初始化
-    updateProgress();
+	// 初始化
+	updateProgress();
 
-    return progressContainer;
+	return progressContainer;
 }

@@ -50,11 +50,15 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Notes - Writing Notes' });
-		container.createEl('p', { text: 'The examples below demonstrate how to write general notes in AlphaTex. Multiple bars are separated by vertical lines |. Each bar corresponds to a section on the score.' });
+		container.createEl('p', {
+			text: 'The examples below demonstrate how to write general notes in AlphaTex. Multiple bars are separated by vertical lines |. Each bar corresponds to a section on the score.',
+		});
 
 		// Single notes and rests
 		container.createEl('h4', { text: 'Single notes and rests' });
-		container.createEl('p', { text: 'Note format is fret.string.duration; rests use r instead of fret. Duration values: 1=whole note, 2=half note, 4=quarter note, 8=eighth note, and so on.' });
+		container.createEl('p', {
+			text: 'Note format is fret.string.duration; rests use r instead of fret. Duration values: 1=whole note, 2=half note, 4=quarter note, 8=eighth note, and so on.',
+		});
 		if (plugin) {
 			const host1 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host1, SAMPLE_SINGLE_NOTES);
@@ -62,7 +66,9 @@ export default {
 
 		// Chords
 		container.createEl('h4', { text: 'Chords' });
-		container.createEl('p', { text: 'Multiple notes in the same beat are grouped with parentheses: (fret.string fret.string ...).duration.' });
+		container.createEl('p', {
+			text: 'Multiple notes in the same beat are grouped with parentheses: (fret.string fret.string ...).duration.',
+		});
 		if (plugin) {
 			const host2 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host2, SAMPLE_CHORDS, {});
@@ -70,7 +76,9 @@ export default {
 
 		// Duration Ranges
 		container.createEl('h4', { text: 'Duration Ranges' });
-		container.createEl('p', { text: 'Use :duration to start a duration range, subsequent notes share that duration; AlphaTex also remembers the last explicitly set duration.' });
+		container.createEl('p', {
+			text: 'Use :duration to start a duration range, subsequent notes share that duration; AlphaTex also remembers the last explicitly set duration.',
+		});
 		if (plugin) {
 			const host3 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host3, SAMPLE_DURATION_RANGES, {});
@@ -78,7 +86,9 @@ export default {
 
 		// Repeat beats
 		container.createEl('h4', { text: 'Repeat beats' });
-		container.createEl('p', { text: 'Use *N after a beat to quickly repeat that beat N times.' });
+		container.createEl('p', {
+			text: 'Use *N after a beat to quickly repeat that beat N times.',
+		});
 		if (plugin) {
 			const host4 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host4, SAMPLE_REPEAT_BEATS, {});
@@ -86,7 +96,9 @@ export default {
 
 		// Multiple voices
 		container.createEl('h4', { text: 'Multiple voices' });
-		container.createEl('p', { text: 'Use \\voice to start a new voice. Multiple independent voices can be written in parallel within the same track; AlphaTab will try to merge bars with different voice counts.' });
+		container.createEl('p', {
+			text: 'Use \\voice to start a new voice. Multiple independent voices can be written in parallel within the same track; AlphaTab will try to merge bars with different voice counts.',
+		});
 		if (plugin) {
 			const host5 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host5, SAMPLE_MULTIPLE_VOICES, {});
@@ -94,7 +106,9 @@ export default {
 
 		// Accidentals
 		container.createEl('h4', { text: 'Accidentals' });
-		container.createEl('p', { text: 'Default (\\accidentals explicit) uses accidentals as written; can switch to \\accidentals auto. Accidentals can also be specified in note effects using acc (like forceSharp/forceFlat, etc.).' });
+		container.createEl('p', {
+			text: 'Default (\\accidentals explicit) uses accidentals as written; can switch to \\accidentals auto. Accidentals can also be specified in note effects using acc (like forceSharp/forceFlat, etc.).',
+		});
 		if (plugin) {
 			const host6 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host6, SAMPLE_ACCIDENTALS, {});
@@ -103,7 +117,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
 		}
-	}
+	},
 };
-
-

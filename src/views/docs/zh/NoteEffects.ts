@@ -57,7 +57,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Note Effects（音符效果）' });
-		container.createEl('p', { text: '演示泛音、颤音/滑音/击勾弦、鬼音/闷音、重音/断奏、连音线、指法、装饰音、弯音、连音、可见性等。' });
+		container.createEl('p', {
+			text: '演示泛音、颤音/滑音/击勾弦、鬼音/闷音、重音/断奏、连音线、指法、装饰音、弯音、连音、可见性等。',
+		});
 
 		const sections: Array<[string, string]> = [
 			['Harmonics（泛音）', SAMPLE_HARMONICS],
@@ -91,7 +93,5 @@ export default {
 		if (!plugin) {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
 		}
-	}
+	},
 };
-
-

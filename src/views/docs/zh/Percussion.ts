@@ -11,7 +11,9 @@ export default {
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 		container.createEl('h3', { text: 'Percussion（打击乐）' });
-		container.createEl('p', { text: '演示最小打击乐谱例（示意）。后续将补充更完整的映射示例。' });
+		container.createEl('p', {
+			text: '演示最小打击乐谱例（示意）。后续将补充更完整的映射示例。',
+		});
 
 		if (plugin) {
 			const host = container.createDiv({ cls: 'doc-playground-host' });
@@ -19,7 +21,5 @@ export default {
 		} else {
 			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
 		}
-	}
+	},
 };
-
-
