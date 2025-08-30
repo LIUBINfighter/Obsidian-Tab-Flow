@@ -54,3 +54,31 @@
   width: 3em;
   text-align: center;
 }
+
+/* 音轨模态框标题栏样式 */
+.tracks-modal .modal-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1em;
+  position: sticky;
+  top: 0;
+  background: var(--background-primary, #fff);
+  z-index: 10;
+}
+
+.tracks-modal .modal-title-text {
+  font-weight: bold;
+}
+
+.tracks-modal .modal-button-group {
+  display: flex;
+  gap: 0.5em;
+}
+
+/* 音轨模态框滚动容器样式 */
+.tracks-modal .tracks-scroll-container {
+  overflow-y: auto;
+  max-height: 50vh;
+  padding-right: 4px;
+}

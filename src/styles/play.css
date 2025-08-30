@@ -184,3 +184,31 @@
 .view-content > .tab-view .content {
 	margin-bottom: calc(var(--status-bar-height) * 2 + 8px);
 }
+
+/* 播放栏控件图标样式 */
+.play-bar .speed-icon {
+	margin-right: 0.5em;
+}
+
+.play-bar .stave-icon {
+	margin-left: 1em;
+	margin-right: 0.5em;
+}
+
+.play-bar .zoom-icon {
+	margin-left: 1em;
+	margin-right: 0.5em;
+}
+
+/* 音频播放器样式 */
+.audio-player-container {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	gap: 8px;
+}
+
+.audio-player-container audio {
+	width: 100%;
+	height: 32px;
+}
