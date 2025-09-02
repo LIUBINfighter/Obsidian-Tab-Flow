@@ -4,6 +4,18 @@ Play and create your guitar tabs in Obsidian!
 
 <!-- GIF NEEDED -->
 
+<!--
+![alphatex-and-doc](https://github.com/user-attachments/assets/92821b4a-739c-458b-a1f3-1df0d64421ef)
+
+![alphatex-copy-and-paste-writing](https://github.com/user-attachments/assets/ef402b18-9c3f-4e10-8772-a3fd8e50c507)
+
+![alphatex-copy-and-paste-writing-multiview](https://github.com/user-attachments/assets/30d1e922-d4d2-4edd-a68a-8b2f3bada705)
+
+![download-assets](https://github.com/user-attachments/assets/b3ca9620-83df-4517-a005-fd0a3acba0c9)
+
+![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
+-->
+
 ## Features
 
 Play and Create guitar tabs using AlphaTab. Modern music font and sound! (Support .alphatab, .gp, .gp3, .gp4, .gp5, .gpx).
