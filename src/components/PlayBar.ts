@@ -111,7 +111,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	}
 
 	// 从运行期覆盖或全局设置读取可见性（覆盖优先）
-	let visibility: any = undefined;
+	let visibility: Record<string, boolean> | undefined = undefined;
 	let runtimeOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = undefined;
@@ -185,17 +185,19 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			if (normalized.length > 0) {
 				order = normalized.map((i) => defaultOrder[i]);
 				// 当使用数字序列时，默认只渲染这组组件：将其它组件视作隐藏
-				runtimeOverride = runtimeOverride || {};
-				runtimeOverride.components = runtimeOverride.components || {};
+				const currentRuntimeOverride = runtimeOverride || {};
+				const currentComponents = currentRuntimeOverride.components || {};
 				const allowed = new Set(order);
 				defaultOrder.forEach((k) => {
 					if (!allowed.has(k))
-						(runtimeOverride!.components as Record<string, boolean>)[k] = false;
+						currentComponents[k] = false;
 				});
 				// 确保已选择的键默认显示
 				order.forEach(
-					(k) => ((runtimeOverride!.components as Record<string, boolean>)[k] = true)
+					(k) => (currentComponents[k] = true)
 				);
+				currentRuntimeOverride.components = currentComponents;
+				runtimeOverride = currentRuntimeOverride;
 			}
 		}
 	} catch {
@@ -505,6 +507,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			// 设置当前值
 			try {
 				const pluginId = 'tab-flow';
+				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 				const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
 				const currentMode = plugin?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
@@ -515,6 +518,29 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				eventBus?.publish('命令:设置滚动模式', select.value);
 			};
 			bar.appendChild(select);
+		},
+		audioPlayer: () => {
+			if (!show('audioPlayer')) return;
+			const audioPlayer = createAudioPlayer({
+				app,
+				onAudioCreated: (audioEl: HTMLAudioElement) => {
+					// 通知父组件音频元素已创建
+					options.onAudioCreated(audioEl);
+				},
+				onTimeUpdate: (currentTime: number, duration: number) => {
+					// 可以在这里处理时间更新
+				},
+				onPlay: () => {
+					// 可以在这里处理播放事件
+				},
+				onPause: () => {
+					// 可以在这里处理暂停事件
+				},
+				onSeek: (time: number) => {
+					// 可以在这里处理跳转事件
+				},
+			});
+			bar.appendChild(audioPlayer);
 		},
 	};
 
