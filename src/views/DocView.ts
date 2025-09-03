@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
 import TabFlowPlugin from '../main';
 import panelsRegistry, { DocPanel } from './docs/index';
+import { t } from '../i18n';
 
 export const VIEW_TYPE_TABFLOW_DOC = 'tabflow-doc-view';
 // 兼容导出：保留旧名称以避免其它文件立刻出错
@@ -26,7 +27,7 @@ export class DocView extends ItemView {
 	}
 
 	getDisplayText(): string {
-		return 'TabFlow 文档（示例）';
+		return t('docView.displayText');
 	}
 
 	async onOpen() {
@@ -63,7 +64,7 @@ export class DocView extends ItemView {
 		const header = container.createDiv({ cls: 'tabflow-doc-header' });
 
 		// 标题（先渲染）
-		header.createEl('h2', { text: 'TabFlow 文档' });
+		header.createEl('h2', { text: t('docView.title') });
 
 		// 按钮组（后渲染，和标题同级）
 		const btnGroup = header.createDiv({ cls: 'tabflow-doc-header-btns' });
@@ -102,7 +103,7 @@ export class DocView extends ItemView {
 		// alphaTab.js 官方文档按钮（黑体文字）
 		const alphaTabBtn = btnGroup.createEl('a', {
 			href: 'https://www.alphatab.net/',
-			attr: { target: '_blank', rel: 'noopener', 'aria-label': 'alphaTab.js 官方文档' },
+			attr: { target: '_blank', rel: 'noopener', 'aria-label': t('docView.alphaTabOfficialDoc') },
 			cls: 'mod-cta',
 		});
 		alphaTabBtn.innerText = '[alphaTab.js]';
@@ -110,7 +111,7 @@ export class DocView extends ItemView {
 		// 设置按钮（齿轮图标）
 		const settingsBtn = btnGroup.createEl('button', {
 			cls: 'clickable-icon',
-			attr: { 'aria-label': '设置', type: 'button', style: 'margin-left:0.5em;' },
+			attr: { 'aria-label': t('docView.settings'), type: 'button', style: 'margin-left:0.5em;' },
 		});
 		const iconSpan = document.createElement('span');
 		settingsBtn.appendChild(iconSpan);
@@ -185,7 +186,7 @@ export class DocView extends ItemView {
 			try {
 				active.render(contentWrap, this.plugin);
 			} catch (e) {
-				contentWrap.setText('渲染面板时出错');
+				contentWrap.setText(t('docView.renderError'));
 			}
 		}
 
@@ -203,12 +204,12 @@ export class DocView extends ItemView {
 
 			if (prevPanel) {
 				const prev = docNav.createDiv({ cls: 'doc-nav-item doc-nav-item--prev' });
-				const label = prev.createDiv({ cls: 'doc-nav-label', text: '上一条' });
+				const label = prev.createDiv({ cls: 'doc-nav-label', text: t('navigation.previous') });
 				label.setAttr('aria-hidden', 'true');
 				prev.createDiv({ cls: 'doc-nav-title', text: prevPanel.title });
 				prev.setAttr('role', 'button');
 				prev.setAttr('tabindex', '0');
-				prev.setAttr('aria-label', `上一条：${prevPanel.title}`);
+				prev.setAttr('aria-label', `${t('navigation.previous')}：${prevPanel.title}`);
 				prev.addEventListener('click', () => {
 					this.activeId = prevPanel.id;
 					this.render();
@@ -223,12 +224,12 @@ export class DocView extends ItemView {
 
 			if (nextPanel) {
 				const next = docNav.createDiv({ cls: 'doc-nav-item doc-nav-item--next' });
-				const label = next.createDiv({ cls: 'doc-nav-label', text: '下一条' });
+				const label = next.createDiv({ cls: 'doc-nav-label', text: t('navigation.next') });
 				label.setAttr('aria-hidden', 'true');
 				next.createDiv({ cls: 'doc-nav-title', text: nextPanel.title });
 				next.setAttr('role', 'button');
 				next.setAttr('tabindex', '0');
-				next.setAttr('aria-label', `下一条：${nextPanel.title}`);
+				next.setAttr('aria-label', `${t('navigation.next')}：${nextPanel.title}`);
 				next.addEventListener('click', () => {
 					this.activeId = nextPanel.id;
 					this.render();

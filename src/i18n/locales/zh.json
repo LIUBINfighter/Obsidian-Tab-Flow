@@ -155,7 +155,9 @@
 		"toBottom": "回到底部",
 		"locateCursor": "定位光标",
 		"scrollToTop": "滚动到顶部",
-		"scrollToBottom": "滚动到底部"
+		"scrollToBottom": "滚动到底部",
+		"previous": "上一条",
+		"next": "下一条"
 	},
 	"status": {
 		"audioNotLoaded": "音频资源未加载",
@@ -229,5 +231,12 @@
 	},
 	"commands": {
 		"openDocumentation": "打开 AlphaTex 文档"
+	},
+	"docView": {
+		"displayText": "TabFlow 文档（示例）",
+		"title": "TabFlow 文档",
+		"renderError": "渲染面板时出错",
+		"settings": "设置",
+		"alphaTabOfficialDoc": "alphaTab.js 官方文档"
 	}
 }
