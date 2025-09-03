@@ -126,7 +126,7 @@
 }
 
 /* 错误消息容器中的复制按钮靠右显示 */
-.alphatex-messages .clickable-icon[aria-label="复制错误与原文"] {
+.alphatex-messages .clickable-icon[aria-label='复制错误与原文'] {
 	align-self: flex-end;
 	margin-bottom: 0.25rem;
 }
@@ -603,13 +603,13 @@
 		scroll-behavior: smooth;
 		scroll-behavior: smooth !important;
 	}
-	
+
 	.tabflow-doc-layout * {
 		scroll-behavior: smooth;
 		scroll-behavior: smooth !important;
 		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
 	}
-	
+
 	/* 特别针对滚动容器的优化 */
 	.tabflow-doc-markdown {
 		scroll-behavior: smooth;
@@ -624,7 +624,7 @@
 		scroll-behavior: auto; /* 可选项：移动端使用即时滚动以提升性能 */
 		scroll-behavior: auto !important;
 	}
-	
+
 	.tabflow-doc-layout * {
 		scroll-behavior: auto; /* 可选项：移动端使用即时滚动以提升性能 */
 		scroll-behavior: auto !important;

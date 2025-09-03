@@ -39,7 +39,7 @@
 }
 
 /* 错误消息容器中的复制按钮靠右显示 */
-.alphatex-messages .clickable-icon[aria-label="复制错误与原文"] {
+.alphatex-messages .clickable-icon[aria-label='复制错误与原文'] {
 	align-self: flex-end;
 	margin-bottom: 0.25rem;
 }

@@ -38,7 +38,9 @@ export class DocView extends ItemView {
 		// 简单的延迟滚动，立即执行
 		setTimeout(() => {
 			if (!layout) return;
-			const contentElement = layout.querySelector('.tabflow-doc-markdown') as HTMLElement | null;
+			const contentElement = layout.querySelector(
+				'.tabflow-doc-markdown'
+			) as HTMLElement | null;
 			if (contentElement) {
 				this.performScroll(contentElement);
 			}
@@ -56,14 +58,14 @@ export class DocView extends ItemView {
 			contentElement.scrollIntoView({
 				behavior: 'smooth',
 				block: 'start',
-				inline: 'nearest'
+				inline: 'nearest',
 			});
 		} catch {
 			// 降级处理：使用相同参数的简单滚动
 			try {
 				contentElement.scrollIntoView({
 					block: 'start',
-					inline: 'nearest'
+					inline: 'nearest',
 				});
 			} catch {
 				// 忽略滚动错误
@@ -152,7 +154,11 @@ export class DocView extends ItemView {
 		// alphaTab.js 官方文档按钮（黑体文字）
 		const alphaTabBtn = btnGroup.createEl('a', {
 			href: 'https://www.alphatab.net/',
-			attr: { target: '_blank', rel: 'noopener', 'aria-label': t('docView.alphaTabOfficialDoc') },
+			attr: {
+				target: '_blank',
+				rel: 'noopener',
+				'aria-label': t('docView.alphaTabOfficialDoc'),
+			},
 			cls: 'mod-cta',
 		});
 		alphaTabBtn.innerText = 'alphaTab.js';
@@ -160,7 +166,11 @@ export class DocView extends ItemView {
 		// 设置按钮（齿轮图标）
 		const settingsBtn = btnGroup.createEl('button', {
 			cls: 'clickable-icon',
-			attr: { 'aria-label': t('docView.settings'), type: 'button', style: 'margin-left:0.5em;' },
+			attr: {
+				'aria-label': t('docView.settings'),
+				type: 'button',
+				style: 'margin-left:0.5em;',
+			},
 		});
 		const iconSpan = document.createElement('span');
 		settingsBtn.appendChild(iconSpan);
@@ -255,7 +265,10 @@ export class DocView extends ItemView {
 
 			if (prevPanel) {
 				const prev = docNav.createDiv({ cls: 'doc-nav-item doc-nav-item--prev' });
-				const label = prev.createDiv({ cls: 'doc-nav-label', text: t('navigation.previous') });
+				const label = prev.createDiv({
+					cls: 'doc-nav-label',
+					text: t('navigation.previous'),
+				});
 				label.setAttr('aria-hidden', 'true');
 				prev.createDiv({ cls: 'doc-nav-title', text: prevPanel.title });
 				prev.setAttr('role', 'button');
@@ -310,7 +323,7 @@ export class DocView extends ItemView {
 		// 添加键盘事件处理器：支持左右箭头键切换页签
 		this.registerDomEvent(layout, 'keydown', (e: KeyboardEvent) => {
 			if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-				const currentIndex = this.panels.findIndex(p => p.id === this.activeId);
+				const currentIndex = this.panels.findIndex((p) => p.id === this.activeId);
 				if (currentIndex === -1) return;
 
 				let newIndex = currentIndex;
