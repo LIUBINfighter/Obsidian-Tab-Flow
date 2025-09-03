@@ -5,8 +5,8 @@
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
-		"dev": "node ./scripts/merge-styles.js --dir src/styles && node esbuild.config.mjs",
-		"build": "node ./scripts/merge-styles.js --dir src/styles && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"dev": "npm run lint:fix && npm run format && node ./scripts/merge-styles.js --dir src/styles && node esbuild.config.mjs",
+		"build": "node ./scripts/merge-styles.js --dir src/styles && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && echo ======================================= && echo ' build done.'",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"mix": "node ./scripts/mix-code.js --dir ../src",
 		"clean": "node ./scripts/clean.js",
