@@ -303,6 +303,16 @@ export default class TabFlowPlugin extends Plugin {
 		// 注册设置面板
 		this.addSettingTab(new SettingTab(this.app, this));
 
+		// 添加侧边栏 Robin 图标，调用打开 TabFlow 文档命令
+		this.addRibbonIcon('bird', t('ribbon.openDocumentation', undefined, '打开 TabFlow 文档'), async () => {
+			const leaf = this.app.workspace.getLeaf(true);
+			await leaf.setViewState({
+				type: VIEW_TYPE_TABFLOW_DOC,
+				active: true,
+			});
+			this.app.workspace.revealLeaf(leaf);
+		});
+
 		// 注册 AlphaTex 文档视图
 		this.registerView(VIEW_TYPE_TABFLOW_DOC, (leaf) => new DocView(leaf, this));
 
