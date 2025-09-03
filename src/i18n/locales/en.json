@@ -230,7 +230,7 @@
 		"newFileBaseName": "New guitar tab"
 	},
 	"commands": {
-		"openDocumentation": "Open AlphaTex Documentation"
+		"openDocumentation": "Open TabFlow Documentation"
 	},
 	"docView": {
 		"displayText": "TabFlow Documentation (Example)",
@@ -239,4 +239,6 @@
 		"settings": "Settings",
 		"alphaTabOfficialDoc": "alphaTab.js Official Documentation"
 	}
+	,
+	"ribbon.openDocumentation": "Open TabFlow Documentation"
 }

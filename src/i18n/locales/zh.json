@@ -230,7 +230,7 @@
 		"newFileBaseName": "新的吉他谱"
 	},
 	"commands": {
-		"openDocumentation": "打开 AlphaTex 文档"
+		"openDocumentation": "打开 TabFlow 文档"
 	},
 	"docView": {
 		"displayText": "TabFlow 文档（示例）",
@@ -239,4 +239,6 @@
 		"settings": "设置",
 		"alphaTabOfficialDoc": "alphaTab.js 官方文档"
 	}
+	,
+	"ribbon.openDocumentation": "打开 TabFlow 文档"
 }
