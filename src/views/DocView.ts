@@ -24,7 +24,7 @@ export class DocView extends ItemView {
 
 	/**
 	 * 在窄屏模式下切换内容后自动滚动到内容区域
-	 * 使用更智能的延迟机制，确保内容完全加载后再滚动
+	 * 简化版本：使用固定延迟，快速滚动
 	 */
 	private scrollToContentAfterRender(layout?: Element | null): void {
 		// 如果没有传入layout参数，尝试从DOM中查找
@@ -35,51 +35,14 @@ export class DocView extends ItemView {
 
 		if (!layout.classList.contains('is-narrow')) return;
 
-		// 首先等待一个基础延迟，让DOM结构稳定
+		// 简单的延迟滚动，立即执行
 		setTimeout(() => {
-			if (!layout) return; // 额外检查，确保layout不为null
+			if (!layout) return;
 			const contentElement = layout.querySelector('.tabflow-doc-markdown') as HTMLElement | null;
-			if (!contentElement) return;
-
-			// 使用MutationObserver监听内容变化，确保动态内容加载完成
-			const observer = new MutationObserver((mutations) => {
-				let hasContentChanges = false;
-				for (const mutation of mutations) {
-					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-						hasContentChanges = true;
-						break;
-					}
-				}
-
-				if (hasContentChanges) {
-					// 内容有变化，等待一小段时间让布局稳定
-					setTimeout(() => {
-						this.performScroll(contentElement);
-					}, 50);
-				}
-			});
-
-			// 开始观察内容区域的变化
-			observer.observe(contentElement, {
-				childList: true,
-				subtree: true
-			});
-
-			// 设置一个最大等待时间，避免无限等待
-			const maxWaitTimeout = setTimeout(() => {
-				observer.disconnect();
+			if (contentElement) {
 				this.performScroll(contentElement);
-			}, 1000); // 最多等待1秒
-
-			// 如果内容区域已经有内容，立即尝试滚动
-			if (contentElement.children.length > 0 || contentElement.textContent?.trim()) {
-				clearTimeout(maxWaitTimeout);
-				observer.disconnect();
-				setTimeout(() => {
-					this.performScroll(contentElement);
-				}, 100);
 			}
-		}, 150); // 基础延迟增加到150ms
+		}, 50); // 减少到50ms，让滚动更快发生
 	}
 
 	/**
@@ -89,6 +52,7 @@ export class DocView extends ItemView {
 		if (!contentElement) return;
 
 		try {
+			// 方案1：使用 smooth 滚动 + CSS 控制速度
 			contentElement.scrollIntoView({
 				behavior: 'smooth',
 				block: 'start'
