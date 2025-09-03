@@ -189,13 +189,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				const currentComponents = currentRuntimeOverride.components || {};
 				const allowed = new Set(order);
 				defaultOrder.forEach((k) => {
-					if (!allowed.has(k))
-						currentComponents[k] = false;
+					if (!allowed.has(k)) currentComponents[k] = false;
 				});
 				// 确保已选择的键默认显示
-				order.forEach(
-					(k) => (currentComponents[k] = true)
-				);
+				order.forEach((k) => (currentComponents[k] = true));
 				currentRuntimeOverride.components = currentComponents;
 				runtimeOverride = currentRuntimeOverride;
 			}
