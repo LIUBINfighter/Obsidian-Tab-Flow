@@ -22,6 +22,87 @@ export class DocView extends ItemView {
 		if (this.panels.length) this.activeId = this.panels[0].id;
 	}
 
+	/**
+	 * 在窄屏模式下切换内容后自动滚动到内容区域
+	 * 使用更智能的延迟机制，确保内容完全加载后再滚动
+	 */
+	private scrollToContentAfterRender(layout?: Element | null): void {
+		// 如果没有传入layout参数，尝试从DOM中查找
+		if (!layout) {
+			layout = this.contentEl.querySelector('.tabflow-doc-layout') as Element | null;
+			if (!layout) return;
+		}
+
+		if (!layout.classList.contains('is-narrow')) return;
+
+		// 首先等待一个基础延迟，让DOM结构稳定
+		setTimeout(() => {
+			if (!layout) return; // 额外检查，确保layout不为null
+			const contentElement = layout.querySelector('.tabflow-doc-markdown') as HTMLElement | null;
+			if (!contentElement) return;
+
+			// 使用MutationObserver监听内容变化，确保动态内容加载完成
+			const observer = new MutationObserver((mutations) => {
+				let hasContentChanges = false;
+				for (const mutation of mutations) {
+					if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+						hasContentChanges = true;
+						break;
+					}
+				}
+
+				if (hasContentChanges) {
+					// 内容有变化，等待一小段时间让布局稳定
+					setTimeout(() => {
+						this.performScroll(contentElement);
+					}, 50);
+				}
+			});
+
+			// 开始观察内容区域的变化
+			observer.observe(contentElement, {
+				childList: true,
+				subtree: true
+			});
+
+			// 设置一个最大等待时间，避免无限等待
+			const maxWaitTimeout = setTimeout(() => {
+				observer.disconnect();
+				this.performScroll(contentElement);
+			}, 1000); // 最多等待1秒
+
+			// 如果内容区域已经有内容，立即尝试滚动
+			if (contentElement.children.length > 0 || contentElement.textContent?.trim()) {
+				clearTimeout(maxWaitTimeout);
+				observer.disconnect();
+				setTimeout(() => {
+					this.performScroll(contentElement);
+				}, 100);
+			}
+		}, 150); // 基础延迟增加到150ms
+	}
+
+	/**
+	 * 执行滚动操作，包含降级处理
+	 */
+	private performScroll(contentElement: HTMLElement | null): void {
+		if (!contentElement) return;
+
+		try {
+			contentElement.scrollIntoView({
+				behavior: 'smooth',
+				block: 'start'
+			});
+		} catch (e) {
+			// 降级处理：使用简单滚动
+			try {
+				contentElement.scrollIntoView();
+			} catch {
+				// 忽略滚动错误
+			}
+		}
+	}
+
 	getViewType(): string {
 		return VIEW_TYPE_ALPHATEX_DOC;
 	}
@@ -170,7 +251,9 @@ export class DocView extends ItemView {
 			tabEl.setText(panel.title);
 			tabEl.addEventListener('click', () => {
 				this.activeId = panel.id;
-				this.render();
+				this.render().then(() => {
+					this.scrollToContentAfterRender();
+				});
 			});
 			if (panel.id === this.activeId) tabEl.addClass('active');
 		});
@@ -212,12 +295,16 @@ export class DocView extends ItemView {
 				prev.setAttr('aria-label', `${t('navigation.previous')}：${prevPanel.title}`);
 				prev.addEventListener('click', () => {
 					this.activeId = prevPanel.id;
-					this.render();
+					this.render().then(() => {
+						this.scrollToContentAfterRender(layout);
+					});
 				});
 				prev.addEventListener('keypress', (e) => {
 					if ((e as KeyboardEvent).key === 'Enter') {
 						this.activeId = prevPanel.id;
-						this.render();
+						this.render().then(() => {
+							this.scrollToContentAfterRender(layout);
+						});
 					}
 				});
 			}
@@ -232,12 +319,16 @@ export class DocView extends ItemView {
 				next.setAttr('aria-label', `${t('navigation.next')}：${nextPanel.title}`);
 				next.addEventListener('click', () => {
 					this.activeId = nextPanel.id;
-					this.render();
+					this.render().then(() => {
+						this.scrollToContentAfterRender(layout);
+					});
 				});
 				next.addEventListener('keypress', (e) => {
 					if ((e as KeyboardEvent).key === 'Enter') {
 						this.activeId = nextPanel.id;
-						this.render();
+						this.render().then(() => {
+							this.scrollToContentAfterRender(layout);
+						});
 					}
 				});
 			}
@@ -247,5 +338,27 @@ export class DocView extends ItemView {
 			if (count >= 2) docNav.addClass('two');
 			else docNav.addClass('one');
 		}
+
+		// 添加键盘事件处理器：支持左右箭头键切换页签
+		this.registerDomEvent(layout, 'keydown', (e: KeyboardEvent) => {
+			if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+				const currentIndex = this.panels.findIndex(p => p.id === this.activeId);
+				if (currentIndex === -1) return;
+
+				let newIndex = currentIndex;
+				if (e.key === 'ArrowLeft' && currentIndex > 0) {
+					newIndex = currentIndex - 1;
+				} else if (e.key === 'ArrowRight' && currentIndex < this.panels.length - 1) {
+					newIndex = currentIndex + 1;
+				}
+
+				if (newIndex !== currentIndex) {
+					this.activeId = this.panels[newIndex].id;
+					this.render().then(() => {
+						this.scrollToContentAfterRender(layout);
+					});
+				}
+			}
+		});
 	}
 }
