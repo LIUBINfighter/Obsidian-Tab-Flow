@@ -416,7 +416,7 @@
 
 /* 使用CSS变量控制滚动速度 */
 :root {
-	--scroll-duration: 0.08s;
+	--scroll-duration: 0.05s;
 	--scroll-easing: cubic-bezier(0.4, 0, 0.2, 1); /* 更快的缓动曲线 */
 }
 

@@ -42,7 +42,7 @@ export class DocView extends ItemView {
 			if (contentElement) {
 				this.performScroll(contentElement);
 			}
-		}, 50); // 减少到50ms，让滚动更快发生
+		}, 0); // 延迟为0ms，让滚动立即发生，进一步加速
 	}
 
 	/**
@@ -52,15 +52,19 @@ export class DocView extends ItemView {
 		if (!contentElement) return;
 
 		try {
-			// 方案1：使用 smooth 滚动 + CSS 控制速度
+			// 方案1：使用 smooth 滚动 + 统一滚动参数
 			contentElement.scrollIntoView({
 				behavior: 'smooth',
-				block: 'start'
+				block: 'start',
+				inline: 'nearest'
 			});
-		} catch (e) {
-			// 降级处理：使用简单滚动
+		} catch {
+			// 降级处理：使用相同参数的简单滚动
 			try {
-				contentElement.scrollIntoView();
+				contentElement.scrollIntoView({
+					block: 'start',
+					inline: 'nearest'
+				});
 			} catch {
 				// 忽略滚动错误
 			}
@@ -143,7 +147,7 @@ export class DocView extends ItemView {
 			attr: { target: '_blank', rel: 'noopener', 'aria-label': 'Issue' },
 			cls: 'mod-cta',
 		});
-		issueBtn.innerText = '[Feedback for Docs]';
+		issueBtn.innerText = 'Feedback';
 
 		// alphaTab.js 官方文档按钮（黑体文字）
 		const alphaTabBtn = btnGroup.createEl('a', {
@@ -151,7 +155,7 @@ export class DocView extends ItemView {
 			attr: { target: '_blank', rel: 'noopener', 'aria-label': t('docView.alphaTabOfficialDoc') },
 			cls: 'mod-cta',
 		});
-		alphaTabBtn.innerText = '[alphaTab.js]';
+		alphaTabBtn.innerText = 'alphaTab.js';
 
 		// 设置按钮（齿轮图标）
 		const settingsBtn = btnGroup.createEl('button', {
@@ -260,14 +264,14 @@ export class DocView extends ItemView {
 				prev.addEventListener('click', () => {
 					this.activeId = prevPanel.id;
 					this.render().then(() => {
-						this.scrollToContentAfterRender(layout);
+						this.scrollToContentAfterRender();
 					});
 				});
 				prev.addEventListener('keypress', (e) => {
 					if ((e as KeyboardEvent).key === 'Enter') {
 						this.activeId = prevPanel.id;
 						this.render().then(() => {
-							this.scrollToContentAfterRender(layout);
+							this.scrollToContentAfterRender();
 						});
 					}
 				});
@@ -284,14 +288,14 @@ export class DocView extends ItemView {
 				next.addEventListener('click', () => {
 					this.activeId = nextPanel.id;
 					this.render().then(() => {
-						this.scrollToContentAfterRender(layout);
+						this.scrollToContentAfterRender();
 					});
 				});
 				next.addEventListener('keypress', (e) => {
 					if ((e as KeyboardEvent).key === 'Enter') {
 						this.activeId = nextPanel.id;
 						this.render().then(() => {
-							this.scrollToContentAfterRender(layout);
+							this.scrollToContentAfterRender();
 						});
 					}
 				});
@@ -319,7 +323,7 @@ export class DocView extends ItemView {
 				if (newIndex !== currentIndex) {
 					this.activeId = this.panels[newIndex].id;
 					this.render().then(() => {
-						this.scrollToContentAfterRender(layout);
+						this.scrollToContentAfterRender();
 					});
 				}
 			}
