@@ -238,7 +238,6 @@
 		"renderError": "Error rendering panel",
 		"settings": "Settings",
 		"alphaTabOfficialDoc": "alphaTab.js Official Documentation"
-	}
-	,
+	},
 	"ribbon.openDocumentation": "Open TabFlow Documentation"
 }

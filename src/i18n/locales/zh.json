@@ -238,7 +238,6 @@
 		"renderError": "渲染面板时出错",
 		"settings": "设置",
 		"alphaTabOfficialDoc": "alphaTab.js 官方文档"
-	}
-	,
+	},
 	"ribbon.openDocumentation": "打开 TabFlow 文档"
 }
