@@ -64,7 +64,7 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 			staveProfile: false,
 			zoom: false,
 			progressBar: true,
-			scrollMode: true,
+			scrollMode: false,
 			audioPlayer: false,
 		},
 		order: [
@@ -85,6 +85,7 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 			'speed',
 			'staveProfile',
 			'zoom',
+			'scrollMode',
 			'audioPlayer',
 		],
 	},

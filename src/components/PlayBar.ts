@@ -512,18 +512,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				select.value = 'continuous';
 			}
 			select.onchange = () => {
-				try {
-					const pluginId = 'tab-flow';
-					const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-					if (plugin) {
-						plugin.settings.scrollMode = select.value;
-						plugin.saveSettings();
-						// 触发滚动模式变更事件
-						app.workspace.trigger('tabflow:scroll-mode-changed', select.value);
-					}
-				} catch (e) {
-					console.error('[PlayBar] 更新滚动模式失败:', e);
-				}
+				eventBus?.publish('命令:设置滚动模式', select.value);
 			};
 			bar.appendChild(select);
 		},

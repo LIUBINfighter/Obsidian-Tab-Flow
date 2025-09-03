@@ -132,6 +132,7 @@
 				"speed": "Speed Selection",
 				"staveProfile": "Stave Selection",
 				"zoom": "Zoom Selection",
+				"scrollMode": "Scroll Mode Selection",
 				"audioPlayer": "Native Audio Player (Experimental)",
 				"audioPlayerDesc": "Not available, may conflict with AlphaTab player"
 			},

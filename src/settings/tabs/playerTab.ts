@@ -102,6 +102,11 @@ export async function renderPlayerTab(
 		},
 		{ key: 'zoom', label: t('settings.player.components.zoom'), icon: 'lucide-zoom-in' },
 		{
+			key: 'scrollMode',
+			label: t('settings.player.components.scrollMode'),
+			icon: 'lucide-scroll',
+		},
+		{
 			key: 'audioPlayer',
 			label: t('settings.player.components.audioPlayer'),
 			icon: 'audio-file',
@@ -128,10 +133,25 @@ export async function renderPlayerTab(
 			'speed',
 			'staveProfile',
 			'zoom',
+			'scrollMode',
 			'audioPlayer',
 		];
 		const saved = plugin.settings.playBar?.order;
-		return Array.isArray(saved) && saved.length ? saved.slice() : def.slice();
+
+		if (Array.isArray(saved) && saved.length > 0) {
+			const savedSet = new Set(saved);
+			const missing = def.filter((item) => !savedSet.has(item));
+			if (missing.length > 0) {
+				const newOrder = [...saved, ...missing];
+				if (plugin.settings.playBar) {
+					plugin.settings.playBar.order = newOrder;
+					plugin.saveSettings();
+				}
+				return newOrder;
+			}
+			return saved.slice();
+		}
+		return def.slice();
 	};
 
 	let draggingKey: string | null = null;
@@ -397,26 +417,4 @@ export async function renderPlayerTab(
 				);
 			});
 		});
-
-	// 滚动模式配置
-	new Setting(tabContents)
-		.setName(t('settings.player.scrollMode', undefined, '滚动模式'))
-		.setDesc(t('settings.player.scrollModeDesc', undefined, '控制乐谱播放时的页面滚动行为'))
-		.addDropdown((dropdown) => {
-			dropdown.addOption('continuous', t('settings.player.scrollModeOptions.continuous', undefined, '连续滚动'));
-			dropdown.addOption('offScreen', t('settings.player.scrollModeOptions.offScreen', undefined, '智能翻页'));
-			dropdown.addOption('off', t('settings.player.scrollModeOptions.off', undefined, '不滚动'));
-			const current = plugin.settings.scrollMode || 'continuous';
-			dropdown.setValue(current).onChange(async (value) => {
-				plugin.settings.scrollMode = value as any;
-				await plugin.saveSettings();
-				try {
-					app.workspace.trigger('tabflow:scroll-mode-changed', value);
-				} catch {
-					// Ignore workspace trigger errors
-				}
-				new Notice(t('settings.player.scrollModeUpdated', undefined, '滚动模式已更新'));
-			});
-		})
-		.setClass('tabflow-no-border');
 }

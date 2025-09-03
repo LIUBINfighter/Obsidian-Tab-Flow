@@ -473,6 +473,24 @@ export class TabView extends FileView {
 			);
 			modal.open();
 		});
+
+		// 订阅设置滚动模式事件
+		this.eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
+			try {
+				const plugin = this.plugin as any;
+				if (plugin && plugin.settings) {
+					plugin.settings.scrollMode = mode;
+					plugin.saveSettings();
+					// 应用新的滚动模式
+					this.configureScrollElement();
+					// 触发滚动模式变更事件
+					this.app.workspace.trigger('tabflow:scroll-mode-changed', mode);
+					console.debug(`[TabView] 滚动模式已更新为: ${mode}`);
+				}
+			} catch (e) {
+				console.warn('[TabView] 更新滚动模式失败:', e);
+			}
+		});
 	}
 
 	async onClose() {

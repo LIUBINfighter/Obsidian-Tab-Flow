@@ -132,6 +132,7 @@
 				"speed": "速度选择",
 				"staveProfile": "谱表选择",
 				"zoom": "缩放选择",
+				"scrollMode": "滚动模式选择",
 				"audioPlayer": "原生音频播放器（实验性）",
 				"audioPlayerDesc": "暂不可用，存在与 AlphaTab 播放器冲突风险"
 			},
