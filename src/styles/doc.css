@@ -444,12 +444,12 @@
 /* 移动端优化 */
 @media (max-width: 768px) {
 	.tabflow-doc-layout {
-		scroll-behavior: auto; /* 移动端使用即时滚动以提升性能 */
+		scroll-behavior: auto; /* 可选项：移动端使用即时滚动以提升性能 */
 		scroll-behavior: auto !important;
 	}
 	
 	.tabflow-doc-layout * {
-		scroll-behavior: auto;
+		scroll-behavior: auto; /* 可选项：移动端使用即时滚动以提升性能 */
 		scroll-behavior: auto !important;
 	}
 }
