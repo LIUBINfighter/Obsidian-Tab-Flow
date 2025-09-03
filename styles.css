@@ -118,6 +118,19 @@
 	color: var(--text-muted);
 }
 
+/* 错误消息容器使用flexbox布局 */
+.alphatex-messages {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+/* 错误消息容器中的复制按钮靠右显示 */
+.alphatex-messages .clickable-icon[aria-label="复制错误与原文"] {
+	align-self: flex-end;
+	margin-bottom: 0.25rem;
+}
+
 /* --- debug.css --- */
 /* .debug-bar {
 	display: none !important;
