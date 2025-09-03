@@ -88,6 +88,14 @@
 		"yOffset": "Y Offset:",
 		"nativeScroll": "Native Scroll:",
 		"useNativeBrowserSmoothScroll": "Use browser native smooth scroll",
+		"scrollMode": "Scroll Mode",
+		"scrollModeDesc": "Control page scrolling behavior during score playback",
+		"scrollModeOptions": {
+			"continuous": "Continuous Scroll",
+			"offScreen": "Smart Page Turn",
+			"off": "No Scroll"
+		},
+		"scrollModeUpdated": "Scroll mode updated",
 		"tabs": {
 			"general": "Asset Management",
 			"player": "Player Settings",

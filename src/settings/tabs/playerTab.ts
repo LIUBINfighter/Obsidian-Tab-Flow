@@ -397,4 +397,26 @@ export async function renderPlayerTab(
 				);
 			});
 		});
+
+	// 滚动模式配置
+	new Setting(tabContents)
+		.setName(t('settings.player.scrollMode', undefined, '滚动模式'))
+		.setDesc(t('settings.player.scrollModeDesc', undefined, '控制乐谱播放时的页面滚动行为'))
+		.addDropdown((dropdown) => {
+			dropdown.addOption('continuous', t('settings.player.scrollModeOptions.continuous', undefined, '连续滚动'));
+			dropdown.addOption('offScreen', t('settings.player.scrollModeOptions.offScreen', undefined, '智能翻页'));
+			dropdown.addOption('off', t('settings.player.scrollModeOptions.off', undefined, '不滚动'));
+			const current = plugin.settings.scrollMode || 'continuous';
+			dropdown.setValue(current).onChange(async (value) => {
+				plugin.settings.scrollMode = value as any;
+				await plugin.saveSettings();
+				try {
+					app.workspace.trigger('tabflow:scroll-mode-changed', value);
+				} catch {
+					// Ignore workspace trigger errors
+				}
+				new Notice(t('settings.player.scrollModeUpdated', undefined, '滚动模式已更新'));
+			});
+		})
+		.setClass('tabflow-no-border');
 }

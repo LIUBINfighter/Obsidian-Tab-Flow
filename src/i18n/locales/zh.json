@@ -88,6 +88,14 @@
 		"yOffset": "Y偏移:",
 		"nativeScroll": "原生滚动:",
 		"useNativeBrowserSmoothScroll": "使用浏览器原生平滑滚动",
+		"scrollMode": "滚动模式",
+		"scrollModeDesc": "控制乐谱播放时的页面滚动行为",
+		"scrollModeOptions": {
+			"continuous": "连续滚动",
+			"offScreen": "智能翻页",
+			"off": "不滚动"
+		},
+		"scrollModeUpdated": "滚动模式已更新",
 		"tabs": {
 			"general": "资产管理",
 			"player": "播放器配置",

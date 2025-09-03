@@ -332,6 +332,18 @@ export class TabView extends FileView {
 			})
 		);
 
+		// Listen for scroll mode changes triggered by settings UI or playbar
+		this.registerEvent(
+			(this.app.workspace as any).on('tabflow:scroll-mode-changed', (newMode: string) => {
+				try {
+					console.debug(`[TabView] 滚动模式变更: ${newMode}`);
+					this.configureScrollElement();
+				} catch (e) {
+					console.warn('[TabView] Failed to apply scroll mode change:', e);
+				}
+			})
+		);
+
 		// 监听设置变化，实时响应 Debug Bar 挂载/卸载
 		this.settingsChangeHandler = () => {
 			this._renderDebugBarIfEnabled();
@@ -569,12 +581,29 @@ export class TabView extends FileView {
 
 		this._api.updateSettings();
 
+		// 延迟应用滚动模式及智能阈值设置
 		setTimeout(() => {
 			if (this._api.settings.player) {
-				this._api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
+				// 根据用户设置选择滚动模式
+				const mode = (this.plugin as any).settings.scrollMode || 'continuous';
+				let sm: alphaTab.ScrollMode;
+				switch (mode) {
+					case 'continuous':
+						sm = alphaTab.ScrollMode.Continuous;
+						break;
+					case 'offScreen':
+						sm = alphaTab.ScrollMode.OffScreen;
+						break;
+					case 'off':
+						sm = alphaTab.ScrollMode.Off;
+						break;
+					default:
+						sm = alphaTab.ScrollMode.Continuous;
+				}
+				this._api.settings.player.scrollMode = sm;
 				this._api.settings.player.enableCursor = true;
 				this._api.updateSettings();
-				console.debug('[TabView] 滚动配置已更新');
+				console.debug(`[TabView] 应用滚动模式: ${mode}`);
 			}
 		}, 100);
 

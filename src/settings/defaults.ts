@@ -15,6 +15,7 @@ export interface PlayBarComponentVisibility {
 	staveProfile: boolean;
 	zoom: boolean;
 	progressBar: boolean;
+	scrollMode: boolean;
 	audioPlayer: boolean;
 }
 
@@ -27,6 +28,8 @@ export interface TabFlowSettings {
 	showDebugBar?: boolean;
 	/** 自动打开 AlphaTex 文件 */
 	autoOpenAlphaTexFiles?: boolean;
+	/** 滚动模式：continuous|offScreen|off */
+	scrollMode?: 'continuous' | 'offScreen' | 'off';
 	/** 播放栏配置 */
 	playBar?: {
 		components: PlayBarComponentVisibility;
@@ -41,6 +44,8 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	lastAssetsCheck: 0,
 	showDebugBar: false,
 	autoOpenAlphaTexFiles: false,
+	/** 默认滚动模式：智能阈值翻页 */
+	scrollMode: 'offScreen',
 	playBar: {
 		components: {
 			playPause: true,
@@ -59,6 +64,7 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 			staveProfile: false,
 			zoom: false,
 			progressBar: true,
+			scrollMode: true,
 			audioPlayer: false,
 		},
 		order: [

@@ -156,6 +156,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		'speed',
 		'staveProfile',
 		'zoom',
+		'scrollMode',
 		'audioPlayer',
 	];
 
@@ -483,14 +484,48 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			select.onchange = () => eventBus?.publish('命令:设置缩放', parseFloat(select.value));
 			bar.appendChild(select);
 		},
-		audioPlayer: () => {
-			if (!show('audioPlayer', false)) return;
-			const audioContainer = createAudioPlayer({
-				app: options.app,
-				onAudioCreated: options.onAudioCreated,
-				...(options.audioPlayerOptions || {}),
-			} as AudioPlayerOptions);
-			bar.appendChild(audioContainer);
+		scrollMode: () => {
+			if (!show('scrollMode')) return;
+			const scrollModeIcon = document.createElement('span');
+			scrollModeIcon.className = 'scroll-mode-icon';
+			setIcon(scrollModeIcon, 'lucide-scroll');
+			bar.appendChild(scrollModeIcon);
+			const select = document.createElement('select');
+			const scrollModes = [
+				{ name: t('settings.scrollContinuous'), value: 'continuous' },
+				{ name: t('settings.scrollOffScreen'), value: 'offScreen' },
+				{ name: t('settings.scrollOff'), value: 'off' },
+			];
+			scrollModes.forEach((item) => {
+				const opt = document.createElement('option');
+				opt.value = item.value;
+				opt.innerText = item.name;
+				select.appendChild(opt);
+			});
+			// 设置当前值
+			try {
+				const pluginId = 'tab-flow';
+				const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+				const currentMode = plugin?.settings?.scrollMode || 'continuous';
+				select.value = currentMode;
+			} catch {
+				select.value = 'continuous';
+			}
+			select.onchange = () => {
+				try {
+					const pluginId = 'tab-flow';
+					const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+					if (plugin) {
+						plugin.settings.scrollMode = select.value;
+						plugin.saveSettings();
+						// 触发滚动模式变更事件
+						app.workspace.trigger('tabflow:scroll-mode-changed', select.value);
+					}
+				} catch (e) {
+					console.error('[PlayBar] 更新滚动模式失败:', e);
+				}
+			};
+			bar.appendChild(select);
 		},
 	};
 
