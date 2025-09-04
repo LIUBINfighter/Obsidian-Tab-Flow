@@ -1,7 +1,7 @@
 import { Plugin, TFile, Notice, requestUrl, MarkdownRenderChild } from 'obsidian';
 import { TabView, VIEW_TYPE_TAB } from './views/TabView';
 import { DocView, VIEW_TYPE_TABFLOW_DOC } from './views/DocView';
-import { AlphaTexEditorView, VIEW_TYPE_ALPHATEX_EDITOR } from './views/AlphaTexEditorView';
+import { EditorView, VIEW_TYPE_ALPHATEX_EDITOR } from './views/EditorView';
 import {
 	ResourceLoaderService,
 	AlphaTabResources,
@@ -322,7 +322,7 @@ export default class TabFlowPlugin extends Plugin {
 		this.registerView(VIEW_TYPE_TABFLOW_DOC, (leaf) => new DocView(leaf, this));
 
 		// 注册 AlphaTex 编辑器视图
-		this.registerView(VIEW_TYPE_ALPHATEX_EDITOR, (leaf) => new AlphaTexEditorView(leaf, this));
+		this.registerView(VIEW_TYPE_ALPHATEX_EDITOR, (leaf) => new EditorView(leaf, this));
 
 		this.addCommand({
 			id: 'open-tabflow-doc-view',
@@ -339,7 +339,7 @@ export default class TabFlowPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'open-alphatex-editor',
-			name: t('commands.openAlphaTexEditor', undefined, 'Open AlphaTex Editor'),
+			name: t('commands.openEditor', undefined, 'Open AlphaTex Editor'),
 			callback: async () => {
 				const leaf = this.app.workspace.getLeaf(true);
 				await leaf.setViewState({
@@ -353,7 +353,7 @@ export default class TabFlowPlugin extends Plugin {
 		this.addCommand({
 			id: 'open-alphatex-editor-horizontal',
 			name: t(
-				'commands.openAlphaTexEditorHorizontal',
+				'commands.openEditorHorizontal',
 				undefined,
 				'Open AlphaTex Editor (Horizontal)'
 			),

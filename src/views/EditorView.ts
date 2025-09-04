@@ -7,14 +7,14 @@ import {
 	createAlphaTexPlayground,
 	AlphaTexPlaygroundHandle,
 } from '../components/AlphaTexPlayground';
-import { createPlayBar } from '../components/PlayBar';
+import { createEditorBar } from '../components/EditorBar';
 import { EventBus } from '../utils/EventBus';
 import { t } from '../i18n';
 import TabFlowPlugin from '../main';
 
 export const VIEW_TYPE_ALPHATEX_EDITOR = 'alphatex-editor-view';
 
-export class AlphaTexEditorView extends FileView {
+export class EditorView extends FileView {
 	private editor: EmbeddableMarkdownEditor | null = null;
 	private playground: AlphaTexPlaygroundHandle | null = null;
 	private container: HTMLElement;
@@ -39,7 +39,7 @@ export class AlphaTexEditorView extends FileView {
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.file && file && file.path === this.file.path) {
 				console.debug(
-					`[AlphaTexEditorView] 检测到文件变化: ${file.basename}，正在重新加载...`
+					`[EditorView] 检测到文件变化: ${file.basename}，正在重新加载...`
 				);
 				this.reloadFile();
 			}
@@ -98,7 +98,7 @@ export class AlphaTexEditorView extends FileView {
 		try {
 			content = await this.app.vault.read(this.file);
 		} catch (error) {
-			console.error('[AlphaTexEditorView] 读取文件失败:', error);
+			console.error('[EditorView] 读取文件失败:', error);
 			new Notice(t('alphatex.editor.readError', undefined, '读取文件失败'));
 			return;
 		}
@@ -106,9 +106,9 @@ export class AlphaTexEditorView extends FileView {
 		// 创建主布局容器
 		const mainContainer = this.container.createDiv({ cls: 'alphatex-editor-layout' });
 
-		// 创建播放栏
-		const playBarContainer = this.container.createDiv({ cls: 'alphatex-editor-playbar' });
-		const playBar = createPlayBar({
+		// 创建编辑器栏（EditorBar）
+		const editorBarContainer = this.container.createDiv({ cls: 'alphatex-editor-bar' });
+		const editorBar = createEditorBar({
 			app: this.app,
 			eventBus: this.eventBus,
 			initialPlaying: false,
@@ -130,7 +130,7 @@ export class AlphaTexEditorView extends FileView {
 				// 编辑器视图可能不需要音频集成，暂时留空
 			},
 		});
-		playBarContainer.appendChild(playBar);
+		editorBarContainer.appendChild(editorBar);
 
 		// 创建编辑器和预览容器
 		const editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
