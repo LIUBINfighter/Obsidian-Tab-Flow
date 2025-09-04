@@ -4,8 +4,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import { App, Scope, TFile, WorkspaceLeaf } from 'obsidian';
-import { EditorSelection, Prec } from '@codemirror/state';
-import { EditorView, keymap, placeholder, ViewUpdate } from '@codemirror/view';
+import { EditorSelection, Prec, RangeSetBuilder, RangeSet } from '@codemirror/state';
+import { EditorView, keymap, placeholder, ViewUpdate, Decoration, ViewPlugin } from '@codemirror/view';
 import { around } from 'monkey-around';
 
 export interface MarkdownEditorProps {
@@ -143,6 +143,34 @@ export class EmbeddableMarkdownEditor {
 							} as any;
 						}
 						extensions.push(Prec.highest(keymap.of(keyBindings as any)));
+						// Add ViewPlugin to highlight dot symbols
+						extensions.push(ViewPlugin.fromClass(class {
+							decorations: RangeSet<Decoration>
+							constructor(view: EditorView) {
+								this.decorations = this.buildDecorations(view);
+							}
+							update(update: ViewUpdate) {
+								if (update.docChanged || update.viewportChanged) {
+									this.decorations = this.buildDecorations(update.view);
+								}
+							}
+							buildDecorations(view: EditorView): RangeSet<Decoration> {
+								const builder = new RangeSetBuilder<Decoration>();
+								for (let {from, to} of view.visibleRanges) {
+									const text = view.state.doc.sliceString(from, to);
+									let pos = 0;
+									while ((pos = text.indexOf('.', pos)) !== -1) {
+										const start = from + pos;
+										const end = start + 1;
+										builder.add(start, end, Decoration.mark({class: 'highlighted-dot'}));
+										pos += 1;
+									}
+								}
+								return builder.finish();
+							}
+						}, {
+							decorations: (value: any) => value.decorations
+						}));
 					}
 					return extensions;
 				},

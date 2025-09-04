@@ -205,6 +205,14 @@
 	margin-bottom: 0.25rem;
 }
 
+/* markdown post processing*/
+
+/* Highlight for dot symbol in embedded editor */
+.highlighted-dot {
+	background-color: rgba(255, 255, 0, 0.3);
+	border-radius: 2px;
+}
+
 /* --- debug.css --- */
 /* .debug-bar {
 	display: none !important;
