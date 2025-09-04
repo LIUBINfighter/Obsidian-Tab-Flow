@@ -58,6 +58,22 @@ export class EmbeddableMarkdownEditor {
 	private scope: Scope;
 	private editor: InternalMarkdownEditor;
 
+	/**
+	 * Hard-coded configuration to control whether to set activeEditor.
+	 *
+	 * Pros of setting activeEditor:
+	 * - Allows the embedded editor to receive keyboard shortcuts and commands properly.
+	 * - Maintains compatibility with Obsidian's command system.
+	 *
+	 * Cons of setting activeEditor:
+	 * - May cause "Cannot read properties of undefined" errors if not handled properly.
+	 * - Potential conflicts with multiple editor instances.
+	 * - Can interfere with Obsidian's internal activeEditor management.
+	 *
+	 * Set to true to enable activeEditor management, false to disable.
+	 */
+	private static readonly USE_ACTIVE_EDITOR = true;
+
 	constructor(
 		app: App,
 		EditorClass: new (...args: any[]) => InternalMarkdownEditor,
@@ -83,12 +99,19 @@ export class EmbeddableMarkdownEditor {
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
 								blur: () => {
 									app.keymap.popScope(selfRef.scope);
-									(app.workspace as any).activeEditor = null;
+									if (
+										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
+										(app.workspace as any).activeEditor === selfRef.editor
+									) {
+										(app.workspace as any).activeEditor = null;
+									}
 									selfRef.options.onBlur?.(selfRef);
 								},
 								focusin: () => {
 									app.keymap.pushScope(selfRef.scope);
-									(app.workspace as any).activeEditor = selfRef.editor;
+									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
+										(app.workspace as any).activeEditor = selfRef.editor;
+									}
 								},
 							})
 						);
