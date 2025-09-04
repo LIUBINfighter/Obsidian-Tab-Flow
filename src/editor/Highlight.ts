@@ -56,8 +56,8 @@ export function barHighlightPlugin() {
 		}
 	}
 
-		return ViewPlugin.fromClass(
-			class {
+	return ViewPlugin.fromClass(
+		class {
 			decorations: DecorationSet;
 
 			constructor(view: EditorView) {
@@ -92,9 +92,9 @@ export function barHighlightPlugin() {
 
 				return builder.finish();
 			}
-			},
-			{
-				decorations: (value: any) => value.decorations,
-			}
-		);
+		},
+		{
+			decorations: (value: any) => value.decorations,
+		}
+	);
 }

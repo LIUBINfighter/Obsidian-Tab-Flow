@@ -6,6 +6,7 @@ import { App, Scope, TFile, WorkspaceLeaf } from 'obsidian';
 import { EditorSelection, Prec } from '@codemirror/state';
 import { EditorView, keymap, placeholder, ViewUpdate } from '@codemirror/view';
 import { dotHighlightPlugin, barHighlightPlugin } from './Highlight';
+import { alphaTex } from './alphaTexLanguage';
 import { around } from 'monkey-around';
 
 export interface MarkdownEditorProps {
@@ -94,6 +95,14 @@ export class EmbeddableMarkdownEditor {
 					if (this === (selfRef as any).editor) {
 						if (selfRef.options.placeholder)
 							extensions.push(placeholder(selfRef.options.placeholder));
+						// Disable browser spellcheck/auto-correct in the embedded editor
+						extensions.push(
+							EditorView.editorAttributes.of({
+								spellcheck: 'false',
+								autocorrect: 'off',
+								autocapitalize: 'off',
+							}) as any
+						);
 						extensions.push(
 							EditorView.domEventHandlers({
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
@@ -148,6 +157,14 @@ export class EmbeddableMarkdownEditor {
 						// (dot and bar highlight plugins are imported from ./Highlight.ts)
 						extensions.push(dotHighlightPlugin());
 						extensions.push(barHighlightPlugin());
+						// Inject AlphaTex language/highlighting
+						try {
+							const alphaExt = alphaTex();
+							if (Array.isArray(alphaExt)) extensions.push(...(alphaExt as any));
+							else extensions.push(alphaExt as any);
+						} catch {
+							// fail gracefully if alphaTex isn't available in runtime
+						}
 					}
 					return extensions;
 				},

@@ -122,9 +122,15 @@
 
 /* Highlight for dot symbol in embedded editor */
 .highlighted-dot {
-	background-color: var(--color-accent);
-	opacity: 0.5;
-	border-radius: 2px;
+	/* Render the dot larger and visually distinct */
+	display: inline-block;
+	color: var(--text-accent, var(--color-accent));
+	background: transparent;
+	font-size: 1em; /* larger dot */
+	line-height: 1.3;
+	padding: 0 1px;
+	transform: translateY(0.5px);
+	opacity: 0.95;
 }
 
 /* Highlight for bar line symbol (|) in embedded editor */
@@ -134,7 +140,81 @@
 	border-radius: 2px;
 }
 
-/* Style for bar number widgets */
+/* Token styling for AlphaTex language tokens */
+.cm-content .cm-atx-meta,
+.atx-meta {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+.cm-content .cm-atx-comment,
+.atx-comment {
+	color: var(--text-muted);
+	font-style: italic;
+	opacity: 0.9;
+}
+
+.cm-content .cm-atx-keyword,
+.atx-keyword {
+	color: var(--color-accent);
+	font-weight: 600;
+}
+
+.cm-content .cm-atx-string,
+.atx-string {
+	color: var(--text-success);
+}
+
+.cm-content .cm-atx-number,
+.atx-number {
+	color: var(--text-faint);
+}
+
+/* Bars and section dots */
+.cm-content .cm-atx-bar,
+.atx-bar {
+	background-color: transparent;
+	color: var(--color-accent);
+	font-weight: 700;
+	padding: 0 2px;
+}
+
+/* Section separator dot rendered larger and aligned */
+.cm-content .cm-dot,
+.highlighted-dot,
+.atx-dot {
+	display: inline-block;
+	font-size: 1.2em; /* 调整为更小的点 */
+	line-height: 1;
+	color: var(--text-accent, var(--color-accent));
+	transform: translateY(0.02em);
+	padding: 0 1px;
+}
+
+/* Note tokens (fret.string.duration) */
+.cm-content .cm-note,
+.atx-note {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+/* Chord group */
+.cm-content .cm-chord,
+.atx-chord {
+	color: var(--text-accent);
+	background: rgba(0, 0, 0, 0.02);
+	border-radius: 2px;
+	padding: 0 2px;
+}
+
+/* Effect blocks { ... } */
+.cm-content .cm-effect,
+.atx-effect {
+	color: var(--text-warning);
+	font-weight: 600;
+}
+
+/* Bar number widget (kept) */
 .bar-number {
 	color: var(--text-muted);
 	font-size: 0.8em;
