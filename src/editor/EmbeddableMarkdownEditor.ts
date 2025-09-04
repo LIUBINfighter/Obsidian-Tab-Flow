@@ -83,11 +83,12 @@ export class EmbeddableMarkdownEditor {
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
 								blur: () => {
 									app.keymap.popScope(selfRef.scope);
+									(app.workspace as any).activeEditor = null;
 									selfRef.options.onBlur?.(selfRef);
 								},
 								focusin: () => {
 									app.keymap.pushScope(selfRef.scope);
-									(app.workspace as any).activeEditor = (selfRef as any).owner;
+									(app.workspace as any).activeEditor = selfRef.editor;
 								},
 							})
 						);
