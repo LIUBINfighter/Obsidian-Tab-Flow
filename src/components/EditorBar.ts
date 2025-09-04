@@ -16,6 +16,7 @@ export interface PlayBarOptions {
 	seekTo?: (position: number) => void; // 跳转到指定位置（毫秒）
 	onAudioCreated: (audioEl: HTMLAudioElement) => void; // 新增
 	audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
+	getApi?: () => alphaTab.AlphaTabApi | null; // 新增：获取 playground 的 API
 }
 
 export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
@@ -209,9 +210,17 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			playPauseBtn.setAttribute('type', 'button');
 			updatePlayPauseButton();
 			playPauseBtn.onclick = () => {
-				playing = !playing;
-				eventBus?.publish('命令:播放暂停');
-				updatePlayPauseButton();
+				const api = options.getApi?.();
+				if (api) {
+					api.playPause();
+					playing = !playing;
+					updatePlayPauseButton();
+				} else {
+					// fallback to eventBus
+					playing = !playing;
+					eventBus?.publish('命令:播放暂停');
+					updatePlayPauseButton();
+				}
 			};
 			bar.appendChild(playPauseBtn);
 		},

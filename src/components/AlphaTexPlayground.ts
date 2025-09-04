@@ -6,6 +6,10 @@ import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
 import type { AlphaTexMountHandle } from '../markdown/AlphaTexBlock';
 
+interface EventBus {
+	subscribe(event: string, callback: (...args: unknown[]) => void): void;
+}
+
 export interface AlphaTexPlaygroundOptions {
 	placeholder?: string;
 	debounceMs?: number;
@@ -19,6 +23,8 @@ export interface AlphaTexPlaygroundOptions {
 	className?: string;
 	/** 是否显示编辑区 */
 	showEditor?: boolean;
+	/** EventBus for handling commands */
+	eventBus?: EventBus;
 }
 
 export interface AlphaTexPlaygroundHandle {
@@ -48,6 +54,7 @@ export function createAlphaTexPlayground(
 		layout = 'horizontal', // 默认改为左右布局
 		className = '',
 		showEditor = true,
+		eventBus,
 	} = options;
 
 	container.empty();
@@ -357,6 +364,76 @@ export function createAlphaTexPlayground(
 
 	// 初次渲染
 	renderPreview();
+
+	// 订阅事件
+	if (eventBus) {
+		eventBus.subscribe('命令:播放暂停', () => {
+			const api = mounted?.api;
+			if (api) api.playPause();
+		});
+
+		eventBus.subscribe('命令:停止', () => {
+			const api = mounted?.api;
+			if (api) api.stop();
+		});
+
+		eventBus.subscribe('命令:设置速度', (speed: number) => {
+			const api = mounted?.api;
+			if (api) api.playbackSpeed = speed;
+		});
+
+		eventBus.subscribe('命令:设置谱表', (profile: number) => {
+			const api = mounted?.api;
+			if (api) {
+				(api.settings.display as any).staveProfile = profile;
+				api.updateSettings();
+				api.render();
+			}
+		});
+
+		eventBus.subscribe('命令:设置缩放', (scale: number) => {
+			const api = mounted?.api;
+			if (api) {
+				api.settings.display.scale = scale;
+				api.updateSettings();
+				api.render();
+			}
+		});
+
+		eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
+			const api = mounted?.api;
+			if (api) {
+				(api.settings.player as any).scrollMode = mode;
+				api.updateSettings();
+			}
+		});
+
+		eventBus.subscribe('命令:滚动到顶部', () => {
+			const api = mounted?.api;
+			if (api) api.tickPosition = 0;
+		});
+
+		eventBus.subscribe('命令:滚动到底部', () => {
+			const api = mounted?.api;
+			if (api && api.score) {
+				const masterBars = api.score.masterBars;
+				if (masterBars && masterBars.length > 0) {
+					const lastBar = masterBars[masterBars.length - 1];
+					const endTick = lastBar.start + lastBar.calculateDuration();
+					api.tickPosition = endTick;
+				}
+			}
+		});
+
+		eventBus.subscribe('命令:滚动到光标', () => {
+			const api = mounted?.api;
+			if (api) (api as any).scrollToCursor?.();
+		});
+
+		eventBus.subscribe('命令:重新构造AlphaTabApi', () => {
+			renderPreview();
+		});
+	}
 
 	// 观察移除，销毁实例
 	const observer = new MutationObserver(() => {

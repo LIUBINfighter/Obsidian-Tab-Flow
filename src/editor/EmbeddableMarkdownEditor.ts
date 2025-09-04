@@ -2,7 +2,7 @@
  * Internal dynamic wrapper for embedding Obsidian markdown editor.
  * NOTE: Relies on private APIs; we intentionally relax lint rules for dynamic access.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 import { App, Scope, TFile, WorkspaceLeaf } from 'obsidian';
 import { EditorSelection, Prec } from '@codemirror/state';
 import { EditorView, keymap, placeholder, ViewUpdate } from '@codemirror/view';

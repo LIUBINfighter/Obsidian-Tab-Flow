@@ -42,7 +42,7 @@ export function mountAlphaTexBlock(
 	const merged: AlphaTexInitOptions = { ...(defaults || {}), ...(opts || {}) };
 
 	// extract optional UI override from init
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	const uiOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = (opts as any)?.ui;
@@ -231,6 +231,8 @@ export function mountAlphaTexBlock(
 	let api: alphaTab.AlphaTabApi | null = null;
 	const ERROR_STOP_THRESHOLD = 50;
 	let errorEventsCount = 0;
+	// eslint-disable-next-line prefer-const
+	let handle: AlphaTexMountHandle;
 	const stopAlphaEngine = (reason?: string) => {
 		if (!api) return;
 		try {
@@ -283,6 +285,9 @@ export function mountAlphaTexBlock(
 				scale: merged.scale ?? 1.0,
 			},
 		});
+
+		// Update handle.api after creating the API
+		handle.api = api;
 
 		// Subscribe error events from AlphaTab and surface them in UI
 		const onApiError = (e: unknown) => {
@@ -650,7 +655,7 @@ export function mountAlphaTexBlock(
 	// 推迟并限制初始化
 	scheduleInit(heavyInit);
 
-	return {
+	handle = {
 		destroy: () => {
 			if (destroyed) return;
 			destroyed = true;
@@ -681,4 +686,6 @@ export function mountAlphaTexBlock(
 		},
 		api: api,
 	};
+
+	return handle;
 }
