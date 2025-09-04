@@ -9,6 +9,7 @@ import {
 } from '../components/AlphaTexPlayground';
 import { createEditorBar } from '../components/EditorBar';
 import { EventBus } from '../utils/EventBus';
+import { formatTime } from '../utils';
 import { t } from '../i18n';
 import TabFlowPlugin from '../main';
 
@@ -21,6 +22,7 @@ export class EditorView extends FileView {
 	private layout: 'vertical' | 'horizontal' = 'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
 	private eventBus: EventBus;
+	private progressBar: any = null; // 保存进度条引用
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -30,10 +32,15 @@ export class EditorView extends FileView {
 		this.container = this.contentEl;
 		this.eventBus = new EventBus();
 
-		// 从视图状态中读取布局参数
+		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
 		if (state.state?.layout === 'horizontal') {
 			this.layout = 'horizontal';
+		} else if (state.state?.layout === 'vertical') {
+			this.layout = 'vertical';
+		} else {
+			// 使用插件的默认布局设置
+			this.layout = this.plugin.settings.editorViewDefaultLayout || 'horizontal';
 		}
 
 		this.fileModifyHandler = (file: TFile) => {
@@ -42,6 +49,18 @@ export class EditorView extends FileView {
 				this.reloadFile();
 			}
 		};
+
+		// 监听 EditorBar 设置变化事件，实现实时更新
+		this.registerEvent(
+			(this.app.workspace as any).on('tabflow:editorbar-components-changed', () => {
+				try {
+					console.debug('[EditorView] 检测到 EditorBar 设置变化，正在重新渲染...');
+					this._remountEditorBar();
+				} catch (e) {
+					console.warn('[EditorView] 重新渲染 EditorBar 失败:', e);
+				}
+			})
+		);
 	}
 
 	getViewType(): string {
@@ -140,6 +159,26 @@ export class EditorView extends FileView {
 		});
 
 		// 创建编辑器栏（EditorBar）
+		this._mountEditorBar();
+	}
+
+	private async reloadFile(): Promise<void> {
+		if (this.file) {
+			await this.onLoadFile(this.file);
+		}
+	}
+
+	/**
+	 * 挂载或重新挂载 EditorBar
+	 */
+	private _mountEditorBar(): void {
+		// 移除现有的 EditorBar
+		const existingBar = this.container.querySelector('.alphatex-editor-bar');
+		if (existingBar) {
+			existingBar.remove();
+		}
+
+		// 创建新的 EditorBar 容器
 		const editorBarContainer = this.container.createDiv({ cls: 'alphatex-editor-bar' });
 		const editorBar = createEditorBar({
 			app: this.app,
@@ -147,32 +186,74 @@ export class EditorView extends FileView {
 			initialPlaying: false,
 			getCurrentTime: () => {
 				const api = this.playground?.getApi();
-				return api?.tickPosition !== undefined ? api.tickPosition : 0;
+				return api ? (api as any).timePosition || 0 : 0;
 			},
 			getDuration: () => {
 				const api = this.playground?.getApi();
-				return api?.score ? (api.score as any).duration || 0 : 0;
+				return api?.score
+					? (api.score as any).durationMillis || (api.score as any).duration || 0
+					: 0;
 			},
 			seekTo: (ms: number) => {
 				const api = this.playground?.getApi();
 				if (api) {
-					api.tickPosition = ms;
+					(api as any).timePosition = ms;
 				}
 			},
 			onAudioCreated: (audioEl: HTMLAudioElement) => {
 				// 编辑器视图可能不需要音频集成，暂时留空
 			},
 			getApi: () => this.playground?.getApi() || null,
+			onProgressBarCreated: (progressBar: any) => {
+				this.progressBar = progressBar;
+				// 推迟设置事件监听器，直到 API 可用
+				const setupProgressUpdate = () => {
+					const api = this.playground?.getApi();
+					if (api && api.playerPositionChanged) {
+						api.playerPositionChanged.on((args: any) => {
+							if (this.progressBar && this.progressBar.updateProgress) {
+								// 更新进度条
+								this.progressBar.updateProgress(args.currentTime, args.endTime);
+
+								// 同时更新时间显示元素
+								const editorBarContainer =
+									this.containerEl.querySelector('.alphatex-editor-bar');
+								if (editorBarContainer) {
+									const currentTimeDisplay = editorBarContainer.querySelector(
+										'.play-time.current-time'
+									) as HTMLSpanElement;
+									const totalTimeDisplay = editorBarContainer.querySelector(
+										'.play-time.total-time'
+									) as HTMLSpanElement;
+
+									if (currentTimeDisplay && totalTimeDisplay) {
+										currentTimeDisplay.textContent = formatTime(
+											args.currentTime || 0
+										);
+										totalTimeDisplay.textContent = formatTime(
+											args.endTime || 0
+										);
+									}
+								}
+							}
+						});
+						console.log('[EditorView] 进度条事件监听器已设置');
+					} else {
+						// 如果 API 还不可用，稍后重试
+						setTimeout(setupProgressUpdate, 100);
+					}
+				};
+				setupProgressUpdate();
+			},
 		});
 		editorBarContainer.appendChild(editorBar);
-
-		// 事件由 playground 直接处理，无需额外订阅
 	}
 
-	private async reloadFile(): Promise<void> {
-		if (this.file) {
-			await this.onLoadFile(this.file);
-		}
+	/**
+	 * 重新挂载 EditorBar（用于设置变化时的实时更新）
+	 */
+	private _remountEditorBar(): void {
+		this._mountEditorBar();
 	}
 
 	onunload(): void {

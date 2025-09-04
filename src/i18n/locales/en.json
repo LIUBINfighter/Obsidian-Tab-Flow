@@ -99,6 +99,7 @@
 		"tabs": {
 			"general": "Asset Management",
 			"player": "Player Settings",
+			"editor": "Editor Settings",
 			"about": "About"
 		},
 		"about": {
@@ -146,6 +147,42 @@
 				"debugBarEnabled": "Debug Bar enabled",
 				"debugBarDisabled": "Debug Bar hidden"
 			}
+		},
+		"editor": {
+			"viewTitle": "Editor View",
+			"barTitle": "Editor Bar",
+			"defaultLayout": "Default Layout",
+			"defaultLayoutDesc": "Default layout mode for the editor view",
+			"layoutHorizontal": "Horizontal Layout",
+			"layoutVertical": "Vertical Layout",
+			"layoutSaved": "Layout setting saved",
+			"resetToDefault": "Reset to Default",
+			"resetToDefaultDesc": "Reset editor bar component visibility and order to default configuration",
+			"resetToDefaultSuccess": "Editor bar settings reset",
+			"resetToDefaultFailed": "Failed to reset editor bar settings",
+			"components": {
+				"playPause": "Play/Pause",
+				"stop": "Stop",
+				"metronome": "Metronome",
+				"countIn": "Count-in",
+				"tracks": "Select Tracks",
+				"refresh": "Refresh/Rebuild Player",
+				"locateCursor": "Scroll to Cursor",
+				"layoutToggle": "Layout Toggle",
+				"exportMenu": "Export Menu",
+				"toTop": "To Top",
+				"toBottom": "To Bottom",
+				"openSettings": "Open Settings",
+				"progressBar": "Progress Bar",
+				"speed": "Speed Selection",
+				"staveProfile": "Stave Selection",
+				"zoom": "Zoom Selection",
+				"scrollMode": "Scroll Mode Selection",
+				"audioPlayer": "Native Audio Player (Experimental)",
+				"audioPlayerDesc": "Not available in editor view"
+			},
+			"moveUp": "Move Up",
+			"moveDown": "Move Down"
 		}
 	},
 	"navigation": {

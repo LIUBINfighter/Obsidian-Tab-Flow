@@ -17,6 +17,7 @@ export interface PlayBarOptions {
 	onAudioCreated: (audioEl: HTMLAudioElement) => void; // 新增
 	audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
 	getApi?: () => alphaTab.AlphaTabApi | null; // 新增：获取 playground 的 API
+	onProgressBarCreated?: (progressBar: any) => void; // 新增：进度条创建回调
 }
 
 export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
@@ -121,7 +122,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
 		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-		visibility = plugin?.settings?.playBar?.components;
+		visibility = plugin?.settings?.editorBar?.components;
 		runtimeOverride = plugin?.runtimeUiOverride;
 	} catch {
 		// Ignore plugin access errors
@@ -168,7 +169,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			((Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0) ||
 				typeof runtimeOverride.order === 'string')
 				? runtimeOverride.order
-				: plugin?.settings?.playBar?.order;
+				: plugin?.settings?.editorBar?.order;
 
 		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
 			order = rawOrder as string[];
@@ -234,9 +235,16 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			stopBtn.appendChild(stopIcon);
 			stopBtn.setAttribute('aria-label', t('playback.stop'));
 			stopBtn.onclick = () => {
-				playing = false;
-				eventBus?.publish('命令:停止');
-				updatePlayPauseButton();
+				const api = options.getApi?.();
+				if (api) {
+					api.stop();
+					playing = false;
+					updatePlayPauseButton();
+				} else {
+					playing = false;
+					eventBus?.publish('命令:停止');
+					updatePlayPauseButton();
+				}
 			};
 			bar.appendChild(stopBtn);
 		},
@@ -247,9 +255,16 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			metronomeBtn.setAttribute('type', 'button');
 			updateMetronomeBtn();
 			metronomeBtn.onclick = () => {
-				metronomeOn = !metronomeOn;
-				eventBus?.publish('命令:设置节拍器', metronomeOn);
-				updateMetronomeBtn();
+				const api = options.getApi?.();
+				if (api) {
+					metronomeOn = !metronomeOn;
+					api.metronomeVolume = metronomeOn ? 1 : 0;
+					updateMetronomeBtn();
+				} else {
+					metronomeOn = !metronomeOn;
+					eventBus?.publish('命令:设置节拍器', metronomeOn);
+					updateMetronomeBtn();
+				}
 			};
 			bar.appendChild(metronomeBtn);
 		},
@@ -260,9 +275,17 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			countInBtn.setAttribute('type', 'button');
 			updateCountInBtn();
 			countInBtn.onclick = () => {
-				countInOn = !countInOn;
-				eventBus?.publish('命令:设置预备拍', countInOn);
-				updateCountInBtn();
+				const api = options.getApi?.();
+				if (api) {
+					countInOn = !countInOn;
+					(api.settings.player as any).enableCountIn = countInOn;
+					api.updateSettings();
+					updateCountInBtn();
+				} else {
+					countInOn = !countInOn;
+					eventBus?.publish('命令:设置预备拍', countInOn);
+					updateCountInBtn();
+				}
 			};
 			bar.appendChild(countInBtn);
 		},
@@ -287,7 +310,16 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			setIcon(icon, 'lucide-refresh-ccw');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.refreshPlayer'));
-			btn.onclick = () => eventBus?.publish('命令:重新构造AlphaTabApi');
+			btn.onclick = () => {
+				const api = options.getApi?.();
+				if (api) {
+					// 直接刷新 playground
+					// 这里可能需要调用 playground 的 refresh 方法
+					eventBus?.publish('命令:重新构造AlphaTabApi');
+				} else {
+					eventBus?.publish('命令:重新构造AlphaTabApi');
+				}
+			};
 			bar.appendChild(btn);
 		},
 		locateCursor: () => {
@@ -299,7 +331,14 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			setIcon(icon, 'lucide-crosshair');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.scrollToCursor'));
-			btn.onclick = () => eventBus?.publish('命令:滚动到光标');
+			btn.onclick = () => {
+				const api = options.getApi?.();
+				if (api) {
+					(api as any).scrollToCursor?.();
+				} else {
+					eventBus?.publish('命令:滚动到光标');
+				}
+			};
 			bar.appendChild(btn);
 		},
 		layoutToggle: () => {
@@ -309,12 +348,24 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			layoutToggleBtn.setAttribute('type', 'button');
 			updateLayoutToggleBtn();
 			layoutToggleBtn.onclick = () => {
-				layoutMode =
-					layoutMode === alphaTab.LayoutMode.Page
-						? alphaTab.LayoutMode.Horizontal
-						: alphaTab.LayoutMode.Page;
-				eventBus?.publish('命令:切换布局', layoutMode);
-				updateLayoutToggleBtn();
+				const api = options.getApi?.();
+				if (api) {
+					layoutMode =
+						layoutMode === alphaTab.LayoutMode.Page
+							? alphaTab.LayoutMode.Horizontal
+							: alphaTab.LayoutMode.Page;
+					(api.settings.display as any).layoutMode = layoutMode;
+					api.updateSettings();
+					api.render();
+					updateLayoutToggleBtn();
+				} else {
+					layoutMode =
+						layoutMode === alphaTab.LayoutMode.Page
+							? alphaTab.LayoutMode.Horizontal
+							: alphaTab.LayoutMode.Page;
+					eventBus?.publish('命令:切换布局', layoutMode);
+					updateLayoutToggleBtn();
+				}
 			};
 			bar.appendChild(layoutToggleBtn);
 		},
@@ -358,7 +409,15 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			setIcon(icon, 'lucide-chevrons-up');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.toTop'));
-			btn.onclick = () => eventBus?.publish('命令:滚动到顶部');
+			btn.onclick = () => {
+				const api = options.getApi?.();
+				if (api) {
+					api.tickPosition = 0;
+					(api as any).scrollToCursor?.();
+				} else {
+					eventBus?.publish('命令:滚动到顶部');
+				}
+			};
 			bar.appendChild(btn);
 		},
 		toBottom: () => {
@@ -370,7 +429,20 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			setIcon(icon, 'lucide-chevrons-down');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.toBottom'));
-			btn.onclick = () => eventBus?.publish('命令:滚动到底部');
+			btn.onclick = () => {
+				const api = options.getApi?.();
+				if (api && api.score) {
+					const masterBars = api.score.masterBars;
+					if (masterBars && masterBars.length > 0) {
+						const lastBar = masterBars[masterBars.length - 1];
+						const endTick = lastBar.start + lastBar.calculateDuration();
+						api.tickPosition = endTick;
+						(api as any).scrollToCursor?.();
+					}
+				} else {
+					eventBus?.publish('命令:滚动到底部');
+				}
+			};
 			bar.appendChild(btn);
 		},
 		openSettings: () => {
@@ -386,7 +458,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				try {
 					// 直达本插件SettingTab的“播放器配置”页签
 					// @ts-ignore
-					app.workspace.trigger('tabflow:open-plugin-settings-player');
+					app.workspace.trigger('tabflow:open-plugin-settings-editor');
 				} catch {
 					try {
 						// 退化处理
@@ -425,6 +497,8 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				seekTo,
 			}) as ProgressBarElement;
 			bar.appendChild(progressBar);
+			// 通知外部进度条已创建
+			options.onProgressBarCreated?.(progressBar);
 			totalTimeDisplay = document.createElement('span');
 			totalTimeDisplay.className = 'play-time total-time';
 			totalTimeDisplay.textContent = '0:00';
@@ -444,7 +518,14 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				if (val === '1.0') opt.selected = true;
 				select.appendChild(opt);
 			});
-			select.onchange = () => eventBus?.publish('命令:设置速度', parseFloat(select.value));
+			select.onchange = () => {
+				const api = options.getApi?.();
+				if (api) {
+					api.playbackSpeed = parseFloat(select.value);
+				} else {
+					eventBus?.publish('命令:设置速度', parseFloat(select.value));
+				}
+			};
 			bar.appendChild(select);
 		},
 		staveProfile: () => {
@@ -465,7 +546,16 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				opt.innerText = item.name;
 				select.appendChild(opt);
 			});
-			select.onchange = () => eventBus?.publish('命令:设置谱表', parseInt(select.value));
+			select.onchange = () => {
+				const api = options.getApi?.();
+				if (api) {
+					(api.settings.display as any).staveProfile = parseInt(select.value);
+					api.updateSettings();
+					api.render();
+				} else {
+					eventBus?.publish('命令:设置谱表', parseInt(select.value));
+				}
+			};
 			bar.appendChild(select);
 		},
 		zoom: () => {
@@ -489,7 +579,16 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				if (value === 1) opt.selected = true;
 				select.appendChild(opt);
 			});
-			select.onchange = () => eventBus?.publish('命令:设置缩放', parseFloat(select.value));
+			select.onchange = () => {
+				const api = options.getApi?.();
+				if (api) {
+					api.settings.display.scale = parseFloat(select.value);
+					api.updateSettings();
+					api.render();
+				} else {
+					eventBus?.publish('命令:设置缩放', parseFloat(select.value));
+				}
+			};
 			bar.appendChild(select);
 		},
 		scrollMode: () => {
@@ -521,7 +620,13 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				select.value = 'continuous';
 			}
 			select.onchange = () => {
-				eventBus?.publish('命令:设置滚动模式', select.value);
+				const api = options.getApi?.();
+				if (api) {
+					(api.settings.player as any).scrollMode = select.value;
+					api.updateSettings();
+				} else {
+					eventBus?.publish('命令:设置滚动模式', select.value);
+				}
 			};
 			bar.appendChild(select);
 		},

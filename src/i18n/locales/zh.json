@@ -99,6 +99,7 @@
 		"tabs": {
 			"general": "资产管理",
 			"player": "播放器配置",
+			"editor": "编辑器设置",
 			"about": "关于"
 		},
 		"about": {
@@ -146,6 +147,42 @@
 				"debugBarEnabled": "已启用 Debug Bar",
 				"debugBarDisabled": "已隐藏 Debug Bar"
 			}
+		},
+		"editor": {
+			"viewTitle": "编辑器视图设置",
+			"barTitle": "编辑器栏设置",
+			"defaultLayout": "默认布局",
+			"defaultLayoutDesc": "编辑器视图的默认布局模式",
+			"layoutHorizontal": "水平布局",
+			"layoutVertical": "垂直布局",
+			"layoutSaved": "布局设置已保存",
+			"resetToDefault": "重置为默认",
+			"resetToDefaultDesc": "重置编辑器栏组件的显示开关与顺序为默认配置",
+			"resetToDefaultSuccess": "编辑器栏设置已重置",
+			"resetToDefaultFailed": "重置编辑器栏设置失败",
+			"components": {
+				"playPause": "播放/暂停",
+				"stop": "停止",
+				"metronome": "节拍器",
+				"countIn": "预备拍",
+				"tracks": "选择音轨",
+				"refresh": "刷新/重建播放器",
+				"locateCursor": "滚动到光标",
+				"layoutToggle": "布局切换",
+				"exportMenu": "导出菜单",
+				"toTop": "回到顶部",
+				"toBottom": "回到底部",
+				"openSettings": "打开设置",
+				"progressBar": "进度条",
+				"speed": "速度选择",
+				"staveProfile": "谱表选择",
+				"zoom": "缩放选择",
+				"scrollMode": "滚动模式选择",
+				"audioPlayer": "原生音频播放器（实验性）",
+				"audioPlayerDesc": "编辑器视图中暂不支持音频播放器"
+			},
+			"moveUp": "上移",
+			"moveDown": "下移"
 		}
 	},
 	"navigation": {

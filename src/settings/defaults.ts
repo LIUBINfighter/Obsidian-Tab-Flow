@@ -19,6 +19,27 @@ export interface PlayBarComponentVisibility {
 	audioPlayer: boolean;
 }
 
+export interface EditorBarComponentVisibility {
+	playPause: boolean;
+	stop: boolean;
+	tracks: boolean;
+	refresh: boolean;
+	locateCursor: boolean;
+	layoutToggle: boolean;
+	exportMenu: boolean;
+	toTop: boolean;
+	toBottom: boolean;
+	openSettings: boolean;
+	metronome: boolean;
+	countIn: boolean;
+	speed: boolean;
+	staveProfile: boolean;
+	zoom: boolean;
+	progressBar: boolean;
+	scrollMode: boolean;
+	audioPlayer: boolean;
+}
+
 export interface TabFlowSettings {
 	mySetting: string;
 	assetsDownloaded?: boolean;
@@ -35,6 +56,13 @@ export interface TabFlowSettings {
 		components: PlayBarComponentVisibility;
 		order?: string[];
 	};
+	/** 编辑器栏配置 */
+	editorBar?: {
+		components: EditorBarComponentVisibility;
+		order?: string[];
+	};
+	/** 编辑器视图默认布局 */
+	editorViewDefaultLayout?: 'horizontal' | 'vertical';
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -89,4 +117,47 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 			'audioPlayer',
 		],
 	},
+	editorBar: {
+		components: {
+			playPause: true,
+			stop: true,
+			tracks: false,
+			refresh: true,
+			locateCursor: false,
+			layoutToggle: true,
+			exportMenu: false,
+			toTop: false,
+			toBottom: false,
+			openSettings: true,
+			metronome: true,
+			countIn: true,
+			speed: false,
+			staveProfile: false,
+			zoom: false,
+			progressBar: true,
+			scrollMode: false,
+			audioPlayer: false,
+		},
+		order: [
+			'progressBar',
+			'playPause',
+			'stop',
+			'metronome',
+			'countIn',
+			'tracks',
+			'refresh',
+			'locateCursor',
+			'layoutToggle',
+			'exportMenu',
+			'toTop',
+			'toBottom',
+			'openSettings',
+			'speed',
+			'staveProfile',
+			'zoom',
+			'scrollMode',
+			'audioPlayer',
+		],
+	},
+	editorViewDefaultLayout: 'horizontal',
 };
