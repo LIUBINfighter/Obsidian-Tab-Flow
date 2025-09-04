@@ -25,6 +25,7 @@ export interface AlphaTexInitOptions {
 
 export interface AlphaTexMountHandle {
 	destroy: () => void;
+	api?: alphaTab.AlphaTabApi | null;
 }
 
 // function fromScrollModeEnum(value: number | undefined): string | undefined {
@@ -678,5 +679,6 @@ export function mountAlphaTexBlock(
 				// Ignore UI override clear errors
 			}
 		},
+		api: api,
 	};
 }

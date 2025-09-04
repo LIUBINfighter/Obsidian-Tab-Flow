@@ -3,6 +3,8 @@ import { setIcon, normalizePath, TFile, Notice } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEditor';
 import { t } from '../i18n';
+import * as alphaTab from '@coderline/alphatab';
+import type { AlphaTexMountHandle } from '../markdown/AlphaTexBlock';
 
 export interface AlphaTexPlaygroundOptions {
 	placeholder?: string;
@@ -24,6 +26,7 @@ export interface AlphaTexPlaygroundHandle {
 	setValue(v: string): void;
 	destroy(): void;
 	refresh(): void; // 强制重新渲染
+	getApi(): alphaTab.AlphaTabApi | null;
 }
 
 /**
@@ -276,7 +279,7 @@ export function createAlphaTexPlayground(
 	// 预览容器
 	const previewWrap = wrapper.createDiv({ cls: 'inmarkdown-preview tabflow-doc-main-content' });
 
-	let mounted: { destroy?: () => void } | null = null;
+	let mounted: AlphaTexMountHandle | null = null;
 	let debounceTimer: number | null = null;
 
 	function scheduleRender() {
@@ -385,5 +388,6 @@ export function createAlphaTexPlayground(
 			wrapper.detach();
 		},
 		refresh: () => renderPreview(),
+		getApi: () => mounted?.api || null,
 	};
 }

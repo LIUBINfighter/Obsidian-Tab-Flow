@@ -7,6 +7,8 @@ import {
 	createAlphaTexPlayground,
 	AlphaTexPlaygroundHandle,
 } from '../components/AlphaTexPlayground';
+import { createPlayBar } from '../components/PlayBar';
+import { EventBus } from '../utils/EventBus';
 import { t } from '../i18n';
 import TabFlowPlugin from '../main';
 
@@ -18,6 +20,7 @@ export class AlphaTexEditorView extends FileView {
 	private container: HTMLElement;
 	private layout: 'vertical' | 'horizontal' = 'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
+	private eventBus: EventBus;
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -25,6 +28,7 @@ export class AlphaTexEditorView extends FileView {
 	) {
 		super(leaf);
 		this.container = this.contentEl;
+		this.eventBus = new EventBus();
 
 		// 从视图状态中读取布局参数
 		const state = leaf.getViewState();
@@ -102,6 +106,32 @@ export class AlphaTexEditorView extends FileView {
 		// 创建主布局容器
 		const mainContainer = this.container.createDiv({ cls: 'alphatex-editor-layout' });
 
+		// 创建播放栏
+		const playBarContainer = this.container.createDiv({ cls: 'alphatex-editor-playbar' });
+		const playBar = createPlayBar({
+			app: this.app,
+			eventBus: this.eventBus,
+			initialPlaying: false,
+			getCurrentTime: () => {
+				const api = this.playground?.getApi();
+				return api?.tickPosition !== undefined ? api.tickPosition : 0;
+			},
+			getDuration: () => {
+				const api = this.playground?.getApi();
+				return api?.score ? (api.score as any).duration || 0 : 0;
+			},
+			seekTo: (ms: number) => {
+				const api = this.playground?.getApi();
+				if (api) {
+					api.tickPosition = ms;
+				}
+			},
+			onAudioCreated: (audioEl: HTMLAudioElement) => {
+				// 编辑器视图可能不需要音频集成，暂时留空
+			},
+		});
+		playBarContainer.appendChild(playBar);
+
 		// 创建编辑器和预览容器
 		const editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
 		const previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
@@ -136,8 +166,88 @@ export class AlphaTexEditorView extends FileView {
 			},
 		});
 
-		// 监听文件变化
-		this.app.vault.on('modify', this.fileModifyHandler);
+		// 订阅播放栏事件
+		this.eventBus.subscribe('命令:播放暂停', () => {
+			const api = this.playground?.getApi();
+			if (api) {
+				api.playPause();
+			}
+		});
+
+		this.eventBus.subscribe('命令:停止', () => {
+			const api = this.playground?.getApi();
+			if (api) {
+				api.stop();
+			}
+		});
+
+		this.eventBus.subscribe('命令:设置速度', (speed: number) => {
+			const api = this.playground?.getApi();
+			if (api) {
+				api.playbackSpeed = speed;
+			}
+		});
+
+		this.eventBus.subscribe('命令:设置谱表', (profile: number) => {
+			const api = this.playground?.getApi();
+			if (api) {
+				(api.settings.display as any).staveProfile = profile;
+				api.updateSettings();
+				api.render();
+			}
+		});
+
+		this.eventBus.subscribe('命令:设置缩放', (scale: number) => {
+			const api = this.playground?.getApi();
+			if (api) {
+				api.settings.display.scale = scale;
+				api.updateSettings();
+				api.render();
+			}
+		});
+
+		this.eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
+			const api = this.playground?.getApi();
+			if (api) {
+				(api.settings.player as any).scrollMode = mode;
+				api.updateSettings();
+			}
+		});
+
+		this.eventBus.subscribe('命令:滚动到顶部', () => {
+			const api = this.playground?.getApi();
+			if (api) {
+				api.tickPosition = 0;
+			}
+		});
+
+		this.eventBus.subscribe('命令:滚动到底部', () => {
+			const api = this.playground?.getApi();
+			if (api && api.score) {
+				const masterBars = api.score.masterBars;
+				if (masterBars && masterBars.length > 0) {
+					const lastBar = masterBars[masterBars.length - 1];
+					const endTick = lastBar.start + lastBar.calculateDuration();
+					api.tickPosition = endTick;
+				}
+			}
+		});
+
+		this.eventBus.subscribe('命令:滚动到光标', () => {
+			const api = this.playground?.getApi();
+			if (api) {
+				(api as any).scrollToCursor?.();
+			}
+		});
+
+		this.eventBus.subscribe('命令:选择音轨', () => {
+			// 暂时留空，可以添加音轨选择逻辑
+		});
+
+		this.eventBus.subscribe('命令:重新构造AlphaTabApi', () => {
+			// 重新渲染预览
+			this.playground?.refresh();
+		});
 	}
 
 	private async reloadFile(): Promise<void> {
