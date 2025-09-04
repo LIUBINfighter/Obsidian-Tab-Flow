@@ -1,4 +1,4 @@
-import { FileView, TFile, WorkspaceLeaf, Notice } from 'obsidian';
+import { FileView, TFile, WorkspaceLeaf } from 'obsidian';
 import {
 	createEmbeddableMarkdownEditor,
 	EmbeddableMarkdownEditor,
@@ -23,6 +23,64 @@ export class EditorView extends FileView {
 	private fileModifyHandler: (file: TFile) => void;
 	private eventBus: EventBus;
 	private progressBar: any = null; // 保存进度条引用
+	private lastSavedContent = '';
+	private pendingSaveTimer: number | null = null;
+
+	private scheduleSave(delay = 1000) {
+		try {
+			if (this.pendingSaveTimer) window.clearTimeout(this.pendingSaveTimer);
+			this.pendingSaveTimer = window.setTimeout(() => {
+				this.pendingSaveTimer = null;
+				this.flushSave().catch(() => {});
+			}, delay);
+		} catch (e) {
+			// ignore
+		}
+	}
+
+	private clearPendingSave() {
+		if (this.pendingSaveTimer) {
+			window.clearTimeout(this.pendingSaveTimer);
+			this.pendingSaveTimer = null;
+		}
+	}
+	/**
+	 * 将当前编辑器内容立即保存（如果有变更）。
+	 */
+	private async flushSave(): Promise<void> {
+		try {
+			if (!this.file || !this.editor) return;
+			const content = (this.editor as EmbeddableMarkdownEditor).value;
+			if (content === this.lastSavedContent) return;
+
+			// 使用 Vault.process 以防止在读取与写入之间发生外部更改导致的数据丢失
+			const result = await this.app.vault.process(this.file, (currentData: string) => {
+				// 如果磁盘内容与我们上次保存的基线不同，说明文件在外部被修改，拒绝覆盖
+				if (currentData !== this.lastSavedContent) {
+					return currentData; // 保持磁盘版本不变
+				}
+				return content;
+			});
+
+			if (result === content) {
+				this.lastSavedContent = content;
+				console.log('[EditorView] flushSave: 保存已完成');
+			} else {
+				console.warn('[EditorView] flushSave: 磁盘文件已变更，未覆盖。');
+				// new Notice(
+				// 	t(
+				// 		'alphatex.editor.externalChangeConflict',
+				// 		undefined,
+				// 		'文件在磁盘上被修改，未覆盖以避免数据丢失'
+				// 	)
+				// );
+			}
+		} catch (e) {
+			console.error('[EditorView] flushSave: 保存失败', e);
+			// new Notice(t('alphatex.editor.saveError', undefined, '自动保存失败'));
+		}
+	}
+	private layoutToggleAction: HTMLElement | null = null;
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -45,8 +103,39 @@ export class EditorView extends FileView {
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.file && file && file.path === this.file.path) {
-				console.debug(`[EditorView] 检测到文件变化: ${file.basename}，正在重新加载...`);
-				this.reloadFile();
+				try {
+					console.debug(
+						`[EditorView] 检测到文件变化: ${file.basename}，正在同步最新内容...`
+					);
+					this.app.vault
+						.cachedRead(file)
+						.then((latest) => {
+							if (!this.editor) {
+								// 如果编辑器不存在，做完整重载
+								this.reloadFile();
+								return;
+							}
+							// 无论是否有本地未保存更改，自动用磁盘最新内容覆盖编辑器视图（按需求自动更新）
+							if ((this.editor as EmbeddableMarkdownEditor).value !== latest) {
+								this.editor!.set(latest, false);
+								this.playground?.setValue(latest);
+								this.lastSavedContent = latest;
+								// new Notice(
+								// 	t(
+								// 		'alphatex.editor.externalUpdated',
+								// 		undefined,
+								// 		'文件已在磁盘上更改，视图已同步'
+								// 	)
+								// );
+								console.debug('[EditorView] 已将编辑器与磁盘最新内容同步');
+							}
+						})
+						.catch((e) => {
+							console.error('[EditorView] 读取修改后的文件失败:', e);
+						});
+				} catch (e) {
+					console.error('[EditorView] 处理文件修改事件失败:', e);
+				}
 			}
 		};
 
@@ -82,11 +171,24 @@ export class EditorView extends FileView {
 		this.file = file;
 		await this.render();
 
-		// 添加布局切换按钮到标题栏
-		this.addAction(this.layout === 'vertical' ? 'layout' : 'sidebar', '切换布局', () => {
-			this.layout = this.layout === 'vertical' ? 'horizontal' : 'vertical';
-			this.render();
-		});
+		// 注册文件修改监听器
+		this.app.vault.on('modify', this.fileModifyHandler);
+
+		// 添加布局切换按钮并保存返回的按钮引用，方便后续移除
+		const btn = this.addAction(
+			this.layout === 'vertical' ? 'layout' : 'sidebar',
+			'切换布局',
+			() => {
+				this.layout = this.layout === 'vertical' ? 'horizontal' : 'vertical';
+				this.render();
+			}
+		);
+		try {
+			// addAction 在运行时通常返回 HTMLElement/Component，尝试保存为 HTMLElement
+			this.layoutToggleAction = btn as unknown as HTMLElement;
+		} catch (e) {
+			this.layoutToggleAction = null;
+		}
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {
@@ -94,6 +196,19 @@ export class EditorView extends FileView {
 	}
 
 	private cleanup(): void {
+		// 在清理时触发一次立即保存（flush）
+		try {
+			// fire-and-forget：确保不会阻塞清理流程
+			this.flushSave().catch(() => {
+				/* already handled inside flushSave */
+			});
+		} catch (e) {
+			// ignore
+		}
+
+		// 清除挂起的自动保存计时器
+		this.clearPendingSave();
+
 		if (this.playground) {
 			this.playground.destroy();
 			this.playground = null;
@@ -101,6 +216,16 @@ export class EditorView extends FileView {
 		if (this.editor) {
 			this.editor.destroy();
 			this.editor = null;
+		}
+
+		// 清理布局切换按钮（防止重复实例残留）
+		try {
+			if (this.layoutToggleAction && this.layoutToggleAction.parentElement) {
+				this.layoutToggleAction.remove();
+			}
+			this.layoutToggleAction = null;
+		} catch (e) {
+			// ignore
 		}
 	}
 
@@ -114,9 +239,11 @@ export class EditorView extends FileView {
 		let content = '';
 		try {
 			content = await this.app.vault.read(this.file);
+			// 记录为已保存内容基线
+			this.lastSavedContent = content;
 		} catch (error) {
 			console.error('[EditorView] 读取文件失败:', error);
-			new Notice(t('alphatex.editor.readError', undefined, '读取文件失败'));
+			// new Notice(t('alphatex.editor.readError', undefined, '读取文件失败'));
 			return;
 		}
 
@@ -137,10 +264,11 @@ export class EditorView extends FileView {
 			value: content,
 			placeholder: t('alphatex.editor.placeholder', undefined, '输入 AlphaTex 内容...'),
 			onChange: () => {
-				// 当编辑器内容变化时，更新预览
+				// 当编辑器内容变化时，更新预览并触发防抖自动保存
 				if (this.playground && this.editor) {
 					this.playground.setValue(this.editor.value);
 				}
+				this.scheduleSave(1000);
 			},
 		});
 
