@@ -163,48 +163,55 @@ export class EmbeddableMarkdownEditor {
 						// (dot and bar highlight plugins are imported from ./Highlight.ts)
 						extensions.push(dotHighlightPlugin());
 						extensions.push(barHighlightPlugin());
-					// Ensure spellcheck/auto-correct attributes are applied to the actual contenteditable area
-					const disableSpellcheckPlugin = ViewPlugin.fromClass(
-						class {
-							private view: EditorView;
-							private observer?: MutationObserver;
-							constructor(view: EditorView) {
-								this.view = view;
-								this.applyAttrs();
-								// Observe DOM changes in case .cm-content is created later
-								try {
-									this.observer = new MutationObserver(() => this.applyAttrs());
-									this.observer.observe(this.view.dom, { childList: true, subtree: true });
-								} catch {
-									// ignore if MutationObserver not available in environment
+						// Ensure spellcheck/auto-correct attributes are applied to the actual contenteditable area
+						const disableSpellcheckPlugin = ViewPlugin.fromClass(
+							class {
+								private view: EditorView;
+								private observer?: MutationObserver;
+								constructor(view: EditorView) {
+									this.view = view;
+									this.applyAttrs();
+									// Observe DOM changes in case .cm-content is created later
+									try {
+										this.observer = new MutationObserver(() =>
+											this.applyAttrs()
+										);
+										this.observer.observe(this.view.dom, {
+											childList: true,
+											subtree: true,
+										});
+									} catch {
+										// ignore if MutationObserver not available in environment
+									}
+								}
+								private applyAttrs() {
+									const content = this.view.dom.querySelector(
+										'.cm-content'
+									) as HTMLElement | null;
+									if (content) {
+										content.setAttribute('spellcheck', 'false');
+										content.setAttribute('autocorrect', 'off');
+										content.setAttribute('autocapitalize', 'off');
+									}
+								}
+								update(update: ViewUpdate) {
+									// Re-apply on updates as well
+									this.applyAttrs();
+								}
+								destroy() {
+									this.observer?.disconnect();
 								}
 							}
-							private applyAttrs() {
-								const content = this.view.dom.querySelector('.cm-content') as HTMLElement | null;
-								if (content) {
-									content.setAttribute('spellcheck', 'false');
-									content.setAttribute('autocorrect', 'off');
-									content.setAttribute('autocapitalize', 'off');
-								}
-							}
-							update(update: ViewUpdate) {
-								// Re-apply on updates as well
-								this.applyAttrs();
-							}
-							destroy() {
-								this.observer?.disconnect();
-							}
-						}
-					);
-					extensions.push(disableSpellcheckPlugin);
-					// Keep editorAttributes as well for broader support
-					extensions.push(
-						EditorView.editorAttributes.of({
-							spellcheck: 'false',
-							autocorrect: 'off',
-							autocapitalize: 'off',
-						}) as any
-					);
+						);
+						extensions.push(disableSpellcheckPlugin);
+						// Keep editorAttributes as well for broader support
+						extensions.push(
+							EditorView.editorAttributes.of({
+								spellcheck: 'false',
+								autocorrect: 'off',
+								autocapitalize: 'off',
+							}) as any
+						);
 						extensions.push(bracketHighlightPlugin());
 						extensions.push(metaHighlightPlugin());
 						extensions.push(commentHighlightPlugin());
