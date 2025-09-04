@@ -155,19 +155,24 @@
 }
 
 /* Brackets and braces styling (for () and {}) */
-.cm-content .cm-bracket, .cm-bracket, .atx-bracket {
+.cm-content .cm-bracket,
+.cm-bracket,
+.atx-bracket {
 	color: var(--color-accent);
 	font-weight: 700;
 }
 
 /* Metadata backslash tokens (e.g. \title, \tempo) */
-.cm-content .cm-meta, .cm-meta, .atx-meta {
+.cm-content .cm-meta,
+.cm-meta,
+.atx-meta {
 	color: var(--text-accent);
 	font-weight: 700;
 }
 
 /* Comments styling (// ...) */
-.cm-content .cm-comment, .cm-comment {
+.cm-content .cm-comment,
+.cm-comment {
 	color: var(--text-muted);
 	font-style: italic;
 }
