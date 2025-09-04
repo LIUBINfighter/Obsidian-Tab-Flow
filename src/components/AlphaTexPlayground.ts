@@ -15,6 +15,8 @@ export interface AlphaTexPlaygroundOptions {
 	layout?: 'vertical' | 'horizontal';
 	/** 附加到根容器的自定义类名（可用于主题/自定义布局） */
 	className?: string;
+	/** 是否显示编辑区 */
+	showEditor?: boolean;
 }
 
 export interface AlphaTexPlaygroundHandle {
@@ -40,8 +42,9 @@ export function createAlphaTexPlayground(
 		readOnly = false,
 		onChange,
 		alphaTabOptions = {},
-		layout = 'vertical',
+		layout = 'horizontal', // 默认改为左右布局
 		className = '',
+		showEditor = true,
 	} = options;
 
 	container.empty();
@@ -50,130 +53,8 @@ export function createAlphaTexPlayground(
 	else wrapper.classList.add('is-vertical');
 	if (className) wrapper.classList.add(className);
 
-	// 编辑器容器
-	const editorWrap = wrapper.createDiv({ cls: 'inmarkdown-editor' });
-	const editorContainer = editorWrap.createDiv({ cls: 'inmarkdown-editor-cm' });
-	const embedded = createEmbeddableMarkdownEditor(plugin.app, editorContainer, {
-		value: initialSource,
-		placeholder,
-		onChange: () => scheduleRender(),
-	});
-
-	// Editor toolbar (top-right icons)
-	const toolbar = editorWrap.createDiv({ cls: 'inmarkdown-editor-toolbar' });
-	const btnCopy = toolbar.createEl('button', { attr: { type: 'button' }, cls: 'clickable-icon' });
-	const iCopy = document.createElement('span');
-	setIcon(iCopy, 'copy');
-	btnCopy.appendChild(iCopy);
-	btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
-	btnCopy.addEventListener('click', async () => {
-		try {
-			await navigator.clipboard.writeText(embedded.value);
-		} catch {
-			try {
-				const ta = document.createElement('textarea');
-				ta.value = embedded.value;
-				document.body.appendChild(ta);
-				ta.select();
-				document.execCommand('copy');
-				ta.remove();
-			} catch {
-				// Ignore clipboard fallback errors
-			}
-		}
-		// feedback: turn into green check briefly
-		try {
-			setIcon(iCopy, 'check');
-			btnCopy.classList.add('is-success');
-			btnCopy.setAttr('aria-label', t('playground.copied'));
-			setTimeout(() => {
-				setIcon(iCopy, 'copy');
-				btnCopy.classList.remove('is-success');
-				btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
-			}, 1200);
-		} catch {
-			// Ignore UI feedback errors
-		}
-	});
-
-	const btnReset = toolbar.createEl('button', {
-		attr: { type: 'button' },
-		cls: 'clickable-icon',
-	});
-	const iReset = document.createElement('span');
-	setIcon(iReset, 'rotate-ccw');
-	btnReset.appendChild(iReset);
-	btnReset.setAttr('aria-label', t('playground.resetToDefault'));
-	btnReset.addEventListener('click', () => {
-		try {
-			embedded.set(initialSource, false);
-			scheduleRender();
-		} catch {
-			// Ignore reset errors
-		}
-	});
-
-	const btnNewNote = toolbar.createEl('button', {
-		attr: { type: 'button' },
-		cls: 'clickable-icon',
-	});
-	const iNew = document.createElement('span');
-	setIcon(iNew, 'file-plus');
-	btnNewNote.appendChild(iNew);
-	btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
-	btnNewNote.addEventListener('click', async () => {
-		try {
-			const now = new Date();
-			const pad = (n: number) => String(n).padStart(2, '0');
-			const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-			const folder = 'Alphatex Playground';
-			const baseName = `Playground-${stamp}.md`;
-			const filePath = normalizePath(`${folder}/${baseName}`);
-			// ensure folder
-			try {
-				if (!(await plugin.app.vault.adapter.exists(folder)))
-					await plugin.app.vault.createFolder(folder);
-			} catch {
-				// Ignore folder creation errors
-			}
-			const content = `\`\`\`alphatex\n${embedded.value}\n\`\`\``.replace(/`/g, '`');
-			// vault.create() 已经返回 Promise<TFile>，不需要类型转换
-			const file = await plugin.app.vault.create(filePath, content);
-			// 使用类型守卫确保是 TFile 实例
-			if (!(file instanceof TFile)) {
-				throw new Error('创建的文件不是有效的 TFile 实例');
-			}
-			const leaf = plugin.app.workspace.getLeaf(true);
-			await leaf.openFile(file);
-		} catch (e) {
-			console.warn('[Playground] 创建笔记失败', e);
-		}
-	});
-
-	// Format init JSON button
-	const btnFormat = toolbar.createEl('button', {
-		attr: { type: 'button' },
-		cls: 'clickable-icon',
-	});
-	const iFmt = document.createElement('span');
-	setIcon(iFmt, 'code');
-	btnFormat.appendChild(iFmt);
-	btnFormat.setAttr('aria-label', t('playground.formatInitJson'));
-	btnFormat.addEventListener('click', () => {
-		try {
-			const formatted = formatInitHeader(embedded.value);
-			if (formatted && formatted !== embedded.value) {
-				embedded.set(formatted, false);
-				new Notice(t('playground.initJsonFormatted'));
-				scheduleRender();
-			} else {
-				new Notice(t('playground.noInitDetected'));
-			}
-		} catch (e) {
-			console.warn('[Playground] 格式化 init 失败:', e);
-			new Notice(t('playground.formatFailed'));
-		}
-	});
+	let currentValue = initialSource;
+	let embedded: ReturnType<typeof createEmbeddableMarkdownEditor> | null = null;
 
 	function formatInitHeader(sourceText: string): string | null {
 		let s = sourceText;
@@ -184,10 +65,10 @@ export function createAlphaTexPlayground(
 		const cursor = startMatch[0].length;
 		const objStart = s.indexOf('{', cursor);
 		if (objStart < 0) return null;
-		let i = objStart,
-			depth = 0,
-			inStr = false,
-			quote: '"' | "'" | null = null;
+		let i = objStart;
+		let depth = 0;
+		let inStr = false;
+		let quote: '"' | "'" | null = null;
 		while (i < s.length) {
 			const ch = s[i];
 			if (inStr) {
@@ -224,14 +105,14 @@ export function createAlphaTexPlayground(
 		}
 		if (depth !== 0) return null;
 		const jsonText = s.slice(objStart, i);
-		let obj: any;
+		let parsed: unknown;
 		try {
-			obj = JSON.parse(jsonText);
+			parsed = JSON.parse(jsonText);
 		} catch {
 			return null;
 		}
-		const pretty = JSON.stringify(obj, null, 2);
-		// consume trailing wrapper up to closing %% and optional newline
+		if (typeof parsed !== 'object' || parsed === null) return null;
+		const pretty = JSON.stringify(parsed, null, 2);
 		let k = i;
 		while (k < s.length && /\s/.test(s[k])) k++;
 		if (s[k] === '}') {
@@ -243,14 +124,153 @@ export function createAlphaTexPlayground(
 		if (s[k] === '\n') k++;
 		const consumed = k + (sourceText.length - s.length);
 		const rest = sourceText.slice(consumed);
-		const header = `%%{init: ${pretty} }%%\n`;
-		return header + rest;
+		return `%%{init: ${pretty} }%%\n` + rest;
 	}
-	if (readOnly) {
-		// 简单只读（利用 CodeMirror DOM 属性）
-		editorContainer.addClass('read-only');
-		const cmEl = editorContainer.querySelector('.cm-content') as HTMLElement | null;
-		if (cmEl) cmEl.setAttr('contenteditable', 'false');
+
+	if (showEditor) {
+		const editorWrap = wrapper.createDiv({ cls: 'inmarkdown-editor' });
+		const editorContainer = editorWrap.createDiv({ cls: 'inmarkdown-editor-cm' });
+		embedded = createEmbeddableMarkdownEditor(plugin.app, editorContainer, {
+			value: initialSource,
+			placeholder,
+			onChange: () => {
+				if (embedded) currentValue = embedded.value;
+				scheduleRender();
+			},
+		});
+
+		// Editor toolbar (top-right icons)
+		const toolbar = editorWrap.createDiv({ cls: 'inmarkdown-editor-toolbar' });
+		const btnCopy = toolbar.createEl('button', {
+			attr: { type: 'button' },
+			cls: 'clickable-icon',
+		});
+		const iCopy = document.createElement('span');
+		setIcon(iCopy, 'copy');
+		btnCopy.appendChild(iCopy);
+		btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
+		btnCopy.addEventListener('click', async () => {
+			try {
+				if (embedded) await navigator.clipboard.writeText(embedded.value);
+			} catch {
+				try {
+					const ta = document.createElement('textarea');
+					ta.value = embedded ? embedded.value : currentValue;
+					document.body.appendChild(ta);
+					ta.select();
+					document.execCommand('copy');
+					ta.remove();
+				} catch {
+					// Ignore clipboard fallback errors
+				}
+			}
+			// feedback: turn into green check briefly
+			try {
+				setIcon(iCopy, 'check');
+				btnCopy.classList.add('is-success');
+				btnCopy.setAttr('aria-label', t('playground.copied'));
+				setTimeout(() => {
+					setIcon(iCopy, 'copy');
+					btnCopy.classList.remove('is-success');
+					btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
+				}, 1200);
+			} catch {
+				// Ignore UI feedback errors
+			}
+		});
+
+		const btnReset = toolbar.createEl('button', {
+			attr: { type: 'button' },
+			cls: 'clickable-icon',
+		});
+		const iReset = document.createElement('span');
+		setIcon(iReset, 'rotate-ccw');
+		btnReset.appendChild(iReset);
+		btnReset.setAttr('aria-label', t('playground.resetToDefault'));
+		btnReset.addEventListener('click', () => {
+			try {
+				if (embedded) embedded.set(initialSource, false);
+				currentValue = initialSource;
+				scheduleRender();
+			} catch {
+				// Ignore reset errors
+			}
+		});
+
+		const btnNewNote = toolbar.createEl('button', {
+			attr: { type: 'button' },
+			cls: 'clickable-icon',
+		});
+		const iNew = document.createElement('span');
+		setIcon(iNew, 'file-plus');
+		btnNewNote.appendChild(iNew);
+		btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
+		btnNewNote.addEventListener('click', async () => {
+			try {
+				const now = new Date();
+				const pad = (n: number) => String(n).padStart(2, '0');
+				const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+				const folder = 'Alphatex Playground';
+				const baseName = `Playground-${stamp}.md`;
+				const filePath = normalizePath(`${folder}/${baseName}`);
+				// ensure folder
+				try {
+					if (!(await plugin.app.vault.adapter.exists(folder)))
+						await plugin.app.vault.createFolder(folder);
+				} catch {
+					// Ignore folder creation errors
+				}
+				const content =
+					`\`\`\`alphatex\n${embedded ? embedded.value : currentValue}\n\`\`\``.replace(
+						/`/g,
+						'`'
+					);
+				// vault.create() 已经返回 Promise<TFile>，不需要类型转换
+				const file = await plugin.app.vault.create(filePath, content);
+				// 使用类型守卫确保是 TFile 实例
+				if (!(file instanceof TFile)) {
+					throw new Error('创建的文件不是有效的 TFile 实例');
+				}
+				const leaf = plugin.app.workspace.getLeaf(true);
+				await leaf.openFile(file);
+			} catch (e) {
+				console.warn('[Playground] 创建笔记失败', e);
+			}
+		});
+
+		// Format init JSON button (使用顶层 formatInitHeader)
+		const btnFormat = toolbar.createEl('button', {
+			attr: { type: 'button' },
+			cls: 'clickable-icon',
+		});
+		const iFmt = document.createElement('span');
+		setIcon(iFmt, 'code');
+		btnFormat.appendChild(iFmt);
+		btnFormat.setAttr('aria-label', t('playground.formatInitJson'));
+		btnFormat.addEventListener('click', () => {
+			if (!embedded) return;
+			try {
+				const formatted = formatInitHeader(embedded.value);
+				if (formatted && formatted !== embedded.value) {
+					embedded.set(formatted, false);
+					currentValue = embedded.value;
+					new Notice(t('playground.initJsonFormatted'));
+					scheduleRender();
+				} else {
+					new Notice(t('playground.noInitDetected'));
+				}
+			} catch (e) {
+				console.warn('[Playground] 格式化 init 失败:', e);
+				new Notice(t('playground.formatFailed'));
+			}
+		});
+
+		if (readOnly) {
+			// 简单只读（利用 CodeMirror DOM 属性）
+			editorContainer.addClass('read-only');
+			const cmEl = editorContainer.querySelector('.cm-content') as HTMLElement | null;
+			if (cmEl) cmEl.setAttr('contenteditable', 'false');
+		}
 	}
 
 	// 预览容器
@@ -262,16 +282,16 @@ export function createAlphaTexPlayground(
 	function scheduleRender() {
 		if (debounceTimer) window.clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
-			const ric = (window as any).requestIdleCallback as
-				| undefined
-				| ((cb: (deadline: any) => void) => number);
-			if (typeof ric === 'function') {
-				ric(() => renderPreview());
-			} else {
-				renderPreview();
-			}
+			const win = window as unknown as {
+				requestIdleCallback?: (
+					cb: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void
+				) => number;
+			};
+			if (typeof win.requestIdleCallback === 'function')
+				win.requestIdleCallback(() => renderPreview());
+			else renderPreview();
 		}, debounceMs);
-		onChange?.(embedded.value);
+		onChange?.(currentValue);
 	}
 
 	async function renderPreview() {
@@ -314,7 +334,7 @@ export function createAlphaTexPlayground(
 		// eslint-disable-next-line @typescript-eslint/no-var-requires
 		const { mountAlphaTexBlock } = require('../markdown/AlphaTexBlock');
 		try {
-			mounted = mountAlphaTexBlock(previewWrap, embedded.value, resources, {
+			mounted = mountAlphaTexBlock(previewWrap, currentValue, resources, {
 				scale: 1,
 				speed: 1,
 				scrollMode: 'Continuous',
@@ -324,9 +344,10 @@ export function createAlphaTexPlayground(
 		} catch (e) {
 			console.warn('[Playground] AlphaTex 渲染失败:', e);
 			const err = previewWrap.createDiv({ cls: 'alphatex-block' });
+			const msg = e instanceof Error ? e.message : String(e);
 			err.createEl('div', {
 				cls: 'alphatex-error',
-				text: t('playground.engineError') + String((e as any)?.message || e),
+				text: t('playground.engineError') + msg,
 			});
 		}
 	}
@@ -348,9 +369,10 @@ export function createAlphaTexPlayground(
 	observer.observe(document.body, { childList: true, subtree: true });
 
 	return {
-		getValue: () => embedded.value,
+		getValue: () => currentValue,
 		setValue: (v: string) => {
-			embedded.set(v, false);
+			currentValue = v;
+			if (embedded) embedded.set(v, false);
 			scheduleRender();
 		},
 		destroy: () => {

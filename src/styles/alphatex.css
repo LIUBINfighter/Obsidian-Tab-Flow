@@ -1,3 +1,71 @@
+/* AlphaTex Editor View Styles */
+.alphatex-editor-layout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.alphatex-editor-toolbar {
+	display: flex;
+	gap: 8px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.alphatex-editor-toolbar .clickable-icon {
+	padding: 6px;
+	border-radius: 4px;
+	transition: background 0.15s ease;
+}
+
+.alphatex-editor-toolbar .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+}
+
+.alphatex-editor-section,
+.alphatex-preview-section {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-section,
+.alphatex-editor-layout.is-vertical .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-layout.is-horizontal {
+	flex-direction: row;
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-section,
+.alphatex-editor-layout.is-horizontal .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-wrapper {
+	height: 100%;
+	padding: 12px;
+	background: var(--background-primary);
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-wrapper {
+	border-bottom: none;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-wrapper {
+	border-right: none;
+}
+
+.alphatex-preview-section {
+	padding: 12px;
+	background: var(--background-primary);
+	overflow: auto;
+}
+
 .alphatex-block {
 	margin: 0.5rem 0 1rem 0;
 }
