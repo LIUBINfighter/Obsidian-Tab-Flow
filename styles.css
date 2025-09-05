@@ -529,9 +529,9 @@
 .inmarkdown-editor-cm .cm-editor {
 	background: transparent;
 	font-family: var(--font-monospace);
-	font-size: 13px;
-	line-height: 1.5;
-	max-height: 260px;
+	font-size: 18px;
+	line-height: 2;
+	max-height: 600px;
 	/* keep a reasonable height */
 	overflow: auto;
 }
