@@ -15,8 +15,8 @@
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest --coverage",
 		"test:ui": "vitest --ui",
-		"lint": "eslint src --ext .ts,.js",
-		"lint:fix": "eslint src --ext .ts,.js --fix",
+		"lint": "eslint src --ext .ts,.js,.md,.json",
+		"lint:fix": "eslint src --ext .ts,.js,.md,.json --fix",
 		"format": "prettier --write \"src/**/*.{ts,js,json,css,md}\"",
 		"format:check": "prettier --check \"src/**/*.{ts,js,json,css,md}\"",
 		"check": "npm run clean && npm run lint && npm run lint:fix && npm run format && npm run format:check && npm run build && echo ======================================= && echo ' All checks passed successfully!'"
