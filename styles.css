@@ -209,15 +209,19 @@
 
 /* Highlight for dot symbol in embedded editor */
 .highlighted-dot {
-	/* Render the dot larger and visually distinct */
+	/* Render the dot with consistent size and bold black font */
 	display: inline-block;
 	color: var(--text-accent, var(--color-accent));
 	background: transparent;
-	font-size: 1em; /* larger dot */
+	/* Use a CSS variable so themes can override dot size; fallback to 1em */
+	font-size: var(--alphatex-dot-size, 1em);
 	line-height: 1.3;
 	padding: 0 1px;
 	transform: translateY(0.5px);
 	opacity: 0.95;
+	font-family:
+		'SimHei', 'Microsoft YaHei', 'Heiti SC', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
+	font-weight: 700;
 }
 
 /* Highlight for bar line symbol (|) in embedded editor */
@@ -294,11 +298,15 @@
 .highlighted-dot,
 .atx-dot {
 	display: inline-block;
-	font-size: 1.2em; /* 调整为更小的点 */
+	/* Dot size controlled by --alphatex-dot-size */
+	font-size: var(--alphatex-dot-size, 1em);
 	line-height: 1;
 	color: var(--text-accent, var(--color-accent));
 	transform: translateY(0.02em);
 	padding: 0 1px;
+	font-family:
+		'SimHei', 'Microsoft YaHei', 'Heiti SC', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
+	font-weight: 700;
 }
 
 /* Note tokens (fret.string.duration) */

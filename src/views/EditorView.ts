@@ -173,22 +173,6 @@ export class EditorView extends FileView {
 
 		// 注册文件修改监听器
 		this.app.vault.on('modify', this.fileModifyHandler);
-
-		// 添加布局切换按钮并保存返回的按钮引用，方便后续移除
-		const btn = this.addAction(
-			this.layout === 'vertical' ? 'layout' : 'sidebar',
-			'切换布局',
-			() => {
-				this.layout = this.layout === 'vertical' ? 'horizontal' : 'vertical';
-				this.render();
-			}
-		);
-		try {
-			// addAction 在运行时通常返回 HTMLElement/Component，尝试保存为 HTMLElement
-			this.layoutToggleAction = btn as unknown as HTMLElement;
-		} catch (e) {
-			this.layoutToggleAction = null;
-		}
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {
@@ -288,6 +272,21 @@ export class EditorView extends FileView {
 
 		// 创建编辑器栏（EditorBar）
 		this._mountEditorBar();
+
+		// 添加布局切换按钮并保存返回的按钮引用，方便后续移除
+		try {
+			const btn = this.addAction(
+				this.layout === 'vertical' ? 'layout' : 'sidebar',
+				'切换布局',
+				() => {
+					this.layout = this.layout === 'vertical' ? 'horizontal' : 'vertical';
+					this.render();
+				}
+			);
+			this.layoutToggleAction = btn as unknown as HTMLElement;
+		} catch (e) {
+			this.layoutToggleAction = null;
+		}
 	}
 
 	private async reloadFile(): Promise<void> {
