@@ -323,6 +323,21 @@ export class DocView extends ItemView {
 		// 添加键盘事件处理器：支持左右箭头键切换页签
 		this.registerDomEvent(layout, 'keydown', (e: KeyboardEvent) => {
 			if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+				// 检查事件目标，如果用户正在编辑器或其他输入控件中，则不处理
+				const target = e.target as Element;
+				if (target && (
+					target.classList.contains('cm-content') || // CodeMirror 编辑器内容
+					target.closest('.cm-editor') || // CodeMirror 编辑器容器
+					target.closest('.inmarkdown-editor') || // playground 编辑器区域
+					target.closest('input') || // 输入框
+					target.closest('textarea') || // 文本域
+					target.tagName === 'INPUT' || // 直接是输入元素
+					target.tagName === 'TEXTAREA' || // 直接是文本域
+					(target as HTMLElement).isContentEditable // 可编辑内容
+				)) {
+					return; // 不处理键盘事件，让编辑器正常工作
+				}
+
 				const currentIndex = this.panels.findIndex((p) => p.id === this.activeId);
 				if (currentIndex === -1) return;
 
@@ -334,6 +349,8 @@ export class DocView extends ItemView {
 				}
 
 				if (newIndex !== currentIndex) {
+					// 阻止默认行为，避免与其他键盘导航冲突
+					e.preventDefault();
 					this.activeId = this.panels[newIndex].id;
 					this.render().then(() => {
 						this.scrollToContentAfterRender();
