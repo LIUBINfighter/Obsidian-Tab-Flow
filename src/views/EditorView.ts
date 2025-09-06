@@ -10,7 +10,12 @@ import {
 import { createEditorBar } from '../components/EditorBar';
 import { EventBus } from '../utils/EventBus';
 import { formatTime } from '../utils';
-import { getBarAtOffset, extractInitHeader, makeFocusedBody } from '../utils/alphatexParser';
+import {
+	getBarAtOffset,
+	extractInitHeader,
+	makeFocusedBody,
+	getBarNumberAtOffset,
+} from '../utils/alphatexParser';
 import { t } from '../i18n';
 import TabFlowPlugin from '../main';
 
@@ -20,8 +25,12 @@ export class EditorView extends FileView {
 	private editor: EmbeddableMarkdownEditor | null = null;
 	private playground: AlphaTexPlaygroundHandle | null = null;
 	private container: HTMLElement;
-	private layout: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped' | 'single-bar' =
-		'horizontal';
+	private layout:
+		| 'horizontal'
+		| 'vertical'
+		| 'horizontal-swapped'
+		| 'vertical-swapped'
+		| 'single-bar' = 'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
 	private eventBus: EventBus;
 	private progressBar: any = null; // 保存进度条引用
@@ -95,7 +104,13 @@ export class EditorView extends FileView {
 
 		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
-		const validLayouts = ['horizontal', 'vertical', 'horizontal-swapped', 'vertical-swapped', 'single-bar'];
+		const validLayouts = [
+			'horizontal',
+			'vertical',
+			'horizontal-swapped',
+			'vertical-swapped',
+			'single-bar',
+		];
 		if (state.state?.layout && validLayouts.includes(state.state.layout as string)) {
 			this.layout = state.state.layout as typeof this.layout;
 		} else {
@@ -308,9 +323,12 @@ export class EditorView extends FileView {
 
 		// 创建 playground 预览
 		let initialPreviewContent = content;
+		let currentBarInfo = '';
 		if (this.layout === 'single-bar') {
 			// 在单小节模式下，初始显示第一个小节
 			initialPreviewContent = this.generateFocusedContent(content, 0);
+			const barNumber = getBarNumberAtOffset(content, 0);
+			currentBarInfo = barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
 		}
 		this.playground = createAlphaTexPlayground(
 			this.plugin,
@@ -321,13 +339,17 @@ export class EditorView extends FileView {
 				readOnly: true, // 预览模式为只读
 				showEditor: false, // 不显示编辑区
 				eventBus: this.eventBus, // 传递 eventBus
+				currentBarInfo,
 				// 当处于 single-bar 模式时，预览不应写回编辑器（仅单向：编辑器 -> 预览）
-				onChange: this.layout === 'single-bar' ? undefined : (value: string) => {
-					// 预览内容变化时，同步到编辑器（仅在非 single-bar 模式）
-					if (this.editor && this.editor.value !== value) {
-						this.editor.set(value, false);
-					}
-				},
+				onChange:
+					this.layout === 'single-bar'
+						? undefined
+						: (value: string) => {
+								// 预览内容变化时，同步到编辑器（仅在非 single-bar 模式）
+								if (this.editor && this.editor.value !== value) {
+									this.editor.set(value, false);
+								}
+							},
 			}
 		);
 
@@ -493,6 +515,11 @@ export class EditorView extends FileView {
 			const content = this.editor.value;
 			const focusedContent = this.generateFocusedContent(content, cursorPos);
 			this.playground.setValue(focusedContent);
+
+			// 更新当前小节信息
+			const barNumber = getBarNumberAtOffset(content, cursorPos);
+			const currentBarInfo = barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
+			this.playground.updateCurrentBarInfo(currentBarInfo);
 		} catch (error) {
 			console.warn('[EditorView] 处理光标变化失败:', error);
 		}

@@ -25,6 +25,9 @@ export interface AlphaTexPlaygroundOptions {
 	/** EventBus for handling commands */
 	eventBus?: EventBus;
 
+	/** 当前小节信息（用于 single-bar 模式显示） */
+	currentBarInfo?: string;
+
 	/**
 	 * 回调：当 playground 内部内容发生变更时触发（例如 playground 内部编辑器、格式化按钮、或工具
 	 * 操作导致的内容修改）。注意：
@@ -42,6 +45,7 @@ export interface AlphaTexPlaygroundHandle {
 	destroy(): void;
 	refresh(): void; // 强制重新渲染
 	getApi(): alphaTab.AlphaTabApi | null;
+	updateCurrentBarInfo(info: string): void;
 }
 
 /**
@@ -64,6 +68,7 @@ export function createAlphaTexPlayground(
 		className = '',
 		showEditor = true,
 		eventBus,
+		currentBarInfo: initialCurrentBarInfo,
 	} = options;
 
 	container.empty();
@@ -75,6 +80,7 @@ export function createAlphaTexPlayground(
 
 	let currentValue = initialSource;
 	let embedded: ReturnType<typeof createEmbeddableMarkdownEditor> | null = null;
+	let currentBarInfo = initialCurrentBarInfo;
 
 	function formatInitHeader(sourceText: string): string | null {
 		let s = sourceText;
@@ -296,6 +302,12 @@ export function createAlphaTexPlayground(
 	// 预览容器
 	const previewWrap = wrapper.createDiv({ cls: 'inmarkdown-preview tabflow-doc-main-content' });
 
+	// 在 single-bar 模式下显示当前小节信息
+	if (layout === 'single-bar' && currentBarInfo) {
+		const infoBar = previewWrap.createDiv({ cls: 'alphatex-bar-info' });
+		infoBar.createEl('span', { text: currentBarInfo });
+	}
+
 	let mounted: AlphaTexMountHandle | null = null;
 	let debounceTimer: number | null = null;
 
@@ -322,6 +334,12 @@ export function createAlphaTexPlayground(
 			/* ignore */
 		}
 		previewWrap.empty();
+
+		// 在 single-bar 模式下重新添加当前小节信息栏
+		if (layout === 'single-bar' && currentBarInfo) {
+			const infoBar = previewWrap.createDiv({ cls: 'alphatex-bar-info' });
+			infoBar.createEl('span', { text: currentBarInfo });
+		}
 
 		const resources: AlphaTabResources | undefined = (
 			plugin as unknown as { resources?: AlphaTabResources }
@@ -476,5 +494,16 @@ export function createAlphaTexPlayground(
 		},
 		refresh: () => renderPreview(),
 		getApi: () => mounted?.api || null,
+		updateCurrentBarInfo: (info: string) => {
+			currentBarInfo = info;
+			const infoBar = previewWrap.querySelector('.alphatex-bar-info span');
+			if (infoBar) {
+				infoBar.textContent = info;
+			} else if (layout === 'single-bar' && info) {
+				// 如果信息栏不存在但应该存在，重新创建
+				const newInfoBar = previewWrap.createDiv({ cls: 'alphatex-bar-info' });
+				newInfoBar.createEl('span', { text: info });
+			}
+		},
 	};
 }

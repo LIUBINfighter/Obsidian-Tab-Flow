@@ -268,7 +268,8 @@
 		}
 	},
 	"alphatex": {
-		"missingResources": "AlphaTab resources missing, unable to render this code block."
+		"missingResources": "AlphaTab resources missing, unable to render this code block.",
+		"currentBar": "Current Bar: {{number}}"
 	},
 	"fileMenu": {
 		"createNewAlphaTab": "Create a new AlphaTab file",

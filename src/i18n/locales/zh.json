@@ -268,7 +268,8 @@
 		}
 	},
 	"alphatex": {
-		"missingResources": "AlphaTab 资源缺失，无法渲染此代码块。"
+		"missingResources": "AlphaTab 资源缺失，无法渲染此代码块。",
+		"currentBar": "当前小节: {{number}}"
 	},
 	"fileMenu": {
 		"createNewAlphaTab": "创建新的 AlphaTab 文件",

@@ -235,10 +235,7 @@ export async function renderEditorTab(
 					'single-bar',
 					t('settings.editor.layoutSingleBar', undefined, '单小节模式')
 				)
-				.addOption(
-					'vertical',
-					t('settings.editor.layoutVertical', undefined, '垂直布局')
-				)
+				.addOption('vertical', t('settings.editor.layoutVertical', undefined, '垂直布局'))
 				.addOption(
 					'horizontal-swapped',
 					t('settings.editor.layoutHorizontalSwapped', undefined, '水平布局（交换）')
@@ -248,11 +245,20 @@ export async function renderEditorTab(
 					t('settings.editor.layoutVerticalSwapped', undefined, '垂直布局（交换）')
 				)
 				.setValue(plugin.settings.editorViewDefaultLayout || 'horizontal')
-				.onChange(async (value: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped' | 'single-bar') => {
-					plugin.settings.editorViewDefaultLayout = value;
-					await plugin.saveSettings();
-					new Notice(t('settings.editor.layoutSaved', undefined, '布局设置已保存'));
-				});
+				.onChange(
+					async (
+						value:
+							| 'horizontal'
+							| 'vertical'
+							| 'horizontal-swapped'
+							| 'vertical-swapped'
+							| 'single-bar'
+					) => {
+						plugin.settings.editorViewDefaultLayout = value;
+						await plugin.saveSettings();
+						new Notice(t('settings.editor.layoutSaved', undefined, '布局设置已保存'));
+					}
+				);
 		});
 
 	// Editor Bar Settings

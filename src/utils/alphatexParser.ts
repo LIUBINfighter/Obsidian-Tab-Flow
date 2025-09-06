@@ -85,7 +85,10 @@ export function toScrollMode(value: number | string | undefined): number | undef
 	return mapping[key];
 }
 
-export function getBarAtOffset(source: string, offset: number): { start: number; end: number; text: string } | null {
+export function getBarAtOffset(
+	source: string,
+	offset: number
+): { start: number; end: number; text: string } | null {
 	if (!source || offset < 0 || offset > source.length) return null;
 
 	let left = -1;
@@ -191,7 +194,10 @@ export function getBarAtOffset(source: string, offset: number): { start: number;
 	return { start, end, text };
 }
 
-export function getTokenAtOffset(source: string, offset: number): { token: string; start: number; end: number } | null {
+export function getTokenAtOffset(
+	source: string,
+	offset: number
+): { token: string; start: number; end: number } | null {
 	if (!source || offset < 0 || offset > source.length) return null;
 
 	// 找到包含 offset 的 bar
@@ -208,14 +214,14 @@ export function getTokenAtOffset(source: string, offset: number): { token: strin
 	// 向左扩展到分隔符
 	while (tokenStart > 0) {
 		const ch = barText[tokenStart - 1];
-		if (/\s/.test(ch) || /[{}()\[\]|.:-]/.test(ch)) break;
+		if (/\s/.test(ch) || /[{}()[\]|.:-]/.test(ch)) break;
 		tokenStart--;
 	}
 
 	// 向右扩展到分隔符
 	while (tokenEnd < barText.length) {
 		const ch = barText[tokenEnd];
-		if (/\s/.test(ch) || /[{}()\[\]|.:-]/.test(ch)) break;
+		if (/\s/.test(ch) || /[{}()[\]|.:-]/.test(ch)) break;
 		tokenEnd++;
 	}
 
@@ -225,11 +231,14 @@ export function getTokenAtOffset(source: string, offset: number): { token: strin
 	return {
 		token,
 		start: bar.start + tokenStart,
-		end: bar.start + tokenEnd
+		end: bar.start + tokenEnd,
 	};
 }
 
-export function extractInitHeader(source: string): { initHeader: string | null; restStart: number } {
+export function extractInitHeader(source: string): {
+	initHeader: string | null;
+	restStart: number;
+} {
 	const { opts, body } = parseInlineInit(source);
 	if (!opts || Object.keys(opts).length === 0) {
 		return { initHeader: null, restStart: 0 };
@@ -244,4 +253,55 @@ export function extractInitHeader(source: string): { initHeader: string | null; 
 
 export function makeFocusedBody(initHeader: string | null, barText: string): string {
 	return initHeader ? initHeader + barText : barText;
+}
+
+export function getBarNumberAtOffset(source: string, offset: number): number | null {
+	if (!source || offset < 0 || offset > source.length) return null;
+
+	let barNumber = 0;
+	let inCodeFence = false;
+	let fenceStart = '';
+
+	for (let i = 0; i < offset; i++) {
+		const ch = source[i];
+		const prev = i > 0 ? source[i - 1] : '';
+
+		// 处理 code fence
+		if (ch === '`' && !inCodeFence) {
+			let backticks = 1;
+			let j = i - 1;
+			while (j >= 0 && source[j] === '`') {
+				backticks++;
+				j--;
+			}
+			if (backticks >= 3) {
+				inCodeFence = true;
+				fenceStart = source.slice(j + 1, i + 1);
+				i = j;
+				continue;
+			}
+		} else if (inCodeFence && ch === '`') {
+			let backticks = 1;
+			let j = i - 1;
+			while (j >= 0 && source[j] === '`') {
+				backticks++;
+				j--;
+			}
+			if (backticks >= 3 && source.slice(j + 1, i + 1) === fenceStart) {
+				inCodeFence = false;
+				fenceStart = '';
+				i = j;
+				continue;
+			}
+		}
+
+		if (inCodeFence) continue;
+
+		// 计数未转义的 '|'
+		if (ch === '|' && prev !== '\\') {
+			barNumber++;
+		}
+	}
+
+	return barNumber;
 }
