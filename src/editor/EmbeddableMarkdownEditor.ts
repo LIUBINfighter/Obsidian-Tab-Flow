@@ -14,6 +14,10 @@ import {
 	debugHighlightPlugin,
 	whitespaceHighlightPlugin,
 	surroundedHighlightPlugin,
+	durationHighlightPlugin,
+	effectHighlightPlugin,
+	tuningHighlightPlugin,
+	booleanHighlightPlugin,
 } from './Highlight';
 import { alphaTex } from './alphaTexLanguage';
 import { around } from 'monkey-around';
@@ -232,6 +236,18 @@ export class EmbeddableMarkdownEditor {
 						} catch {
 							// fail gracefully if alphaTex isn't available in runtime
 						}
+						// Add new highlight plugins for TextMate-inspired tokens
+						extensions.push(durationHighlightPlugin());
+						extensions.push(effectHighlightPlugin());
+						extensions.push(tuningHighlightPlugin());
+						extensions.push(booleanHighlightPlugin());
+						// Add new highlight plugins for TextMate-inspired tokens
+						extensions.push(durationHighlightPlugin());
+						extensions.push(effectHighlightPlugin());
+						extensions.push(tuningHighlightPlugin());
+						extensions.push(booleanHighlightPlugin());
+						// Update meta to use 'cm-metadata'
+						extensions.push(metaHighlightPlugin());
 					}
 					return extensions;
 				},

@@ -29,12 +29,39 @@ function tokenBase(stream: any, state: any) {
 
 	// Metadata tag: \tagName (maybe followed by args)
 	if (stream.match(/\\[A-Za-z_][A-Za-z0-9_-]*/)) {
-		return 'meta';
+		return 'metadata';
 	}
 
 	// Strings "..." or '...'
 	if (stream.match(/"(?:\\.|[^"])*"/) || stream.match(/'(?:\\.|[^'])*'/)) {
 		return 'string';
+	}
+
+	// Beat-duration :[0-9]+
+	if (stream.match(/:[0-9]+/)) {
+		return 'duration';
+	}
+
+	// Tuning literal [A-Ga-g][0-9]+
+	if (stream.match(/[A-Ga-g][0-9]+/)) {
+		return 'tuning';
+	}
+
+	// Boolean literals
+	if (stream.match('true') || stream.match('false')) {
+		return 'boolean';
+	}
+
+	// Effects keywords (beat/note from TextMate)
+	const beatEffects =
+		/f|fo|vs|v|vw|s|p|tt|txt|lyrics|dd|d|su|sd|tuplet|tb|tbe|bu|bd|ai|ad|ch|gr|ob|b|dy|cre|dec|tempo|volume|balance|tp|spd|sph|spu|spe|slashed|glpf|glpt|waho|wahc|barre|rasg|ot|legaoorigin|instrument|bank|fermata|beam|timer/;
+	const noteEffects =
+		/b|be|nh|ah|th|ph|sh|fh|tr|v|vw|sl|ss|sib|sia|sou|sod|psd|psu|h|lht|g|ac|hac|ten|pm|st|lr|x|t|lf|rf|acc|turn|iturn|umordent|lmordent|string|hide|slur/;
+	if (stream.match(beatEffects)) {
+		return 'effect.beat';
+	}
+	if (stream.match(noteEffects)) {
+		return 'effect.note';
 	}
 
 	// Section separator dot (single dot on its own or dot as separator)

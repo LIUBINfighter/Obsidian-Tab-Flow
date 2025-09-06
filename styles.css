@@ -481,6 +481,49 @@
 	text-align: center;
 }
 
+/* New styles for TextMate-inspired tokens, no background to match original */
+.cm-duration {
+	color: #b8860b;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-effect-beat {
+	color: #800080;
+	font-weight: 800;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-effect-note {
+	color: #6b8e23;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-tuning {
+	color: #ff4500;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-boolean {
+	color: #ff8c00;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-metadata {
+	color: var(--text-accent);
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
 /* --- debug.css --- */
 /* .debug-bar {
 	display: none !important;

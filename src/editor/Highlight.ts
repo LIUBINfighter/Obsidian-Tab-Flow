@@ -151,14 +151,14 @@ export function metaHighlightPlugin() {
 			}
 			buildDecorations(view: EditorView): RangeSet<Decoration> {
 				const builder = new RangeSetBuilder<Decoration>();
-				const metaRegex = /\\[A-Za-z0-9_-]+/g; // matches \word or \word-1
+				const metaRegex = /\\[A-Za-z0-9_-]+/g;
 				for (const { from, to } of view.visibleRanges) {
 					const text = view.state.doc.sliceString(from, to);
 					let match: RegExpExecArray | null;
 					while ((match = metaRegex.exec(text)) !== null) {
 						const start = from + match.index;
 						const end = start + match[0].length;
-						builder.add(start, end, Decoration.mark({ class: 'cm-meta' }));
+						builder.add(start, end, Decoration.mark({ class: 'cm-metadata' }));
 					}
 				}
 				return builder.finish();
@@ -548,3 +548,151 @@ export function surroundedHighlightPlugin() {
 		{ decorations: (v: any) => v.decorations }
 	);
 }
+
+// New plugin for beat-duration :[0-9]+
+export function durationHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				const durationRegex = /:[0-9]+/g;
+				for (const { from, to } of view.visibleRanges) {
+					const text = view.state.doc.sliceString(from, to);
+					let match: RegExpExecArray | null;
+					while ((match = durationRegex.exec(text)) !== null) {
+						const start = from + match.index;
+						const end = start + match[0].length;
+						builder.add(start, end, Decoration.mark({ class: 'cm-duration' }));
+					}
+				}
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (value: any) => value.decorations,
+		}
+	);
+}
+
+// New plugin for effect keywords (beat and note)
+export function effectHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				const beatEffectsRegex =
+					/(f|fo|vs|v|vw|s|p|tt|txt|lyrics|dd|d|su|sd|tuplet|tb|tbe|bu|bd|ai|ad|ch|gr|ob|b|dy|cre|dec|tempo|volume|balance|tp|spd|sph|spu|spe|slashed|glpf|glpt|waho|wahc|barre|rasg|ot|legaoorigin|instrument|bank|fermata|beam|timer)/g;
+				const noteEffectsRegex =
+					/(b|be|nh|ah|th|ph|sh|fh|tr|v|vw|sl|ss|sib|sia|sou|sod|psd|psu|h|lht|g|ac|hac|ten|pm|st|lr|x|t|lf|rf|acc|turn|iturn|umordent|lmordent|string|hide|slur)/g;
+				for (const { from, to } of view.visibleRanges) {
+					const text = view.state.doc.sliceString(from, to);
+					let match: RegExpExecArray | null;
+					beatEffectsRegex.lastIndex = 0;
+					while ((match = beatEffectsRegex.exec(text)) !== null) {
+						const start = from + match.index;
+						const end = start + match[0].length;
+						builder.add(start, end, Decoration.mark({ class: 'cm-effect-beat' }));
+					}
+					noteEffectsRegex.lastIndex = 0;
+					while ((match = noteEffectsRegex.exec(text)) !== null) {
+						const start = from + match.index;
+						const end = start + match[0].length;
+						builder.add(start, end, Decoration.mark({ class: 'cm-effect-note' }));
+					}
+				}
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (value: any) => value.decorations,
+		}
+	);
+}
+
+// New plugin for tuning literals [A-Ga-g][0-9]+
+export function tuningHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				const tuningRegex = /[A-Ga-g][0-9]+/g;
+				for (const { from, to } of view.visibleRanges) {
+					const text = view.state.doc.sliceString(from, to);
+					let match: RegExpExecArray | null;
+					while ((match = tuningRegex.exec(text)) !== null) {
+						const start = from + match.index;
+						const end = start + match[0].length;
+						builder.add(start, end, Decoration.mark({ class: 'cm-tuning' }));
+					}
+				}
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (value: any) => value.decorations,
+		}
+	);
+}
+
+// New plugin for boolean literals true/false
+export function booleanHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				const booleanRegex = /\b(true|false)\b/g;
+				for (const { from, to } of view.visibleRanges) {
+					const text = view.state.doc.sliceString(from, to);
+					let match: RegExpExecArray | null;
+					while ((match = booleanRegex.exec(text)) !== null) {
+						const start = from + match.index;
+						const end = start + match[0].length;
+						builder.add(start, end, Decoration.mark({ class: 'cm-boolean' }));
+					}
+				}
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (value: any) => value.decorations,
+		}
+	);
+}
+
+// Updated metaHighlightPlugin for 'metadata' token
