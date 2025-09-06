@@ -11,6 +11,9 @@ import {
 	bracketHighlightPlugin,
 	metaHighlightPlugin,
 	commentHighlightPlugin,
+	debugHighlightPlugin,
+	whitespaceHighlightPlugin,
+	surroundedHighlightPlugin,
 } from './Highlight';
 import { alphaTex } from './alphaTexLanguage';
 import { around } from 'monkey-around';
@@ -163,6 +166,10 @@ export class EmbeddableMarkdownEditor {
 						// (dot and bar highlight plugins are imported from ./Highlight.ts)
 						extensions.push(dotHighlightPlugin());
 						extensions.push(barHighlightPlugin());
+						// visible whitespace highlighter
+						extensions.push(whitespaceHighlightPlugin());
+						// highlight sequences surrounded by whitespace
+						extensions.push(surroundedHighlightPlugin());
 						// Ensure spellcheck/auto-correct attributes are applied to the actual contenteditable area
 						const disableSpellcheckPlugin = ViewPlugin.fromClass(
 							class {
@@ -215,6 +222,8 @@ export class EmbeddableMarkdownEditor {
 						extensions.push(bracketHighlightPlugin());
 						extensions.push(metaHighlightPlugin());
 						extensions.push(commentHighlightPlugin());
+						// Debugging visible-range lexer/highlighter
+						extensions.push(debugHighlightPlugin());
 						// Inject AlphaTex language/highlighting
 						try {
 							const alphaExt = alphaTex();

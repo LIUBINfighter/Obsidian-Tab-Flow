@@ -1,11 +1,4 @@
-import {
-	ViewPlugin,
-	Decoration,
-	DecorationSet,
-	WidgetType,
-	EditorView,
-	ViewUpdate,
-} from '@codemirror/view';
+import { ViewPlugin, Decoration, WidgetType, EditorView, ViewUpdate } from '@codemirror/view';
 import { RangeSetBuilder, RangeSet } from '@codemirror/state';
 
 // Plugin to highlight dot symbols ('.') in the visible ranges
@@ -51,6 +44,7 @@ export function barHighlightPlugin() {
 		toDOM() {
 			const span = document.createElement('span');
 			span.className = 'bar-number';
+			span.setAttribute('aria-hidden', 'true');
 			span.textContent = this.number.toString();
 			return span;
 		}
@@ -58,7 +52,7 @@ export function barHighlightPlugin() {
 
 	return ViewPlugin.fromClass(
 		class {
-			decorations: DecorationSet;
+			decorations: RangeSet<Decoration>;
 
 			constructor(view: EditorView) {
 				this.decorations = this.buildDecorations(view);
@@ -70,23 +64,32 @@ export function barHighlightPlugin() {
 				}
 			}
 
-			buildDecorations(view: EditorView): DecorationSet {
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
 				const builder = new RangeSetBuilder<Decoration>();
 				const doc = view.state.doc;
-				let barCount = 0;
 
-				for (let i = 0; i < doc.length; i++) {
-					if (doc.sliceString(i, i + 1) === '|') {
-						barCount++;
-						builder.add(i, i + 1, Decoration.mark({ class: 'highlighted-bar' }));
+				for (const { from, to } of view.visibleRanges) {
+					const text = doc.sliceString(from, to);
+
+					// Compute startCount = number of '|' before this visible range
+					let startCount = 0;
+					if (from > 0) {
+						const prefix = doc.sliceString(0, from);
+						const m = prefix.match(/\|/g);
+						startCount = m ? m.length : 0;
+					}
+
+					let pos = 0;
+					while ((pos = text.indexOf('|', pos)) !== -1) {
+						const abs = from + pos;
+						startCount++;
+						builder.add(abs, abs + 1, Decoration.mark({ class: 'highlighted-bar' }));
 						builder.add(
-							i + 1,
-							i + 1,
-							Decoration.widget({
-								widget: new BarNumberWidget(barCount),
-								block: false,
-							})
+							abs + 1,
+							abs + 1,
+							Decoration.widget({ widget: new BarNumberWidget(startCount), side: 1 })
 						);
+						pos += 1;
 					}
 				}
 
@@ -202,5 +205,303 @@ export function commentHighlightPlugin() {
 		{
 			decorations: (value: any) => value.decorations,
 		}
+	);
+}
+
+// Debug plugin: lightweight visible-range lexer that marks many AlphaTex terminals
+// with high-contrast debug classes for visual inspection (no semantic parsing).
+export function debugHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				const doc = view.state.doc;
+
+				const stringRegex = /"(?:\\.|[^"])*"|'(?:\\.|[^'])*'/g;
+				const metaRegex = /\\[A-Za-z_][A-Za-z0-9_-]*/g; // \tag
+				const noteRegex = /(?:[0-9x-]+)\.[0-9]+(?:\.[0-9]+)?/g; // 3.3.4
+				const doubleDotRegex = /:[0-9]+/g; // :4
+				const multiplyRegex = /\*[0-9]+/g; // *4
+				const numberRegex = /-?\b[0-9]+(?:\.[0-9]+)?\b/g;
+				const lbraceRegex = /\{/g;
+				const rbraceRegex = /\}/g;
+				const lparRegex = /\(/g;
+				const rparRegex = /\)/g;
+				const pipeRegex = /\|/g;
+				const lessThanRegex = /</g;
+
+				for (const { from, to } of view.visibleRanges) {
+					const text = doc.sliceString(from, to);
+
+					// 1) Strings first (to avoid inner matches)
+					let m: RegExpExecArray | null;
+					stringRegex.lastIndex = 0;
+					while ((m = stringRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(
+							s,
+							s + m[0].length,
+							Decoration.mark({ class: 'cm-debug-string' })
+						);
+					}
+
+					// 2) Meta commands (\title etc.)
+					metaRegex.lastIndex = 0;
+					while ((m = metaRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(
+							s,
+							s + m[0].length,
+							Decoration.mark({ class: 'cm-debug-meta' })
+						);
+					}
+
+					// 3) Effect blocks { ... } - mark block and inner keys/args
+					while ((m = /\{[^}]*\}/g.exec(text)) !== null) {
+						const start = from + m.index;
+						const end = start + m[0].length;
+						builder.add(
+							start,
+							start + 1,
+							Decoration.mark({ class: 'cm-debug-lbrace' })
+						);
+						builder.add(end - 1, end, Decoration.mark({ class: 'cm-debug-rbrace' }));
+
+						// scan inner content for effect keys (words) and numbers
+						const inner = m[0].slice(1, -1);
+						const wordRegex = /[A-Za-z]+/g;
+						const numRegex = /-?\d+(?:\.\d+)?/g;
+						while ((m = wordRegex.exec(inner)) !== null) {
+							const s = start + 1 + m.index;
+							builder.add(
+								s,
+								s + m[0].length,
+								Decoration.mark({ class: 'cm-debug-effect-key' })
+							);
+						}
+						while ((m = numRegex.exec(inner)) !== null) {
+							const s = start + 1 + m.index;
+							builder.add(
+								s,
+								s + m[0].length,
+								Decoration.mark({ class: 'cm-debug-effect-arg' })
+							);
+						}
+					}
+
+					// 4) Notes
+					noteRegex.lastIndex = 0;
+					while ((m = noteRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(
+							s,
+							s + m[0].length,
+							Decoration.mark({ class: 'cm-debug-note' })
+						);
+					}
+
+					// 5) duration ranges :4
+					doubleDotRegex.lastIndex = 0;
+					while ((m = doubleDotRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(
+							s,
+							s + m[0].length,
+							Decoration.mark({ class: 'cm-debug-duration' })
+						);
+					}
+
+					// 6) multiply *4
+					multiplyRegex.lastIndex = 0;
+					while ((m = multiplyRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(
+							s,
+							s + m[0].length,
+							Decoration.mark({ class: 'cm-debug-multiply' })
+						);
+					}
+
+					// 7) numbers
+					numberRegex.lastIndex = 0;
+					while ((m = numberRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						// skip if already covered by note or duration or multiply (best-effort)
+						// naive check: if any decoration already exists at pos, skip marking number.
+						builder.add(
+							s,
+							s + m[0].length,
+							Decoration.mark({ class: 'cm-debug-number' })
+						);
+					}
+
+					// 8) parentheses and braces
+					lparRegex.lastIndex = 0;
+					while ((m = lparRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(s, s + 1, Decoration.mark({ class: 'cm-debug-lparen' }));
+					}
+					rparRegex.lastIndex = 0;
+					while ((m = rparRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(s, s + 1, Decoration.mark({ class: 'cm-debug-rparen' }));
+					}
+
+					lbraceRegex.lastIndex = 0;
+					while ((m = lbraceRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(s, s + 1, Decoration.mark({ class: 'cm-debug-lbrace' }));
+					}
+					rbraceRegex.lastIndex = 0;
+					while ((m = rbraceRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(s, s + 1, Decoration.mark({ class: 'cm-debug-rbrace' }));
+					}
+
+					// 9) pipe
+					pipeRegex.lastIndex = 0;
+					while ((m = pipeRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(s, s + 1, Decoration.mark({ class: 'cm-debug-pipe' }));
+					}
+
+					// 10) less-than
+					lessThanRegex.lastIndex = 0;
+					while ((m = lessThanRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(s, s + 1, Decoration.mark({ class: 'cm-debug-lessthan' }));
+					}
+
+					// 11) standalone dot (section separator) - crude: dot followed by space or line end
+					const dotRegex = /\.(?=\s|$|\n|\|)/g;
+					dotRegex.lastIndex = 0;
+					while ((m = dotRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						builder.add(s, s + 1, Decoration.mark({ class: 'cm-debug-dot' }));
+					}
+				}
+
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (value: any) => value.decorations,
+		}
+	);
+}
+
+// Plugin to highlight visible whitespace (spaces and tabs) with a background
+export function whitespaceHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				const doc = view.state.doc;
+				const wsRegex = /[ \t]/g;
+				for (const { from, to } of view.visibleRanges) {
+					const text = doc.sliceString(from, to);
+					let m: RegExpExecArray | null;
+					wsRegex.lastIndex = 0;
+					while ((m = wsRegex.exec(text)) !== null) {
+						const s = from + m.index;
+						const ch = m[0];
+						if (ch === ' ') {
+							// regular space: render as a visible dot and keep original bg
+							builder.add(
+								s,
+								s + 1,
+								Decoration.mark({ class: 'cm-whitespace-space' })
+							);
+						} else {
+							// other whitespace (tab): highlight with hover background
+							builder.add(s, s + 1, Decoration.mark({ class: 'cm-whitespace' }));
+						}
+					}
+				}
+				return builder.finish();
+			}
+		},
+		{ decorations: (v: any) => v.decorations }
+	);
+}
+
+// Plugin to highlight sequences that are surrounded by spaces or newlines (excluding the spaces themselves)
+export function surroundedHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				const doc = view.state.doc;
+
+				for (const { from, to } of view.visibleRanges) {
+					const text = doc.sliceString(from, to);
+					let i = 0;
+					while (i < text.length) {
+						// skip whitespace
+						if (/\s/.test(text.charAt(i))) {
+							i++;
+							continue;
+						}
+						// start of candidate
+						const startInRange = i;
+						while (i < text.length && !/\s/.test(text.charAt(i))) i++;
+						const endInRange = i; // exclusive
+
+						// determine left boundary char
+						let leftChar: string | null = null;
+						if (startInRange > 0) leftChar = text.charAt(startInRange - 1);
+						else if (from > 0) leftChar = doc.sliceString(from - 1, from);
+
+						// determine right boundary char
+						let rightChar: string | null = null;
+						if (endInRange < text.length) rightChar = text.charAt(endInRange);
+						else if (to < doc.length) rightChar = doc.sliceString(to, to + 1);
+
+						const leftOk = leftChar === null || /\s/.test(leftChar);
+						const rightOk = rightChar === null || /\s/.test(rightChar);
+
+						if (leftOk && rightOk) {
+							const absStart = from + startInRange;
+							const absEnd = from + endInRange;
+							builder.add(
+								absStart,
+								absEnd,
+								Decoration.mark({ class: 'cm-surrounded' })
+							);
+						}
+					}
+				}
+
+				return builder.finish();
+			}
+		},
+		{ decorations: (v: any) => v.decorations }
 	);
 }

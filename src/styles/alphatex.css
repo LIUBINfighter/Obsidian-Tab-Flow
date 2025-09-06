@@ -98,6 +98,47 @@
 	gap: 0.25rem;
 	align-items: center;
 }
+
+/* Background for visible whitespace characters (spaces/tabs) in the editor. */
+:root {
+	--alphatex-space-bg: rgba(0, 0, 0, 0.03);
+}
+/* Style for visible whitespace characters decorated by whitespaceHighlightPlugin */
+.inmarkdown-editor-cm .cm-content .cm-whitespace,
+.cm-editor .cm-content .cm-whitespace,
+.cm-content .cm-whitespace {
+	/* use theme-aware hover modifier as whitespace background for better integration */
+	background: var(--background-modifier-hover, var(--alphatex-space-bg));
+	display: inline-block; /* allow padding/background to be visible */
+	border-radius: 2px;
+	padding: 0 2px;
+	line-height: 1;
+}
+
+/* Render regular ASCII space as a mid-dot, keep original editor background */
+.cm-content .cm-whitespace-space {
+	/* keep background transparent so original bg shows through */
+	background: transparent;
+	color: transparent; /* hide the real space */
+	position: relative;
+}
+.cm-content .cm-whitespace-space::before {
+	content: '·';
+	color: var(--text-muted);
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
+	pointer-events: none;
+}
+.cm-content .cm-surrounded {
+	/* use theme highlight background; fallback to light red */
+	background: var(--background-modifier-hover, rgba(220, 38, 38, 0.12));
+	border-radius: 3px;
+	border: 1px solid var(--background-modifier-border);
+	display: inline-block;
+	padding: 0 2px;
+}
 .alphatex-error {
 	color: var(--text-error);
 }
@@ -122,19 +163,12 @@
 
 /* Highlight for dot symbol in embedded editor */
 .highlighted-dot {
-	/* Render the dot with consistent size and bold black font */
+	/* Simple dot highlight: use accent color and bold weight only. */
 	display: inline-block;
 	color: var(--text-accent, var(--color-accent));
 	background: transparent;
-	/* Use a CSS variable so themes can override dot size; fallback to 1em */
-	font-size: var(--alphatex-dot-size, 1em);
-	line-height: 1.3;
-	padding: 0 1px;
-	transform: translateY(0.5px);
-	opacity: 0.95;
-	font-family:
-		'SimHei', 'Microsoft YaHei', 'Heiti SC', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
 	font-weight: 700;
+	padding: 0 1px;
 }
 
 /* Highlight for bar line symbol (|) in embedded editor */
@@ -154,7 +188,6 @@
 .cm-content .cm-atx-comment,
 .atx-comment {
 	color: var(--text-muted);
-	font-style: italic;
 	opacity: 0.9;
 }
 
@@ -178,7 +211,6 @@
 .cm-content .cm-comment,
 .cm-comment {
 	color: var(--text-muted);
-	font-style: italic;
 }
 
 .cm-content .cm-atx-keyword,
@@ -210,16 +242,11 @@
 .cm-content .cm-dot,
 .highlighted-dot,
 .atx-dot {
+	/* Keep dot highlight minimal: accent color and bold. Avoid custom fonts/size/offsets. */
 	display: inline-block;
-	/* Dot size controlled by --alphatex-dot-size */
-	font-size: var(--alphatex-dot-size, 1em);
-	line-height: 1;
 	color: var(--text-accent, var(--color-accent));
-	transform: translateY(0.02em);
-	padding: 0 1px;
-	font-family:
-		'SimHei', 'Microsoft YaHei', 'Heiti SC', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
 	font-weight: 700;
+	padding: 0 1px;
 }
 
 /* Note tokens (fret.string.duration) */
@@ -252,4 +279,87 @@
 	font-weight: bold;
 	margin-left: 2px;
 	opacity: 0.7;
+}
+
+/* Debug highlight styles: high-contrast, intentionally loud for visual inspection */
+.cm-debug-meta {
+	background: rgba(255, 105, 180, 0.12);
+	color: #ff69b4;
+	font-weight: 700;
+}
+.cm-debug-string {
+	background: rgba(255, 99, 71, 0.06);
+	color: #ff4500;
+	font-weight: 700;
+}
+.cm-debug-number {
+	background: rgba(255, 165, 0, 0.06);
+	color: #ff8c00;
+	font-weight: 700;
+}
+.cm-debug-note {
+	background: rgba(255, 235, 59, 0.08);
+	color: #b58900;
+	font-weight: 800;
+}
+.cm-debug-effect-key {
+	background: rgba(218, 112, 214, 0.08);
+	color: #800080;
+	font-weight: 800;
+}
+.cm-debug-effect-arg {
+	background: rgba(173, 255, 47, 0.06);
+	color: #6b8e23;
+	font-weight: 700;
+}
+.cm-debug-lbrace,
+.cm-debug-rbrace {
+	background: rgba(30, 144, 255, 0.06);
+	color: #1e90ff;
+	font-weight: 800;
+}
+.cm-debug-lparen,
+.cm-debug-rparen {
+	background: rgba(100, 149, 237, 0.04);
+	color: #4b6cb7;
+	font-weight: 700;
+}
+.cm-debug-pipe {
+	background: rgba(148, 0, 211, 0.12);
+	color: #9400d3;
+	font-weight: 900;
+	border-radius: 2px;
+}
+.cm-debug-lessthan {
+	background: rgba(0, 206, 209, 0.06);
+	color: #008b8b;
+	font-weight: 700;
+}
+.cm-debug-dot {
+	background: rgba(0, 191, 165, 0.06);
+	color: #00695c;
+	font-weight: 900;
+}
+.cm-debug-duration {
+	background: rgba(255, 215, 0, 0.06);
+	color: #b8860b;
+	font-weight: 700;
+}
+.cm-debug-multiply {
+	background: rgba(199, 21, 133, 0.06);
+	color: #c71585;
+	font-weight: 800;
+}
+
+/* make debug marks slightly padded so they're visible inline */
+.cm-debug-meta,
+.cm-debug-string,
+.cm-debug-number,
+.cm-debug-note,
+.cm-debug-effect-key,
+.cm-debug-effect-arg,
+.cm-debug-pipe,
+.cm-debug-dot {
+	padding: 0 2px;
+	border-radius: 2px;
 }
