@@ -122,7 +122,7 @@ export async function renderEditorTab(
 						fontText.setValue(parsed.num);
 						fontDropdown.setValue(parsed.unit);
 						(sFont as any).__unitValue = parsed.unit;
-						new Notice(t('settings.editor.resetToDefault', undefined, '已重置为默认'));
+						new Notice(t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认'));
 					});
 			});
 
@@ -213,7 +213,7 @@ export async function renderEditorTab(
 						gapText.setValue(parsed.num);
 						gapDropdown.setValue(parsed.unit);
 						(sGap as any).__unitValue = parsed.unit;
-						new Notice(t('settings.editor.resetToDefault', undefined, '已重置为默认'));
+						new Notice(t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认'));
 					});
 			});
 	}

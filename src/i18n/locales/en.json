@@ -160,6 +160,13 @@
 			"resetToDefaultDesc": "Reset editor bar component visibility and order to default configuration",
 			"resetToDefaultSuccess": "Editor bar settings reset",
 			"resetToDefaultFailed": "Failed to reset editor bar settings",
+			"fontSize": "Editor Font Size",
+			"fontSizeDesc": "Numeric value + unit, e.g. 0.95 rem; Only accepts numbers and select unit from dropdown",
+			"bottomGap": "Editor Bottom Gap",
+			"bottomGapDesc": "Numeric value + unit, e.g. 40 vh; Only accepts numbers and select unit from dropdown",
+			"invalidCss": "Invalid CSS value",
+			"resetToDefaultMessage": "Reset to default",
+			"saved": "Settings saved",
 			"components": {
 				"playPause": "Play/Pause",
 				"stop": "Stop",
