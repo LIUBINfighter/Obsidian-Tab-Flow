@@ -143,6 +143,26 @@
 	height: 100%;
 	padding: 12px;
 	background: var(--background-primary);
+	/* 注意：不要在 wrapper 上直接增加 padding-bottom，因为 CodeMirror
+	   的滚动容器位于内部，直接在 .cm-content 上添加伪元素可以
+	   增加真实的滚动高度，从而使 "最后一行" 在滚动到底部时显得更高。 */
+}
+
+/* 在实际的滚动内容末尾增加占位，以扩展滚动高度并保留底部空白。 */
+.alphatex-editor-wrapper .cm-content::after {
+	content: '';
+	display: block;
+	/* 默认留白为页面高度的一半，方便最后一行在滚动到底部时向上留出更多空间 */
+	height: var(--alphatex-editor-bottom-gap, 40vh);
+	width: 1px;
+	pointer-events: none;
+}
+
+/* 调整编辑器内部字体略小一些，避免占用过多垂直空间 */
+.alphatex-editor-wrapper .cm-content,
+.alphatex-editor-wrapper .cm-editor {
+	font-size: 0.95rem;
+	line-height: 1.45;
 }
 
 .alphatex-editor-layout.is-horizontal .alphatex-editor-wrapper {
