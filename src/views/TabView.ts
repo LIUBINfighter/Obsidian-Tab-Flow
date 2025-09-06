@@ -38,6 +38,7 @@ export class TabView extends FileView {
 	private externalMediaService: ExternalMediaService | null = null;
 	private settingsChangeHandler?: () => void;
 	private horizontalScrollCleanup?: () => void; // 用于清理横向滚动监听器
+	private settingsAction: HTMLElement | null = null;
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -491,6 +492,27 @@ export class TabView extends FileView {
 				console.warn('[TabView] 更新滚动模式失败:', e);
 			}
 		});
+		// 添加右上角设置按钮，跳转到 SettingTab 的 player 子页签
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+				this.settingsAction = null;
+			}
+			const btn = this.addAction(
+				'settings',
+				t('settings.tabs.player', undefined, '设置'),
+				() => {
+					try {
+						this.app.workspace.trigger('tabflow:open-plugin-settings-player');
+					} catch {
+						// ignore
+					}
+				}
+			);
+			this.settingsAction = btn as unknown as HTMLElement;
+		} catch (e) {
+			// ignore
+		}
 	}
 
 	async onClose() {
@@ -516,6 +538,16 @@ export class TabView extends FileView {
 
 		if (this._styles) {
 			this._styles.remove();
+		}
+
+		// 清理右上角设置按钮
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+			}
+			this.settingsAction = null;
+		} catch (e) {
+			// ignore
 		}
 
 		try {

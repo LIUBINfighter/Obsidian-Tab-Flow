@@ -58,6 +58,28 @@ export class SettingTab extends PluginSettingTab {
 					// Ignore event binding errors
 				}
 			});
+
+			// 添加 about 子页签的事件监听
+			// @ts-ignore
+			this.app.workspace.on('tabflow:open-plugin-settings-about', async () => {
+				try {
+					// 打开设置面板并定位到本插件设置页
+					// @ts-ignore
+					(this.app as any).setting?.open?.();
+					if ((this.app as any).setting?.openTabById) {
+						(this.app as any).setting.openTabById(this.plugin.manifest.id);
+					}
+					// 标记强制激活 about 子页签
+					(this as any)._forceActiveInnerTab = 'about';
+					try {
+						await this.display();
+					} catch {
+						// Ignore display errors
+					}
+				} catch {
+					// Ignore event binding errors
+				}
+			});
 			this._eventBound = true;
 		}
 	}

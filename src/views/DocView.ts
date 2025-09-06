@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
+import { ItemView, WorkspaceLeaf } from 'obsidian';
 import TabFlowPlugin from '../main';
 import panelsRegistry, { DocPanel } from './docs/index';
 import { t } from '../i18n';
@@ -14,6 +14,7 @@ export class DocView extends ItemView {
 	panels: DocPanel[] = [];
 	activeId: string | null = null;
 	private layoutObserver?: ResizeObserver;
+	private settingsAction: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
 		super(leaf);
@@ -87,7 +88,15 @@ export class DocView extends ItemView {
 	}
 
 	async onClose() {
-		// no-op
+		// 清理右上角设置按钮（如果存在）
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+			}
+			this.settingsAction = null;
+		} catch {
+			// ignore
+		}
 	}
 
 	private injectStyles() {
@@ -163,47 +172,44 @@ export class DocView extends ItemView {
 		});
 		alphaTabBtn.innerText = 'alphaTab.js';
 
-		// 设置按钮（齿轮图标）
-		const settingsBtn = btnGroup.createEl('button', {
-			cls: 'clickable-icon',
-			attr: {
-				'aria-label': t('docView.settings'),
-				type: 'button',
-				style: 'margin-left:0.5em;',
-			},
-		});
-		const iconSpan = document.createElement('span');
-		settingsBtn.appendChild(iconSpan);
-		setIcon(iconSpan, 'settings');
-		settingsBtn.onclick = () => {
-			try {
-				// 直达本插件SettingTab的“播放器配置”页签
-				// @ts-ignore
-				this.plugin.app.workspace.trigger('tabflow:open-plugin-settings-player');
-			} catch {
-				try {
-					// 退化处理
-					// @ts-ignore
-					this.plugin.app.commands.executeCommandById('app:open-settings');
-					setTimeout(() => {
-						try {
-							const search = document.querySelector(
-								'input.setting-search-input'
-							) as HTMLInputElement | null;
-							if (search) {
-								search.value = 'Tab Flow';
-								const ev = new Event('input', { bubbles: true });
-								search.dispatchEvent(ev);
-							}
-						} catch {
-							// Ignore search input errors
-						}
-					}, 120);
-				} catch {
-					// Ignore settings fallback errors
-				}
+		// 使用视图 action 注入设置按钮，统一管理生命周期
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+				this.settingsAction = null;
 			}
-		};
+			const btn = this.addAction('settings', t('docView.settings', undefined, '设置'), () => {
+				try {
+					// @ts-ignore
+					this.plugin.app.workspace.trigger('tabflow:open-plugin-settings-about');
+				} catch {
+					try {
+						// 退化处理
+						// @ts-ignore
+						this.plugin.app.commands.executeCommandById('app:open-settings');
+						setTimeout(() => {
+							try {
+								const search = document.querySelector(
+									'input.setting-search-input'
+								) as HTMLInputElement | null;
+								if (search) {
+									search.value = 'Tab Flow';
+									const ev = new Event('input', { bubbles: true });
+									search.dispatchEvent(ev);
+								}
+							} catch {
+								// Ignore search input errors
+							}
+						}, 120);
+					} catch {
+						// Ignore settings fallback errors
+					}
+				}
+			});
+			this.settingsAction = btn as unknown as HTMLElement;
+		} catch (e) {
+			// ignore
+		}
 		// Layout wrapper
 		const layout = container.createDiv({ cls: 'tabflow-doc-layout' });
 		// Observe width changes of the view container to toggle narrow layout per-view

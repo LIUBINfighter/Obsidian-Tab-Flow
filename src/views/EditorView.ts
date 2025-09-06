@@ -81,6 +81,7 @@ export class EditorView extends FileView {
 		}
 	}
 	private layoutToggleAction: HTMLElement | null = null;
+	private settingsAction: HTMLElement | null = null;
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -211,6 +212,16 @@ export class EditorView extends FileView {
 		} catch (e) {
 			// ignore
 		}
+
+		// 清理设置按钮
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+			}
+			this.settingsAction = null;
+		} catch (e) {
+			// ignore
+		}
 	}
 
 	private async render(): Promise<void> {
@@ -272,6 +283,33 @@ export class EditorView extends FileView {
 
 		// 创建编辑器栏（EditorBar）
 		this._mountEditorBar();
+
+		// 添加统一的设置按钮（右上角 view-action） -> 跳转到 SettingTab 的 editor 子页签
+		// NOTE:
+		// Obsidian 的 view action 区（addAction）在 DOM 中的插入效果是从右向左排列：
+		// 新添加的 action 会出现在已有 action 的左侧（即插入顺序决定从右到左的可视顺序）。
+		// 因此若希望某个按钮出现在最右侧（视觉上靠右），需要先添加该按钮，再添加其它按钮。
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+				this.settingsAction = null;
+			}
+			const settingsBtn = this.addAction(
+				'settings',
+				t('settings.tabs.editor', undefined, '设置'),
+				() => {
+					try {
+						// @ts-ignore
+						this.plugin.app.workspace.trigger('tabflow:open-plugin-settings-editor');
+					} catch {
+						// 忽略触发错误，SettingTab 内会有降级逻辑
+					}
+				}
+			);
+			this.settingsAction = settingsBtn as unknown as HTMLElement;
+		} catch (e) {
+			// ignore
+		}
 
 		// 添加布局切换按钮并保存返回的按钮引用，方便后续移除
 		try {
