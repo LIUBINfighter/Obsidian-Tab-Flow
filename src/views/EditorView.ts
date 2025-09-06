@@ -75,7 +75,7 @@ export class EditorView extends FileView {
 
 			if (result === content) {
 				this.lastSavedContent = content;
-				console.log('[EditorView] flushSave: 保存已完成');
+				// console.log('[EditorView] flushSave: 保存已完成');
 			} else {
 				console.warn('[EditorView] flushSave: 磁盘文件已变更，未覆盖。');
 				// new Notice(
@@ -487,7 +487,7 @@ export class EditorView extends FileView {
 								}
 							}
 						});
-						console.log('[EditorView] 进度条事件监听器已设置');
+						// console.log('[EditorView] 进度条事件监听器已设置');
 					} else {
 						// 如果 API 还不可用，稍后重试
 						setTimeout(setupProgressUpdate, 100);

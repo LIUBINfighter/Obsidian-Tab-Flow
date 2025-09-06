@@ -320,7 +320,7 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 添加侧边栏 Robin 图标，调用打开 TabFlow 文档命令
 		this.addRibbonIcon(
-			'bird',
+			'guitar',
 			t('ribbon.openDocumentation', undefined, '打开 TabFlow 文档'),
 			async () => {
 				const leaf = this.app.workspace.getLeaf(true);
