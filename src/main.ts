@@ -285,6 +285,20 @@ export default class TabFlowPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		// Apply editor UI preferences as CSS variables so they take effect immediately
+		try {
+			document.documentElement.style.setProperty(
+				'--alphatex-editor-font-size',
+				this.settings.editorFontSize || '0.95rem'
+			);
+			document.documentElement.style.setProperty(
+				'--alphatex-editor-bottom-gap',
+				this.settings.editorBottomGap || '40vh'
+			);
+		} catch (e) {
+			// ignore environments without DOM
+		}
+
 		// 加载翻译系统
 		loadTranslations(this.app);
 

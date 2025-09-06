@@ -74,7 +74,7 @@
 /* 调整编辑器内部字体略小一些，避免占用过多垂直空间 */
 .alphatex-editor-wrapper .cm-content,
 .alphatex-editor-wrapper .cm-editor {
-	font-size: 0.95rem;
+	font-size: var(--alphatex-editor-font-size, 0.95rem);
 	line-height: 1.45;
 }
 

@@ -63,6 +63,10 @@ export interface TabFlowSettings {
 	};
 	/** 编辑器视图默认布局 */
 	editorViewDefaultLayout?: 'horizontal' | 'vertical';
+	/** 编辑器内部字体大小（CSS 单位），例如 '0.95rem' 或 '14px' */
+	editorFontSize?: string;
+	/** 编辑器底部留白，用于增加真实滚动高度，例如 '40vh' 或 '200px' */
+	editorBottomGap?: string;
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -160,4 +164,6 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 		],
 	},
 	editorViewDefaultLayout: 'horizontal',
+	editorFontSize: '0.95rem',
+	editorBottomGap: '40vh',
 };
