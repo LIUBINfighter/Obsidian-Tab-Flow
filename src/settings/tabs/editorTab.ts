@@ -232,8 +232,16 @@ export async function renderEditorTab(
 					t('settings.editor.layoutHorizontal', undefined, '水平布局')
 				)
 				.addOption('vertical', t('settings.editor.layoutVertical', undefined, '垂直布局'))
+				.addOption(
+					'horizontal-swapped',
+					t('settings.editor.layoutHorizontalSwapped', undefined, '水平布局（交换）')
+				)
+				.addOption(
+					'vertical-swapped',
+					t('settings.editor.layoutVerticalSwapped', undefined, '垂直布局（交换）')
+				)
 				.setValue(plugin.settings.editorViewDefaultLayout || 'horizontal')
-				.onChange(async (value: 'horizontal' | 'vertical') => {
+				.onChange(async (value: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped') => {
 					plugin.settings.editorViewDefaultLayout = value;
 					await plugin.saveSettings();
 					new Notice(t('settings.editor.layoutSaved', undefined, '布局设置已保存'));

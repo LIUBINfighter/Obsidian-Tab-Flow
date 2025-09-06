@@ -19,7 +19,8 @@ export class EditorView extends FileView {
 	private editor: EmbeddableMarkdownEditor | null = null;
 	private playground: AlphaTexPlaygroundHandle | null = null;
 	private container: HTMLElement;
-	private layout: 'vertical' | 'horizontal' = 'horizontal';
+	private layout: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped' =
+		'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
 	private eventBus: EventBus;
 	private progressBar: any = null; // 保存进度条引用
@@ -93,10 +94,9 @@ export class EditorView extends FileView {
 
 		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
-		if (state.state?.layout === 'horizontal') {
-			this.layout = 'horizontal';
-		} else if (state.state?.layout === 'vertical') {
-			this.layout = 'vertical';
+		const validLayouts = ['horizontal', 'vertical', 'horizontal-swapped', 'vertical-swapped'];
+		if (state.state?.layout && validLayouts.includes(state.state.layout as string)) {
+			this.layout = state.state.layout as typeof this.layout;
 		} else {
 			// 使用插件的默认布局设置
 			this.layout = this.plugin.settings.editorViewDefaultLayout || 'horizontal';
@@ -245,13 +245,37 @@ export class EditorView extends FileView {
 		// 创建主布局容器
 		const mainContainer = this.container.createDiv({ cls: 'alphatex-editor-layout' });
 
-		// 创建编辑器和预览容器
-		const editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
-		const previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
+		// 根据布局模式创建编辑器和预览容器
+		let editorContainer: HTMLElement;
+		let previewContainer: HTMLElement;
+
+		if (this.layout === 'horizontal-swapped') {
+			// 左右交换：预览在左，编辑器在右
+			previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
+			editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
+		} else if (this.layout === 'vertical-swapped') {
+			// 上下交换：预览在上，编辑器在下
+			previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
+			editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
+		} else {
+			// 默认：编辑器在左/上，预览在右/下
+			editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
+			previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
+		}
 
 		// 设置布局类
-		mainContainer.classList.toggle('is-vertical', this.layout === 'vertical');
-		mainContainer.classList.toggle('is-horizontal', this.layout === 'horizontal');
+		if (this.layout === 'horizontal' || this.layout === 'horizontal-swapped') {
+			mainContainer.classList.add('is-horizontal');
+		} else {
+			mainContainer.classList.add('is-vertical');
+		}
+
+		// 保存布局状态到视图状态
+		const currentState = this.leaf.getViewState();
+		if (currentState.state) {
+			currentState.state.layout = this.layout;
+			this.leaf.setViewState(currentState);
+		}
 
 		// 创建嵌入式编辑器
 		const editorWrapper = editorContainer.createDiv({ cls: 'alphatex-editor-wrapper' });
@@ -313,14 +337,24 @@ export class EditorView extends FileView {
 
 		// 添加布局切换按钮并保存返回的按钮引用，方便后续移除
 		try {
-			const btn = this.addAction(
-				this.layout === 'vertical' ? 'layout' : 'sidebar',
-				'切换布局',
-				() => {
-					this.layout = this.layout === 'vertical' ? 'horizontal' : 'vertical';
-					this.render();
-				}
-			);
+			const layouts = [
+				'horizontal',
+				'horizontal-swapped',
+				'vertical',
+				'vertical-swapped',
+			] as const;
+			const currentIndex = layouts.indexOf(this.layout);
+			const nextLayout = layouts[(currentIndex + 1) % layouts.length];
+			const iconMap = {
+				horizontal: 'layout',
+				'horizontal-swapped': 'layout',
+				vertical: 'sidebar',
+				'vertical-swapped': 'sidebar',
+			};
+			const btn = this.addAction(iconMap[nextLayout], '切换布局', () => {
+				this.layout = nextLayout;
+				this.render();
+			});
 			this.layoutToggleAction = btn as unknown as HTMLElement;
 		} catch (e) {
 			this.layoutToggleAction = null;

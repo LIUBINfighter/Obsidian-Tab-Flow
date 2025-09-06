@@ -18,7 +18,7 @@ export interface AlphaTexPlaygroundOptions {
 	/** 额外 alphaTab 渲染参数 (可覆盖内置默认) */
 	alphaTabOptions?: Record<string, unknown>;
 	/** 布局：vertical(上下) 或 horizontal(左右) */
-	layout?: 'vertical' | 'horizontal';
+	layout?: 'vertical' | 'horizontal' | 'horizontal-swapped' | 'vertical-swapped';
 	/** 附加到根容器的自定义类名（可用于主题/自定义布局） */
 	className?: string;
 	/** 是否显示编辑区 */
@@ -59,7 +59,8 @@ export function createAlphaTexPlayground(
 
 	container.empty();
 	const wrapper = container.createDiv({ cls: 'alphatex-playground inmarkdown-wrapper' });
-	if (layout === 'horizontal') wrapper.classList.add('is-horizontal');
+	if (layout === 'horizontal' || layout === 'horizontal-swapped')
+		wrapper.classList.add('is-horizontal');
 	else wrapper.classList.add('is-vertical');
 	if (className) wrapper.classList.add(className);
 

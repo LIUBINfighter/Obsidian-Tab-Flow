@@ -155,6 +155,8 @@
 			"defaultLayoutDesc": "Default layout mode for the editor view",
 			"layoutHorizontal": "Horizontal Layout",
 			"layoutVertical": "Vertical Layout",
+			"layoutHorizontalSwapped": "Horizontal Layout (Swapped)",
+			"layoutVerticalSwapped": "Vertical Layout (Swapped)",
 			"layoutSaved": "Layout setting saved",
 			"resetToDefault": "Reset to Default",
 			"resetToDefaultDesc": "Reset editor bar component visibility and order to default configuration",
