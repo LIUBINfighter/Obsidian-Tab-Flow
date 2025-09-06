@@ -328,7 +328,8 @@ export class EditorView extends FileView {
 			// 在单小节模式下，初始显示第一个小节
 			initialPreviewContent = this.generateFocusedContent(content, 0);
 			const barNumber = getBarNumberAtOffset(content, 0);
-			currentBarInfo = barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
+			currentBarInfo =
+				barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
 		}
 		this.playground = createAlphaTexPlayground(
 			this.plugin,
@@ -518,7 +519,8 @@ export class EditorView extends FileView {
 
 			// 更新当前小节信息
 			const barNumber = getBarNumberAtOffset(content, cursorPos);
-			const currentBarInfo = barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
+			const currentBarInfo =
+				barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
 			this.playground.updateCurrentBarInfo(currentBarInfo);
 		} catch (error) {
 			console.warn('[EditorView] 处理光标变化失败:', error);
