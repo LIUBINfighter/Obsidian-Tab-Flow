@@ -25,7 +25,9 @@ export async function renderEditorTab(
 			defaultUnit: string
 		): { num: string; unit: string } => {
 			if (!val) return { num: defaultNum, unit: defaultUnit };
-			const m = String(val).trim().match(/^([0-9]+(?:\.[0-9]+)?)([a-z%]+)$/i);
+			const m = String(val)
+				.trim()
+				.match(/^([0-9]+(?:\.[0-9]+)?)([a-z%]+)$/i);
 			if (m) return { num: m[1], unit: m[2] };
 			// fallback
 			return { num: defaultNum, unit: defaultUnit };
@@ -40,69 +42,89 @@ export async function renderEditorTab(
 		const sFont = new Setting(tabContents)
 			.setName(t('settings.editor.fontSize', undefined, '编辑器字体大小'))
 			.setDesc(
-				t('settings.editor.fontSizeDesc', undefined, "数值 + 单位，例如 0.95 rem；仅接受数字并从下拉选择单位")
+				t(
+					'settings.editor.fontSizeDesc',
+					undefined,
+					'数值 + 单位，例如 0.95 rem；仅接受数字并从下拉选择单位'
+				)
 			);
 
 		let fontText: any;
 		let fontDropdown: any;
 
-		sFont.addText((text) => {
-			fontText = text;
-			// restrict to numeric input
-			try {
-				(text as any).inputEl.setAttribute('type', 'number');
-				(text as any).inputEl.setAttribute('step', '0.01');
-				(text as any).inputEl.setAttribute('min', '0');
-			} catch (e) {
-				console.debug('set input attributes failed', e);
-			}
-			text.setValue(fontDefault.num).onChange(async (numStr) => {
-				const unit = (sFont as any).__unitValue || fontDefault.unit;
-				const composed = `${numStr}${unit}`;
-				const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
-				if (!valid) {
-					new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
-					return;
+		sFont
+			.addText((text) => {
+				fontText = text;
+				// restrict to numeric input
+				try {
+					(text as any).inputEl.setAttribute('type', 'number');
+					(text as any).inputEl.setAttribute('step', '0.01');
+					(text as any).inputEl.setAttribute('min', '0');
+				} catch (e) {
+					console.debug('set input attributes failed', e);
 				}
-				plugin.settings.editorFontSize = composed;
-				await plugin.saveSettings();
-				document.documentElement.style.setProperty('--alphatex-editor-font-size', composed);
-				new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+				text.setValue(fontDefault.num).onChange(async (numStr) => {
+					const unit = (sFont as any).__unitValue || fontDefault.unit;
+					const composed = `${numStr}${unit}`;
+					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
+					if (!valid) {
+						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+						fontText.inputEl.classList.add('tabflow-invalid-input');
+						return;
+					}
+					fontText.inputEl.classList.remove('tabflow-invalid-input');
+					plugin.settings.editorFontSize = composed;
+					await plugin.saveSettings();
+					document.documentElement.style.setProperty(
+						'--alphatex-editor-font-size',
+						composed
+					);
+					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+				});
+			})
+			.addDropdown((dd) => {
+				fontDropdown = dd;
+				unitsFont.forEach((u) => dd.addOption(u, u));
+				dd.setValue(fontDefault.unit).onChange(async (unit) => {
+					// store unit on setting instance for access from text handler
+					(sFont as any).__unitValue = unit;
+					const num = (sFont as any).value || fontDefault.num;
+					const composed = `${num}${unit}`;
+					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
+					if (!valid) {
+						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+						fontText.inputEl.classList.add('tabflow-invalid-input');
+						return;
+					}
+					fontText.inputEl.classList.remove('tabflow-invalid-input');
+					plugin.settings.editorFontSize = composed;
+					await plugin.saveSettings();
+					document.documentElement.style.setProperty(
+						'--alphatex-editor-font-size',
+						composed
+					);
+					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+				});
+			})
+			.addButton((btn) => {
+				btn.setIcon('rotate-ccw')
+					.setTooltip('重置为默认')
+					.onClick(async () => {
+						const defaultVal = DEFAULT_SETTINGS.editorFontSize || '0.95rem';
+						const parsed = parseCssValue(defaultVal, '0.95', 'rem');
+						plugin.settings.editorFontSize = defaultVal;
+						await plugin.saveSettings();
+						document.documentElement.style.setProperty(
+							'--alphatex-editor-font-size',
+							defaultVal
+						);
+						// Update UI values
+						fontText.setValue(parsed.num);
+						fontDropdown.setValue(parsed.unit);
+						(sFont as any).__unitValue = parsed.unit;
+						new Notice(t('settings.editor.resetToDefault', undefined, '已重置为默认'));
+					});
 			});
-		})
-		.addDropdown((dd) => {
-			fontDropdown = dd;
-			unitsFont.forEach((u) => dd.addOption(u, u));
-			dd.setValue(fontDefault.unit).onChange(async (unit) => {
-				// store unit on setting instance for access from text handler
-				(sFont as any).__unitValue = unit;
-				const num = (sFont as any).value || fontDefault.num;
-				const composed = `${num}${unit}`;
-				const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
-				if (!valid) {
-					new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
-					return;
-				}
-				plugin.settings.editorFontSize = composed;
-				await plugin.saveSettings();
-				document.documentElement.style.setProperty('--alphatex-editor-font-size', composed);
-				new Notice(t('settings.editor.saved', undefined, '设置已保存'));
-			});
-		})
-		.addButton((btn) => {
-			btn.setIcon('rotate-ccw').setTooltip('重置为默认').onClick(async () => {
-				const defaultVal = DEFAULT_SETTINGS.editorFontSize || '0.95rem';
-				const parsed = parseCssValue(defaultVal, '0.95', 'rem');
-				plugin.settings.editorFontSize = defaultVal;
-				await plugin.saveSettings();
-				document.documentElement.style.setProperty('--alphatex-editor-font-size', defaultVal);
-				// Update UI values
-				fontText.setValue(parsed.num);
-				fontDropdown.setValue(parsed.unit);
-				(sFont as any).__unitValue = parsed.unit;
-				new Notice(t('settings.editor.resetToDefault', undefined, '已重置为默认'));
-			});
-		});
 
 		// Bottom gap
 		const gapDefault = parseCssValue(
@@ -117,7 +139,7 @@ export async function renderEditorTab(
 				t(
 					'settings.editor.bottomGapDesc',
 					undefined,
-					"数值 + 单位，例如 40 vh；仅接受数字并从下拉选择单位"
+					'数值 + 单位，例如 40 vh；仅接受数字并从下拉选择单位'
 				)
 			);
 
@@ -138,47 +160,62 @@ export async function renderEditorTab(
 				const composed = `${numStr}${unit}`;
 				const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 				if (!valid) {
-					new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+					// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+					gapText.inputEl.classList.add('tabflow-invalid-input');
 					return;
 				}
+				gapText.inputEl.classList.remove('tabflow-invalid-input');
 				plugin.settings.editorBottomGap = composed;
 				await plugin.saveSettings();
-				document.documentElement.style.setProperty('--alphatex-editor-bottom-gap', composed);
-				new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+				document.documentElement.style.setProperty(
+					'--alphatex-editor-bottom-gap',
+					composed
+				);
+				// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
 			});
 		})
-		.addDropdown((dd) => {
-			gapDropdown = dd;
-			unitsGap.forEach((u) => dd.addOption(u, u));
-			dd.setValue(gapDefault.unit).onChange(async (unit) => {
-				(sGap as any).__unitValue = unit;
-				const num = (sGap as any).value || gapDefault.num;
-				const composed = `${num}${unit}`;
-				const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
-				if (!valid) {
-					new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
-					return;
-				}
-				plugin.settings.editorBottomGap = composed;
-				await plugin.saveSettings();
-				document.documentElement.style.setProperty('--alphatex-editor-bottom-gap', composed);
-				new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+			.addDropdown((dd) => {
+				gapDropdown = dd;
+				unitsGap.forEach((u) => dd.addOption(u, u));
+				dd.setValue(gapDefault.unit).onChange(async (unit) => {
+					(sGap as any).__unitValue = unit;
+					const num = (sGap as any).value || gapDefault.num;
+					const composed = `${num}${unit}`;
+					const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
+					if (!valid) {
+						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+						gapText.inputEl.classList.add('tabflow-invalid-input');
+						return;
+					}
+					gapText.inputEl.classList.remove('tabflow-invalid-input');
+					plugin.settings.editorBottomGap = composed;
+					await plugin.saveSettings();
+					document.documentElement.style.setProperty(
+						'--alphatex-editor-bottom-gap',
+						composed
+					);
+					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+				});
+			})
+			.addButton((btn) => {
+				btn.setIcon('rotate-ccw')
+					.setTooltip('重置为默认')
+					.onClick(async () => {
+						const defaultVal = DEFAULT_SETTINGS.editorBottomGap || '40vh';
+						const parsed = parseCssValue(defaultVal, '40', 'vh');
+						plugin.settings.editorBottomGap = defaultVal;
+						await plugin.saveSettings();
+						document.documentElement.style.setProperty(
+							'--alphatex-editor-bottom-gap',
+							defaultVal
+						);
+						// Update UI values
+						gapText.setValue(parsed.num);
+						gapDropdown.setValue(parsed.unit);
+						(sGap as any).__unitValue = parsed.unit;
+						new Notice(t('settings.editor.resetToDefault', undefined, '已重置为默认'));
+					});
 			});
-		})
-		.addButton((btn) => {
-			btn.setIcon('rotate-ccw').setTooltip('重置为默认').onClick(async () => {
-				const defaultVal = DEFAULT_SETTINGS.editorBottomGap || '40vh';
-				const parsed = parseCssValue(defaultVal, '40', 'vh');
-				plugin.settings.editorBottomGap = defaultVal;
-				await plugin.saveSettings();
-				document.documentElement.style.setProperty('--alphatex-editor-bottom-gap', defaultVal);
-				// Update UI values
-				gapText.setValue(parsed.num);
-				gapDropdown.setValue(parsed.unit);
-				(sGap as any).__unitValue = parsed.unit;
-				new Notice(t('settings.editor.resetToDefault', undefined, '已重置为默认'));
-			});
-		});
 	}
 
 	new Setting(tabContents)

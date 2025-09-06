@@ -135,3 +135,9 @@ ol.tabflow-setting-description li,
 ul.tabflow-setting-description li {
 	margin-bottom: 0.2em;
 }
+
+/* Invalid input styling */
+.tabflow-invalid-input {
+	border-color: var(--text-error, #e74c3c) !important;
+	box-shadow: 0 0 0 1px var(--text-error, #e74c3c) !important;
+}
