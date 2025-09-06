@@ -463,14 +463,57 @@ export function surroundedHighlightPlugin() {
 				for (const { from, to } of view.visibleRanges) {
 					const text = doc.sliceString(from, to);
 					let i = 0;
+
+					const matchingClose = (absStart: number, openChar: string): number => {
+						const pairs: Record<string, string> = { '(': ')', '{': '}', '[': ']' };
+						const closeChar = pairs[openChar];
+						if (!closeChar) return -1;
+						let depth = 0;
+						// scan the document from absStart (inclusive) forward
+						for (let p = absStart; p < doc.length; p++) {
+							const ch = doc.sliceString(p, p + 1);
+							if (ch === openChar) depth++;
+							else if (ch === closeChar) {
+								depth--;
+								if (depth === 0) return p; // absolute index of matching close
+							}
+						}
+						return -1;
+					};
+
 					while (i < text.length) {
+						const ch = text.charAt(i);
+						// if we encounter an opening bracket, try to find its matching close in the doc
+						if (ch === '(' || ch === '{' || ch === '[') {
+							const absOpen = from + i;
+							const absClose = matchingClose(absOpen, ch);
+							if (absClose !== -1 && absClose > absOpen + 1) {
+								// mark inner content as a single surrounded region (exclude the brackets themselves)
+								const innerStart = absOpen + 1;
+								const innerEnd = absClose;
+								builder.add(
+									innerStart,
+									innerEnd,
+									Decoration.mark({ class: 'cm-surrounded' })
+								);
+								// advance i to after the close if it's within this visible chunk, otherwise end scanning
+								if (absClose < to) {
+									i = absClose - from + 1;
+									continue;
+								} else {
+									// close is outside this visible range; stop processing this chunk
+									break;
+								}
+							}
+						}
 						// skip whitespace
-						if (/\s/.test(text.charAt(i))) {
+						if (/\s/.test(ch)) {
 							i++;
 							continue;
 						}
-						// start of candidate
+						// start of candidate word/sequence
 						const startInRange = i;
+						i++;
 						while (i < text.length && !/\s/.test(text.charAt(i))) i++;
 						const endInRange = i; // exclusive
 
