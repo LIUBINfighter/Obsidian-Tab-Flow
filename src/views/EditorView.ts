@@ -10,6 +10,7 @@ import {
 import { createEditorBar } from '../components/EditorBar';
 import { EventBus } from '../utils/EventBus';
 import { formatTime } from '../utils';
+import { getBarAtOffset, extractInitHeader, makeFocusedBody } from '../utils/alphatexParser';
 import { t } from '../i18n';
 import TabFlowPlugin from '../main';
 
@@ -19,7 +20,7 @@ export class EditorView extends FileView {
 	private editor: EmbeddableMarkdownEditor | null = null;
 	private playground: AlphaTexPlaygroundHandle | null = null;
 	private container: HTMLElement;
-	private layout: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped' =
+	private layout: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped' | 'single-bar' =
 		'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
 	private eventBus: EventBus;
@@ -94,7 +95,7 @@ export class EditorView extends FileView {
 
 		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
-		const validLayouts = ['horizontal', 'vertical', 'horizontal-swapped', 'vertical-swapped'];
+		const validLayouts = ['horizontal', 'vertical', 'horizontal-swapped', 'vertical-swapped', 'single-bar'];
 		if (state.state?.layout && validLayouts.includes(state.state.layout as string)) {
 			this.layout = state.state.layout as typeof this.layout;
 		} else {
@@ -257,14 +258,22 @@ export class EditorView extends FileView {
 			// 上下交换：预览在上，编辑器在下
 			previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
 			editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
+		} else if (this.layout === 'single-bar') {
+			// 单小节模式：左右分栏，但只渲染当前小节
+			editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
+			previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
 		} else {
 			// 默认：编辑器在左/上，预览在右/下
 			editorContainer = mainContainer.createDiv({ cls: 'alphatex-editor-section' });
 			previewContainer = mainContainer.createDiv({ cls: 'alphatex-preview-section' });
 		}
 
-		// 设置布局类
-		if (this.layout === 'horizontal' || this.layout === 'horizontal-swapped') {
+		// 设置布局类（single-bar 使用左右分栏，与默认 horizontal 一致）
+		if (
+			this.layout === 'horizontal' ||
+			this.layout === 'horizontal-swapped' ||
+			this.layout === 'single-bar'
+		) {
 			mainContainer.classList.add('is-horizontal');
 		} else {
 			mainContainer.classList.add('is-vertical');
@@ -282,28 +291,45 @@ export class EditorView extends FileView {
 		this.editor = createEmbeddableMarkdownEditor(this.app, editorWrapper, {
 			value: content,
 			placeholder: t('alphatex.editor.placeholder', undefined, '输入 AlphaTex 内容...'),
-			onChange: () => {
+			onChange: (update) => {
 				// 当编辑器内容变化时，更新预览并触发防抖自动保存
 				if (this.playground && this.editor) {
 					this.playground.setValue(this.editor.value);
 				}
 				this.scheduleSave(1000);
+
+				// 在单小节模式下处理光标变化
+				if (this.layout === 'single-bar' && update.view) {
+					const cursorPos = update.view.state.selection.main.head;
+					this.handleCursorChange(cursorPos);
+				}
 			},
 		});
 
 		// 创建 playground 预览
-		this.playground = createAlphaTexPlayground(this.plugin, previewContainer, content, {
-			layout: this.layout,
-			readOnly: true, // 预览模式为只读
-			showEditor: false, // 不显示编辑区
-			eventBus: this.eventBus, // 传递 eventBus
-			onChange: (value: string) => {
-				// 预览内容变化时，同步到编辑器
-				if (this.editor && this.editor.value !== value) {
-					this.editor.set(value, false);
-				}
-			},
-		});
+		let initialPreviewContent = content;
+		if (this.layout === 'single-bar') {
+			// 在单小节模式下，初始显示第一个小节
+			initialPreviewContent = this.generateFocusedContent(content, 0);
+		}
+		this.playground = createAlphaTexPlayground(
+			this.plugin,
+			previewContainer,
+			initialPreviewContent,
+			{
+				layout: this.layout,
+				readOnly: true, // 预览模式为只读
+				showEditor: false, // 不显示编辑区
+				eventBus: this.eventBus, // 传递 eventBus
+				// 当处于 single-bar 模式时，预览不应写回编辑器（仅单向：编辑器 -> 预览）
+				onChange: this.layout === 'single-bar' ? undefined : (value: string) => {
+					// 预览内容变化时，同步到编辑器（仅在非 single-bar 模式）
+					if (this.editor && this.editor.value !== value) {
+						this.editor.set(value, false);
+					}
+				},
+			}
+		);
 
 		// 创建编辑器栏（EditorBar）
 		this._mountEditorBar();
@@ -342,6 +368,7 @@ export class EditorView extends FileView {
 				'horizontal-swapped',
 				'vertical',
 				'vertical-swapped',
+				'single-bar',
 			] as const;
 			const currentIndex = layouts.indexOf(this.layout);
 			const nextLayout = layouts[(currentIndex + 1) % layouts.length];
@@ -350,6 +377,7 @@ export class EditorView extends FileView {
 				'horizontal-swapped': 'layout',
 				vertical: 'sidebar',
 				'vertical-swapped': 'sidebar',
+				'single-bar': 'music',
 			};
 			const btn = this.addAction(iconMap[nextLayout], '切换布局', () => {
 				this.layout = nextLayout;
@@ -453,6 +481,41 @@ export class EditorView extends FileView {
 	 */
 	private _remountEditorBar(): void {
 		this._mountEditorBar();
+	}
+
+	/**
+	 * 处理光标变化事件（用于单小节模式）
+	 */
+	private handleCursorChange(cursorPos: number): void {
+		if (this.layout !== 'single-bar' || !this.playground || !this.editor) return;
+
+		try {
+			const content = this.editor.value;
+			const focusedContent = this.generateFocusedContent(content, cursorPos);
+			this.playground.setValue(focusedContent);
+		} catch (error) {
+			console.warn('[EditorView] 处理光标变化失败:', error);
+		}
+	}
+
+	/**
+	 * 生成聚焦内容（用于单小节模式）
+	 */
+	private generateFocusedContent(content: string, cursorPos: number): string {
+		try {
+			const bar = getBarAtOffset(content, cursorPos);
+			if (!bar) {
+				// 如果找不到当前小节，返回完整内容
+				return content;
+			}
+
+			const header = extractInitHeader(content);
+			const focusedBody = makeFocusedBody(header.initHeader, bar.text);
+			return focusedBody;
+		} catch (error) {
+			console.warn('[EditorView] 生成聚焦内容失败:', error);
+			return content;
+		}
 	}
 
 	onunload(): void {

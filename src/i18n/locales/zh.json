@@ -157,6 +157,7 @@
 			"layoutVertical": "垂直布局",
 			"layoutHorizontalSwapped": "水平布局（交换）",
 			"layoutVerticalSwapped": "垂直布局（交换）",
+			"layoutSingleBar": "单小节模式",
 			"layoutSaved": "布局设置已保存",
 			"resetToDefault": "重置为默认",
 			"resetToDefaultDesc": "重置编辑器栏组件的显示开关与顺序为默认配置",

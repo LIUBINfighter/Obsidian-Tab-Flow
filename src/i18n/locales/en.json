@@ -157,6 +157,7 @@
 			"layoutVertical": "Vertical Layout",
 			"layoutHorizontalSwapped": "Horizontal Layout (Swapped)",
 			"layoutVerticalSwapped": "Vertical Layout (Swapped)",
+			"layoutSingleBar": "Single Bar Mode (Experimental)",
 			"layoutSaved": "Layout setting saved",
 			"resetToDefault": "Reset to Default",
 			"resetToDefaultDesc": "Reset editor bar component visibility and order to default configuration",

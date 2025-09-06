@@ -62,7 +62,7 @@ export interface TabFlowSettings {
 		order?: string[];
 	};
 	/** 编辑器视图默认布局 */
-	editorViewDefaultLayout?: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped';
+	editorViewDefaultLayout?: 'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped' | 'single-bar';
 	/** 编辑器内部字体大小（CSS 单位），例如 '0.95rem' 或 '14px' */
 	editorFontSize?: string;
 	/** 编辑器底部留白，用于增加真实滚动高度，例如 '40vh' 或 '200px' */
