@@ -3,7 +3,13 @@ import type TabFlowPlugin from '../../../main';
 import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
 // 采用最小可视示例：使用标准打击乐映射（示意）
-const SAMPLE_PERC = `\\title "Percussion Basics"\n\\instrument Drums\n\\tuning none\n.\n:4 (x.5 x.4) (x.5 x.4) (x.5 x.4) (x.5 x.4)`;
+const SAMPLE_PERC = `\\title "Percussion Basics"
+\\instrument 25
+.
+\\track "Drums"
+\\staff {score}
+c#5.4 d4.4 c#5.4 d4.4 |
+`;
 
 export default {
 	id: 'percussion',
