@@ -18,7 +18,7 @@ import {
 	effectHighlightPlugin,
 	tuningHighlightPlugin,
 	booleanHighlightPlugin,
-	chordHighlightPlugin,
+	// chordHighlightPlugin,
 } from './Highlight';
 import { alphaTex } from './alphaTexLanguage';
 import { around } from 'monkey-around';

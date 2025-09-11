@@ -645,7 +645,8 @@ export function tuningHighlightPlugin() {
 				const builder = new RangeSetBuilder<Decoration>();
 				// chord-like pattern: root (A-G/a-g), optional accidental, optional minor/major marker,
 				// optional numeric degree, optional extension keywords (sus/add/dim/aug/maj), optional slash bass
-				const chordRegex = /\b[A-Ga-g][#b]?(?:m|M)?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-Ga-g][#b]?)?[0-9]*\b/g;
+				const chordRegex =
+					/\b[A-Ga-g][#b]?(?:m|M)?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-Ga-g][#b]?)?[0-9]*\b/g;
 				const doc = view.state.doc;
 				for (const { from, to } of view.visibleRanges) {
 					const text = doc.sliceString(from, to);
@@ -718,7 +719,8 @@ export function chordHighlightPlugin() {
 			buildDecorations(view: EditorView): RangeSet<Decoration> {
 				const builder = new RangeSetBuilder<Decoration>();
 				// Pattern: [A-G][#b]?[mM]?[0-9]*[sus|add|dim|aug|maj]?[0-9]*[/[A-G][#b]?]?[0-9]*
-				const chordRegex = /[A-G][#b]?[mM]?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-G][#b]?)?[0-9]*/g;
+				const chordRegex =
+					/[A-G][#b]?[mM]?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-G][#b]?)?[0-9]*/g;
 				for (const { from, to } of view.visibleRanges) {
 					const text = view.state.doc.sliceString(from, to);
 					let match: RegExpExecArray | null;
