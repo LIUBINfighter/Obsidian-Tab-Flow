@@ -32,6 +32,12 @@ function tokenBase(stream: any, state: any) {
 		return 'metadata';
 	}
 
+	// Chord literals: common guitar chords like Bm/D, Cadd9, G/B, Am7, G, F, B7, Em
+	// Pattern: [A-G][#b]?[mM]?[0-9]*[sus|add|dim|aug|maj]?[0-9]*[/[A-G][#b]?]?[0-9]*
+	if (stream.match(/[A-G][#b]?[mM]?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-G][#b]?)?[0-9]*/)) {
+		return 'chord';
+	}
+
 	// Strings "..." or '...'
 	if (stream.match(/"(?:\\.|[^"])*"/) || stream.match(/'(?:\\.|[^'])*'/)) {
 		return 'string';

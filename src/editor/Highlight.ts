@@ -627,7 +627,8 @@ export function effectHighlightPlugin() {
 	);
 }
 
-// New plugin for tuning literals [A-Ga-g][0-9]+
+// Re-purposed plugin: highlight chord-like literals using the previous "tuning" visual style (cm-tuning)
+// Recognizes examples like: Am7, Bm/D, G/B, Cadd9, G, F
 export function tuningHighlightPlugin() {
 	return ViewPlugin.fromClass(
 		class {
@@ -642,11 +643,15 @@ export function tuningHighlightPlugin() {
 			}
 			buildDecorations(view: EditorView): RangeSet<Decoration> {
 				const builder = new RangeSetBuilder<Decoration>();
-				const tuningRegex = /[A-Ga-g][0-9]+/g;
+				// chord-like pattern: root (A-G/a-g), optional accidental, optional minor/major marker,
+				// optional numeric degree, optional extension keywords (sus/add/dim/aug/maj), optional slash bass
+				const chordRegex = /\b[A-Ga-g][#b]?(?:m|M)?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-Ga-g][#b]?)?[0-9]*\b/g;
+				const doc = view.state.doc;
 				for (const { from, to } of view.visibleRanges) {
-					const text = view.state.doc.sliceString(from, to);
+					const text = doc.sliceString(from, to);
 					let match: RegExpExecArray | null;
-					while ((match = tuningRegex.exec(text)) !== null) {
+					chordRegex.lastIndex = 0;
+					while ((match = chordRegex.exec(text)) !== null) {
 						const start = from + match.index;
 						const end = start + match[0].length;
 						builder.add(start, end, Decoration.mark({ class: 'cm-tuning' }));
@@ -696,3 +701,38 @@ export function booleanHighlightPlugin() {
 }
 
 // Updated metaHighlightPlugin for 'metadata' token
+
+// Plugin to highlight chord literals (guitar chords like Bm/D, Cadd9, G/B, Am7, G, F, B7, Em)
+export function chordHighlightPlugin() {
+	return ViewPlugin.fromClass(
+		class {
+			decorations: RangeSet<Decoration>;
+			constructor(view: EditorView) {
+				this.decorations = this.buildDecorations(view);
+			}
+			update(update: ViewUpdate) {
+				if (update.docChanged || update.viewportChanged) {
+					this.decorations = this.buildDecorations(update.view);
+				}
+			}
+			buildDecorations(view: EditorView): RangeSet<Decoration> {
+				const builder = new RangeSetBuilder<Decoration>();
+				// Pattern: [A-G][#b]?[mM]?[0-9]*[sus|add|dim|aug|maj]?[0-9]*[/[A-G][#b]?]?[0-9]*
+				const chordRegex = /[A-G][#b]?[mM]?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-G][#b]?)?[0-9]*/g;
+				for (const { from, to } of view.visibleRanges) {
+					const text = view.state.doc.sliceString(from, to);
+					let match: RegExpExecArray | null;
+					while ((match = chordRegex.exec(text)) !== null) {
+						const start = from + match.index;
+						const end = start + match[0].length;
+						builder.add(start, end, Decoration.mark({ class: 'cm-chord' }));
+					}
+				}
+				return builder.finish();
+			}
+		},
+		{
+			decorations: (value: any) => value.decorations,
+		}
+	);
+}

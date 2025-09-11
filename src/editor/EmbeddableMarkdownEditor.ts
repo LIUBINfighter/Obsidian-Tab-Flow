@@ -18,6 +18,7 @@ import {
 	effectHighlightPlugin,
 	tuningHighlightPlugin,
 	booleanHighlightPlugin,
+	chordHighlightPlugin,
 } from './Highlight';
 import { alphaTex } from './alphaTexLanguage';
 import { around } from 'monkey-around';
@@ -277,6 +278,7 @@ export class EmbeddableMarkdownEditor {
 							extensions.push(tuningHighlightPlugin());
 						if (resolveSetting('boolean', true))
 							extensions.push(booleanHighlightPlugin());
+						// chord highlighting is now handled by the repurposed tuningHighlightPlugin
 						// Update meta to use 'cm-metadata' (ensure meta present if enabled)
 						if (resolveSetting('meta', true)) extensions.push(metaHighlightPlugin());
 					}

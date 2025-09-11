@@ -451,6 +451,7 @@ export async function renderEditorTab(
 		const sampleCode = `\\title "Sample Song"
 \\tempo 120
 .
+// TO DO 完善这里的示例
 \\chord "Bm/D" 2 3 4 0 x x
 \\chord "Cadd9" 0 3 0 2 3 x
 \\chord "G/B" x 3 0 0 2 x
@@ -766,7 +767,7 @@ export async function renderEditorTab(
 				cls: 'tabflow-card',
 				attr: {
 					draggable: 'true',
-					style: 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--background-modifier-border); border-radius:6px;',
+					style: 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px; border:1px solid var(--background-modifier-border); border-radius:6px;',
 				},
 			});
 			card.dataset.key = String(key);

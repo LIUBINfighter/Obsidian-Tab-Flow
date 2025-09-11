@@ -187,5 +187,6 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 		effect: true,
 		tuning: true,
 		boolean: true,
+		chord: true,
 	},
 };
