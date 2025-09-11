@@ -10,6 +10,7 @@ import {
 import { createEditorBar } from '../components/EditorBar';
 import { EventBus } from '../utils/EventBus';
 import { formatTime } from '../utils';
+import NewFileModal from '../components/NewFileModal';
 import {
 	getBarAtOffset,
 	extractInitHeader,
@@ -92,6 +93,7 @@ export class EditorView extends FileView {
 		}
 	}
 	private layoutToggleAction: HTMLElement | null = null;
+	private newFileAction: HTMLElement | null = null;
 	private settingsAction: HTMLElement | null = null;
 
 	constructor(
@@ -238,6 +240,16 @@ export class EditorView extends FileView {
 		} catch (e) {
 			// ignore
 		}
+
+		// 清理新建文件按钮
+		try {
+			if (this.newFileAction && this.newFileAction.parentElement) {
+				this.newFileAction.remove();
+			}
+			this.newFileAction = null;
+		} catch (e) {
+			// ignore
+		}
 	}
 
 	private async render(): Promise<void> {
@@ -372,6 +384,24 @@ export class EditorView extends FileView {
 		// 新添加的 action 会出现在已有 action 的左侧（即插入顺序决定从右到左的可视顺序）。
 		// 因此若希望某个按钮出现在最右侧（视觉上靠右），需要先添加该按钮，再添加其它按钮。
 		try {
+			// 先添加“新建文件”按钮，使其显示在最右侧
+			if (this.newFileAction && this.newFileAction.parentElement) {
+				this.newFileAction.remove();
+				this.newFileAction = null;
+			}
+			const newFileBtn = this.addAction('document', '新建文件', () => {
+				const modal = new NewFileModal(this.app, (path: string) => {
+					// 创建完成后在工作区中打开新文件
+					try {
+						this.app.workspace.openLinkText(path, '', true);
+					} catch (err) {
+						console.error('[EditorView] 打开新文件失败', err);
+					}
+				});
+				modal.open();
+			});
+			this.newFileAction = newFileBtn as unknown as HTMLElement;
+
 			if (this.settingsAction && this.settingsAction.parentElement) {
 				this.settingsAction.remove();
 				this.settingsAction = null;
