@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf } from 'obsidian';
 import TabFlowPlugin from '../main';
-import panelsRegistry, { DocPanel } from './docs/index';
-import { t } from '../i18n';
+import panelsRegistry, { DocPanel, loadDocPanels } from './docs/index';
+import { t, getCurrentLanguageCode, addLanguageChangeListener } from '../i18n';
 
 export const VIEW_TYPE_TABFLOW_DOC = 'tabflow-doc-view';
 // 兼容导出：保留旧名称以避免其它文件立刻出错
@@ -19,8 +19,37 @@ export class DocView extends ItemView {
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
 		super(leaf);
 		this.plugin = plugin;
-		this.panels = panelsRegistry;
-		if (this.panels.length) this.activeId = this.panels[0].id;
+		// 初始化面板为当前语言对应的集合
+		try {
+			this.panels = loadDocPanels(getCurrentLanguageCode());
+			if (this.panels.length) this.activeId = this.panels[0].id;
+		} catch {
+			// fallback to registry
+			this.panels = panelsRegistry;
+			if (this.panels.length) this.activeId = this.panels[0].id;
+		}
+
+		// 监听全局语言变化，自动刷新面板
+		try {
+			const off = addLanguageChangeListener((language) => {
+				try {
+					this.panels = loadDocPanels(language);
+					this.activeId = this.panels[0]?.id ?? null;
+					// 如果视图已打开，重新渲染
+					try {
+						this.render();
+					} catch {
+						/* ignore */
+					}
+				} catch (e) {
+					console.warn('[DocView] Failed to switch panels on language change', e);
+				}
+			});
+			// 在视图关闭时取消监听
+			this.register(() => off());
+		} catch {
+			// ignore
+		}
 	}
 
 	/**

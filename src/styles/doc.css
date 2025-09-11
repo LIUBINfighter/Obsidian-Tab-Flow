@@ -441,15 +441,28 @@
 	}
 }
 
-/* 移动端优化 */
-@media (max-width: 768px) {
-	.tabflow-doc-layout {
-		scroll-behavior: auto; /* 可选项：移动端使用即时滚动以提升性能 */
-		scroll-behavior: auto !important;
-	}
+/* Articulation table copy buttons */
+.articulation-table .copy-btn {
+	background: transparent;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 4px 8px;
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--text-normal);
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+	min-width: auto;
+	width: 100%;
+	text-align: left;
+}
 
-	.tabflow-doc-layout * {
-		scroll-behavior: auto; /* 可选项：移动端使用即时滚动以提升性能 */
-		scroll-behavior: auto !important;
-	}
+.articulation-table .copy-btn:hover {
+	border-color: var(--interactive-accent);
+	background-color: var(--background-modifier-hover);
+}
+
+.articulation-table .copy-btn:active {
+	background-color: var(--background-modifier-active);
 }
