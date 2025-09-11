@@ -72,6 +72,8 @@ export interface TabFlowSettings {
 	editorFontSize?: string;
 	/** 编辑器底部留白，用于增加真实滚动高度，例如 '40vh' 或 '200px' */
 	editorBottomGap?: string;
+	/** 编辑器高亮开关：按名字启用/禁用特定高亮插件 */
+	editorHighlights?: Record<string, boolean>;
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -171,4 +173,19 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	editorViewDefaultLayout: 'horizontal',
 	editorFontSize: '0.95rem',
 	editorBottomGap: '40vh',
+	// 默认启用的一组编辑器高亮插件
+	editorHighlights: {
+		dot: true,
+		bar: true,
+		bracket: true,
+		meta: true,
+		comment: true,
+		debug: false,
+		whitespace: true,
+		surrounded: false,
+		duration: true,
+		effect: true,
+		tuning: true,
+		boolean: true,
+	},
 };

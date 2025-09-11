@@ -141,3 +141,35 @@ ul.tabflow-setting-description li {
 	border-color: var(--text-error, #e74c3c) !important;
 	box-shadow: 0 0 0 1px var(--text-error, #e74c3c) !important;
 }
+
+/* Custom Highlight settings - Two column layout */
+.tabflow-highlight-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	margin-top: 8px;
+	margin-bottom: 8px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+	.tabflow-highlight-grid {
+		grid-template-columns: 1fr;
+		gap: 4px;
+	}
+}
+
+/* Ensure setting items in grid don't have unwanted borders */
+.tabflow-highlight-grid .setting-item {
+	border-top: none !important;
+	padding: 8px 12px;
+	margin: 0;
+}
+
+/* Improve spacing for highlight preview elements */
+.tabflow-highlight-grid .setting-item .setting-item-description {
+	margin-top: 4px;
+	font-size: 0.85em;
+}
+
+/* reset styling intentionally uses existing setting-item styles to match other reset buttons */

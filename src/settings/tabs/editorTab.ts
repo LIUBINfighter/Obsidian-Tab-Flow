@@ -3,6 +3,7 @@ import { setIcon } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
 import { DEFAULT_SETTINGS, EditorBarComponentVisibility } from '../defaults';
+import { createEmbeddableMarkdownEditor } from '../../editor/EmbeddableMarkdownEditor';
 
 export async function renderEditorTab(
 	tabContents: HTMLElement,
@@ -260,6 +261,243 @@ export async function renderEditorTab(
 					}
 				);
 		});
+
+	// Custom Highlight settings (collapsible)
+	{
+		const details = tabContents.createEl('details', {
+			attr: { style: 'margin-top: 12px;' },
+		});
+		details.createEl('summary', {
+			text: 'Custom Highlight',
+			attr: {
+				style: 'cursor: pointer; font-size: 0.9em; font-weight: 600; color: var(--text-accent);',
+			},
+		});
+
+		// Helper: render a compact preview for each highlight type using existing CSS classes
+		const renderHighlightPreview = (key: string): DocumentFragment => {
+			const wrap = document.createElement('div');
+			wrap.className = 'cm-content';
+			wrap.style.cssText =
+				'display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center; padding:4px 6px; border-radius:4px; background: var(--background-secondary); font-family: var(--font-monospace); font-size: 0.9em;';
+
+			const span = (cls: string, text?: string) => {
+				const el = document.createElement('span');
+				el.className = cls;
+				if (text != null) el.textContent = text;
+				return el;
+			};
+
+			switch (key) {
+				case 'dot': {
+					wrap.append(
+						span('', '示例:'),
+						span('highlighted-dot', '.'),
+						span('', ' • '),
+						span('highlighted-dot', '.')
+					);
+					break;
+				}
+				case 'bar': {
+					wrap.append(
+						span('', '示例:'),
+						span('highlighted-bar', '|'),
+						span('bar-number', '12')
+					);
+					break;
+				}
+				case 'bracket': {
+					wrap.append(
+						span('', '示例:'),
+						span('cm-bracket', '('),
+						span('cm-bracket', ')')
+					);
+					break;
+				}
+				case 'meta': {
+					wrap.append(span('', '示例:'), span('cm-metadata', '\\tempo'), span('', '120'));
+					break;
+				}
+				case 'comment': {
+					wrap.append(span('', '示例:'), span('cm-comment', '// comment 注释'));
+					break;
+				}
+				case 'debug': {
+					wrap.append(
+						span('', '示例:'),
+						span('cm-debug-meta', '\\title'),
+						span('cm-debug-number', '120'),
+						span('cm-debug-effect-key', 'tr'),
+						span('cm-debug-lbrace', '{'),
+						span('cm-debug-effect-arg', '4'),
+						span('cm-debug-rbrace', '}'),
+						span('cm-debug-duration', ':4'),
+						span('cm-debug-pipe', '|'),
+						span('cm-debug-dot', '.')
+					);
+					break;
+				}
+				case 'whitespace': {
+					const a = document.createElement('span');
+					a.textContent = 'a';
+					const space = span('cm-whitespace-space', ' '); // render visible dot via ::before
+					const b = document.createElement('span');
+					b.textContent = 'b';
+					wrap.append(span('', '示例:'), a, space, b);
+					break;
+				}
+				case 'surrounded': {
+					wrap.append(
+						span('', '示例:'),
+						span('', '('),
+						span('cm-surrounded', 'abc'),
+						span('', ')'),
+						span('', ' / '),
+						span('', ' '),
+						span('cm-surrounded', 'foo'),
+						span('', ' ')
+					);
+					break;
+				}
+				case 'duration': {
+					wrap.append(span('', '示例:'), span('cm-duration', ':4'));
+					break;
+				}
+				case 'effect': {
+					wrap.append(
+						span('', '示例:'),
+						span('cm-effect-beat', 'tempo'),
+						span('cm-effect-note', 'tr')
+					);
+					break;
+				}
+				case 'tuning': {
+					wrap.append(span('', '示例:'), span('cm-tuning', 'A4'));
+					break;
+				}
+				case 'boolean': {
+					wrap.append(
+						span('', '示例:'),
+						span('cm-boolean', 'true'),
+						span('', '/'),
+						span('cm-boolean', 'false')
+					);
+					break;
+				}
+				default: {
+					wrap.append(span('', '示例')); // fallback
+				}
+			}
+			const frag = document.createDocumentFragment();
+			frag.appendChild(wrap);
+			return frag;
+		};
+		const highlights = [
+			{ key: 'dot', label: '点符号 (.)' },
+			{ key: 'bar', label: '小节竖线 (|)' },
+			{ key: 'bracket', label: '括号 ()/{}' },
+			{ key: 'meta', label: '元信息 (\title, \tempo)' },
+			{ key: 'comment', label: '行注释 (//)' },
+			{ key: 'debug', label: 'Debug 高亮（仅调试）' },
+			{ key: 'whitespace', label: '可见空白' },
+			{ key: 'surrounded', label: '被空白包围的序列' },
+			{ key: 'duration', label: '时长标记 (:4)' },
+			{ key: 'effect', label: '效果关键字' },
+			{ key: 'tuning', label: '调弦文字 (A4)' },
+			{ key: 'boolean', label: '布尔字面量' },
+		];
+
+		// Markdown editor preview for highlight settings (syntax highlighting only)
+		const previewContainer = details.createDiv({
+			attr: {
+				style: 'margin-bottom: 12px; border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 8px;',
+			},
+		});
+
+		const sampleCode = `\\title "Sample Song"
+\\tempo 120
+.
+\\chord "Bm/D" 2 3 4 0 x x
+\\chord "Cadd9" 0 3 0 2 3 x
+\\chord "G/B" x 3 0 0 2 x
+\\chord "Am7" 3 1 0 2 0 x
+\\chord "G" 3 0 0 0 2 3
+\\chord "F" 2 2 3 4 4 2
+\\chord "B7" 2 0 2 1 2 x
+\\chord "Em" 0 0 0 2 2 0
+.
+`;
+
+		let currentEditorHandle: any = null;
+
+		const renderPreview = () => {
+			if (currentEditorHandle) {
+				currentEditorHandle.destroy();
+			}
+			previewContainer.empty();
+			const editorWrap = previewContainer.createDiv({
+				attr: { style: 'height: 200px; overflow: auto; border-radius: 4px;' },
+			});
+			currentEditorHandle = createEmbeddableMarkdownEditor(app, editorWrap, {
+				value: sampleCode,
+				highlightSettings: plugin.settings.editorHighlights || {},
+			});
+		};
+		// Initial preview load
+		renderPreview();
+
+		// Reset to default button for Custom Highlight settings (visual matches other resets)
+		new Setting(details)
+			.setName(t('settings.editor.resetHighlightToDefault', undefined, '重置高亮为默认'))
+			.setDesc(
+				t('settings.editor.resetHighlightToDefaultDesc', undefined, '重置所有语法高亮设置到默认值')
+			)
+			.setClass('tabflow-no-border')
+			.addButton((btn) => {
+				btn.setButtonText(t('settings.editor.resetToDefault', undefined, '重置为默认'))
+					.setIcon('rotate-ccw')
+					.onClick(async () => {
+						try {
+							plugin.settings.editorHighlights = JSON.parse(
+								JSON.stringify(DEFAULT_SETTINGS.editorHighlights || {})
+							);
+							await plugin.saveSettings();
+							// Refresh preview to show default highlight settings
+							renderPreview();
+							new Notice(
+								t('settings.editor.resetHighlightToDefaultSuccess', undefined, '高亮设置已重置')
+							);
+						} catch (e) {
+							new Notice(
+								t('settings.editor.resetHighlightToDefaultFailed', undefined, '重置失败: ') + e
+							);
+						}
+					});
+			});
+
+		const highlightedGroup = details.createDiv({
+			cls: 'tabflow-highlight-grid',
+		});
+
+		highlights.forEach((h) => {
+			new Setting(highlightedGroup)
+				.setName(h.label)
+				.setDesc(renderHighlightPreview(h.key))
+				.addToggle((t) => {
+					const enabled = !!(
+						plugin.settings.editorHighlights && plugin.settings.editorHighlights[h.key]
+					);
+					t.setValue(enabled).onChange(async (v) => {
+						plugin.settings.editorHighlights = plugin.settings.editorHighlights || {};
+						plugin.settings.editorHighlights[h.key] = v;
+						await plugin.saveSettings();
+						// Refresh markdown editor preview to apply new highlight settings
+						renderPreview();
+					});
+				})
+				.setClass('tabflow-no-border');
+		});
+	}
 
 	// Editor Bar Settings
 	tabContents.createEl('h4', { text: t('settings.editor.barTitle', undefined, '编辑器栏设置') });

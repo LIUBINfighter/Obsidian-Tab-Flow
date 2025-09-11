@@ -156,6 +156,14 @@ export function createAlphaTexPlayground(
 	if (showEditor) {
 		const editorWrap = wrapper.createDiv({ cls: 'inmarkdown-editor' });
 		const editorContainer = editorWrap.createDiv({ cls: 'inmarkdown-editor-cm' });
+		// ensure global fallback for older code paths
+		try {
+			(window as any).__tabflow_settings__ =
+				(window as any).__tabflow_settings__ || plugin.settings;
+		} catch {
+			// ignore
+		}
+
 		embedded = createEmbeddableMarkdownEditor(plugin.app, editorContainer, {
 			value: initialSource,
 			placeholder,
@@ -163,6 +171,7 @@ export function createAlphaTexPlayground(
 				if (embedded) currentValue = embedded.value;
 				scheduleRender();
 			},
+			highlightSettings: plugin.settings.editorHighlights || {},
 		});
 
 		// Editor toolbar (top-right icons)

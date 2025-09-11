@@ -34,6 +34,8 @@ export interface MarkdownEditorProps {
 	onBlur?: (editor: EmbeddableMarkdownEditor) => void;
 	onPaste?: (e: ClipboardEvent, editor: EmbeddableMarkdownEditor) => void;
 	onChange?: (update: ViewUpdate) => void;
+	// optional map of highlight plugin toggles passed from caller
+	highlightSettings?: Record<string, boolean>;
 }
 
 const defaultProperties: Required<Omit<MarkdownEditorProps, 'cursorLocation'>> & {
@@ -50,6 +52,7 @@ const defaultProperties: Required<Omit<MarkdownEditorProps, 'cursorLocation'>> &
 	onBlur: () => {},
 	onPaste: () => {},
 	onChange: () => {},
+	highlightSettings: {},
 };
 
 interface InternalMarkdownEditor extends Record<string, unknown> {
@@ -166,14 +169,41 @@ export class EmbeddableMarkdownEditor {
 						}
 						extensions.push(Prec.highest(keymap.of(keyBindings as any)));
 						// Add highlight plugins extracted to separate module
-						// ...existing code...
+						// Resolve highlight settings: prefer explicit options, fallback to global plugin settings if available
+						const resolveSetting = (key: string, def = true) => {
+							try {
+								if (
+									selfRef.options.highlightSettings &&
+									key in selfRef.options.highlightSettings
+								) {
+									return !!selfRef.options.highlightSettings[key];
+								}
+								// fallback: some callers may expose settings on window for minimal changes
+								const globalSettings = (window as any).__tabflow_settings__ as
+									| Record<string, any>
+									| undefined;
+								if (
+									globalSettings &&
+									globalSettings.editorHighlights &&
+									key in globalSettings.editorHighlights
+								) {
+									return !!globalSettings.editorHighlights[key];
+								}
+							} catch {
+								// ignore
+							}
+							return def;
+						};
+
 						// (dot and bar highlight plugins are imported from ./Highlight.ts)
-						extensions.push(dotHighlightPlugin());
-						extensions.push(barHighlightPlugin());
+						if (resolveSetting('dot', true)) extensions.push(dotHighlightPlugin());
+						if (resolveSetting('bar', true)) extensions.push(barHighlightPlugin());
 						// visible whitespace highlighter
-						extensions.push(whitespaceHighlightPlugin());
+						if (resolveSetting('whitespace', true))
+							extensions.push(whitespaceHighlightPlugin());
 						// highlight sequences surrounded by whitespace
-						extensions.push(surroundedHighlightPlugin());
+						if (resolveSetting('surrounded', false))
+							extensions.push(surroundedHighlightPlugin());
 						// Ensure spellcheck/auto-correct attributes are applied to the actual contenteditable area
 						const disableSpellcheckPlugin = ViewPlugin.fromClass(
 							class {
@@ -223,11 +253,13 @@ export class EmbeddableMarkdownEditor {
 								autocapitalize: 'off',
 							}) as any
 						);
-						extensions.push(bracketHighlightPlugin());
-						extensions.push(metaHighlightPlugin());
-						extensions.push(commentHighlightPlugin());
+						if (resolveSetting('bracket', true))
+							extensions.push(bracketHighlightPlugin());
+						if (resolveSetting('meta', true)) extensions.push(metaHighlightPlugin());
+						if (resolveSetting('comment', true))
+							extensions.push(commentHighlightPlugin());
 						// Debugging visible-range lexer/highlighter
-						extensions.push(debugHighlightPlugin());
+						if (resolveSetting('debug', false)) extensions.push(debugHighlightPlugin());
 						// Inject AlphaTex language/highlighting
 						try {
 							const alphaExt = alphaTex();
@@ -237,17 +269,16 @@ export class EmbeddableMarkdownEditor {
 							// fail gracefully if alphaTex isn't available in runtime
 						}
 						// Add new highlight plugins for TextMate-inspired tokens
-						extensions.push(durationHighlightPlugin());
-						extensions.push(effectHighlightPlugin());
-						extensions.push(tuningHighlightPlugin());
-						extensions.push(booleanHighlightPlugin());
-						// Add new highlight plugins for TextMate-inspired tokens
-						extensions.push(durationHighlightPlugin());
-						extensions.push(effectHighlightPlugin());
-						extensions.push(tuningHighlightPlugin());
-						extensions.push(booleanHighlightPlugin());
-						// Update meta to use 'cm-metadata'
-						extensions.push(metaHighlightPlugin());
+						if (resolveSetting('duration', true))
+							extensions.push(durationHighlightPlugin());
+						if (resolveSetting('effect', true))
+							extensions.push(effectHighlightPlugin());
+						if (resolveSetting('tuning', true))
+							extensions.push(tuningHighlightPlugin());
+						if (resolveSetting('boolean', true))
+							extensions.push(booleanHighlightPlugin());
+						// Update meta to use 'cm-metadata' (ensure meta present if enabled)
+						if (resolveSetting('meta', true)) extensions.push(metaHighlightPlugin());
 					}
 					return extensions;
 				},

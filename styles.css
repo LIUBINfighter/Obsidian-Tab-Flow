@@ -1385,3 +1385,68 @@ ul.tabflow-setting-description li {
 	box-shadow: 0 0 0 1px var(--text-error, #e74c3c) !important;
 }
 
+/* Custom Highlight settings - Two column layout */
+.tabflow-highlight-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	margin-top: 8px;
+	margin-bottom: 8px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+	.tabflow-highlight-grid {
+		grid-template-columns: 1fr;
+		gap: 4px;
+	}
+}
+
+/* Ensure setting items in grid don't have unwanted borders */
+.tabflow-highlight-grid .setting-item {
+	border-top: none !important;
+	padding: 8px 12px;
+	margin: 0;
+}
+
+/* Improve spacing for highlight preview elements */
+.tabflow-highlight-grid .setting-item .setting-item-description {
+	margin-top: 4px;
+	font-size: 0.85em;
+}
+
+/* Custom Highlight reset button styling */
+.tabflow-highlight-reset {
+	margin: 8px 0;
+	padding: 8px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-secondary);
+}
+
+.tabflow-highlight-reset .setting-item-name {
+	font-weight: 500;
+	margin-bottom: 4px;
+}
+
+.tabflow-highlight-reset .setting-item-description {
+	color: var(--text-muted);
+	font-size: 0.85em;
+	margin-bottom: 8px;
+}
+
+.tabflow-highlight-reset button {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent, var(--text-normal));
+	border: none;
+	padding: 6px 12px;
+	border-radius: 4px;
+	font-size: 0.9em;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.tabflow-highlight-reset button:hover {
+	background: color-mix(in srgb, var(--interactive-accent) 85%, black);
+}
+

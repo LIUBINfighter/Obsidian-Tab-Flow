@@ -303,6 +303,14 @@ export class EditorView extends FileView {
 
 		// 创建嵌入式编辑器
 		const editorWrapper = editorContainer.createDiv({ cls: 'alphatex-editor-wrapper' });
+		// ensure global fallback for older code paths
+		try {
+			(window as any).__tabflow_settings__ =
+				(window as any).__tabflow_settings__ || this.plugin.settings;
+		} catch {
+			// ignore
+		}
+
 		this.editor = createEmbeddableMarkdownEditor(this.app, editorWrapper, {
 			value: content,
 			placeholder: t('alphatex.editor.placeholder', undefined, '输入 AlphaTex 内容...'),
@@ -319,6 +327,7 @@ export class EditorView extends FileView {
 					this.handleCursorChange(cursorPos);
 				}
 			},
+			highlightSettings: this.plugin.settings.editorHighlights || {},
 		});
 
 		// 创建 playground 预览
