@@ -291,7 +291,7 @@ export async function renderEditorTab(
 			switch (key) {
 				case 'dot': {
 					wrap.append(
-						span('', '示例:'),
+						span('', 'Example:'),
 						span('highlighted-dot', '.'),
 						span('', ' • '),
 						span('highlighted-dot', '.')
@@ -300,7 +300,7 @@ export async function renderEditorTab(
 				}
 				case 'bar': {
 					wrap.append(
-						span('', '示例:'),
+						span('', 'Example:'),
 						span('highlighted-bar', '|'),
 						span('bar-number', '12')
 					);
@@ -308,23 +308,27 @@ export async function renderEditorTab(
 				}
 				case 'bracket': {
 					wrap.append(
-						span('', '示例:'),
+						span('', 'Example:'),
 						span('cm-bracket', '('),
 						span('cm-bracket', ')')
 					);
 					break;
 				}
 				case 'meta': {
-					wrap.append(span('', '示例:'), span('cm-metadata', '\\tempo'), span('', '120'));
+					wrap.append(
+						span('', 'Example:'),
+						span('cm-metadata', '\\tempo'),
+						span('', '120')
+					);
 					break;
 				}
 				case 'comment': {
-					wrap.append(span('', '示例:'), span('cm-comment', '// comment 注释'));
+					wrap.append(span('', 'Example:'), span('cm-comment', '// comment 注释'));
 					break;
 				}
 				case 'debug': {
 					wrap.append(
-						span('', '示例:'),
+						span('', 'Example:'),
 						span('cm-debug-meta', '\\title'),
 						span('cm-debug-number', '120'),
 						span('cm-debug-effect-key', 'tr'),
@@ -343,12 +347,12 @@ export async function renderEditorTab(
 					const space = span('cm-whitespace-space', ' '); // render visible dot via ::before
 					const b = document.createElement('span');
 					b.textContent = 'b';
-					wrap.append(span('', '示例:'), a, space, b);
+					wrap.append(span('', 'Example:'), a, space, b);
 					break;
 				}
 				case 'surrounded': {
 					wrap.append(
-						span('', '示例:'),
+						span('', 'Example:'),
 						span('', '('),
 						span('cm-surrounded', 'abc'),
 						span('', ')'),
@@ -360,24 +364,24 @@ export async function renderEditorTab(
 					break;
 				}
 				case 'duration': {
-					wrap.append(span('', '示例:'), span('cm-duration', ':4'));
+					wrap.append(span('', 'Example:'), span('cm-duration', ':4'));
 					break;
 				}
 				case 'effect': {
 					wrap.append(
-						span('', '示例:'),
+						span('', 'Example:'),
 						span('cm-effect-beat', 'tempo'),
 						span('cm-effect-note', 'tr')
 					);
 					break;
 				}
 				case 'tuning': {
-					wrap.append(span('', '示例:'), span('cm-tuning', 'A4'));
+					wrap.append(span('', 'Example:'), span('cm-tuning', 'A4'));
 					break;
 				}
 				case 'boolean': {
 					wrap.append(
-						span('', '示例:'),
+						span('', 'Example:'),
 						span('cm-boolean', 'true'),
 						span('', '/'),
 						span('cm-boolean', 'false')
@@ -385,7 +389,7 @@ export async function renderEditorTab(
 					break;
 				}
 				default: {
-					wrap.append(span('', '示例')); // fallback
+					wrap.append(span('', 'Example')); // fallback
 				}
 			}
 			const frag = document.createDocumentFragment();
@@ -393,18 +397,48 @@ export async function renderEditorTab(
 			return frag;
 		};
 		const highlights = [
-			{ key: 'dot', label: '点符号 (.)' },
-			{ key: 'bar', label: '小节竖线 (|)' },
-			{ key: 'bracket', label: '括号 ()/{}' },
-			{ key: 'meta', label: '元信息 (\title, \tempo)' },
-			{ key: 'comment', label: '行注释 (//)' },
-			{ key: 'debug', label: 'Debug 高亮（仅调试）' },
-			{ key: 'whitespace', label: '可见空白' },
-			{ key: 'surrounded', label: '被空白包围的序列' },
-			{ key: 'duration', label: '时长标记 (:4)' },
-			{ key: 'effect', label: '效果关键字' },
-			{ key: 'tuning', label: '调弦文字 (A4)' },
-			{ key: 'boolean', label: '布尔字面量' },
+			{ key: 'dot', label: t('settings.editor.highlights.dot', undefined, '点符号 (.)') },
+			{ key: 'bar', label: t('settings.editor.highlights.bar', undefined, '小节竖线 (|)') },
+			{
+				key: 'bracket',
+				label: t('settings.editor.highlights.bracket', undefined, '括号 ()/{}'),
+			},
+			{
+				key: 'meta',
+				label: t('settings.editor.highlights.meta', undefined, '元信息 (\\title, \\tempo)'),
+			},
+			{
+				key: 'comment',
+				label: t('settings.editor.highlights.comment', undefined, '行注释 (//)'),
+			},
+			{
+				key: 'debug',
+				label: t('settings.editor.highlights.debug', undefined, 'Debug 高亮（仅调试）'),
+			},
+			{
+				key: 'whitespace',
+				label: t('settings.editor.highlights.whitespace', undefined, '可见空白'),
+			},
+			{
+				key: 'surrounded',
+				label: t('settings.editor.highlights.surrounded', undefined, '被空白包围的序列'),
+			},
+			{
+				key: 'duration',
+				label: t('settings.editor.highlights.duration', undefined, '时长标记 (:4)'),
+			},
+			{
+				key: 'effect',
+				label: t('settings.editor.highlights.effect', undefined, '效果关键字'),
+			},
+			{
+				key: 'tuning',
+				label: t('settings.editor.highlights.tuning', undefined, '调弦文字 (A4)'),
+			},
+			{
+				key: 'boolean',
+				label: t('settings.editor.highlights.boolean', undefined, '布尔字面量'),
+			},
 		];
 
 		// Markdown editor preview for highlight settings (syntax highlighting only)
@@ -450,53 +484,74 @@ export async function renderEditorTab(
 		new Setting(details)
 			.setName(t('settings.editor.resetHighlightToDefault', undefined, '重置高亮为默认'))
 			.setDesc(
-				t('settings.editor.resetHighlightToDefaultDesc', undefined, '重置所有语法高亮设置到默认值')
+				t(
+					'settings.editor.resetHighlightToDefaultDesc',
+					undefined,
+					'重置所有语法高亮设置到默认值'
+				)
 			)
 			.setClass('tabflow-no-border')
 			.addButton((btn) => {
-				btn.setButtonText(t('settings.editor.resetToDefault', undefined, '重置为默认'))
-					.setIcon('rotate-ccw')
-					.onClick(async () => {
-						try {
-							plugin.settings.editorHighlights = JSON.parse(
-								JSON.stringify(DEFAULT_SETTINGS.editorHighlights || {})
-							);
-							await plugin.saveSettings();
-							// Refresh preview to show default highlight settings
-							renderPreview();
-							new Notice(
-								t('settings.editor.resetHighlightToDefaultSuccess', undefined, '高亮设置已重置')
-							);
-						} catch (e) {
-							new Notice(
-								t('settings.editor.resetHighlightToDefaultFailed', undefined, '重置失败: ') + e
-							);
-						}
-					});
+				btn.setButtonText(
+					t('settings.editor.resetHighlightToDefault', undefined, '重置高亮为默认')
+				).onClick(async () => {
+					try {
+						plugin.settings.editorHighlights = JSON.parse(
+							JSON.stringify(DEFAULT_SETTINGS.editorHighlights || {})
+						);
+						await plugin.saveSettings();
+						// Refresh preview to show default highlight settings
+						renderPreview();
+						renderHighlightControls();
+						new Notice(
+							t(
+								'settings.editor.resetHighlightToDefaultSuccess',
+								undefined,
+								'高亮设置已重置'
+							)
+						);
+					} catch (e) {
+						new Notice(
+							t(
+								'settings.editor.resetHighlightToDefaultFailed',
+								undefined,
+								'重置失败: '
+							) + e
+						);
+					}
+				});
 			});
 
 		const highlightedGroup = details.createDiv({
 			cls: 'tabflow-highlight-grid',
 		});
 
-		highlights.forEach((h) => {
-			new Setting(highlightedGroup)
-				.setName(h.label)
-				.setDesc(renderHighlightPreview(h.key))
-				.addToggle((t) => {
-					const enabled = !!(
-						plugin.settings.editorHighlights && plugin.settings.editorHighlights[h.key]
-					);
-					t.setValue(enabled).onChange(async (v) => {
-						plugin.settings.editorHighlights = plugin.settings.editorHighlights || {};
-						plugin.settings.editorHighlights[h.key] = v;
-						await plugin.saveSettings();
-						// Refresh markdown editor preview to apply new highlight settings
-						renderPreview();
-					});
-				})
-				.setClass('tabflow-no-border');
-		});
+		const renderHighlightControls = () => {
+			highlightedGroup.empty();
+			highlights.forEach((h) => {
+				new Setting(highlightedGroup)
+					.setName(h.label)
+					.setDesc(renderHighlightPreview(h.key))
+					.addToggle((t) => {
+						const enabled = !!(
+							plugin.settings.editorHighlights &&
+							plugin.settings.editorHighlights[h.key]
+						);
+						t.setValue(enabled).onChange(async (v) => {
+							plugin.settings.editorHighlights =
+								plugin.settings.editorHighlights || {};
+							plugin.settings.editorHighlights[h.key] = v;
+							await plugin.saveSettings();
+							// Refresh markdown editor preview to apply new highlight settings
+							renderPreview();
+						});
+					})
+					.setClass('tabflow-no-border');
+			});
+		};
+
+		// Initial render of highlight controls
+		renderHighlightControls();
 	}
 
 	// Editor Bar Settings
