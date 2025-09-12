@@ -10,7 +10,7 @@ import {
 import { createEditorBar } from '../components/EditorBar';
 import { EventBus } from '../utils/EventBus';
 import { formatTime } from '../utils';
-import NewFileModal from '../components/NewFileModal';
+import ShareCardModal from '../components/ShareCardModal';
 import {
 	getBarAtOffset,
 	extractInitHeader,
@@ -390,14 +390,7 @@ export class EditorView extends FileView {
 				this.newFileAction = null;
 			}
 			const newFileBtn = this.addAction('document', '新建文件', () => {
-				const modal = new NewFileModal(this.app, (path: string) => {
-					// 创建完成后在工作区中打开新文件
-					try {
-						this.app.workspace.openLinkText(path, '', true);
-					} catch (err) {
-						console.error('[EditorView] 打开新文件失败', err);
-					}
-				});
+				const modal = new ShareCardModal(this.app);
 				modal.open();
 			});
 			this.newFileAction = newFileBtn as unknown as HTMLElement;
