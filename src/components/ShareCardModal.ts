@@ -2,6 +2,7 @@ import { Modal, Notice, Platform, MarkdownView } from 'obsidian';
 import type TabFlowPlugin from '../main';
 import { createAlphaTexPlayground, AlphaTexPlaygroundHandle } from './AlphaTexPlayground';
 import * as domtoimage from 'dom-to-image-more';
+import { waitAlphaTabFullRender, withExportLock } from '../utils/alphaTabRenderWait';
 
 export class ShareCardModal extends Modal {
 	private plugin: TabFlowPlugin;
@@ -43,22 +44,29 @@ export class ShareCardModal extends Modal {
 		return el || this.cardRoot;
 	}
 
-	// 等待布局在若干次测量中稳定（用于避免 AlphaTab 渐进渲染造成截断）
-	private async waitForStableLayout(el: HTMLElement, attempts = 6, interval = 70) {
-		let lastH = -1;
-		for (let i = 0; i < attempts; i++) {
-			const rect = el.getBoundingClientRect();
-			if (Math.abs(rect.height - lastH) < 1 && i > 0) return; // 两次高度相同视为稳定
-			lastH = rect.height;
-			await new Promise((r) => setTimeout(r, interval));
-		}
-	}
-
 	private async generateImageBlob(resolution: number, fmt: string, mime: string): Promise<Blob> {
 		const captureEl = this.getCaptureElement();
 		if (!captureEl) throw new Error('未找到可导出的节点');
-		// 等待布局稳定，减少截断概率
-		await this.waitForStableLayout(captureEl);
+		// 新的等待逻辑：若 playground 有 AlphaTabApi 则等待其完整渲染
+		try {
+			const api = this.playgroundHandle?.getApi?.();
+			if (api) {
+				// 找到乐谱根节点（.alphatex-score 或 captureEl 内部）
+				const scoreRoot = captureEl.querySelector('.alphatex-score') as HTMLElement | null;
+				if (scoreRoot) {
+					const result = await waitAlphaTabFullRender(api as any, scoreRoot, {
+						debug: false,
+						timeoutMs: 8000,
+						stableFrames: 3,
+					});
+					if (!result.success) {
+						console.warn('[ShareCardModal] 渲染等待未完全成功，使用回退: ', result);
+					}
+				}
+			}
+		} catch (e) {
+			console.warn('[ShareCardModal] 完整渲染等待异常，继续回退导出', e);
+		}
 		const rect = captureEl.getBoundingClientRect();
 		const width = Math.ceil(rect.width * resolution);
 		const height = Math.ceil(rect.height * resolution);
@@ -158,6 +166,19 @@ export class ShareCardModal extends Modal {
 		});
 		formatSelect.value = 'png';
 
+		// 是否禁用懒加载（一次性完整渲染）
+		const lazyWrap = left.createDiv({ cls: 'share-card-field-checkbox' });
+		const disableLazyId = 'share-disable-lazy-' + Date.now();
+		const lazyCb = lazyWrap.createEl('input', {
+			attr: { type: 'checkbox', id: disableLazyId },
+		}) as HTMLInputElement;
+		const lazyLabel = lazyWrap.createEl('label', {
+			text: '禁用懒加载(完整渲染)',
+			attr: { for: disableLazyId },
+		});
+		lazyLabel.style.marginLeft = '4px';
+		lazyCb.checked = false; // 默认不禁用，用户显式勾选
+
 		// Buttons
 		const btnRow = left.createDiv({ cls: 'share-card-actions' });
 		const copyBtn = btnRow.createEl('button', { text: '复制' });
@@ -244,21 +265,48 @@ export class ShareCardModal extends Modal {
 		}
 
 		// create playground inside cardRoot
+		const buildPlayground = () => {
+			try {
+				this.playgroundHandle?.destroy();
+			} catch {
+				/* ignore */
+			}
+			try {
+				this.playgroundHandle = createAlphaTexPlayground(
+					this.plugin,
+					this.cardRoot!,
+					source,
+					{
+						readOnly: true,
+						showEditor: false,
+						layout: 'vertical',
+						className: 'share-card-playground',
+						// @ts-ignore 透传给 mountAlphaTexBlock 的 init：关闭播放器
+						player: 'disable',
+						// 自定义附加 alphaTabOptions：根据勾选决定是否禁用懒加载
+						alphaTabOptions: {
+							// alphaTab Settings.core 不一定暴露 enableLazyLoading，这里作为扩展字段传给我们的实现
+							// 约定：在 mountAlphaTexBlock 内读取并应用
+							// @ts-ignore
+							__disableLazyLoading: lazyCb.checked,
+						},
+					}
+				);
+			} catch (e) {
+				console.error('[ShareCardModal] 创建 playground 失败', e);
+				this.cardRoot!.createEl('div', { text: '预览创建失败' });
+			}
+		};
+
 		try {
-			// 禁用播放器与光标 (player:'disable')，避免导出时出现播放光标
-			this.playgroundHandle = createAlphaTexPlayground(this.plugin, this.cardRoot, source, {
-				readOnly: true,
-				showEditor: false,
-				layout: 'vertical',
-				className: 'share-card-playground',
-				// 通过透传给 mountAlphaTexBlock 的 init 选项关闭播放器/光标
-				// @ts-ignore - 自定义扩展字段
-				player: 'disable',
-			});
+			buildPlayground();
 		} catch (e) {
 			console.error('[ShareCardModal] 创建 playground 失败', e);
 			this.cardRoot.createEl('div', { text: '预览创建失败' });
 		}
+
+		// 切换懒加载选项 -> 重新构建 playground
+		lazyCb.addEventListener('change', () => buildPlayground());
 
 		// Update preview width when width input changes
 		widthInput.addEventListener('change', () => {
@@ -274,64 +322,70 @@ export class ShareCardModal extends Modal {
 
 		// Export handler (捕获完整 .inmarkdown-preview 内容)
 		exportBtn.addEventListener('click', async () => {
-			exportBtn.setAttribute('disabled', 'true');
-			copyBtn.setAttribute('disabled', 'true');
-			const title = titleInput.value || 'alphatex-card';
-			const resolution = Number(resSelect.value.replace('x', '')) || 1;
-			const fmt = formatSelect.value as string;
-			const mime = fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
-			try {
-				const blob = await this.generateImageBlob(resolution, fmt, mime);
-				if (Platform.isMobile) {
-					const filename = `${title.replace(/\s+/g, '_')}.${fmt}`;
-					const filePath =
-						await this.app.fileManager.getAvailablePathForAttachment(filename);
-					await this.app.vault.createBinary(filePath, await blob.arrayBuffer());
-					new Notice(`已保存到 ${filePath}`);
-				} else {
-					const url = URL.createObjectURL(blob);
-					const a = document.createElement('a');
-					a.href = url;
-					a.download = `${title.replace(/\s+/g, '_')}.${fmt}`;
-					document.body.appendChild(a);
-					a.click();
-					a.remove();
-					URL.revokeObjectURL(url);
+			await withExportLock(async () => {
+				exportBtn.setAttribute('disabled', 'true');
+				copyBtn.setAttribute('disabled', 'true');
+				const title = titleInput.value || 'alphatex-card';
+				const resolution = Number(resSelect.value.replace('x', '')) || 1;
+				const fmt = formatSelect.value as string;
+				const mime =
+					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
+				try {
+					const blob = await this.generateImageBlob(resolution, fmt, mime);
+					if (Platform.isMobile) {
+						const filename = `${title.replace(/\s+/g, '_')}.${fmt}`;
+						const filePath =
+							await this.app.fileManager.getAvailablePathForAttachment(filename);
+						await this.app.vault.createBinary(filePath, await blob.arrayBuffer());
+						new Notice(`已保存到 ${filePath}`);
+					} else {
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						a.href = url;
+						a.download = `${title.replace(/\s+/g, '_')}.${fmt}`;
+						document.body.appendChild(a);
+						a.click();
+						a.remove();
+						URL.revokeObjectURL(url);
+					}
+				} catch (e) {
+					console.error('[ShareCardModal] 导出失败', e);
+					new Notice('导出失败');
+				} finally {
+					exportBtn.removeAttribute('disabled');
+					copyBtn.removeAttribute('disabled');
 				}
-			} catch (e) {
-				console.error('[ShareCardModal] 导出失败', e);
-				new Notice('导出失败');
-			} finally {
-				exportBtn.removeAttribute('disabled');
-				copyBtn.removeAttribute('disabled');
-			}
+			});
 		});
 
 		// Copy handler
 		copyBtn.addEventListener('click', async () => {
-			exportBtn.setAttribute('disabled', 'true');
-			copyBtn.setAttribute('disabled', 'true');
-			const resolution = Number(resSelect.value.replace('x', '')) || 1;
-			const fmt = formatSelect.value as string;
-			const mime = fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
-			try {
-				const blob = await this.generateImageBlob(resolution, fmt, mime);
-				// @ts-ignore
-				if (navigator.clipboard && (navigator.clipboard as any).write) {
-					const item = new ClipboardItem({ [blob.type]: blob });
+			await withExportLock(async () => {
+				exportBtn.setAttribute('disabled', 'true');
+				copyBtn.setAttribute('disabled', 'true');
+				const resolution = Number(resSelect.value.replace('x', '')) || 1;
+				const fmt = formatSelect.value as string;
+				const mime =
+					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
+				try {
+					const blob = await this.generateImageBlob(resolution, fmt, mime);
 					// @ts-ignore
-					await navigator.clipboard.write([item]);
-					new Notice('已复制到剪贴板');
-				} else {
-					new Notice('复制到剪贴板不被支持');
+					if (navigator.clipboard && (navigator.clipboard as any).write) {
+						const item = new ClipboardItem({ [blob.type]: blob });
+						// @ts-ignore
+						await navigator.clipboard.write([item]);
+						new Notice('已复制到剪贴板');
+					} else {
+						new Notice('复制到剪贴板不被支持');
+					}
+				} catch (e) {
+					console.error('[ShareCardModal] 复制失败', e);
+					new Notice('复制失败');
+				} finally {
+					exportBtn.removeAttribute('disabled');
+					copyBtn.removeAttribute('disabled');
 				}
-			} catch (e) {
-				console.error('[ShareCardModal] 复制失败', e);
-				new Notice('复制失败');
-			} finally {
-				exportBtn.removeAttribute('disabled');
-				copyBtn.removeAttribute('disabled');
-			}
+			});
 		});
 
 		closeBtn.addEventListener('click', () => this.close());

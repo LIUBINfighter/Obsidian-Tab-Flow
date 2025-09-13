@@ -41,6 +41,10 @@ export function mountAlphaTexBlock(
 	const { opts, body } = parseInlineInit(source);
 	const merged: AlphaTexInitOptions = { ...(defaults || {}), ...(opts || {}) };
 
+	// 自定义扩展：外层可通过 defaults 传入 alphaTabOptions.__disableLazyLoading
+	// 我们不在类型上正式暴露此字段，保持局部影响。
+	const disableLazyLoading = (defaults as any)?.alphaTabOptions?.__disableLazyLoading === true;
+
 	// extract optional UI override from init
 
 	const uiOverride:
@@ -258,6 +262,9 @@ export function mountAlphaTexBlock(
 						])
 					: new Map()) as unknown as Map<number, string>,
 				fontDirectory: '',
+				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
+				// @ts-ignore
+				enableLazyLoading: disableLazyLoading ? false : undefined,
 			},
 			player: {
 				enablePlayer: playerEnabled,
