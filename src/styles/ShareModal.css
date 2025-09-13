@@ -51,6 +51,20 @@
 	height: 100%;
 }
 
+/* Soft rounded card + subtle shadow for a polished look */
+.modal-container.share-card-wide .share-card-modal,
+.modal.share-card-wide .share-card-modal {
+	border-radius: 12px;
+	box-shadow:
+		0 10px 30px rgba(0, 0, 0, 0.12),
+		0 4px 8px rgba(0, 0, 0, 0.06);
+	overflow: hidden; /* ensure rounded corners clip children */
+	transition:
+		transform 160ms ease,
+		box-shadow 200ms ease,
+		opacity 120ms ease;
+}
+
 .share-card-left {
 	flex: 0 0 300px;
 	display: flex;
@@ -107,6 +121,21 @@
 	box-sizing: border-box;
 	padding: 12px;
 	background: var(--background-primary);
+	/* Ensure inner root respects the outer radius and does not overflow */
+	border-radius: 12px;
+	overflow: hidden;
+	/* little elevation on the inner card to visually separate controls */
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* Remove the dashed/document-style border from tabflow content inside the share modal.
+   Keep this override scoped to the modal so other views are unaffected. */
+.modal-container.share-card-wide .share-card-modal .tabflow-doc-main-content,
+.modal.share-card-wide .share-card-modal .tabflow-doc-main-content {
+	border: none !important;
+	background: transparent !important; /* let .share-card-root provide the background */
+	padding: 0 !important; /* avoid double padding inside the card root */
+	border-radius: 0 !important;
 }
 
 .share-card-hint {

@@ -21,6 +21,9 @@ export class ShareCardModal extends Modal {
 	private maxZoom = 3;
 	private zoomStep = 0.1;
 
+	// handler reference so we can remove listener on close
+	private outsidePointerDownHandler: ((e: PointerEvent) => void) | null = null;
+
 	private applyPanTransform() {
 		if (this.panWrapper) {
 			this.panWrapper.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.zoomScale})`;
@@ -166,7 +169,7 @@ export class ShareCardModal extends Modal {
 
 		// Form fields
 		left.createEl('label', { text: '导出文件名' });
-		const titleInput = left.createEl('input') as HTMLInputElement;
+		const titleInput = left.createEl('input', { attr: { type: 'text' } }) as HTMLInputElement;
 		titleInput.style.width = '100%';
 		// 默认使用当前文件名（如有）
 		const activeFile = this.app.workspace.getActiveFile();
@@ -223,6 +226,22 @@ export class ShareCardModal extends Modal {
 		this.cardRoot = this.panWrapper.createDiv({ cls: 'share-card-root' });
 		this.cardRoot.style.width = widthInput.value + 'px';
 		this.applyPanTransform();
+
+		// 点击模态框外部关闭（增加一致的心智模型）
+		this.outsidePointerDownHandler = (e: PointerEvent) => {
+			try {
+				// 如果点击目标不在 modalElement 内容内，则关闭 modal
+				const target = e.target as Node | null;
+				if (!target) return;
+				if (!this.modalEl.contains(target)) {
+					this.close();
+				}
+			} catch (err) {
+				// 忽略任何异常
+			}
+		};
+		// 绑定到 document 以捕获 modal 外的点击
+		document.addEventListener('pointerdown', this.outsidePointerDownHandler);
 
 		// Pan interaction
 		previewWrap.addEventListener('pointerdown', (e) => {
@@ -426,6 +445,16 @@ export class ShareCardModal extends Modal {
 	onClose() {
 		try {
 			this.playgroundHandle?.destroy();
+		} catch (e) {
+			// ignore
+		}
+
+		// 移除外部点击关闭的监听
+		try {
+			if (this.outsidePointerDownHandler) {
+				document.removeEventListener('pointerdown', this.outsidePointerDownHandler);
+				this.outsidePointerDownHandler = null;
+			}
 		} catch (e) {
 			// ignore
 		}
