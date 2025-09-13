@@ -67,9 +67,41 @@ export class ShareCardModal extends Modal {
 		} catch (e) {
 			console.warn('[ShareCardModal] 完整渲染等待异常，继续回退导出', e);
 		}
-		const rect = captureEl.getBoundingClientRect();
-		const width = Math.ceil(rect.width * resolution);
-		const height = Math.ceil(rect.height * resolution);
+		// ---- 尺寸测量策略 ----
+		// 问题根因：我们之前使用 getBoundingClientRect() 在 panWrapper 存在 transform(scale/translate) 时，
+		// 返回的是“视觉缩放后”的尺寸（被 zoom 缩小则高度变小），导致传入 dom-to-image 的 width/height 过小 -> 底部被裁剪。
+		// 解决：临时移除 panWrapper 的 transform，使用 scrollWidth/scrollHeight 获得未缩放原始尺寸。
+		let width: number;
+		let height: number;
+		let restoreTransform: string | null = null;
+		try {
+			if (this.panWrapper && this.panWrapper.style.transform) {
+				restoreTransform = this.panWrapper.style.transform;
+				this.panWrapper.style.transform = 'none';
+			}
+			// 强制 reflow
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+			captureEl.offsetHeight;
+			const rawW = captureEl.scrollWidth || captureEl.clientWidth;
+			const rawH = captureEl.scrollHeight || captureEl.clientHeight;
+			width = Math.ceil(rawW * resolution);
+			height = Math.ceil(rawH * resolution);
+			if (!rawH) {
+				// 退回到 rect 方案
+				const rectFallback = captureEl.getBoundingClientRect();
+				width = Math.ceil(rectFallback.width * resolution);
+				height = Math.ceil(rectFallback.height * resolution);
+			}
+		} finally {
+			if (restoreTransform !== null && this.panWrapper) {
+				this.panWrapper.style.transform = restoreTransform;
+			}
+		}
+		// 对非常大的尺寸做一个软上限提示（例如高度>30000 px）避免内存 OOM
+		const SOFT_LIMIT = 30000;
+		if (height > SOFT_LIMIT) {
+			console.warn('[ShareCardModal] 导出高度过大，可能内存占用显著: ', height);
+		}
 		// 仅按分辨率缩放，忽略 pan/zoom（用户平移只是预览视图，不影响最终全图）
 		const options: any = {
 			width,
