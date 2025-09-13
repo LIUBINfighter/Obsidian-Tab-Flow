@@ -390,7 +390,7 @@ export class EditorView extends FileView {
 				this.newFileAction = null;
 			}
 			const newFileBtn = this.addAction('document', '新建文件', () => {
-				const modal = new ShareCardModal(this.app);
+				const modal = new ShareCardModal(this.plugin);
 				modal.open();
 			});
 			this.newFileAction = newFileBtn as unknown as HTMLElement;
