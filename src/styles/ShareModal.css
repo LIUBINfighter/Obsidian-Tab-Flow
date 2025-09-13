@@ -119,3 +119,12 @@
 .share-card-preview * {
 	-webkit-user-drag: none;
 }
+
+/* 兜底隐藏光标/播放相关高亮（双保险：即使未成功传 player:'disable' 也不显示） */
+.share-card-root .at-cursor-bar,
+.share-card-root .at-cursor-beat,
+.share-card-root .at-selection,
+.share-card-root .alphatex-controls,
+.share-card-root .nav-buttons-container {
+	display: none !important;
+}

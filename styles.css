@@ -13,7 +13,8 @@
 
 /* 给外层 Obsidian modal container 增加可选加宽类 */
 /* 容器加宽：同时兼容 modal-container 与 modal 本身加类的情况 */
-.modal-container.share-card-wide, .modal.share-card-wide {
+.modal-container.share-card-wide,
+.modal.share-card-wide {
 	width: 96vw !important;
 	max-width: 96vw !important;
 	height: 88vh !important;
@@ -27,7 +28,8 @@
 	margin: 0 !important;
 }
 
-.modal-container.share-card-wide .modal, .modal.share-card-wide {
+.modal-container.share-card-wide .modal,
+.modal.share-card-wide {
 	width: 100% !important;
 	max-width: 100% !important;
 	height: 100% !important;
@@ -37,7 +39,8 @@
 }
 
 /* 让 content 区域填满以摆放左右布局 */
-.modal-container.share-card-wide .modal-content, .modal.share-card-wide .modal-content {
+.modal-container.share-card-wide .modal-content,
+.modal.share-card-wide .modal-content {
 	flex: 1 1 auto;
 	display: flex;
 	flex-direction: column;
@@ -45,10 +48,10 @@
 }
 
 /* 让我们内部根布局自适应剩余空间 */
-.modal-container.share-card-wide .share-card-modal, .modal.share-card-wide .share-card-modal {
+.modal-container.share-card-wide .share-card-modal,
+.modal.share-card-wide .share-card-modal {
 	height: 100%;
 }
-
 
 .share-card-left {
 	flex: 0 0 300px;
@@ -59,33 +62,74 @@
 	overflow-y: auto;
 	padding-right: 4px;
 }
-.share-card-left label { font-weight: 600; margin-top: 4px; }
-.share-card-left input, .share-card-left select, .share-card-left button {
+.share-card-left label {
+	font-weight: 600;
+	margin-top: 4px;
+}
+.share-card-left input,
+.share-card-left select,
+.share-card-left button {
 	font-size: 13px;
 }
-.share-card-actions { display:flex; gap: .5rem; flex-wrap:wrap; }
-.share-card-actions button { flex:1 1 auto; }
+.share-card-actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+.share-card-actions button {
+	flex: 1 1 auto;
+}
 
-.share-card-right { flex: 1 1 auto; position: relative; display:flex; flex-direction:column; }
+.share-card-right {
+	flex: 1 1 auto;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
 .share-card-preview {
 	position: relative;
-	flex:1 1 auto;
+	flex: 1 1 auto;
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
 	overflow: hidden; /* hide panned content */
 	cursor: grab;
 	user-select: none;
 }
-.share-card-preview.panning { cursor: grabbing; }
+.share-card-preview.panning {
+	cursor: grabbing;
+}
 
-.share-card-pan-wrapper { position:absolute; top:0; left:0; transform-origin: top left; }
-.share-card-root { box-sizing: border-box; padding: 12px; background: var(--background-primary); }
+.share-card-pan-wrapper {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: top left;
+}
+.share-card-root {
+	box-sizing: border-box;
+	padding: 12px;
+	background: var(--background-primary);
+}
 
-.share-card-hint { margin-top: 6px; font-size: 11px; opacity: .7; }
+.share-card-hint {
+	margin-top: 6px;
+	font-size: 11px;
+	opacity: 0.7;
+}
 
 /* Prevent accidental text selection while panning */
-.share-card-preview * { -webkit-user-drag: none; }
+.share-card-preview * {
+	-webkit-user-drag: none;
+}
 
+/* 兜底隐藏光标/播放相关高亮（双保险：即使未成功传 player:'disable' 也不显示） */
+.share-card-root .at-cursor-bar,
+.share-card-root .at-cursor-beat,
+.share-card-root .at-selection,
+.share-card-root .alphatex-controls,
+.share-card-root .nav-buttons-container {
+	display: none !important;
+}
 
 /* --- TrackModal.css --- */
 .tracks-modal .setting-item {

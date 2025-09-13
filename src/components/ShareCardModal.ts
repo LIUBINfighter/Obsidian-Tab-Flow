@@ -34,6 +34,51 @@ export class ShareCardModal extends Modal {
 		};
 	}
 
+	// 获取需要被完整导出的乐谱根节点（包含全部 SVG / 多页内容）
+	private getCaptureElement(): HTMLElement | null {
+		if (!this.cardRoot) return null;
+		const el = this.cardRoot.querySelector(
+			'.inmarkdown-preview.tabflow-doc-main-content'
+		) as HTMLElement | null;
+		return el || this.cardRoot;
+	}
+
+	// 等待布局在若干次测量中稳定（用于避免 AlphaTab 渐进渲染造成截断）
+	private async waitForStableLayout(el: HTMLElement, attempts = 6, interval = 70) {
+		let lastH = -1;
+		for (let i = 0; i < attempts; i++) {
+			const rect = el.getBoundingClientRect();
+			if (Math.abs(rect.height - lastH) < 1 && i > 0) return; // 两次高度相同视为稳定
+			lastH = rect.height;
+			await new Promise((r) => setTimeout(r, interval));
+		}
+	}
+
+	private async generateImageBlob(resolution: number, fmt: string, mime: string): Promise<Blob> {
+		const captureEl = this.getCaptureElement();
+		if (!captureEl) throw new Error('未找到可导出的节点');
+		// 等待布局稳定，减少截断概率
+		await this.waitForStableLayout(captureEl);
+		const rect = captureEl.getBoundingClientRect();
+		const width = Math.ceil(rect.width * resolution);
+		const height = Math.ceil(rect.height * resolution);
+		// 仅按分辨率缩放，忽略 pan/zoom（用户平移只是预览视图，不影响最终全图）
+		const options: any = {
+			width,
+			height,
+			style: {
+				transformOrigin: 'top left',
+				transform: `scale(${resolution})`,
+			},
+			bgcolor: mime === 'image/jpeg' ? '#fff' : undefined,
+			quality: fmt === 'jpg' ? 0.92 : undefined,
+			cacheBust: true,
+		};
+		const blob = await domtoimage.toBlob(captureEl, options);
+		if (!blob) throw new Error('生成图片失败');
+		return blob;
+	}
+
 	private setZoom(next: number, anchorX?: number, anchorY?: number) {
 		const clamped = Math.min(this.maxZoom, Math.max(this.minZoom, next));
 		if (!this.panWrapper || !this.cardRoot) {
@@ -200,11 +245,15 @@ export class ShareCardModal extends Modal {
 
 		// create playground inside cardRoot
 		try {
+			// 禁用播放器与光标 (player:'disable')，避免导出时出现播放光标
 			this.playgroundHandle = createAlphaTexPlayground(this.plugin, this.cardRoot, source, {
 				readOnly: true,
 				showEditor: false,
 				layout: 'vertical',
 				className: 'share-card-playground',
+				// 通过透传给 mountAlphaTexBlock 的 init 选项关闭播放器/光标
+				// @ts-ignore - 自定义扩展字段
+				player: 'disable',
 			});
 		} catch (e) {
 			console.error('[ShareCardModal] 创建 playground 失败', e);
@@ -223,9 +272,8 @@ export class ShareCardModal extends Modal {
 			}
 		});
 
-		// Export handler
+		// Export handler (捕获完整 .inmarkdown-preview 内容)
 		exportBtn.addEventListener('click', async () => {
-			if (!this.cardRoot) return;
 			exportBtn.setAttribute('disabled', 'true');
 			copyBtn.setAttribute('disabled', 'true');
 			const title = titleInput.value || 'alphatex-card';
@@ -233,30 +281,14 @@ export class ShareCardModal extends Modal {
 			const fmt = formatSelect.value as string;
 			const mime = fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
 			try {
-				let blob: Blob | null = null;
-				const rect = this.cardRoot.getBoundingClientRect();
-				const width = Math.ceil(rect.width * resolution);
-				const height = Math.ceil(rect.height * resolution);
-				const options: any = {
-					width,
-					height,
-					style: this.buildExportStyle(resolution),
-					bgcolor: mime === 'image/jpeg' ? '#fff' : undefined,
-					quality: fmt === 'jpg' ? 0.92 : undefined,
-					cacheBust: true,
-				};
-				blob = await domtoimage.toBlob(this.cardRoot, options);
-				if (!blob) throw new Error('生成图片失败');
-
+				const blob = await this.generateImageBlob(resolution, fmt, mime);
 				if (Platform.isMobile) {
-					// save to vault
 					const filename = `${title.replace(/\s+/g, '_')}.${fmt}`;
 					const filePath =
 						await this.app.fileManager.getAvailablePathForAttachment(filename);
 					await this.app.vault.createBinary(filePath, await blob.arrayBuffer());
 					new Notice(`已保存到 ${filePath}`);
 				} else {
-					// desktop: download
 					const url = URL.createObjectURL(blob);
 					const a = document.createElement('a');
 					a.href = url;
@@ -277,28 +309,13 @@ export class ShareCardModal extends Modal {
 
 		// Copy handler
 		copyBtn.addEventListener('click', async () => {
-			if (!this.cardRoot) return;
 			exportBtn.setAttribute('disabled', 'true');
 			copyBtn.setAttribute('disabled', 'true');
 			const resolution = Number(resSelect.value.replace('x', '')) || 1;
 			const fmt = formatSelect.value as string;
 			const mime = fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
 			try {
-				let blob: Blob | null = null;
-				const rect = this.cardRoot.getBoundingClientRect();
-				const width = Math.ceil(rect.width * resolution);
-				const height = Math.ceil(rect.height * resolution);
-				const options: any = {
-					width,
-					height,
-					style: this.buildExportStyle(resolution),
-					bgcolor: mime === 'image/jpeg' ? '#fff' : undefined,
-					quality: fmt === 'jpg' ? 0.92 : undefined,
-					cacheBust: true,
-				};
-				blob = await domtoimage.toBlob(this.cardRoot, options);
-				if (!blob) throw new Error('生成图片失败');
-				// copy to clipboard if supported
+				const blob = await this.generateImageBlob(resolution, fmt, mime);
 				// @ts-ignore
 				if (navigator.clipboard && (navigator.clipboard as any).write) {
 					const item = new ClipboardItem({ [blob.type]: blob });
