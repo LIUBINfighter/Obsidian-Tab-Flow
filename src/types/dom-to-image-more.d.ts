@@ -1,4 +1,4 @@
 declare module 'dom-to-image-more' {
-  const content: any;
-  export = content;
+	const content: any;
+	export = content;
 }

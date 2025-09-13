@@ -47,8 +47,8 @@ export class ShareCardModal extends Modal {
 		if (anchorX !== undefined && anchorY !== undefined) {
 			// 转换坐标：我们希望 (anchorX, anchorY) 在缩放后位置不发生大的跳动
 			// 原理： (anchor - offset) / prevZoom = 内容坐标 -> 新 offset = anchor - 内容坐标 * newZoom
-			const contentX = (anchorX - this.offsetX);
-			const contentY = (anchorY - this.offsetY);
+			const contentX = anchorX - this.offsetX;
+			const contentY = anchorY - this.offsetY;
 			this.offsetX = anchorX - (contentX / prevZoom) * this.zoomScale;
 			this.offsetY = anchorY - (contentY / prevZoom) * this.zoomScale;
 		}
@@ -68,8 +68,11 @@ export class ShareCardModal extends Modal {
 			this.modalEl.addClass('share-card-wide');
 			// Obsidian 可能将实际容器包一层 .modal-container
 			const parent = this.modalEl.parentElement;
-			if (parent && parent.classList.contains('modal-container')) parent.classList.add('share-card-wide');
-		} catch { /* ignore */ }
+			if (parent && parent.classList.contains('modal-container'))
+				parent.classList.add('share-card-wide');
+		} catch {
+			/* ignore */
+		}
 
 		const container = contentEl.createDiv({ cls: 'share-card-modal' });
 		// 左侧配置，右侧预览
@@ -146,22 +149,30 @@ export class ShareCardModal extends Modal {
 			if (!this.isPanning) return;
 			this.isPanning = false;
 			previewWrap.classList.remove('panning');
-			try { previewWrap.releasePointerCapture(e.pointerId); } catch (_) { /* ignore */ }
+			try {
+				previewWrap.releasePointerCapture(e.pointerId);
+			} catch (_) {
+				/* ignore */
+			}
 		};
 		previewWrap.addEventListener('pointerup', endPan);
 		previewWrap.addEventListener('pointerleave', endPan);
 
 		// Wheel zoom: Ctrl+wheel 或 Alt+wheel 触发缩放
-		previewWrap.addEventListener('wheel', (e) => {
-			if (!(e.ctrlKey || e.altKey)) return; // 需要组合键避免与滚动冲突
-			e.preventDefault();
-			const delta = e.deltaY;
-			const factor = delta > 0 ? -this.zoomStep : this.zoomStep;
-			const rect = previewWrap.getBoundingClientRect();
-			const ax = e.clientX - rect.left;
-			const ay = e.clientY - rect.top;
-			this.setZoom(this.zoomScale + factor, ax, ay);
-		}, { passive: false });
+		previewWrap.addEventListener(
+			'wheel',
+			(e) => {
+				if (!(e.ctrlKey || e.altKey)) return; // 需要组合键避免与滚动冲突
+				e.preventDefault();
+				const delta = e.deltaY;
+				const factor = delta > 0 ? -this.zoomStep : this.zoomStep;
+				const rect = previewWrap.getBoundingClientRect();
+				const ax = e.clientX - rect.left;
+				const ay = e.clientY - rect.top;
+				this.setZoom(this.zoomScale + factor, ax, ay);
+			},
+			{ passive: false }
+		);
 
 		// 双击重置 (位置 + 缩放)
 		previewWrap.addEventListener('dblclick', () => {
@@ -223,13 +234,13 @@ export class ShareCardModal extends Modal {
 			const mime = fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
 			try {
 				let blob: Blob | null = null;
-					const rect = this.cardRoot.getBoundingClientRect();
+				const rect = this.cardRoot.getBoundingClientRect();
 				const width = Math.ceil(rect.width * resolution);
 				const height = Math.ceil(rect.height * resolution);
 				const options: any = {
 					width,
 					height,
-						style: this.buildExportStyle(resolution),
+					style: this.buildExportStyle(resolution),
 					bgcolor: mime === 'image/jpeg' ? '#fff' : undefined,
 					quality: fmt === 'jpg' ? 0.92 : undefined,
 					cacheBust: true,
