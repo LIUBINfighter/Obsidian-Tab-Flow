@@ -6,6 +6,13 @@ import { waitAlphaTabFullRender, withExportLock } from '../utils/alphaTabRenderW
 
 export class ShareCardModal extends Modal {
 	private plugin: TabFlowPlugin;
+	// 导出背景配置（仅在当前 modal 生命周期中有效）
+	// three modes:
+	//  - 'default' : backwards compatible behavior (only set bgcolor for jpeg)
+	//  - 'auto'    : compute from preview root's computed background, fallback to white if transparent
+	//  - 'custom'  : user provided color string like '#ffffff'
+	private exportBgMode: 'default' | 'auto' | 'custom' = 'default';
+	private exportBgCustomColor = '#ffffff';
 	private playgroundHandle: AlphaTexPlaygroundHandle | null = null;
 	private cardRoot: HTMLElement | null = null;
 	private panWrapper: HTMLElement | null = null;
@@ -106,6 +113,34 @@ export class ShareCardModal extends Modal {
 			console.warn('[ShareCardModal] 导出高度过大，可能内存占用显著: ', height);
 		}
 		// 仅按分辨率缩放，忽略 pan/zoom（用户平移只是预览视图，不影响最终全图）
+		// 背景颜色选择优先级：
+		// - exportBgMode === 'default' : 兼容旧行为（仅为 jpeg 设置白底，png/webp 保持透明）
+		// - exportBgMode === 'auto'    : 尝试读取 preview root 的计算背景色，若透明则回退到白色
+		// - exportBgMode === 'custom'  : 使用用户输入的自定义颜色
+		let bgcolorToUse: string | undefined = undefined;
+		try {
+			if (this.exportBgMode === 'custom') {
+				bgcolorToUse = this.exportBgCustomColor || undefined;
+			} else if (this.exportBgMode === 'auto') {
+				const bgSource = (this.cardRoot || captureEl) as HTMLElement;
+				if (bgSource) {
+					const cs = getComputedStyle(bgSource);
+					const computedBg = cs && cs.backgroundColor ? cs.backgroundColor : undefined;
+					const isTransparent =
+						!computedBg ||
+						computedBg === 'transparent' ||
+						/^rgba\(\s*0,\s*0,\s*0,\s*0\s*\)$/i.test(computedBg || '');
+					bgcolorToUse = isTransparent ? '#fff' : computedBg;
+				}
+			} else {
+				// default: 保持向后兼容，仍然只为 jpeg 设置白底
+				if (mime === 'image/jpeg') bgcolorToUse = '#fff';
+			}
+		} catch (e) {
+			// 读取样式或正则出错则回退：若 jpeg 则白色，否则 undefined
+			bgcolorToUse = mime === 'image/jpeg' ? '#fff' : undefined;
+		}
+
 		const options: any = {
 			width,
 			height,
@@ -113,7 +148,7 @@ export class ShareCardModal extends Modal {
 				transformOrigin: 'top left',
 				transform: `scale(${resolution})`,
 			},
-			bgcolor: mime === 'image/jpeg' ? '#fff' : undefined,
+			bgcolor: bgcolorToUse,
 			quality: fmt === 'jpg' ? 0.92 : undefined,
 			cacheBust: true,
 		};
@@ -200,6 +235,38 @@ export class ShareCardModal extends Modal {
 			opt.value = String(v);
 		});
 		formatSelect.value = 'png';
+
+		// 导出背景配置：与 modal 生命周期绑定（不会持久化到插件设置）
+		left.createEl('label', { text: '导出背景' });
+		const bgModeSelect = left.createEl('select') as HTMLSelectElement;
+		[
+			['默认（与之前一致）', 'default'],
+			['自动（使用预览背景）', 'auto'],
+			['自定义颜色', 'custom'],
+		].forEach(([t, v]) => {
+			const opt = bgModeSelect.createEl('option', { text: String(t) });
+			opt.value = String(v);
+		});
+		bgModeSelect.value = 'default';
+
+		// 当用户选择自定义颜色时显示输入框
+		const customColorInput = left.createEl('input') as HTMLInputElement;
+		customColorInput.type = 'text';
+		customColorInput.value = this.exportBgCustomColor;
+		customColorInput.placeholder = '#ffffff 或 rgb(...)';
+		customColorInput.style.display = 'none';
+
+		bgModeSelect.addEventListener('change', () => {
+			this.exportBgMode = bgModeSelect.value as any;
+			if (this.exportBgMode === 'custom') {
+				customColorInput.style.display = '';
+			} else {
+				customColorInput.style.display = 'none';
+			}
+		});
+		customColorInput.addEventListener('change', () => {
+			if (customColorInput.value) this.exportBgCustomColor = customColorInput.value;
+		});
 
 		// 是否禁用懒加载（一次性完整渲染）
 		const lazyWrap = left.createDiv({ cls: 'share-card-field-checkbox' });
