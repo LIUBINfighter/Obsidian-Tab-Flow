@@ -305,5 +305,70 @@
 		"settings": "Settings",
 		"alphaTabOfficialDoc": "alphaTab.js Official Documentation"
 	},
-	"ribbon.openDocumentation": "Open TabFlow Documentation"
+	"ribbon.openDocumentation": "Open TabFlow Documentation",
+	"shareCard": {
+		"title": "Share Card",
+		"preset": "Preset",
+		"presetSave": "Save",
+		"presetSaveAs": "Save As",
+		"presetSetDefault": "Set as Default",
+		"presetReset": "Reset",
+		"confirmPresetDirty": "Current preset has unsaved changes. OK = save and switch, Cancel = show second confirmation",
+		"confirmPresetDiscard": "Discard unsaved changes and switch? OK = discard and switch, Cancel = continue editing",
+		"notice": {
+			"presetSaved": "Preset saved",
+			"presetCreated": "New preset created",
+			"presetSetDefault": "Set as default",
+			"savedTo": "Saved to {{path}}",
+			"exportFailed": "Export failed",
+			"copiedToClipboard": "Copied to clipboard",
+			"clipboardNotSupported": "Copy to clipboard not supported",
+			"copyFailed": "Copy failed"
+		},
+		"prompt": {
+			"newPresetName": "New preset name",
+			"newPresetDefault": "New preset"
+		},
+		"fileName": "File Name",
+		"cardWidth": "Card width (px)",
+		"resolution": "Resolution",
+		"format": "Format",
+		"exportBg": {
+			"label": "Export background",
+			"options": {
+				"default": "Default (same as before)",
+				"auto": "Auto (use preview background)",
+				"custom": "Custom color"
+			}
+		},
+		"customColor": "Color parameter",
+		"customColorPlaceholder": "#ffffff or rgb(...)",
+		"disableLazyLabel": "Full render",
+		"disableLazy": "Disable lazy loading",
+		"showAuthor": "Show author info",
+		"authorName": "Author name",
+		"authorRemark": "Extra remark",
+		"showAvatar": "Show avatar",
+		"avatarUpload": "Avatar (upload)",
+		"chooseFile": "Choose file",
+		"authorAlign": "Align",
+		"authorPosition": "Position",
+		"position": {
+			"top": "Top",
+			"bottom": "Bottom"
+		},
+		"authorBg": "Background color",
+		"authorTextColor": "Text color",
+		"authorFontSize": "Font size (px)",
+		"copy": "Copy",
+		"export": "Export",
+		"close": "Close",
+		"hint": "Drag to move, Ctrl/Alt + wheel to zoom, double click to reset",
+		"previewCreateFailed": "Preview creation failed",
+		"align": {
+			"left": "Left",
+			"center": "Center",
+			"right": "Right"
+		}
+	}
 }

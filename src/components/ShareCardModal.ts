@@ -1,5 +1,6 @@
 import { Modal, Notice, Platform, MarkdownView } from 'obsidian';
 import type TabFlowPlugin from '../main';
+import { t } from '../i18n';
 import { createAlphaTexPlayground, AlphaTexPlaygroundHandle } from './AlphaTexPlayground';
 import * as domtoimage from 'dom-to-image-more';
 import { waitAlphaTabFullRender, withExportLock } from '../utils/alphaTabRenderWait';
@@ -330,7 +331,7 @@ export class ShareCardModal extends Modal {
 	async onOpen() {
 		const { contentEl } = this;
 		contentEl.empty();
-		this.titleEl.setText('分享卡片');
+		this.titleEl.setText(t('shareCard.title'));
 		try {
 			this.modalEl.addClass('share-card-wide');
 			// Obsidian 可能将实际容器包一层 .modal-container
@@ -353,15 +354,23 @@ export class ShareCardModal extends Modal {
 		const runtime = this.stateManager.init();
 		this.currentPresetId = runtime.activePresetId;
 		const presetBar = left.createDiv({ cls: 'share-card-preset-bar' });
-		const presetLabel = presetBar.createEl('label', { text: '预设' });
+		const presetLabel = presetBar.createEl('label', { text: t('shareCard.preset') });
 		presetLabel.style.display = 'block';
 		const presetSelect = presetBar.createEl('select') as HTMLSelectElement;
 		presetSelect.style.width = '100%';
 		const presetActionRow = left.createDiv({ cls: 'share-card-preset-actions' });
-		const btnPresetSave = presetActionRow.createEl('button', { text: '保存' });
-		const btnPresetSaveAs = presetActionRow.createEl('button', { text: '另存为' });
-		const btnPresetSetDefault = presetActionRow.createEl('button', { text: '设为默认' });
-		const btnPresetReset = presetActionRow.createEl('button', { text: '重置' });
+		const btnPresetSave = presetActionRow.createEl('button', {
+			text: t('shareCard.presetSave'),
+		});
+		const btnPresetSaveAs = presetActionRow.createEl('button', {
+			text: t('shareCard.presetSaveAs'),
+		});
+		const btnPresetSetDefault = presetActionRow.createEl('button', {
+			text: t('shareCard.presetSetDefault'),
+		});
+		const btnPresetReset = presetActionRow.createEl('button', {
+			text: t('shareCard.presetReset'),
+		});
 
 		const rebuildPresetOptions = () => {
 			presetSelect.empty();
@@ -397,14 +406,10 @@ export class ShareCardModal extends Modal {
 			const st = this.stateManager?.getState();
 			if (st?.dirty && !st.autosaveEnabled) {
 				// 三选弹窗：保存/放弃/取消
-				const choice = window.confirm(
-					'当前预设有未保存的更改。\n确定=保存并切换，取消=弹出二次确认'
-				);
+				const choice = window.confirm(t('shareCard.confirmPresetDirty'));
 				if (!choice) {
 					// 二次确认：放弃或取消
-					const discard = window.confirm(
-						'放弃未保存更改并切换?  确定=放弃并切换  取消=继续编辑'
-					);
+					const discard = window.confirm(t('shareCard.confirmPresetDiscard'));
 					if (!discard) {
 						// 取消切换，恢复下拉值
 						presetSelect.value = this.currentPresetId || targetId;
@@ -459,11 +464,14 @@ export class ShareCardModal extends Modal {
 		btnPresetSave.addEventListener('click', async () => {
 			this.stateManager?.commit('manual');
 			rebuildPresetOptions();
-			new Notice('预设已保存');
+			new Notice(t('shareCard.notice.presetSaved'));
 		});
 
 		btnPresetSaveAs.addEventListener('click', async () => {
-			const name = window.prompt('新预设名称', '新预设');
+			const name = window.prompt(
+				t('shareCard.prompt.newPresetName'),
+				t('shareCard.prompt.newPresetDefault')
+			);
 			if (!name) return;
 			// 收集当前 working 值
 			const st = this.stateManager?.getState();
@@ -493,7 +501,7 @@ export class ShareCardModal extends Modal {
 			rebuildPresetOptions();
 			presetSelect.value = created.id;
 			this.currentPresetId = created.id;
-			new Notice('已创建新预设');
+			new Notice(t('shareCard.notice.presetCreated'));
 		});
 
 		btnPresetSetDefault.addEventListener('click', async () => {
@@ -501,7 +509,7 @@ export class ShareCardModal extends Modal {
 			this.presetService!.setDefault(this.currentPresetId);
 			await this.plugin.saveSettings();
 			rebuildPresetOptions();
-			new Notice('已设为默认');
+			new Notice(t('shareCard.notice.presetSetDefault'));
 		});
 
 		btnPresetReset.addEventListener('click', () => {
@@ -540,7 +548,7 @@ export class ShareCardModal extends Modal {
 			rebuildPresetOptions();
 		});
 
-		left.createEl('label', { text: '导出文件名' });
+		left.createEl('label', { text: t('shareCard.fileName') });
 		const titleInput = left.createEl('input', { attr: { type: 'text' } }) as HTMLInputElement;
 		titleInput.style.width = '100%';
 		// 默认使用当前文件名（如有）
@@ -550,12 +558,12 @@ export class ShareCardModal extends Modal {
 		// 基础配置卡片
 		const basicCard = left.createDiv({ cls: 'share-card-basic-grid' });
 		// 宽度
-		basicCard.createEl('div', { text: '卡片宽度(px)', cls: 'sc-label' });
+		basicCard.createEl('div', { text: t('shareCard.cardWidth'), cls: 'sc-label' });
 		const widthInput = basicCard.createEl('input') as HTMLInputElement;
 		widthInput.type = 'number';
 		widthInput.value = '800';
 		// 分辨率
-		basicCard.createEl('div', { text: '分辨率', cls: 'sc-label' });
+		basicCard.createEl('div', { text: t('shareCard.resolution'), cls: 'sc-label' });
 		const resSelect = basicCard.createEl('select') as HTMLSelectElement;
 		['1x', '2x', '3x'].forEach((r) => {
 			const opt = resSelect.createEl('option', { text: r });
@@ -567,7 +575,7 @@ export class ShareCardModal extends Modal {
 			refreshDirtyIndicator();
 		});
 		// 格式
-		basicCard.createEl('div', { text: '格式', cls: 'sc-label' });
+		basicCard.createEl('div', { text: t('shareCard.format'), cls: 'sc-label' });
 		const formatSelect = basicCard.createEl('select') as HTMLSelectElement;
 		[
 			['png', 'png'],
@@ -583,33 +591,34 @@ export class ShareCardModal extends Modal {
 			refreshDirtyIndicator();
 		});
 		// 导出背景模式
-		basicCard.createEl('div', { text: '导出背景', cls: 'sc-label' });
+		basicCard.createEl('div', { text: t('shareCard.exportBg.label'), cls: 'sc-label' });
 		const bgModeSelect = basicCard.createEl('select') as HTMLSelectElement;
 		[
-			['默认（与之前一致）', 'default'],
-			['自动（使用预览背景）', 'auto'],
-			['自定义颜色', 'custom'],
-		].forEach(([t, v]) => {
-			const opt = bgModeSelect.createEl('option', { text: String(t) });
+			[t('shareCard.exportBg.options.default'), 'default'],
+			[t('shareCard.exportBg.options.auto'), 'auto'],
+			[t('shareCard.exportBg.options.custom'), 'custom'],
+		].forEach(([label, v]) => {
+			const opt = bgModeSelect.createEl('option', { text: String(label) });
 			opt.value = String(v);
 		});
 		bgModeSelect.value = 'default';
 		// 自定义颜色输入
-		basicCard.createEl('div', { text: '颜色参数', cls: 'sc-label' });
+		basicCard.createEl('div', { text: t('shareCard.customColor'), cls: 'sc-label' });
 		const customColorInput = basicCard.createEl('input') as HTMLInputElement;
 		customColorInput.type = 'text';
 		customColorInput.value = this.exportBgCustomColor;
-		customColorInput.placeholder = '#ffffff 或 rgb(...)';
+		customColorInput.placeholder =
+			t('shareCard.customColorPlaceholder') || '#ffffff 或 rgb(...)';
 		customColorInput.style.display = 'none';
 		// 禁用懒加载
-		basicCard.createEl('div', { text: '完全渲染', cls: 'sc-label' });
+		basicCard.createEl('div', { text: t('shareCard.disableLazyLabel'), cls: 'sc-label' });
 		const lazyWrapInner = basicCard.createDiv({ cls: 'share-card-field-checkbox' });
 		const disableLazyId2 = 'share-disable-lazy-' + Date.now();
 		const lazyCb = lazyWrapInner.createEl('input', {
 			attr: { type: 'checkbox', id: disableLazyId2 },
 		}) as HTMLInputElement;
 		const lazyLabel2 = lazyWrapInner.createEl('label', {
-			text: '禁用懒加载',
+			text: t('shareCard.disableLazy'),
 			attr: { for: disableLazyId2 },
 		});
 		lazyLabel2.style.marginLeft = '4px';
@@ -636,7 +645,7 @@ export class ShareCardModal extends Modal {
 		// --- 作者信息相关（modal-local，不持久化） ---
 		// Compact two-column form grid for author settings
 		const authorSection = left.createDiv({ cls: 'share-card-form-grid' });
-		authorSection.createEl('div', { text: '显示作者信息', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.showAuthor'), cls: 'sc-label' });
 		const authorShowCb = authorSection.createEl('input', {
 			attr: { type: 'checkbox' },
 		}) as HTMLInputElement;
@@ -647,7 +656,7 @@ export class ShareCardModal extends Modal {
 			this.renderAuthorBlock();
 			refreshDirtyIndicator();
 		});
-		authorSection.createEl('div', { text: '作者姓名', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.authorName'), cls: 'sc-label' });
 		const authorNameInput = authorSection.createEl('input') as HTMLInputElement;
 		authorNameInput.type = 'text';
 		authorNameInput.value = runtime.working.authorName;
@@ -657,7 +666,7 @@ export class ShareCardModal extends Modal {
 			this.renderAuthorBlock();
 			refreshDirtyIndicator();
 		});
-		authorSection.createEl('div', { text: '额外文案', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.authorRemark'), cls: 'sc-label' });
 		const authorRemarkInput = authorSection.createEl('input') as HTMLInputElement;
 		authorRemarkInput.type = 'text';
 		authorRemarkInput.value = runtime.working.authorRemark;
@@ -667,7 +676,7 @@ export class ShareCardModal extends Modal {
 			this.renderAuthorBlock();
 			refreshDirtyIndicator();
 		});
-		authorSection.createEl('div', { text: '显示头像', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.showAvatar'), cls: 'sc-label' });
 		const authorAvatarCb = authorSection.createEl('input', {
 			attr: { type: 'checkbox' },
 		}) as HTMLInputElement;
@@ -678,7 +687,7 @@ export class ShareCardModal extends Modal {
 			this.renderAuthorBlock();
 			refreshDirtyIndicator();
 		});
-		authorSection.createEl('div', { text: '头像(上传)', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.avatarUpload'), cls: 'sc-label' });
 		const avatarInput = authorSection.createEl('input') as HTMLInputElement;
 		avatarInput.type = 'file';
 		avatarInput.accept = 'image/*';
@@ -703,12 +712,12 @@ export class ShareCardModal extends Modal {
 			reader.readAsDataURL(blob);
 		});
 
-		authorSection.createEl('div', { text: '对齐方式', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.authorAlign'), cls: 'sc-label' });
 		const authorAlignSelect = authorSection.createEl('select') as HTMLSelectElement;
 		[
-			['Left', 'left'],
-			['Center', 'center'],
-			['Right', 'right'],
+			[t('shareCard.align.left'), 'left'],
+			[t('shareCard.align.center'), 'center'],
+			[t('shareCard.align.right'), 'right'],
 		].forEach(([t, v]) => {
 			const opt = authorAlignSelect.createEl('option', { text: t });
 			opt.value = v;
@@ -721,13 +730,13 @@ export class ShareCardModal extends Modal {
 			refreshDirtyIndicator();
 		});
 
-		authorSection.createEl('div', { text: '显示位置', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.authorPosition'), cls: 'sc-label' });
 		const authorPosSelect = authorSection.createEl('select') as HTMLSelectElement;
 		[
-			['顶部', 'top'],
-			['底部', 'bottom'],
-		].forEach(([t, v]) => {
-			const opt = authorPosSelect.createEl('option', { text: String(t) });
+			[t('shareCard.position.top'), 'top'],
+			[t('shareCard.position.bottom'), 'bottom'],
+		].forEach(([label, v]) => {
+			const opt = authorPosSelect.createEl('option', { text: String(label) });
 			opt.value = String(v);
 		});
 		authorPosSelect.value = runtime.working.authorPosition;
@@ -738,7 +747,7 @@ export class ShareCardModal extends Modal {
 			refreshDirtyIndicator();
 		});
 
-		authorSection.createEl('div', { text: '背景色', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.authorBg'), cls: 'sc-label' });
 		const authorBgInput = authorSection.createEl('input') as HTMLInputElement;
 		authorBgInput.type = 'color';
 		authorBgInput.value = runtime.working.authorBg || '#ffffff';
@@ -749,7 +758,7 @@ export class ShareCardModal extends Modal {
 			refreshDirtyIndicator();
 		});
 
-		authorSection.createEl('div', { text: '文字颜色', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.authorTextColor'), cls: 'sc-label' });
 		const authorColorInput = authorSection.createEl('input') as HTMLInputElement;
 		authorColorInput.type = 'color';
 		authorColorInput.value = runtime.working.authorTextColor || '#000000';
@@ -760,7 +769,7 @@ export class ShareCardModal extends Modal {
 			refreshDirtyIndicator();
 		});
 
-		authorSection.createEl('div', { text: '字号(px)', cls: 'sc-label' });
+		authorSection.createEl('div', { text: t('shareCard.authorFontSize'), cls: 'sc-label' });
 		const authorFontInput = authorSection.createEl('input') as HTMLInputElement;
 		authorFontInput.type = 'number';
 		authorFontInput.value = String(runtime.working.authorFontSize);
@@ -773,9 +782,9 @@ export class ShareCardModal extends Modal {
 
 		// Buttons
 		const btnRow = left.createDiv({ cls: 'share-card-actions' });
-		const copyBtn = btnRow.createEl('button', { text: '复制' });
-		const exportBtn = btnRow.createEl('button', { text: '导出' });
-		const closeBtn = btnRow.createEl('button', { text: '关闭' });
+		const copyBtn = btnRow.createEl('button', { text: t('shareCard.copy') });
+		const exportBtn = btnRow.createEl('button', { text: t('shareCard.export') });
+		const closeBtn = btnRow.createEl('button', { text: t('shareCard.close') });
 
 		// Preview area (add a pan wrapper so we can translate content)
 		const previewWrap = right.createDiv({ cls: 'share-card-preview' });
@@ -859,7 +868,7 @@ export class ShareCardModal extends Modal {
 		});
 
 		// 提示文本（可选）
-		right.createDiv({ cls: 'share-card-hint', text: '拖动移动，Ctrl/Alt+滚轮缩放，双击重置' });
+		right.createDiv({ cls: 'share-card-hint', text: t('shareCard.hint') });
 
 		// load source content (prefer active MD editor view content)
 		let source = '';
@@ -904,7 +913,7 @@ export class ShareCardModal extends Modal {
 				);
 			} catch (e) {
 				console.error('[ShareCardModal] 创建 playground 失败', e);
-				this.cardRoot!.createEl('div', { text: '预览创建失败' });
+				this.cardRoot!.createEl('div', { text: t('shareCard.previewCreateFailed') });
 			}
 			// ensure author block is rendered after playground rebuild
 			this.renderAuthorBlock();
@@ -914,7 +923,7 @@ export class ShareCardModal extends Modal {
 			buildPlayground();
 		} catch (e) {
 			console.error('[ShareCardModal] 创建 playground 失败', e);
-			this.cardRoot.createEl('div', { text: '预览创建失败' });
+			this.cardRoot.createEl('div', { text: t('shareCard.previewCreateFailed') });
 		}
 
 		// 切换懒加载选项 -> 重新构建 playground
@@ -964,7 +973,7 @@ export class ShareCardModal extends Modal {
 						const filePath =
 							await this.app.fileManager.getAvailablePathForAttachment(filename);
 						await this.app.vault.createBinary(filePath, await blob.arrayBuffer());
-						new Notice(`已保存到 ${filePath}`);
+						new Notice(t('shareCard.notice.savedTo', { path: filePath }));
 					} else {
 						const url = URL.createObjectURL(blob);
 						const a = document.createElement('a');
@@ -977,7 +986,7 @@ export class ShareCardModal extends Modal {
 					}
 				} catch (e) {
 					console.error('[ShareCardModal] 导出失败', e);
-					new Notice('导出失败');
+					new Notice(t('shareCard.notice.exportFailed'));
 				} finally {
 					exportBtn.removeAttribute('disabled');
 					copyBtn.removeAttribute('disabled');
@@ -1009,13 +1018,13 @@ export class ShareCardModal extends Modal {
 						const item = new ClipboardItem({ [blob.type]: blob });
 						// @ts-ignore
 						await navigator.clipboard.write([item]);
-						new Notice('已复制到剪贴板');
+						new Notice(t('shareCard.notice.copiedToClipboard'));
 					} else {
-						new Notice('复制到剪贴板不被支持');
+						new Notice(t('shareCard.notice.clipboardNotSupported'));
 					}
 				} catch (e) {
 					console.error('[ShareCardModal] 复制失败', e);
-					new Notice('复制失败');
+					new Notice(t('shareCard.notice.copyFailed'));
 				} finally {
 					exportBtn.removeAttribute('disabled');
 					copyBtn.removeAttribute('disabled');

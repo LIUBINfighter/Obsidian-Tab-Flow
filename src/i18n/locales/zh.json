@@ -305,5 +305,65 @@
 		"settings": "设置",
 		"alphaTabOfficialDoc": "alphaTab.js 官方文档"
 	},
-	"ribbon.openDocumentation": "打开 TabFlow 文档"
+	"ribbon.openDocumentation": "打开 TabFlow 文档",
+	"shareCard": {
+		"title": "分享卡片",
+		"preset": "预设",
+		"presetSave": "保存",
+		"presetSaveAs": "另存为",
+		"presetSetDefault": "设为默认",
+		"presetReset": "重置",
+		"confirmPresetDirty": "当前预设有未保存的更改。确定=保存并切换，取消=弹出二次确认",
+		"confirmPresetDiscard": "放弃未保存更改并切换? 确定=放弃并切换 取消=继续编辑",
+		"notice": {
+			"presetSaved": "预设已保存",
+			"presetCreated": "已创建新预设",
+			"presetSetDefault": "已设为默认",
+			"savedTo": "已保存到 {{path}}",
+			"exportFailed": "导出失败",
+			"copiedToClipboard": "已复制到剪贴板",
+			"clipboardNotSupported": "复制到剪贴板不被支持",
+			"copyFailed": "复制失败"
+		},
+		"prompt": {
+			"newPresetName": "新预设名称",
+			"newPresetDefault": "新预设"
+		},
+		"fileName": "导出文件名",
+		"cardWidth": "卡片宽度(px)",
+		"resolution": "分辨率",
+		"format": "格式",
+		"exportBg": {
+			"label": "导出背景",
+			"options": {
+				"default": "默认（与之前相同）",
+				"auto": "自动（使用预览背景）",
+				"custom": "自定义颜色"
+			}
+		},
+		"customColor": "颜色参数",
+		"customColorPlaceholder": "#ffffff 或 rgb(...)",
+		"disableLazyLabel": "完全渲染",
+		"disableLazy": "禁用懒加载",
+		"showAuthor": "显示作者信息",
+		"authorName": "作者姓名",
+		"authorRemark": "额外文案",
+		"showAvatar": "显示头像",
+		"avatarUpload": "头像(上传)",
+		"authorAlign": "对齐方式",
+		"authorPosition": "显示位置",
+		"authorBg": "背景色",
+		"authorTextColor": "文字颜色",
+		"authorFontSize": "字号(px)",
+		"copy": "复制",
+		"export": "导出",
+		"close": "关闭",
+		"hint": "拖动移动，Ctrl/Alt+滚轮缩放，双击重置",
+		"previewCreateFailed": "预览创建失败",
+		"align": {
+			"left": "左",
+			"center": "居中",
+			"right": "右"
+		}
+	}
 }
