@@ -171,6 +171,43 @@
 	opacity: 0.85;
 }
 
+/* Two-column compact form grid for author settings */
+.share-card-form-grid {
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	align-items: center;
+	row-gap: 6px;
+	column-gap: 8px;
+	margin-top: 12px;
+	padding: 10px 10px 12px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+}
+.share-card-form-grid .sc-label {
+	font-weight: 600;
+	font-size: 12px;
+	opacity: 0.9;
+	line-height: 1.2;
+}
+.share-card-form-grid input[type='text'],
+.share-card-form-grid input[type='number'],
+.share-card-form-grid input[type='file'],
+.share-card-form-grid input[type='color'],
+.share-card-form-grid select {
+	width: 100%;
+	box-sizing: border-box;
+}
+.share-card-form-grid input[type='checkbox'] {
+	justify-self: start; /* keep checkbox near left edge of its cell */
+}
+
+/* tighter buttons inside grid if any future ones appear */
+.share-card-form-grid button {
+	font-size: 12px;
+	padding: 4px 8px;
+}
+
 /* Remove the dashed/document-style border from tabflow content inside the share modal.
    Keep this override scoped to the modal so other views are unaffected. */
 .modal-container.share-card-wide .share-card-modal .tabflow-doc-main-content,

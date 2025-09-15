@@ -10,6 +10,7 @@ import {
 import * as path from 'path';
 import { SettingTab } from './settings/SettingTab';
 import { DEFAULT_SETTINGS, TabFlowSettings } from './settings/defaults';
+import ShareCardPresetService from './services/ShareCardPresetService';
 import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
 
@@ -284,6 +285,15 @@ export default class TabFlowPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+
+		// ShareCard 预设迁移 / 初始化
+		try {
+			const presetSvc = new ShareCardPresetService(this);
+			presetSvc.ensureMigration();
+			await this.saveSettings();
+		} catch (e) {
+			console.warn('[TabFlowPlugin] ShareCard preset migration failed', e);
+		}
 
 		// Apply editor UI preferences as CSS variables so they take effect immediately
 		try {

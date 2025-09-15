@@ -74,6 +74,37 @@ export interface TabFlowSettings {
 	editorBottomGap?: string;
 	/** 编辑器高亮开关：按名字启用/禁用特定高亮插件 */
 	editorHighlights?: Record<string, boolean>;
+	/** 分享卡片导出预设列表 */
+	shareCardPresets?: ShareCardPresetV1[];
+	/** 默认预设 ID */
+	shareCardDefaultPresetId?: string;
+	/** 上次使用的预设 ID */
+	shareCardLastUsedPresetId?: string;
+}
+
+export interface ShareCardPresetV1 {
+	id: string;
+	name: string;
+	version: 1;
+	cardWidth: number;
+	resolution: '1x' | '2x' | '3x';
+	format: 'png' | 'jpg' | 'webp';
+	disableLazy: boolean;
+	exportBgMode: 'default' | 'auto' | 'custom';
+	exportBgCustomColor?: string;
+	showAuthor: boolean;
+	authorName: string;
+	authorRemark: string;
+	showAvatar: boolean;
+	avatarSource?: { type: 'data-url'; data: string } | null; // 预留其它类型: vault-file|url
+	authorPosition: 'top' | 'bottom';
+	authorBg: string;
+	authorTextColor: string;
+	authorFontSize: number;
+	authorAlign?: 'left' | 'center' | 'right';
+	createdAt: number;
+	updatedAt: number;
+	isDefault?: boolean; // 冗余标记，方便快速判断
 }
 
 export const DEFAULT_SETTINGS: TabFlowSettings = {
@@ -189,4 +220,6 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 		boolean: true,
 		chord: true,
 	},
+	// 运行时初始为空，首次加载时写入默认预设
+	shareCardPresets: [],
 };

@@ -20,6 +20,22 @@ export type AlphaTabResources = {
 	soundFontUri: string;
 };
 
+// 音轨状态持久化接口
+interface ITabViewPersistedState extends Record<string, unknown> {
+	filePath: string;
+	selectedTracks?: number[];
+	trackSettings?: Record<
+		string,
+		{
+			solo?: boolean;
+			mute?: boolean;
+			volume?: number;
+			transpose?: number;
+			transposeAudio?: number;
+		}
+	>;
+}
+
 export class TabView extends FileView {
 	private static instanceId = 0;
 	private _styles: HTMLStyleElement;
@@ -105,6 +121,92 @@ export class TabView extends FileView {
 		}
 		if (this.currentFile) return this.currentFile.basename;
 		return 'alphaTab';
+	}
+
+	/**
+	 * 获取当前视图的状态用于持久化。
+	 * 当 Obsidian 序列化布局时调用此方法。
+	 */
+	getState(): ITabViewPersistedState {
+		const state: ITabViewPersistedState = {
+			filePath: this.currentFile?.path || '',
+		};
+
+		// 保存选中的音轨
+		if (this._api?.score?.tracks && this._api.tracks) {
+			// 通过检查音轨是否在渲染的音轨列表中来确定选中的音轨
+			const renderedTrackIndices = new Set(this._api.tracks.map((track) => track.index));
+			const selectedTracks = this._api.score.tracks.filter((track) =>
+				renderedTrackIndices.has(track.index)
+			);
+			if (selectedTracks.length > 0) {
+				state.selectedTracks = selectedTracks.map((track) => track.index);
+			}
+		}
+
+		// 保存音轨设置（通过 ScorePersistenceService 从 localStorage 获取）
+		if (this.currentFile?.path) {
+			try {
+				const raw = localStorage.getItem(`tabflow-viewstate:${this.currentFile.path}`);
+				if (raw) {
+					const savedState = JSON.parse(raw);
+					if (savedState.trackSettings) {
+						state.trackSettings = savedState.trackSettings;
+					}
+				}
+			} catch (e) {
+				console.warn('[TabView] 获取音轨设置状态失败:', e);
+			}
+		}
+
+		return state;
+	}
+
+	/**
+	 * 设置视图的状态。
+	 * 当 Obsidian 反序列化布局时调用此方法。
+	 */
+	async setState(state: ITabViewPersistedState, result: any): Promise<void> {
+		// 应用文件路径
+		if (state.filePath && state.filePath !== this.currentFile?.path) {
+			try {
+				const file = this.app.vault.getAbstractFileByPath(state.filePath);
+				if (file instanceof TFile) {
+					await this.onLoadFile(file);
+				}
+			} catch (e) {
+				console.warn('[TabView] 设置文件路径状态失败:', e);
+			}
+		}
+
+		// 应用选中的音轨（在乐谱加载完成后通过事件处理）
+		if (state.selectedTracks && Array.isArray(state.selectedTracks)) {
+			// 保存选中的音轨索引，等待乐谱加载完成后应用
+			const selectedTrackIndices = new Set(state.selectedTracks);
+
+			// 监听乐谱加载事件来应用音轨选择
+			const applyTrackSelection = () => {
+				if (this._api?.score?.tracks) {
+					const tracksToRender = this._api.score.tracks.filter((track) =>
+						selectedTrackIndices.has(track.index)
+					);
+					if (tracksToRender.length > 0) {
+						this._api.renderTracks(tracksToRender as any);
+					}
+				}
+			};
+
+			// 如果 API 已经就绪，立即应用
+			if (this._api && this._api.score) {
+				applyTrackSelection();
+			} else if (this._api && this._api.scoreLoaded) {
+				// 监听乐谱加载完成事件
+				this._api.scoreLoaded.on(applyTrackSelection);
+			}
+		}
+
+		// 调用父类的 setState
+		await super.setState(state, result);
 	}
 
 	/**
@@ -466,6 +568,8 @@ export class TabView extends FileView {
 				(selectedTracks: alphaTab.model.Track[]) => {
 					if (selectedTracks && selectedTracks.length > 0) {
 						api.renderTracks(selectedTracks);
+						// 音轨选择变化时请求保存布局
+						this.app.workspace.requestSaveLayout();
 					}
 				},
 				api,
@@ -473,6 +577,23 @@ export class TabView extends FileView {
 				this.scorePersistenceService // 传递 ScorePersistenceService
 			);
 			modal.open();
+		});
+
+		// 监听音轨参数变化事件，在参数变化时请求保存布局
+		this.eventBus.subscribe('track:solo', () => {
+			this.app.workspace.requestSaveLayout();
+		});
+		this.eventBus.subscribe('track:mute', () => {
+			this.app.workspace.requestSaveLayout();
+		});
+		this.eventBus.subscribe('track:volume', () => {
+			this.app.workspace.requestSaveLayout();
+		});
+		this.eventBus.subscribe('track:transpose', () => {
+			this.app.workspace.requestSaveLayout();
+		});
+		this.eventBus.subscribe('track:transposeAudio', () => {
+			this.app.workspace.requestSaveLayout();
 		});
 
 		// 订阅设置滚动模式事件

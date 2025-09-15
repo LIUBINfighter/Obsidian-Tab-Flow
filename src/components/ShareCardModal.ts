@@ -3,6 +3,7 @@ import type TabFlowPlugin from '../main';
 import { createAlphaTexPlayground, AlphaTexPlaygroundHandle } from './AlphaTexPlayground';
 import * as domtoimage from 'dom-to-image-more';
 import { waitAlphaTabFullRender, withExportLock } from '../utils/alphaTabRenderWait';
+import ShareCardPresetService from '../services/ShareCardPresetService';
 
 export class ShareCardModal extends Modal {
 	private plugin: TabFlowPlugin;
@@ -23,6 +24,7 @@ export class ShareCardModal extends Modal {
 	private authorBg = '';
 	private authorTextColor = '';
 	private authorFontSize = 13;
+	private authorAlign: 'left' | 'center' | 'right' = 'left';
 	private authorContainer: HTMLElement | null = null;
 	private playgroundContent: HTMLElement | null = null; // dedicated container for playground so author block isn't wiped
 	private playgroundHandle: AlphaTexPlaygroundHandle | null = null;
@@ -39,6 +41,39 @@ export class ShareCardModal extends Modal {
 	private minZoom = 0.5;
 	private maxZoom = 3;
 	private zoomStep = 0.1;
+
+	// 预设相关运行期字段（不持久化）
+	private presetService: ShareCardPresetService | null = null;
+	private currentPresetId: string | null = null; // 当前下拉选中
+	private isPresetDirty = false;
+	// 用于服务收集的当前 UI 状态缓存
+	public __shareCardCurrentResolution: '1x' | '2x' | '3x' = '2x';
+	public __shareCardCurrentFormat: 'png' | 'jpg' | 'webp' = 'png';
+	public __shareCardDisableLazy = false;
+
+	// 供服务调用：应用尺寸宽度
+	public __applyShareCardDimension = (w: number) => {
+		if (this.cardRoot) {
+			this.cardRoot.style.width = w + 'px';
+			try {
+				this.playgroundHandle?.refresh();
+			} catch {
+				/* ignore */
+			}
+			this.renderAuthorBlock();
+		}
+	};
+	// 供服务调用：应用格式/分辨率/懒加载
+	public __applyShareCardFormat = (
+		fmt: 'png' | 'jpg' | 'webp',
+		res: '1x' | '2x' | '3x',
+		disableLazy: boolean
+	) => {
+		this.__shareCardCurrentFormat = fmt;
+		this.__shareCardCurrentResolution = res;
+		this.__shareCardDisableLazy = disableLazy;
+		// 这里只更新内部字段，实际控件会在下拉选择后手动同步
+	};
 
 	// handler reference so we can remove listener on close
 	private outsidePointerDownHandler: ((e: PointerEvent) => void) | null = null;
@@ -74,6 +109,14 @@ export class ShareCardModal extends Modal {
 		if (this.authorBg) this.authorContainer.style.background = this.authorBg;
 		if (this.authorTextColor) this.authorContainer.style.color = this.authorTextColor;
 		this.authorContainer.style.fontSize = `${this.authorFontSize}px`;
+		// alignment
+		if (this.authorAlign === 'center') {
+			this.authorContainer.style.justifyContent = 'center';
+		} else if (this.authorAlign === 'right') {
+			this.authorContainer.style.justifyContent = 'flex-end';
+		} else {
+			this.authorContainer.style.justifyContent = 'flex-start';
+		}
 
 		if (this.showAvatar && this.avatarDataUrl) {
 			const avatarEl = document.createElement('div');
@@ -292,6 +335,113 @@ export class ShareCardModal extends Modal {
 		const right = container.createDiv({ cls: 'share-card-right' });
 
 		// Form fields
+		// --- 预设选择区域 ---
+		this.presetService = new ShareCardPresetService(this.plugin);
+		const presetBar = left.createDiv({ cls: 'share-card-preset-bar' });
+		const presetLabel = presetBar.createEl('label', { text: '预设' });
+		presetLabel.style.display = 'block';
+		const presetSelect = presetBar.createEl('select') as HTMLSelectElement;
+		presetSelect.style.width = '100%';
+		const presetActionRow = left.createDiv({ cls: 'share-card-preset-actions' });
+		const btnPresetSave = presetActionRow.createEl('button', { text: '保存' });
+		const btnPresetSaveAs = presetActionRow.createEl('button', { text: '另存为' });
+		const btnPresetSetDefault = presetActionRow.createEl('button', { text: '设为默认' });
+		const btnPresetReset = presetActionRow.createEl('button', { text: '重置' });
+
+		const rebuildPresetOptions = () => {
+			presetSelect.empty();
+			const presets = this.presetService!.list();
+			presets.forEach((p) => {
+				const opt = presetSelect.createEl('option', {
+					text:
+						p.name +
+						(p.id === this.plugin.settings.shareCardDefaultPresetId ? ' (默认)' : ''),
+				});
+				opt.value = p.id;
+			});
+			// 选中：优先 lastUsed -> default -> 第一个
+			let toSelect =
+				this.plugin.settings.shareCardLastUsedPresetId ||
+				this.plugin.settings.shareCardDefaultPresetId ||
+				presets[0]?.id;
+			if (this.currentPresetId) toSelect = this.currentPresetId; // 若已经有选中保持
+			if (toSelect) {
+				presetSelect.value = toSelect;
+				this.currentPresetId = toSelect;
+			}
+		};
+
+		rebuildPresetOptions();
+
+		presetSelect.addEventListener('change', () => {
+			this.currentPresetId = presetSelect.value;
+			const p = this.currentPresetId ? this.presetService!.get(this.currentPresetId) : null;
+			if (p) {
+				this.presetService!.applyToModal(this, p);
+				this.isPresetDirty = false;
+				// 同步 UI 控件（下面控件创建后会引用这些变量）
+				if (widthInput) widthInput.value = String(p.cardWidth);
+				if (resSelect) resSelect.value = p.resolution;
+				if (formatSelect) formatSelect.value = p.format;
+				if (bgModeSelect) bgModeSelect.value = p.exportBgMode;
+				if (p.exportBgMode === 'custom') customColorInput.style.display = '';
+				else customColorInput.style.display = 'none';
+				customColorInput.value = p.exportBgCustomColor || '#ffffff';
+				if (authorShowCb) authorShowCb.checked = p.showAuthor;
+				if (authorNameInput) authorNameInput.value = p.authorName;
+				if (authorRemarkInput) authorRemarkInput.value = p.authorRemark;
+				if (authorAvatarCb) authorAvatarCb.checked = p.showAvatar;
+				if (authorPosSelect) authorPosSelect.value = p.authorPosition;
+				if (authorBgInput) authorBgInput.value = p.authorBg || '#ffffff';
+				if (authorColorInput) authorColorInput.value = p.authorTextColor || '#000000';
+				if (authorFontInput) authorFontInput.value = String(p.authorFontSize);
+				if (authorAlignSelect) authorAlignSelect.value = p.authorAlign || 'left';
+				if (lazyCb) lazyCb.checked = p.disableLazy;
+				this.__shareCardDisableLazy = p.disableLazy;
+				this.renderAuthorBlock();
+			}
+		});
+
+		btnPresetSave.addEventListener('click', async () => {
+			if (!this.currentPresetId) return;
+			const base = this.presetService!.get(this.currentPresetId);
+			if (!base) return;
+			const collected = this.presetService!.collectFromModal(this);
+			this.presetService!.update(this.currentPresetId, { ...collected, name: base.name });
+			await this.plugin.saveSettings();
+			this.isPresetDirty = false;
+			rebuildPresetOptions();
+			new Notice('预设已保存');
+		});
+
+		btnPresetSaveAs.addEventListener('click', async () => {
+			const collected = this.presetService!.collectFromModal(this);
+			const name = window.prompt('新预设名称', '新预设');
+			if (!name) return;
+			const p = this.presetService!.create({ ...collected, name });
+			await this.plugin.saveSettings();
+			rebuildPresetOptions();
+			presetSelect.value = p.id;
+			this.currentPresetId = p.id;
+			new Notice('已创建新预设');
+		});
+
+		btnPresetSetDefault.addEventListener('click', async () => {
+			if (!this.currentPresetId) return;
+			this.presetService!.setDefault(this.currentPresetId);
+			await this.plugin.saveSettings();
+			rebuildPresetOptions();
+			new Notice('已设为默认');
+		});
+
+		btnPresetReset.addEventListener('click', () => {
+			// 重置到当前选中预设值
+			if (!this.currentPresetId) return;
+			const p = this.presetService!.get(this.currentPresetId);
+			if (!p) return;
+			presetSelect.dispatchEvent(new Event('change'));
+		});
+
 		left.createEl('label', { text: '导出文件名' });
 		const titleInput = left.createEl('input', { attr: { type: 'text' } }) as HTMLInputElement;
 		titleInput.style.width = '100%';
@@ -347,6 +497,7 @@ export class ShareCardModal extends Modal {
 
 		bgModeSelect.addEventListener('change', () => {
 			this.exportBgMode = bgModeSelect.value as any;
+			this.isPresetDirty = true;
 			if (this.exportBgMode === 'custom') {
 				customColorInput.style.display = '';
 			} else {
@@ -355,6 +506,7 @@ export class ShareCardModal extends Modal {
 		});
 		customColorInput.addEventListener('change', () => {
 			if (customColorInput.value) this.exportBgCustomColor = customColorInput.value;
+			this.isPresetDirty = true;
 		});
 
 		// 是否禁用懒加载（一次性完整渲染）
@@ -371,46 +523,48 @@ export class ShareCardModal extends Modal {
 		lazyCb.checked = false; // 默认不禁用，用户显式勾选
 
 		// --- 作者信息相关（modal-local，不持久化） ---
-		left.createEl('label', { text: '显示作者信息' });
-		const authorShowCb = left.createEl('input', {
+		// Compact two-column form grid for author settings
+		const authorSection = left.createDiv({ cls: 'share-card-form-grid' });
+		authorSection.createEl('div', { text: '显示作者信息', cls: 'sc-label' });
+		const authorShowCb = authorSection.createEl('input', {
 			attr: { type: 'checkbox' },
 		}) as HTMLInputElement;
 		authorShowCb.checked = this.showAuthor;
 		authorShowCb.addEventListener('change', () => {
 			this.showAuthor = authorShowCb.checked;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
-
-		left.createEl('label', { text: '作者姓名' });
-		const authorNameInput = left.createEl('input') as HTMLInputElement;
+		authorSection.createEl('div', { text: '作者姓名', cls: 'sc-label' });
+		const authorNameInput = authorSection.createEl('input') as HTMLInputElement;
 		authorNameInput.type = 'text';
 		authorNameInput.value = this.authorName;
 		authorNameInput.addEventListener('input', () => {
 			this.authorName = authorNameInput.value;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
-
-		left.createEl('label', { text: '作者备注' });
-		const authorRemarkInput = left.createEl('input') as HTMLInputElement;
+		authorSection.createEl('div', { text: '额外文案', cls: 'sc-label' });
+		const authorRemarkInput = authorSection.createEl('input') as HTMLInputElement;
 		authorRemarkInput.type = 'text';
 		authorRemarkInput.value = this.authorRemark;
 		authorRemarkInput.addEventListener('input', () => {
 			this.authorRemark = authorRemarkInput.value;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
-
-		left.createEl('label', { text: '显示头像' });
-		const authorAvatarCb = left.createEl('input', {
+		authorSection.createEl('div', { text: '显示头像', cls: 'sc-label' });
+		const authorAvatarCb = authorSection.createEl('input', {
 			attr: { type: 'checkbox' },
 		}) as HTMLInputElement;
 		authorAvatarCb.checked = this.showAvatar;
 		authorAvatarCb.addEventListener('change', () => {
 			this.showAvatar = authorAvatarCb.checked;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
-
-		left.createEl('label', { text: '头像（上传 / 选择 URL）' });
-		const avatarInput = left.createEl('input') as HTMLInputElement;
+		authorSection.createEl('div', { text: '头像(上传)', cls: 'sc-label' });
+		const avatarInput = authorSection.createEl('input') as HTMLInputElement;
 		avatarInput.type = 'file';
 		avatarInput.accept = 'image/*';
 		avatarInput.addEventListener('change', async () => {
@@ -421,13 +575,31 @@ export class ShareCardModal extends Modal {
 			const reader = new FileReader();
 			reader.onload = () => {
 				this.avatarDataUrl = String(reader.result);
+				this.isPresetDirty = true;
 				this.renderAuthorBlock();
 			};
 			reader.readAsDataURL(blob);
 		});
 
-		left.createEl('label', { text: '作者位置' });
-		const authorPosSelect = left.createEl('select') as HTMLSelectElement;
+		authorSection.createEl('div', { text: '对齐方式', cls: 'sc-label' });
+		const authorAlignSelect = authorSection.createEl('select') as HTMLSelectElement;
+		[
+			['Left', 'left'],
+			['Center', 'center'],
+			['Right', 'right'],
+		].forEach(([t, v]) => {
+			const opt = authorAlignSelect.createEl('option', { text: t });
+			opt.value = v;
+		});
+		authorAlignSelect.value = this.authorAlign;
+		authorAlignSelect.addEventListener('change', () => {
+			this.authorAlign = authorAlignSelect.value as any;
+			this.isPresetDirty = true;
+			this.renderAuthorBlock();
+		});
+
+		authorSection.createEl('div', { text: '显示位置', cls: 'sc-label' });
+		const authorPosSelect = authorSection.createEl('select') as HTMLSelectElement;
 		[
 			['顶部', 'top'],
 			['底部', 'bottom'],
@@ -438,33 +610,37 @@ export class ShareCardModal extends Modal {
 		authorPosSelect.value = this.authorPosition;
 		authorPosSelect.addEventListener('change', () => {
 			this.authorPosition = authorPosSelect.value as any;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
 
-		left.createEl('label', { text: '作者背景色' });
-		const authorBgInput = left.createEl('input') as HTMLInputElement;
+		authorSection.createEl('div', { text: '背景色', cls: 'sc-label' });
+		const authorBgInput = authorSection.createEl('input') as HTMLInputElement;
 		authorBgInput.type = 'color';
 		authorBgInput.value = this.authorBg || '#ffffff';
 		authorBgInput.addEventListener('change', () => {
 			this.authorBg = authorBgInput.value;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
 
-		left.createEl('label', { text: '作者文字色' });
-		const authorColorInput = left.createEl('input') as HTMLInputElement;
+		authorSection.createEl('div', { text: '文字颜色', cls: 'sc-label' });
+		const authorColorInput = authorSection.createEl('input') as HTMLInputElement;
 		authorColorInput.type = 'color';
 		authorColorInput.value = this.authorTextColor || '#000000';
 		authorColorInput.addEventListener('change', () => {
 			this.authorTextColor = authorColorInput.value;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
 
-		left.createEl('label', { text: '作者字号 (px)' });
-		const authorFontInput = left.createEl('input') as HTMLInputElement;
+		authorSection.createEl('div', { text: '字号(px)', cls: 'sc-label' });
+		const authorFontInput = authorSection.createEl('input') as HTMLInputElement;
 		authorFontInput.type = 'number';
 		authorFontInput.value = String(this.authorFontSize);
 		authorFontInput.addEventListener('change', () => {
 			this.authorFontSize = Number(authorFontInput.value) || 13;
+			this.isPresetDirty = true;
 			this.renderAuthorBlock();
 		});
 
@@ -615,7 +791,10 @@ export class ShareCardModal extends Modal {
 		}
 
 		// 切换懒加载选项 -> 重新构建 playground
-		lazyCb.addEventListener('change', () => buildPlayground());
+		lazyCb.addEventListener('change', () => {
+			this.isPresetDirty = true;
+			buildPlayground();
+		});
 
 		// Update preview width when width input changes
 		widthInput.addEventListener('change', () => {
@@ -629,6 +808,7 @@ export class ShareCardModal extends Modal {
 			}
 			// re-render author block to adapt to new width
 			this.renderAuthorBlock();
+			this.isPresetDirty = true;
 		});
 
 		// Export handler (捕获完整 .inmarkdown-preview 内容)
@@ -703,6 +883,15 @@ export class ShareCardModal extends Modal {
 	}
 
 	onClose() {
+		// 记录最后使用的预设（即当前选中，不论是否已保存修改）
+		try {
+			if (this.currentPresetId) {
+				this.plugin.settings.shareCardLastUsedPresetId = this.currentPresetId;
+				this.plugin.saveSettings();
+			}
+		} catch (e) {
+			// ignore
+		}
 		try {
 			this.playgroundHandle?.destroy();
 		} catch (e) {
