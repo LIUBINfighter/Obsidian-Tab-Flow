@@ -372,7 +372,9 @@ export class ShareCardModal extends Modal {
 
 		// --- 作者信息相关（modal-local，不持久化） ---
 		left.createEl('label', { text: '显示作者信息' });
-		const authorShowCb = left.createEl('input', { attr: { type: 'checkbox' } }) as HTMLInputElement;
+		const authorShowCb = left.createEl('input', {
+			attr: { type: 'checkbox' },
+		}) as HTMLInputElement;
 		authorShowCb.checked = this.showAuthor;
 		authorShowCb.addEventListener('change', () => {
 			this.showAuthor = authorShowCb.checked;
@@ -398,7 +400,9 @@ export class ShareCardModal extends Modal {
 		});
 
 		left.createEl('label', { text: '显示头像' });
-		const authorAvatarCb = left.createEl('input', { attr: { type: 'checkbox' } }) as HTMLInputElement;
+		const authorAvatarCb = left.createEl('input', {
+			attr: { type: 'checkbox' },
+		}) as HTMLInputElement;
 		authorAvatarCb.checked = this.showAvatar;
 		authorAvatarCb.addEventListener('change', () => {
 			this.showAvatar = authorAvatarCb.checked;
@@ -424,7 +428,10 @@ export class ShareCardModal extends Modal {
 
 		left.createEl('label', { text: '作者位置' });
 		const authorPosSelect = left.createEl('select') as HTMLSelectElement;
-		[['顶部', 'top'], ['底部', 'bottom']].forEach(([t, v]) => {
+		[
+			['顶部', 'top'],
+			['底部', 'bottom'],
+		].forEach(([t, v]) => {
 			const opt = authorPosSelect.createEl('option', { text: String(t) });
 			opt.value = String(v);
 		});
