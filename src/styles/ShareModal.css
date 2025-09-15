@@ -71,10 +71,11 @@
 	flex-direction: column;
 	gap: 0.75rem;
 	font-size: 13px;
-	overflow-y: auto;
+	/* overflow-y: auto; */
+	/* overflow-y: hidden; */
 	padding-right: 4px;
 	/* 防止潜在父级 transform 影响子像素文本渲染 */
-	transform: translateZ(0); /* 独立图层，有时可改善/有时会加重；若仍模糊可改成 none */
+	/*transform: translateZ(0);*/ /* 独立图层，有时可改善/有时会加重；若仍模糊可改成 none */
 	backface-visibility: hidden;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
