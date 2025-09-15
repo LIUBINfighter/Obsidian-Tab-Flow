@@ -11,7 +11,19 @@
 
 /* 给外层 Obsidian modal container 增加可选加宽类 */
 /* 容器加宽：同时兼容 modal-container 与 modal 本身加类的情况 */
-.modal-container.share-card-wide,
+/* Center the modal using a full-bleed flex container to avoid transform-based
+   centering (which can promote compositing and disable ClearType on Windows). */
+.modal-container.share-card-wide {
+	position: fixed;
+	inset: 0; /* top:0; right:0; bottom:0; left:0; */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 !important;
+}
+
+/* Ensure modal itself retains the intended size when the class is applied to
+   the modal element instead of the container. */
 .modal.share-card-wide {
 	width: 96vw !important;
 	max-width: 96vw !important;
@@ -19,19 +31,18 @@
 	max-height: 88vh !important;
 	display: flex;
 	flex-direction: column;
-	position: fixed;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
 	margin: 0 !important;
 }
 
 .modal-container.share-card-wide .modal,
 .modal.share-card-wide {
-	width: 100% !important;
-	max-width: 100% !important;
-	height: 100% !important;
-	max-height: 100% !important;
+	/* When the container has the sizing class, target the inner .modal to
+	   adopt the intended modal dimensions; when the class is on the modal
+	   itself, the rule above already applies. */
+	width: 96vw !important;
+	max-width: 96vw !important;
+	height: 88vh !important;
+	max-height: 88vh !important;
 	display: flex;
 	flex-direction: column;
 }
@@ -71,8 +82,8 @@
 	flex-direction: column;
 	gap: 0.75rem;
 	font-size: 13px;
-	/* overflow-y: auto; */
-	/* overflow-y: hidden; */
+	overflow-y: auto;
+	scrollbar-width: none; /* 隐藏滚动条（Firefox） */
 	padding-right: 4px;
 	/* 防止潜在父级 transform 影响子像素文本渲染 */
 	/*transform: translateZ(0);*/ /* 独立图层，有时可改善/有时会加重；若仍模糊可改成 none */
@@ -266,4 +277,9 @@
 .share-card-root .alphatex-controls,
 .share-card-root .nav-buttons-container {
 	display: none !important;
+}
+
+/* 在文件末尾添加（隐藏滚动条，Chrome/Safari/Edge） */
+.share-card-left::-webkit-scrollbar {
+	display: none;
 }
