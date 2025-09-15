@@ -352,6 +352,10 @@
 		"avatarUpload": "头像(上传)",
 		"authorAlign": "对齐方式",
 		"authorPosition": "显示位置",
+		"position": {
+			"top": "顶部",
+			"bottom": "底部"
+		},
 		"authorBg": "背景色",
 		"authorTextColor": "文字颜色",
 		"authorFontSize": "字号(px)",
