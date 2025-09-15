@@ -13,6 +13,18 @@ export class ShareCardModal extends Modal {
 	//  - 'custom'  : user provided color string like '#ffffff'
 	private exportBgMode: 'default' | 'auto' | 'custom' = 'default';
 	private exportBgCustomColor = '#ffffff';
+	// Modal-local author/card customization (non-persistent)
+	private showAuthor = false;
+	private authorName = '';
+	private authorRemark = '';
+	private showAvatar = true;
+	private avatarDataUrl: string | null = null;
+	private authorPosition: 'top' | 'bottom' = 'bottom';
+	private authorBg = '';
+	private authorTextColor = '';
+	private authorFontSize = 13;
+	private authorContainer: HTMLElement | null = null;
+	private playgroundContent: HTMLElement | null = null; // dedicated container for playground so author block isn't wiped
 	private playgroundHandle: AlphaTexPlaygroundHandle | null = null;
 	private cardRoot: HTMLElement | null = null;
 	private panWrapper: HTMLElement | null = null;
@@ -37,6 +49,84 @@ export class ShareCardModal extends Modal {
 		}
 	}
 
+	// Render or update the author info block inside cardRoot according to modal-local fields
+	private renderAuthorBlock() {
+		if (!this.cardRoot) return;
+		// remove existing container if position changed
+		if (this.authorContainer && this.authorContainer.parentElement) {
+			this.authorContainer.remove();
+			this.authorContainer = null;
+		}
+		if (!this.showAuthor) {
+			return;
+		}
+		// create container
+		this.authorContainer = document.createElement('div');
+		this.authorContainer.className = 'share-card-author-container';
+		this.authorContainer.style.display = 'flex';
+		this.authorContainer.style.alignItems = 'center';
+		this.authorContainer.style.gap = '8px';
+		this.authorContainer.style.padding = '8px';
+		// ensure author block is on top of playground content and stretches horizontally
+		this.authorContainer.style.position = 'relative';
+		this.authorContainer.style.zIndex = '10';
+		this.authorContainer.style.width = '100%';
+		if (this.authorBg) this.authorContainer.style.background = this.authorBg;
+		if (this.authorTextColor) this.authorContainer.style.color = this.authorTextColor;
+		this.authorContainer.style.fontSize = `${this.authorFontSize}px`;
+
+		if (this.showAvatar && this.avatarDataUrl) {
+			const avatarEl = document.createElement('div');
+			avatarEl.className = 'share-card-author-avatar';
+			avatarEl.style.width = '40px';
+			avatarEl.style.height = '40px';
+			avatarEl.style.backgroundImage = `url(${this.avatarDataUrl})`;
+			avatarEl.style.backgroundSize = 'cover';
+			avatarEl.style.backgroundPosition = 'center';
+			avatarEl.style.borderRadius = '6px';
+			this.authorContainer.appendChild(avatarEl);
+		}
+
+		const textWrap = document.createElement('div');
+		textWrap.style.display = 'flex';
+		textWrap.style.flexDirection = 'column';
+		textWrap.style.lineHeight = '1.1';
+
+		if (this.authorName) {
+			const nameEl = document.createElement('div');
+			nameEl.className = 'share-card-author-name';
+			nameEl.textContent = this.authorName;
+			nameEl.style.fontWeight = '600';
+			textWrap.appendChild(nameEl);
+		}
+		if (this.authorRemark) {
+			const remarkEl = document.createElement('div');
+			remarkEl.className = 'share-card-author-remark';
+			remarkEl.textContent = this.authorRemark;
+			remarkEl.style.opacity = '0.8';
+			remarkEl.style.fontSize = `${Math.max(10, this.authorFontSize - 2)}px`;
+			textWrap.appendChild(remarkEl);
+		}
+
+		this.authorContainer.appendChild(textWrap);
+
+		// Insert relative to playground content container if present
+		if (this.playgroundContent) {
+			if (this.authorPosition === 'top') {
+				this.cardRoot.insertBefore(this.authorContainer, this.playgroundContent);
+			} else {
+				this.cardRoot.appendChild(this.authorContainer);
+			}
+		} else {
+			// fallback previous behavior
+			if (this.authorPosition === 'top') {
+				this.cardRoot.insertBefore(this.authorContainer, this.cardRoot.firstChild);
+			} else {
+				this.cardRoot.appendChild(this.authorContainer);
+			}
+		}
+	}
+
 	private buildExportStyle(scale: number) {
 		// Combine current translation (pan) with zoom * resolution scale
 		return {
@@ -47,11 +137,10 @@ export class ShareCardModal extends Modal {
 
 	// 获取需要被完整导出的乐谱根节点（包含全部 SVG / 多页内容）
 	private getCaptureElement(): HTMLElement | null {
+		// 为了包含作者信息块，导出时始终以 cardRoot 作为捕获根节点（而不是仅内容区）
+		// 等待渲染时仍然会在其内部查找具体的乐谱节点。
 		if (!this.cardRoot) return null;
-		const el = this.cardRoot.querySelector(
-			'.inmarkdown-preview.tabflow-doc-main-content'
-		) as HTMLElement | null;
-		return el || this.cardRoot;
+		return this.cardRoot;
 	}
 
 	private async generateImageBlob(resolution: number, fmt: string, mime: string): Promise<Blob> {
@@ -281,6 +370,97 @@ export class ShareCardModal extends Modal {
 		lazyLabel.style.marginLeft = '4px';
 		lazyCb.checked = false; // 默认不禁用，用户显式勾选
 
+		// --- 作者信息相关（modal-local，不持久化） ---
+		left.createEl('label', { text: '显示作者信息' });
+		const authorShowCb = left.createEl('input', { attr: { type: 'checkbox' } }) as HTMLInputElement;
+		authorShowCb.checked = this.showAuthor;
+		authorShowCb.addEventListener('change', () => {
+			this.showAuthor = authorShowCb.checked;
+			this.renderAuthorBlock();
+		});
+
+		left.createEl('label', { text: '作者姓名' });
+		const authorNameInput = left.createEl('input') as HTMLInputElement;
+		authorNameInput.type = 'text';
+		authorNameInput.value = this.authorName;
+		authorNameInput.addEventListener('input', () => {
+			this.authorName = authorNameInput.value;
+			this.renderAuthorBlock();
+		});
+
+		left.createEl('label', { text: '作者备注' });
+		const authorRemarkInput = left.createEl('input') as HTMLInputElement;
+		authorRemarkInput.type = 'text';
+		authorRemarkInput.value = this.authorRemark;
+		authorRemarkInput.addEventListener('input', () => {
+			this.authorRemark = authorRemarkInput.value;
+			this.renderAuthorBlock();
+		});
+
+		left.createEl('label', { text: '显示头像' });
+		const authorAvatarCb = left.createEl('input', { attr: { type: 'checkbox' } }) as HTMLInputElement;
+		authorAvatarCb.checked = this.showAvatar;
+		authorAvatarCb.addEventListener('change', () => {
+			this.showAvatar = authorAvatarCb.checked;
+			this.renderAuthorBlock();
+		});
+
+		left.createEl('label', { text: '头像（上传 / 选择 URL）' });
+		const avatarInput = left.createEl('input') as HTMLInputElement;
+		avatarInput.type = 'file';
+		avatarInput.accept = 'image/*';
+		avatarInput.addEventListener('change', async () => {
+			const f = avatarInput.files?.[0];
+			if (!f) return;
+			const arr = await f.arrayBuffer();
+			const blob = new Blob([arr], { type: f.type });
+			const reader = new FileReader();
+			reader.onload = () => {
+				this.avatarDataUrl = String(reader.result);
+				this.renderAuthorBlock();
+			};
+			reader.readAsDataURL(blob);
+		});
+
+		left.createEl('label', { text: '作者位置' });
+		const authorPosSelect = left.createEl('select') as HTMLSelectElement;
+		[['顶部', 'top'], ['底部', 'bottom']].forEach(([t, v]) => {
+			const opt = authorPosSelect.createEl('option', { text: String(t) });
+			opt.value = String(v);
+		});
+		authorPosSelect.value = this.authorPosition;
+		authorPosSelect.addEventListener('change', () => {
+			this.authorPosition = authorPosSelect.value as any;
+			this.renderAuthorBlock();
+		});
+
+		left.createEl('label', { text: '作者背景色' });
+		const authorBgInput = left.createEl('input') as HTMLInputElement;
+		authorBgInput.type = 'color';
+		authorBgInput.value = this.authorBg || '#ffffff';
+		authorBgInput.addEventListener('change', () => {
+			this.authorBg = authorBgInput.value;
+			this.renderAuthorBlock();
+		});
+
+		left.createEl('label', { text: '作者文字色' });
+		const authorColorInput = left.createEl('input') as HTMLInputElement;
+		authorColorInput.type = 'color';
+		authorColorInput.value = this.authorTextColor || '#000000';
+		authorColorInput.addEventListener('change', () => {
+			this.authorTextColor = authorColorInput.value;
+			this.renderAuthorBlock();
+		});
+
+		left.createEl('label', { text: '作者字号 (px)' });
+		const authorFontInput = left.createEl('input') as HTMLInputElement;
+		authorFontInput.type = 'number';
+		authorFontInput.value = String(this.authorFontSize);
+		authorFontInput.addEventListener('change', () => {
+			this.authorFontSize = Number(authorFontInput.value) || 13;
+			this.renderAuthorBlock();
+		});
+
 		// Buttons
 		const btnRow = left.createDiv({ cls: 'share-card-actions' });
 		const copyBtn = btnRow.createEl('button', { text: '复制' });
@@ -292,6 +472,8 @@ export class ShareCardModal extends Modal {
 		this.panWrapper = previewWrap.createDiv({ cls: 'share-card-pan-wrapper' });
 		this.cardRoot = this.panWrapper.createDiv({ cls: 'share-card-root' });
 		this.cardRoot.style.width = widthInput.value + 'px';
+		// inner content container for playground rendering (so we can keep author block separate)
+		this.playgroundContent = this.cardRoot.createDiv({ cls: 'share-card-content' });
 		this.applyPanTransform();
 
 		// 点击模态框外部关闭（增加一致的心智模型）
@@ -392,7 +574,7 @@ export class ShareCardModal extends Modal {
 			try {
 				this.playgroundHandle = createAlphaTexPlayground(
 					this.plugin,
-					this.cardRoot!,
+					this.playgroundContent!,
 					source,
 					{
 						readOnly: true,
@@ -414,6 +596,8 @@ export class ShareCardModal extends Modal {
 				console.error('[ShareCardModal] 创建 playground 失败', e);
 				this.cardRoot!.createEl('div', { text: '预览创建失败' });
 			}
+			// ensure author block is rendered after playground rebuild
+			this.renderAuthorBlock();
 		};
 
 		try {
@@ -436,6 +620,8 @@ export class ShareCardModal extends Modal {
 			} catch (err) {
 				console.warn('[ShareCardModal] 刷新 preview 失败', err);
 			}
+			// re-render author block to adapt to new width
+			this.renderAuthorBlock();
 		});
 
 		// Export handler (捕获完整 .inmarkdown-preview 内容)
