@@ -12,6 +12,59 @@ export class ShareCardPresetService {
 		this.plugin = plugin;
 	}
 
+	/**
+	 * Normalize a CSS color string to 6-digit hex if possible, else return fallback.
+	 */
+	private normalizeColorToHex(color: string | undefined | null, fallback = '#ffffff') {
+		if (!color) return fallback;
+		const s = String(color).trim();
+		if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) {
+			if (s.length === 4) {
+				return (
+					'#' +
+					s
+						.slice(1)
+						.split('')
+						.map((c) => c + c)
+						.join('')
+				).toLowerCase();
+			}
+			return s.toLowerCase();
+		}
+		const m = s.match(/rgba?\s*\(([^)]+)\)/i);
+		if (m) {
+			const parts = m[1].split(',').map((p) => p.trim());
+			if (parts.length >= 3) {
+				const r = Math.max(0, Math.min(255, parseInt(parts[0], 10) || 0));
+				const g = Math.max(0, Math.min(255, parseInt(parts[1], 10) || 0));
+				const b = Math.max(0, Math.min(255, parseInt(parts[2], 10) || 0));
+				return (
+					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
+				).toLowerCase();
+			}
+		}
+		try {
+			const el = document.createElement('div');
+			el.style.color = s;
+			document.body.appendChild(el);
+			const cs = getComputedStyle(el).color;
+			document.body.removeChild(el);
+			const mm = String(cs).match(/rgba?\s*\(([^)]+)\)/i);
+			if (mm) {
+				const parts = mm[1].split(',').map((p) => p.trim());
+				const r = Math.max(0, Math.min(255, parseInt(parts[0], 10) || 0));
+				const g = Math.max(0, Math.min(255, parseInt(parts[1], 10) || 0));
+				const b = Math.max(0, Math.min(255, parseInt(parts[2], 10) || 0));
+				return (
+					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
+				).toLowerCase();
+			}
+		} catch (e) {
+			// ignore
+		}
+		return fallback;
+	}
+
 	/** 在插件加载后调用：若无预设则创建一个默认预设 */
 	ensureMigration(): void {
 		const s = this.plugin.settings;
@@ -149,7 +202,9 @@ export class ShareCardPresetService {
 	applyToModal(modal: any, preset: ShareCardPresetV1): void {
 		// 直接映射：确保字段名保持一致
 		modal.exportBgMode = preset.exportBgMode;
-		modal.exportBgCustomColor = preset.exportBgCustomColor || '#ffffff';
+		modal.exportBgCustomColor = this.normalizeColorToHex(
+			preset.exportBgCustomColor || '#ffffff'
+		);
 		modal.showAuthor = preset.showAuthor;
 		modal.authorName = preset.authorName;
 		modal.authorRemark = preset.authorRemark;
@@ -184,7 +239,7 @@ export class ShareCardPresetService {
 			format: modal.__shareCardCurrentFormat || 'png',
 			disableLazy: !!modal.__shareCardDisableLazy,
 			exportBgMode: modal.exportBgMode,
-			exportBgCustomColor: modal.exportBgCustomColor,
+			exportBgCustomColor: this.normalizeColorToHex(modal.exportBgCustomColor),
 			showAuthor: modal.showAuthor,
 			authorName: modal.authorName,
 			authorRemark: modal.authorRemark,

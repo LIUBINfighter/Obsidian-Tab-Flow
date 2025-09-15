@@ -87,6 +87,64 @@ export class ShareCardModal extends Modal {
 		}
 	}
 
+	/**
+	 * Try to normalize any CSS color string to a 6-digit hex like #rrggbb.
+	 * Falls back to provided default (#ffffff) when unable to parse.
+	 */
+	private normalizeColorToHex(color: string | undefined | null, fallback = '#ffffff'): string {
+		if (!color) return fallback;
+		const s = String(color).trim();
+		// already hex (#fff or #ffffff)
+		if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) {
+			if (s.length === 4) {
+				// expand short hex #abc -> #aabbcc
+				return (
+					'#' +
+					s
+						.slice(1)
+						.split('')
+						.map((c) => c + c)
+						.join('')
+				).toLowerCase();
+			}
+			return s.toLowerCase();
+		}
+		// rgb/rgba
+		const m = s.match(/rgba?\s*\(([^)]+)\)/i);
+		if (m) {
+			const parts = m[1].split(',').map((p) => p.trim());
+			if (parts.length >= 3) {
+				const r = Math.max(0, Math.min(255, parseInt(parts[0], 10) || 0));
+				const g = Math.max(0, Math.min(255, parseInt(parts[1], 10) || 0));
+				const b = Math.max(0, Math.min(255, parseInt(parts[2], 10) || 0));
+				return (
+					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
+				).toLowerCase();
+			}
+		}
+		// try letting browser parse named colors etc.
+		try {
+			const el = document.createElement('div');
+			el.style.color = s;
+			document.body.appendChild(el);
+			const cs = getComputedStyle(el).color;
+			document.body.removeChild(el);
+			const mm = String(cs).match(/rgba?\s*\(([^)]+)\)/i);
+			if (mm) {
+				const parts = mm[1].split(',').map((p) => p.trim());
+				const r = Math.max(0, Math.min(255, parseInt(parts[0], 10) || 0));
+				const g = Math.max(0, Math.min(255, parseInt(parts[1], 10) || 0));
+				const b = Math.max(0, Math.min(255, parseInt(parts[2], 10) || 0));
+				return (
+					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
+				).toLowerCase();
+			}
+		} catch (e) {
+			// ignore and fallthrough to fallback
+		}
+		return fallback;
+	}
+
 	// Render or update the author info block inside cardRoot according to modal-local fields
 	private renderAuthorBlock() {
 		if (!this.cardRoot) return;
@@ -275,7 +333,7 @@ export class ShareCardModal extends Modal {
 						!computedBg ||
 						computedBg === 'transparent' ||
 						/^rgba\(\s*0,\s*0,\s*0,\s*0\s*\)$/i.test(computedBg || '');
-					bgcolorToUse = isTransparent ? '#fff' : computedBg;
+					bgcolorToUse = isTransparent ? this.exportBgCustomColor || '#fff' : computedBg;
 				}
 			} else {
 				// default: 保持向后兼容，仍然只为 jpeg 设置白底
@@ -429,9 +487,20 @@ export class ShareCardModal extends Modal {
 				resSelect.value = st2.working.resolution;
 				formatSelect.value = st2.working.format;
 				bgModeSelect.value = st2.working.exportBgMode;
-				customColorInput.style.display =
-					st2.working.exportBgMode === 'custom' ? '' : 'none';
-				customColorInput.value = st2.working.exportBgCustomColor;
+				if (st2.working.exportBgMode === 'auto') {
+					customColorLabel.textContent = t('shareCard.fallbackColor') || 'Fallback Color';
+					customColorLabel.style.display = '';
+					customColorInput.style.display = '';
+				} else if (st2.working.exportBgMode === 'custom') {
+					customColorLabel.textContent = t('shareCard.customColor');
+					customColorLabel.style.display = '';
+					customColorInput.style.display = '';
+				} else {
+					customColorLabel.style.display = 'none';
+					customColorInput.style.display = 'none';
+				}
+				const norm = this.normalizeColorToHex(st2.working.exportBgCustomColor);
+				customColorInput.value = norm;
 				authorShowCb.checked = st2.working.showAuthor;
 				authorNameInput.value = st2.working.authorName;
 				authorRemarkInput.value = st2.working.authorRemark;
@@ -443,7 +512,7 @@ export class ShareCardModal extends Modal {
 				authorAlignSelect.value = st2.working.authorAlign || 'left';
 				lazyCb.checked = st2.working.disableLazy;
 				this.exportBgMode = st2.working.exportBgMode;
-				this.exportBgCustomColor = st2.working.exportBgCustomColor;
+				this.exportBgCustomColor = norm;
 				this.showAuthor = st2.working.showAuthor;
 				this.authorName = st2.working.authorName;
 				this.authorRemark = st2.working.authorRemark;
@@ -483,7 +552,7 @@ export class ShareCardModal extends Modal {
 				format: st.working.format,
 				disableLazy: st.working.disableLazy,
 				exportBgMode: st.working.exportBgMode,
-				exportBgCustomColor: st.working.exportBgCustomColor,
+				exportBgCustomColor: this.normalizeColorToHex(st.working.exportBgCustomColor),
 				showAuthor: st.working.showAuthor,
 				authorName: st.working.authorName,
 				authorRemark: st.working.authorRemark,
@@ -520,8 +589,19 @@ export class ShareCardModal extends Modal {
 				resSelect.value = st.working.resolution;
 				formatSelect.value = st.working.format;
 				bgModeSelect.value = st.working.exportBgMode;
-				customColorInput.style.display = st.working.exportBgMode === 'custom' ? '' : 'none';
-				customColorInput.value = st.working.exportBgCustomColor;
+				if (st.working.exportBgMode === 'auto') {
+					customColorLabel.textContent = t('shareCard.fallbackColor') || 'Fallback Color';
+					customColorLabel.style.display = '';
+					customColorInput.style.display = '';
+				} else if (st.working.exportBgMode === 'custom') {
+					customColorLabel.textContent = t('shareCard.customColor');
+					customColorLabel.style.display = '';
+					customColorInput.style.display = '';
+				} else {
+					customColorLabel.style.display = 'none';
+					customColorInput.style.display = 'none';
+				}
+				customColorInput.value = this.normalizeColorToHex(st.working.exportBgCustomColor);
 				authorShowCb.checked = st.working.showAuthor;
 				authorNameInput.value = st.working.authorName;
 				authorRemarkInput.value = st.working.authorRemark;
@@ -603,12 +683,14 @@ export class ShareCardModal extends Modal {
 		});
 		bgModeSelect.value = 'default';
 		// 自定义颜色输入
-		basicCard.createEl('div', { text: t('shareCard.customColor'), cls: 'sc-label' });
+		const customColorLabel = basicCard.createEl('div', {
+			text: t('shareCard.customColor'),
+			cls: 'sc-label',
+		});
 		const customColorInput = basicCard.createEl('input') as HTMLInputElement;
-		customColorInput.type = 'text';
-		customColorInput.value = this.exportBgCustomColor;
-		customColorInput.placeholder =
-			t('shareCard.customColorPlaceholder') || '#ffffff 或 rgb(...)';
+		customColorInput.type = 'color';
+		// ensure stored value is normalized hex
+		customColorInput.value = this.normalizeColorToHex(this.exportBgCustomColor);
 		customColorInput.style.display = 'none';
 		// 禁用懒加载
 		basicCard.createEl('div', { text: t('shareCard.disableLazyLabel'), cls: 'sc-label' });
@@ -630,13 +712,22 @@ export class ShareCardModal extends Modal {
 			this.stateManager?.updateField('exportBgMode', this.exportBgMode);
 			const st = this.stateManager?.getState();
 			if (st) st.working.exportBgMode = this.exportBgMode; // 保持同步
-			if (this.exportBgMode === 'custom') customColorInput.style.display = '';
-			else customColorInput.style.display = 'none';
+			if (this.exportBgMode === 'custom') {
+				customColorLabel.textContent = t('shareCard.customColor');
+				customColorLabel.style.display = '';
+				customColorInput.style.display = '';
+			} else {
+				customColorLabel.style.display = 'none';
+				customColorInput.style.display = 'none';
+			}
 			refreshDirtyIndicator();
 		});
 		customColorInput.addEventListener('change', () => {
-			if (customColorInput.value) this.exportBgCustomColor = customColorInput.value;
-			this.stateManager?.updateField('exportBgCustomColor', this.exportBgCustomColor);
+			if (customColorInput.value) {
+				const hex = this.normalizeColorToHex(customColorInput.value);
+				this.exportBgCustomColor = hex;
+				this.stateManager?.updateField('exportBgCustomColor', this.exportBgCustomColor);
+			}
 			refreshDirtyIndicator();
 		});
 
@@ -1058,10 +1149,18 @@ export class ShareCardModal extends Modal {
 		resSelect.value = runtime.working.resolution;
 		formatSelect.value = runtime.working.format;
 		bgModeSelect.value = runtime.working.exportBgMode;
-		if (runtime.working.exportBgMode === 'custom') customColorInput.style.display = '';
-		customColorInput.value = runtime.working.exportBgCustomColor;
+		if (runtime.working.exportBgMode === 'custom') {
+			customColorLabel.textContent = t('shareCard.customColor');
+			customColorLabel.style.display = '';
+			customColorInput.style.display = '';
+		} else {
+			customColorLabel.style.display = 'none';
+			customColorInput.style.display = 'none';
+		}
+		const initHex = this.normalizeColorToHex(runtime.working.exportBgCustomColor);
+		customColorInput.value = initHex;
 		this.exportBgMode = runtime.working.exportBgMode;
-		this.exportBgCustomColor = runtime.working.exportBgCustomColor;
+		this.exportBgCustomColor = initHex;
 		this.showAuthor = runtime.working.showAuthor;
 		this.authorName = runtime.working.authorName;
 		this.authorRemark = runtime.working.authorRemark;
