@@ -80,6 +80,11 @@ export interface TabFlowSettings {
 	shareCardDefaultPresetId?: string;
 	/** 上次使用的预设 ID */
 	shareCardLastUsedPresetId?: string;
+	/** 分享卡片行为配置（新增） */
+	shareCardOptions?: {
+		autosaveDefaultPreset?: boolean; // 多预设时是否对默认预设启用自动保存（默认 true）
+		autosaveDelayMs?: number; // 自动保存延迟（默认 800）
+	};
 }
 
 export interface ShareCardPresetV1 {
@@ -222,4 +227,6 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	},
 	// 运行时初始为空，首次加载时写入默认预设
 	shareCardPresets: [],
+	// 可选行为配置（保持空对象，使用代码内默认值）
+	shareCardOptions: {},
 };

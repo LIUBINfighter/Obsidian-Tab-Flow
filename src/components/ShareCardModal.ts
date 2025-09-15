@@ -4,6 +4,7 @@ import { createAlphaTexPlayground, AlphaTexPlaygroundHandle } from './AlphaTexPl
 import * as domtoimage from 'dom-to-image-more';
 import { waitAlphaTabFullRender, withExportLock } from '../utils/alphaTabRenderWait';
 import ShareCardPresetService from '../services/ShareCardPresetService';
+import ShareCardStateManager from '../state/ShareCardStateManager';
 
 export class ShareCardModal extends Modal {
 	private plugin: TabFlowPlugin;
@@ -46,6 +47,7 @@ export class ShareCardModal extends Modal {
 	private presetService: ShareCardPresetService | null = null;
 	private currentPresetId: string | null = null; // 当前下拉选中
 	private isPresetDirty = false;
+	private stateManager: ShareCardStateManager | null = null;
 	// 用于服务收集的当前 UI 状态缓存
 	public __shareCardCurrentResolution: '1x' | '2x' | '3x' = '2x';
 	public __shareCardCurrentFormat: 'png' | 'jpg' | 'webp' = 'png';
@@ -87,6 +89,16 @@ export class ShareCardModal extends Modal {
 	// Render or update the author info block inside cardRoot according to modal-local fields
 	private renderAuthorBlock() {
 		if (!this.cardRoot) return;
+		// 尝试容错：若应显示头像但本地缓存为空且 stateManager 中仍有 avatarSource，则回填
+		if (this.showAvatar && !this.avatarDataUrl) {
+			try {
+				const st = this.stateManager?.getState();
+				const maybe = st?.working.avatarSource?.data;
+				if (maybe) this.avatarDataUrl = maybe;
+			} catch {
+				/* ignore */
+			}
+		}
 		// remove existing container if position changed
 		if (this.authorContainer && this.authorContainer.parentElement) {
 			this.authorContainer.remove();
@@ -337,6 +349,9 @@ export class ShareCardModal extends Modal {
 		// Form fields
 		// --- 预设选择区域 ---
 		this.presetService = new ShareCardPresetService(this.plugin);
+		this.stateManager = new ShareCardStateManager(this.plugin, this.presetService);
+		const runtime = this.stateManager.init();
+		this.currentPresetId = runtime.activePresetId;
 		const presetBar = left.createDiv({ cls: 'share-card-preset-bar' });
 		const presetLabel = presetBar.createEl('label', { text: '预设' });
 		presetLabel.style.display = 'block';
@@ -355,7 +370,11 @@ export class ShareCardModal extends Modal {
 				const opt = presetSelect.createEl('option', {
 					text:
 						p.name +
-						(p.id === this.plugin.settings.shareCardDefaultPresetId ? ' (默认)' : ''),
+						(p.id === this.plugin.settings.shareCardDefaultPresetId ? ' (默认)' : '') +
+						(this.stateManager?.getState().activePresetId === p.id &&
+						this.stateManager?.isDirty()
+							? ' *'
+							: ''),
 				});
 				opt.value = p.id;
 			});
@@ -374,55 +393,106 @@ export class ShareCardModal extends Modal {
 		rebuildPresetOptions();
 
 		presetSelect.addEventListener('change', () => {
-			this.currentPresetId = presetSelect.value;
-			const p = this.currentPresetId ? this.presetService!.get(this.currentPresetId) : null;
-			if (p) {
-				this.presetService!.applyToModal(this, p);
-				this.isPresetDirty = false;
-				// 同步 UI 控件（下面控件创建后会引用这些变量）
-				if (widthInput) widthInput.value = String(p.cardWidth);
-				if (resSelect) resSelect.value = p.resolution;
-				if (formatSelect) formatSelect.value = p.format;
-				if (bgModeSelect) bgModeSelect.value = p.exportBgMode;
-				if (p.exportBgMode === 'custom') customColorInput.style.display = '';
-				else customColorInput.style.display = 'none';
-				customColorInput.value = p.exportBgCustomColor || '#ffffff';
-				if (authorShowCb) authorShowCb.checked = p.showAuthor;
-				if (authorNameInput) authorNameInput.value = p.authorName;
-				if (authorRemarkInput) authorRemarkInput.value = p.authorRemark;
-				if (authorAvatarCb) authorAvatarCb.checked = p.showAvatar;
-				if (authorPosSelect) authorPosSelect.value = p.authorPosition;
-				if (authorBgInput) authorBgInput.value = p.authorBg || '#ffffff';
-				if (authorColorInput) authorColorInput.value = p.authorTextColor || '#000000';
-				if (authorFontInput) authorFontInput.value = String(p.authorFontSize);
-				if (authorAlignSelect) authorAlignSelect.value = p.authorAlign || 'left';
-				if (lazyCb) lazyCb.checked = p.disableLazy;
-				this.__shareCardDisableLazy = p.disableLazy;
+			const targetId = presetSelect.value;
+			const st = this.stateManager?.getState();
+			if (st?.dirty && !st.autosaveEnabled) {
+				// 三选弹窗：保存/放弃/取消
+				const choice = window.confirm(
+					'当前预设有未保存的更改。\n确定=保存并切换，取消=弹出二次确认'
+				);
+				if (!choice) {
+					// 二次确认：放弃或取消
+					const discard = window.confirm(
+						'放弃未保存更改并切换?  确定=放弃并切换  取消=继续编辑'
+					);
+					if (!discard) {
+						// 取消切换，恢复下拉值
+						presetSelect.value = this.currentPresetId || targetId;
+						return;
+					}
+					// 放弃 -> 不保存直接切换
+				} else {
+					// 保存并切换
+					this.stateManager?.commit('switch');
+				}
+			}
+			this.currentPresetId = targetId;
+			this.stateManager?.switchPreset(this.currentPresetId);
+			const st2 = this.stateManager?.getState();
+			if (st2) {
+				widthInput.value = String(st2.working.cardWidth);
+				resSelect.value = st2.working.resolution;
+				formatSelect.value = st2.working.format;
+				bgModeSelect.value = st2.working.exportBgMode;
+				customColorInput.style.display =
+					st2.working.exportBgMode === 'custom' ? '' : 'none';
+				customColorInput.value = st2.working.exportBgCustomColor;
+				authorShowCb.checked = st2.working.showAuthor;
+				authorNameInput.value = st2.working.authorName;
+				authorRemarkInput.value = st2.working.authorRemark;
+				authorAvatarCb.checked = st2.working.showAvatar;
+				authorPosSelect.value = st2.working.authorPosition;
+				authorBgInput.value = st2.working.authorBg || '#ffffff';
+				authorColorInput.value = st2.working.authorTextColor || '#000000';
+				authorFontInput.value = String(st2.working.authorFontSize);
+				authorAlignSelect.value = st2.working.authorAlign || 'left';
+				lazyCb.checked = st2.working.disableLazy;
+				this.exportBgMode = st2.working.exportBgMode;
+				this.exportBgCustomColor = st2.working.exportBgCustomColor;
+				this.showAuthor = st2.working.showAuthor;
+				this.authorName = st2.working.authorName;
+				this.authorRemark = st2.working.authorRemark;
+				this.showAvatar = st2.working.showAvatar;
+				this.avatarDataUrl = st2.working.avatarSource?.data || null;
+				this.authorPosition = st2.working.authorPosition;
+				this.authorBg = st2.working.authorBg;
+				this.authorTextColor = st2.working.authorTextColor;
+				this.authorFontSize = st2.working.authorFontSize;
+				this.authorAlign = st2.working.authorAlign;
+				this.__shareCardDisableLazy = st2.working.disableLazy;
+				if (this.cardRoot) this.cardRoot.style.width = st2.working.cardWidth + 'px';
 				this.renderAuthorBlock();
 			}
+			refreshDirtyIndicator();
 		});
 
 		btnPresetSave.addEventListener('click', async () => {
-			if (!this.currentPresetId) return;
-			const base = this.presetService!.get(this.currentPresetId);
-			if (!base) return;
-			const collected = this.presetService!.collectFromModal(this);
-			this.presetService!.update(this.currentPresetId, { ...collected, name: base.name });
-			await this.plugin.saveSettings();
-			this.isPresetDirty = false;
+			this.stateManager?.commit('manual');
 			rebuildPresetOptions();
 			new Notice('预设已保存');
 		});
 
 		btnPresetSaveAs.addEventListener('click', async () => {
-			const collected = this.presetService!.collectFromModal(this);
 			const name = window.prompt('新预设名称', '新预设');
 			if (!name) return;
-			const p = this.presetService!.create({ ...collected, name });
+			// 收集当前 working 值
+			const st = this.stateManager?.getState();
+			if (!st) return;
+			const created = this.presetService!.create({
+				name,
+				cardWidth: st.working.cardWidth,
+				resolution: st.working.resolution,
+				format: st.working.format,
+				disableLazy: st.working.disableLazy,
+				exportBgMode: st.working.exportBgMode,
+				exportBgCustomColor: st.working.exportBgCustomColor,
+				showAuthor: st.working.showAuthor,
+				authorName: st.working.authorName,
+				authorRemark: st.working.authorRemark,
+				showAvatar: st.working.showAvatar,
+				avatarSource: st.working.avatarSource,
+				authorPosition: st.working.authorPosition,
+				authorBg: st.working.authorBg,
+				authorTextColor: st.working.authorTextColor,
+				authorFontSize: st.working.authorFontSize,
+				authorAlign: st.working.authorAlign,
+				isDefault: undefined,
+			});
 			await this.plugin.saveSettings();
+			this.stateManager?.switchPreset(created.id);
 			rebuildPresetOptions();
-			presetSelect.value = p.id;
-			this.currentPresetId = p.id;
+			presetSelect.value = created.id;
+			this.currentPresetId = created.id;
 			new Notice('已创建新预设');
 		});
 
@@ -435,11 +505,39 @@ export class ShareCardModal extends Modal {
 		});
 
 		btnPresetReset.addEventListener('click', () => {
-			// 重置到当前选中预设值
-			if (!this.currentPresetId) return;
-			const p = this.presetService!.get(this.currentPresetId);
-			if (!p) return;
-			presetSelect.dispatchEvent(new Event('change'));
+			this.stateManager?.resetWorking();
+			const st = this.stateManager?.getState();
+			if (st) {
+				widthInput.value = String(st.working.cardWidth);
+				resSelect.value = st.working.resolution;
+				formatSelect.value = st.working.format;
+				bgModeSelect.value = st.working.exportBgMode;
+				customColorInput.style.display = st.working.exportBgMode === 'custom' ? '' : 'none';
+				customColorInput.value = st.working.exportBgCustomColor;
+				authorShowCb.checked = st.working.showAuthor;
+				authorNameInput.value = st.working.authorName;
+				authorRemarkInput.value = st.working.authorRemark;
+				authorAvatarCb.checked = st.working.showAvatar;
+				authorPosSelect.value = st.working.authorPosition;
+				authorBgInput.value = st.working.authorBg || '#ffffff';
+				authorColorInput.value = st.working.authorTextColor || '#000000';
+				authorFontInput.value = String(st.working.authorFontSize);
+				authorAlignSelect.value = st.working.authorAlign || 'left';
+				lazyCb.checked = st.working.disableLazy;
+				if (this.cardRoot) this.cardRoot.style.width = st.working.cardWidth + 'px';
+				this.showAuthor = st.working.showAuthor;
+				this.authorName = st.working.authorName;
+				this.authorRemark = st.working.authorRemark;
+				this.showAvatar = st.working.showAvatar;
+				this.avatarDataUrl = st.working.avatarSource?.data || null;
+				this.authorPosition = st.working.authorPosition;
+				this.authorBg = st.working.authorBg;
+				this.authorTextColor = st.working.authorTextColor;
+				this.authorFontSize = st.working.authorFontSize;
+				this.authorAlign = st.working.authorAlign;
+				this.renderAuthorBlock();
+			}
+			rebuildPresetOptions();
 		});
 
 		left.createEl('label', { text: '导出文件名' });
@@ -449,22 +547,28 @@ export class ShareCardModal extends Modal {
 		const activeFile = this.app.workspace.getActiveFile();
 		titleInput.value = activeFile ? activeFile.basename : 'alphatex-card';
 
-		left.createEl('label', { text: '卡片宽度(px)' });
-		const widthInput = left.createEl('input') as HTMLInputElement;
+		// 基础配置卡片
+		const basicCard = left.createDiv({ cls: 'share-card-basic-grid' });
+		// 宽度
+		basicCard.createEl('div', { text: '卡片宽度(px)', cls: 'sc-label' });
+		const widthInput = basicCard.createEl('input') as HTMLInputElement;
 		widthInput.type = 'number';
 		widthInput.value = '800';
-		widthInput.style.width = '100%';
-
-		left.createEl('label', { text: '分辨率' });
-		const resSelect = left.createEl('select') as HTMLSelectElement;
+		// 分辨率
+		basicCard.createEl('div', { text: '分辨率', cls: 'sc-label' });
+		const resSelect = basicCard.createEl('select') as HTMLSelectElement;
 		['1x', '2x', '3x'].forEach((r) => {
 			const opt = resSelect.createEl('option', { text: r });
 			opt.value = r;
 		});
 		resSelect.value = '2x';
-
-		left.createEl('label', { text: '格式' });
-		const formatSelect = left.createEl('select') as HTMLSelectElement;
+		resSelect.addEventListener('change', () => {
+			this.stateManager?.updateField('resolution', resSelect.value as any);
+			refreshDirtyIndicator();
+		});
+		// 格式
+		basicCard.createEl('div', { text: '格式', cls: 'sc-label' });
+		const formatSelect = basicCard.createEl('select') as HTMLSelectElement;
 		[
 			['png', 'png'],
 			['jpg', 'jpg'],
@@ -474,10 +578,13 @@ export class ShareCardModal extends Modal {
 			opt.value = String(v);
 		});
 		formatSelect.value = 'png';
-
-		// 导出背景配置：与 modal 生命周期绑定（不会持久化到插件设置）
-		left.createEl('label', { text: '导出背景' });
-		const bgModeSelect = left.createEl('select') as HTMLSelectElement;
+		formatSelect.addEventListener('change', () => {
+			this.stateManager?.updateField('format', formatSelect.value as any);
+			refreshDirtyIndicator();
+		});
+		// 导出背景模式
+		basicCard.createEl('div', { text: '导出背景', cls: 'sc-label' });
+		const bgModeSelect = basicCard.createEl('select') as HTMLSelectElement;
 		[
 			['默认（与之前一致）', 'default'],
 			['自动（使用预览背景）', 'auto'],
@@ -487,40 +594,44 @@ export class ShareCardModal extends Modal {
 			opt.value = String(v);
 		});
 		bgModeSelect.value = 'default';
-
-		// 当用户选择自定义颜色时显示输入框
-		const customColorInput = left.createEl('input') as HTMLInputElement;
+		// 自定义颜色输入
+		basicCard.createEl('div', { text: '颜色参数', cls: 'sc-label' });
+		const customColorInput = basicCard.createEl('input') as HTMLInputElement;
 		customColorInput.type = 'text';
 		customColorInput.value = this.exportBgCustomColor;
 		customColorInput.placeholder = '#ffffff 或 rgb(...)';
 		customColorInput.style.display = 'none';
+		// 禁用懒加载
+		basicCard.createEl('div', { text: '完全渲染', cls: 'sc-label' });
+		const lazyWrapInner = basicCard.createDiv({ cls: 'share-card-field-checkbox' });
+		const disableLazyId2 = 'share-disable-lazy-' + Date.now();
+		const lazyCb = lazyWrapInner.createEl('input', {
+			attr: { type: 'checkbox', id: disableLazyId2 },
+		}) as HTMLInputElement;
+		const lazyLabel2 = lazyWrapInner.createEl('label', {
+			text: '禁用懒加载',
+			attr: { for: disableLazyId2 },
+		});
+		lazyLabel2.style.marginLeft = '4px';
+		// 旧的 lazyWrap/lazyCb 移除（保持变量名一致用于后续逻辑）
+		// END 基础配置卡片
 
 		bgModeSelect.addEventListener('change', () => {
 			this.exportBgMode = bgModeSelect.value as any;
-			this.isPresetDirty = true;
-			if (this.exportBgMode === 'custom') {
-				customColorInput.style.display = '';
-			} else {
-				customColorInput.style.display = 'none';
-			}
+			this.stateManager?.updateField('exportBgMode', this.exportBgMode);
+			const st = this.stateManager?.getState();
+			if (st) st.working.exportBgMode = this.exportBgMode; // 保持同步
+			if (this.exportBgMode === 'custom') customColorInput.style.display = '';
+			else customColorInput.style.display = 'none';
+			refreshDirtyIndicator();
 		});
 		customColorInput.addEventListener('change', () => {
 			if (customColorInput.value) this.exportBgCustomColor = customColorInput.value;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('exportBgCustomColor', this.exportBgCustomColor);
+			refreshDirtyIndicator();
 		});
 
-		// 是否禁用懒加载（一次性完整渲染）
-		const lazyWrap = left.createDiv({ cls: 'share-card-field-checkbox' });
-		const disableLazyId = 'share-disable-lazy-' + Date.now();
-		const lazyCb = lazyWrap.createEl('input', {
-			attr: { type: 'checkbox', id: disableLazyId },
-		}) as HTMLInputElement;
-		const lazyLabel = lazyWrap.createEl('label', {
-			text: '禁用懒加载(完整渲染)',
-			attr: { for: disableLazyId },
-		});
-		lazyLabel.style.marginLeft = '4px';
-		lazyCb.checked = false; // 默认不禁用，用户显式勾选
+		lazyCb.checked = runtime.working.disableLazy;
 
 		// --- 作者信息相关（modal-local，不持久化） ---
 		// Compact two-column form grid for author settings
@@ -529,39 +640,43 @@ export class ShareCardModal extends Modal {
 		const authorShowCb = authorSection.createEl('input', {
 			attr: { type: 'checkbox' },
 		}) as HTMLInputElement;
-		authorShowCb.checked = this.showAuthor;
+		authorShowCb.checked = runtime.working.showAuthor;
 		authorShowCb.addEventListener('change', () => {
 			this.showAuthor = authorShowCb.checked;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('showAuthor', this.showAuthor);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 		authorSection.createEl('div', { text: '作者姓名', cls: 'sc-label' });
 		const authorNameInput = authorSection.createEl('input') as HTMLInputElement;
 		authorNameInput.type = 'text';
-		authorNameInput.value = this.authorName;
+		authorNameInput.value = runtime.working.authorName;
 		authorNameInput.addEventListener('input', () => {
 			this.authorName = authorNameInput.value;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('authorName', this.authorName);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 		authorSection.createEl('div', { text: '额外文案', cls: 'sc-label' });
 		const authorRemarkInput = authorSection.createEl('input') as HTMLInputElement;
 		authorRemarkInput.type = 'text';
-		authorRemarkInput.value = this.authorRemark;
+		authorRemarkInput.value = runtime.working.authorRemark;
 		authorRemarkInput.addEventListener('input', () => {
 			this.authorRemark = authorRemarkInput.value;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('authorRemark', this.authorRemark);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 		authorSection.createEl('div', { text: '显示头像', cls: 'sc-label' });
 		const authorAvatarCb = authorSection.createEl('input', {
 			attr: { type: 'checkbox' },
 		}) as HTMLInputElement;
-		authorAvatarCb.checked = this.showAvatar;
+		authorAvatarCb.checked = runtime.working.showAvatar;
 		authorAvatarCb.addEventListener('change', () => {
 			this.showAvatar = authorAvatarCb.checked;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('showAvatar', this.showAvatar);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 		authorSection.createEl('div', { text: '头像(上传)', cls: 'sc-label' });
 		const avatarInput = authorSection.createEl('input') as HTMLInputElement;
@@ -575,8 +690,15 @@ export class ShareCardModal extends Modal {
 			const reader = new FileReader();
 			reader.onload = () => {
 				this.avatarDataUrl = String(reader.result);
-				this.isPresetDirty = true;
+				// 将头像持久化到 working avatarSource
+				if (this.avatarDataUrl) {
+					this.stateManager?.updateField('avatarSource', {
+						type: 'data-url',
+						data: this.avatarDataUrl,
+					});
+				}
 				this.renderAuthorBlock();
+				refreshDirtyIndicator();
 			};
 			reader.readAsDataURL(blob);
 		});
@@ -591,11 +713,12 @@ export class ShareCardModal extends Modal {
 			const opt = authorAlignSelect.createEl('option', { text: t });
 			opt.value = v;
 		});
-		authorAlignSelect.value = this.authorAlign;
+		authorAlignSelect.value = runtime.working.authorAlign;
 		authorAlignSelect.addEventListener('change', () => {
 			this.authorAlign = authorAlignSelect.value as any;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('authorAlign', this.authorAlign);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 
 		authorSection.createEl('div', { text: '显示位置', cls: 'sc-label' });
@@ -607,41 +730,45 @@ export class ShareCardModal extends Modal {
 			const opt = authorPosSelect.createEl('option', { text: String(t) });
 			opt.value = String(v);
 		});
-		authorPosSelect.value = this.authorPosition;
+		authorPosSelect.value = runtime.working.authorPosition;
 		authorPosSelect.addEventListener('change', () => {
 			this.authorPosition = authorPosSelect.value as any;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('authorPosition', this.authorPosition);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 
 		authorSection.createEl('div', { text: '背景色', cls: 'sc-label' });
 		const authorBgInput = authorSection.createEl('input') as HTMLInputElement;
 		authorBgInput.type = 'color';
-		authorBgInput.value = this.authorBg || '#ffffff';
+		authorBgInput.value = runtime.working.authorBg || '#ffffff';
 		authorBgInput.addEventListener('change', () => {
 			this.authorBg = authorBgInput.value;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('authorBg', this.authorBg);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 
 		authorSection.createEl('div', { text: '文字颜色', cls: 'sc-label' });
 		const authorColorInput = authorSection.createEl('input') as HTMLInputElement;
 		authorColorInput.type = 'color';
-		authorColorInput.value = this.authorTextColor || '#000000';
+		authorColorInput.value = runtime.working.authorTextColor || '#000000';
 		authorColorInput.addEventListener('change', () => {
 			this.authorTextColor = authorColorInput.value;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('authorTextColor', this.authorTextColor);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 
 		authorSection.createEl('div', { text: '字号(px)', cls: 'sc-label' });
 		const authorFontInput = authorSection.createEl('input') as HTMLInputElement;
 		authorFontInput.type = 'number';
-		authorFontInput.value = String(this.authorFontSize);
+		authorFontInput.value = String(runtime.working.authorFontSize);
 		authorFontInput.addEventListener('change', () => {
 			this.authorFontSize = Number(authorFontInput.value) || 13;
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('authorFontSize', this.authorFontSize);
 			this.renderAuthorBlock();
+			refreshDirtyIndicator();
 		});
 
 		// Buttons
@@ -792,33 +919,42 @@ export class ShareCardModal extends Modal {
 
 		// 切换懒加载选项 -> 重新构建 playground
 		lazyCb.addEventListener('change', () => {
-			this.isPresetDirty = true;
+			this.stateManager?.updateField('disableLazy', lazyCb.checked);
+			this.__shareCardDisableLazy = lazyCb.checked;
 			buildPlayground();
+			refreshDirtyIndicator();
 		});
 
 		// Update preview width when width input changes
 		widthInput.addEventListener('change', () => {
 			const w = Number(widthInput.value) || 800;
 			if (this.cardRoot) this.cardRoot.style.width = w + 'px';
-			// try to refresh playground rendering
+			this.stateManager?.updateField('cardWidth', w);
 			try {
 				this.playgroundHandle?.refresh();
-			} catch (err) {
-				console.warn('[ShareCardModal] 刷新 preview 失败', err);
+			} catch {
+				/* ignore */
 			}
-			// re-render author block to adapt to new width
 			this.renderAuthorBlock();
-			this.isPresetDirty = true;
+			refreshDirtyIndicator();
 		});
 
 		// Export handler (捕获完整 .inmarkdown-preview 内容)
 		exportBtn.addEventListener('click', async () => {
+			// 导出前强制保存当前工作副本
+			try {
+				this.stateManager?.commit('manual');
+			} catch {
+				/* ignore */
+			}
 			await withExportLock(async () => {
 				exportBtn.setAttribute('disabled', 'true');
 				copyBtn.setAttribute('disabled', 'true');
 				const title = titleInput.value || 'alphatex-card';
-				const resolution = Number(resSelect.value.replace('x', '')) || 1;
-				const fmt = formatSelect.value as string;
+				const st = this.stateManager?.getState();
+				const working = st?.working;
+				const resolution = working ? Number(working.resolution.replace('x', '')) : 1;
+				const fmt = working ? working.format : (formatSelect.value as string);
 				const mime =
 					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
 				try {
@@ -851,11 +987,19 @@ export class ShareCardModal extends Modal {
 
 		// Copy handler
 		copyBtn.addEventListener('click', async () => {
+			// 复制前强制保存当前工作副本
+			try {
+				this.stateManager?.commit('manual');
+			} catch {
+				/* ignore */
+			}
 			await withExportLock(async () => {
 				exportBtn.setAttribute('disabled', 'true');
 				copyBtn.setAttribute('disabled', 'true');
-				const resolution = Number(resSelect.value.replace('x', '')) || 1;
-				const fmt = formatSelect.value as string;
+				const st = this.stateManager?.getState();
+				const working = st?.working;
+				const resolution = working ? Number(working.resolution.replace('x', '')) : 1;
+				const fmt = working ? working.format : (formatSelect.value as string);
 				const mime =
 					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
 				try {
@@ -879,10 +1023,72 @@ export class ShareCardModal extends Modal {
 			});
 		});
 
+		// 脏标记刷新助手，仅更新当前选中项的 * 状态
+		const refreshDirtyIndicator = () => {
+			try {
+				const st = this.stateManager?.getState();
+				if (!st) return;
+				const defaultId = this.plugin.settings.shareCardDefaultPresetId;
+				for (const opt of Array.from(presetSelect.options)) {
+					const p = this.presetService?.get(opt.value);
+					if (!p) continue;
+					const isActive = st.activePresetId === p.id;
+					const isDirty = isActive && st.dirty;
+					opt.text =
+						p.name + (p.id === defaultId ? ' (默认)' : '') + (isDirty ? ' *' : '');
+				}
+			} catch {
+				/* ignore */
+			}
+		};
+
 		closeBtn.addEventListener('click', () => this.close());
+
+		// 初始化 UI 值（用 working 而不是默认写死）
+		widthInput.value = String(runtime.working.cardWidth);
+		resSelect.value = runtime.working.resolution;
+		formatSelect.value = runtime.working.format;
+		bgModeSelect.value = runtime.working.exportBgMode;
+		if (runtime.working.exportBgMode === 'custom') customColorInput.style.display = '';
+		customColorInput.value = runtime.working.exportBgCustomColor;
+		this.exportBgMode = runtime.working.exportBgMode;
+		this.exportBgCustomColor = runtime.working.exportBgCustomColor;
+		this.showAuthor = runtime.working.showAuthor;
+		this.authorName = runtime.working.authorName;
+		this.authorRemark = runtime.working.authorRemark;
+		this.showAvatar = runtime.working.showAvatar;
+		this.avatarDataUrl = runtime.working.avatarSource?.data || null;
+		// 再次兜底：如果 showAvatar 且 working 有 data 但 avatarDataUrl 仍为空（理论上不会出现），回填
+		if (this.showAvatar && !this.avatarDataUrl) {
+			try {
+				this.avatarDataUrl =
+					this.stateManager?.getState()?.working.avatarSource?.data || null;
+			} catch {
+				/* ignore */
+			}
+		}
+		this.authorPosition = runtime.working.authorPosition;
+		this.authorBg = runtime.working.authorBg;
+		this.authorTextColor = runtime.working.authorTextColor;
+		this.authorFontSize = runtime.working.authorFontSize;
+		this.authorAlign = runtime.working.authorAlign;
+		this.__shareCardDisableLazy = runtime.working.disableLazy;
+		if (this.cardRoot) this.cardRoot.style.width = runtime.working.cardWidth + 'px';
+		this.renderAuthorBlock();
 	}
 
 	onClose() {
+		// 关闭前无条件保存（统一行为）
+		try {
+			this.stateManager?.commit('close');
+		} catch {
+			/* ignore */
+		}
+		try {
+			this.stateManager?.dispose();
+		} catch {
+			/* ignore */
+		}
 		// 记录最后使用的预设（即当前选中，不论是否已保存修改）
 		try {
 			if (this.currentPresetId) {

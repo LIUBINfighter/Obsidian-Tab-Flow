@@ -184,6 +184,37 @@
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 8px;
 }
+
+/* 基础配置卡片，与作者设置视觉一致，字段更少但复用 grid 模式 */
+.share-card-basic-grid {
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	align-items: center;
+	row-gap: 6px;
+	column-gap: 8px;
+	margin-top: 4px;
+	padding: 10px 10px 12px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+}
+.share-card-basic-grid .sc-label {
+	font-weight: 600;
+	font-size: 12px;
+	opacity: 0.9;
+	line-height: 1.2;
+}
+.share-card-basic-grid input[type='text'],
+.share-card-basic-grid input[type='number'],
+.share-card-basic-grid input[type='file'],
+.share-card-basic-grid input[type='color'],
+.share-card-basic-grid select {
+	width: 100%;
+	box-sizing: border-box;
+}
+.share-card-basic-grid input[type='checkbox'] {
+	justify-self: start;
+}
 .share-card-form-grid .sc-label {
 	font-weight: 600;
 	font-size: 12px;
