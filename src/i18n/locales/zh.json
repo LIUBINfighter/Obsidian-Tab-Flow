@@ -362,7 +362,7 @@
 		"copy": "复制",
 		"export": "导出",
 		"close": "关闭",
-		"hint": "拖动移动，Ctrl/Alt+滚轮缩放，双击重置",
+		"hint": "拖动移动，滚轮缩放，双击重置",
 		"previewCreateFailed": "预览创建失败",
 		"align": {
 			"left": "左",

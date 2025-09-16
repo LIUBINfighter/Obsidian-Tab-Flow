@@ -363,7 +363,7 @@
 		"copy": "Copy",
 		"export": "Export",
 		"close": "Close",
-		"hint": "Drag to move, Ctrl/Alt + wheel to zoom, double click to reset",
+		"hint": "Drag to move, wheel to zoom, double click to reset",
 		"previewCreateFailed": "Preview creation failed",
 		"align": {
 			"left": "Left",

@@ -938,7 +938,7 @@ export class ShareCardModal extends Modal {
 		previewWrap.addEventListener(
 			'wheel',
 			(e) => {
-				if (!(e.ctrlKey || e.altKey)) return; // 需要组合键避免与滚动冲突
+				// Always treat wheel as zoom inside the preview (prevent page scroll)
 				e.preventDefault();
 				const delta = e.deltaY;
 				const factor = delta > 0 ? -this.zoomStep : this.zoomStep;
