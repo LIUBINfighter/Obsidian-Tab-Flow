@@ -35,6 +35,31 @@ Release `tab-flow.zip` contains assets in right dictory position, so there is no
 
 Search `Tab Flow` and enable it.
 
+## UseCase
+
+### Customed Play experience
+
+### Write Guitar Tabs like Markdown
+
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/e3a86a1a-3a85-469f-aa07-bda97faaf891" />
+
+
+### Share your riff (Beta)
+
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2f784059-4fef-4345-a6e4-d543ea7b2169" />
+
+
+### Learn alphaTex in built-in interactive playground
+
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/df7ba557-2c15-4db8-bfdf-d011e5362a16" />
+
+## RoadMap
+
+
+
+---
+
+
 # Obsidian Tab Flow Readme (outdated)
 
 Play and create your guitar tabs in Obsidian!
