@@ -2,6 +2,43 @@
 
 Play and create your guitar tabs in Obsidian!
 
+## Install & Enable Play Font
+
+### 1 install by bart42 (recommended, provide detailed version control & beta access)
+
+1. Install Brat plugin (if not yet)
+
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2a0052a2-d0a0-4d76-86ea-731d49d1902a" />
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/80d9a66c-2d29-4c12-b5b7-76f4fca243d6" />
+<!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6f89ad16-5206-4119-a42c-b5d35a19aa37" /> -->
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6a4bc746-f292-4076-be1f-7c43192ba774" />
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/76a27078-f711-4f35-a9d2-23bae403ad56" />
+
+For Security reason, obsidian community plugin can't request from web automatically to prevent potential malicious attack, so it's neccesarry for you to do manually comfirm. 
+
+If you do concern about the assets loading, please refer to this Chapter Security and package using
+(Draft)
+Tab Flow plugin uses a npm package @coderline/alphatab [github repo](https://github.com/CoderLine/alphaTab), the package content (font & sound font) is from .....
+
+Currently Tab Flow plugin downloads assets fromm github release(frozen and immutable release/tag, 0.0.5 for now). If you do concern about the code, please refer to the latest tag & code file (to add)
+(Draft)
+
+
+### 2 download by github release & manual install
+
+<!-- <img width="1946" height="1278" alt="image" src="https://github.com/user-attachments/assets/685965d9-9718-480d-adac-171f00f3c65c" /> -->
+<img width="1946" height="1278" alt="image" src="https://github.com/user-attachments/assets/f6798b91-73d7-4543-8c28-61af013a7e0d" />
+
+Release `tab-flow.zip` contains assets in right dictory position, so there is no need to download assets and reload again.
+
+### 3 Obsidian Community Plugin Market (Currently Unable review queue)
+
+Search `Tab Flow` and enable it.
+
+# Obsidian Tab Flow Readme (outdated)
+
+Play and create your guitar tabs in Obsidian!
+
 <!-- GIF NEEDED -->
 
 <!--
