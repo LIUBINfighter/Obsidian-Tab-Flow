@@ -2,17 +2,66 @@
 
 Play and create your guitar tabs in Obsidian!
 
+## Feature
+
+### Customed Play experience
+
+![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
+
+
+### Write Guitar Tabs like Markdown
+
+`.alphatab`
+
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/e3a86a1a-3a85-469f-aa07-bda97faaf891" />
+
+`alphaTex` codeblock in `.md`
+
+![alphatex-copy-and-paste-writing](https://github.com/user-attachments/assets/ef402b18-9c3f-4e10-8772-a3fd8e50c507)
+
+<!--![alphatex-copy-and-paste-writing-multiview](https://github.com/user-attachments/assets/30d1e922-d4d2-4edd-a68a-8b2f3bada705)-->
+
+
+### Share your riff (Beta)
+
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2f784059-4fef-4345-a6e4-d543ea7b2169" />
+
+
+### Learn alphaTex in built-in interactive playground
+
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/df7ba557-2c15-4db8-bfdf-d011e5362a16" />
+
+Enter the document view by command or click the robbin icon `guitar`.
+
+![alphatex-and-doc](https://github.com/user-attachments/assets/92821b4a-739c-458b-a1f3-1df0d64421ef)
+
+
 ## Install & Enable Play Font
 
 ### 1 install by bart42 (recommended, provide detailed version control & beta access)
 
 1. Install Brat plugin (if not yet)
+- search for BRAT
+- Install & enable BRAT
+2. Add Tab Flow plugin
+- Jump to Option
+- Add beta plugin
+```
+https://github.com/LIUBINfighter/Obsidian-Tab-Flow
+```
+- Select version & Add plugin
+3. Download missing assets
+- Open Tab Flow settingTab
+- Downding missing asset files
+- Reload Tab Flow plugin or Obsidian app
 
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2a0052a2-d0a0-4d76-86ea-731d49d1902a" />
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/80d9a66c-2d29-4c12-b5b7-76f4fca243d6" />
 <!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6f89ad16-5206-4119-a42c-b5d35a19aa37" /> -->
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6a4bc746-f292-4076-be1f-7c43192ba774" />
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/76a27078-f711-4f35-a9d2-23bae403ad56" />
+<!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/76a27078-f711-4f35-a9d2-23bae403ad56" /> -->
+![download-assets](https://github.com/user-attachments/assets/b3ca9620-83df-4517-a005-fd0a3acba0c9)
+
 
 For Security reason, obsidian community plugin can't request from web automatically to prevent potential malicious attack, so it's neccesarry for you to do manually comfirm. 
 
@@ -35,24 +84,6 @@ Release `tab-flow.zip` contains assets in right dictory position, so there is no
 
 Search `Tab Flow` and enable it.
 
-## UseCase
-
-### Customed Play experience
-
-### Write Guitar Tabs like Markdown
-
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/e3a86a1a-3a85-469f-aa07-bda97faaf891" />
-
-
-### Share your riff (Beta)
-
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2f784059-4fef-4345-a6e4-d543ea7b2169" />
-
-
-### Learn alphaTex in built-in interactive playground
-
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/df7ba557-2c15-4db8-bfdf-d011e5362a16" />
-
 ## RoadMap
 
 
@@ -66,7 +97,7 @@ Play and create your guitar tabs in Obsidian!
 
 <!-- GIF NEEDED -->
 
-<!--
+
 ![alphatex-and-doc](https://github.com/user-attachments/assets/92821b4a-739c-458b-a1f3-1df0d64421ef)
 
 ![alphatex-copy-and-paste-writing](https://github.com/user-attachments/assets/ef402b18-9c3f-4e10-8772-a3fd8e50c507)
@@ -76,7 +107,7 @@ Play and create your guitar tabs in Obsidian!
 ![download-assets](https://github.com/user-attachments/assets/b3ca9620-83df-4517-a005-fd0a3acba0c9)
 
 ![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
--->
+
 
 ## Features
 
