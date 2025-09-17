@@ -178,7 +178,7 @@ export class TracksModal extends Modal {
       trackSetting.settingEl.appendChild(taWrapper);
     });
 
-    // === 底部操作区：恢复默认按钮 ===
+    // === 底部操作区：恢复默认按钮（仅清除存储，不主动改动当前播放状态） ===
     const footer = document.createElement('div');
     footer.className = 'tracks-footer-actions';
     const resetBtn = document.createElement('button');
@@ -186,29 +186,11 @@ export class TracksModal extends Modal {
     resetBtn.textContent = t('tracks.resetToDefaults', undefined, '恢复默认');
     resetBtn.onclick = () => {
       try {
-        // 清除 store 中的状态
+        // 仅清除持久化数据；保留当前界面和播放器即时状态
         this.trackStateStore.clearFile(this.filePath);
-        // 应用默认：全部渲染 + 取消 solo/mute + 复位音量与移调
-        if (this.api?.score?.tracks) {
-          for (const track of this.api.score.tracks) {
-            try { this.api.changeTrackSolo([track], false); } catch { /* ignore */ }
-            try { this.api.changeTrackMute([track], false); } catch { /* ignore */ }
-            try { this.api.changeTrackVolume([track], 1); } catch { /* ignore */ }
-            try { this.api.changeTrackTranspositionPitch([track], 0); } catch { /* ignore */ }
-            // 更新本地 UI 基础状态
-            (track.playbackInfo as any).isSolo = false;
-            (track.playbackInfo as any).isMute = false;
-            (track.playbackInfo as any).volume = 1;
-          }
-          // 渲染全部轨道
-          try { this.api.renderTracks(this.api.score.tracks as any); } catch { /* ignore */ }
-        }
-        // 重置本地选择集合
-        this.selectedTracks = new Set(this.tracks);
-        // 直接关闭并重新打开以刷新 UI
-        this.close();
-        const reopen = new TracksModal(this.app, this.tracks, this.filePath, this.api, this.eventBus, this.trackStateStore);
-        reopen.open();
+        // 不修改 this.api 当前状态，用户关闭后重新打开或重新加载文件时会按默认（或当前 API 实际）表现
+        // 给出轻量反馈（可选）
+        // new Notice('已清除持久化音轨状态'); // 如需要可放开
       } catch (e) {
         console.warn('[TracksModal] 重置轨道状态失败', e);
       }
