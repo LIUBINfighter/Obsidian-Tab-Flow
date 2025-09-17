@@ -177,6 +177,44 @@ export class TracksModal extends Modal {
       taWrapper.appendChild(taLabel); taWrapper.appendChild(taSlider); taWrapper.appendChild(taValue); taWrapper.appendChild(taInput);
       trackSetting.settingEl.appendChild(taWrapper);
     });
+
+    // === 底部操作区：恢复默认按钮 ===
+    const footer = document.createElement('div');
+    footer.className = 'tracks-footer-actions';
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'mod-warning';
+    resetBtn.textContent = t('tracks.resetToDefaults', undefined, '恢复默认');
+    resetBtn.onclick = () => {
+      try {
+        // 清除 store 中的状态
+        this.trackStateStore.clearFile(this.filePath);
+        // 应用默认：全部渲染 + 取消 solo/mute + 复位音量与移调
+        if (this.api?.score?.tracks) {
+          for (const track of this.api.score.tracks) {
+            try { this.api.changeTrackSolo([track], false); } catch { /* ignore */ }
+            try { this.api.changeTrackMute([track], false); } catch { /* ignore */ }
+            try { this.api.changeTrackVolume([track], 1); } catch { /* ignore */ }
+            try { this.api.changeTrackTranspositionPitch([track], 0); } catch { /* ignore */ }
+            // 更新本地 UI 基础状态
+            (track.playbackInfo as any).isSolo = false;
+            (track.playbackInfo as any).isMute = false;
+            (track.playbackInfo as any).volume = 1;
+          }
+          // 渲染全部轨道
+          try { this.api.renderTracks(this.api.score.tracks as any); } catch { /* ignore */ }
+        }
+        // 重置本地选择集合
+        this.selectedTracks = new Set(this.tracks);
+        // 直接关闭并重新打开以刷新 UI
+        this.close();
+        const reopen = new TracksModal(this.app, this.tracks, this.filePath, this.api, this.eventBus, this.trackStateStore);
+        reopen.open();
+      } catch (e) {
+        console.warn('[TracksModal] 重置轨道状态失败', e);
+      }
+    };
+    footer.appendChild(resetBtn);
+    this.contentEl.appendChild(footer);
   }
 
   onClose() {
