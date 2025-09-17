@@ -85,6 +85,26 @@ export interface TabFlowSettings {
 		autosaveDefaultPreset?: boolean; // 多预设时是否对默认预设启用自动保存（默认 true）
 		autosaveDelayMs?: number; // 自动保存延迟（默认 800）
 	};
+	/** 新增：全局音轨状态存储（TrackStateStore 持久化数据） */
+	trackStates?: {
+		version: 1;
+		files: Record<
+			string,
+			{
+				selectedTracks?: number[];
+				trackSettings?: Record<
+					string,
+					{
+						solo?: boolean;
+						mute?: boolean;
+						volume?: number;
+						transpose?: number;
+						transposeAudio?: number;
+					}
+				>;
+			}
+		>;
+	};
 }
 
 export interface ShareCardPresetV1 {
@@ -229,4 +249,6 @@ export const DEFAULT_SETTINGS: TabFlowSettings = {
 	shareCardPresets: [],
 	// 可选行为配置（保持空对象，使用代码内默认值）
 	shareCardOptions: {},
+	// 初始空的轨道状态存储结构
+	trackStates: { version: 1, files: {} },
 };

@@ -9,8 +9,9 @@ import { EventBus, isMessy, formatTime, setupHorizontalScroll } from '../utils';
 import { AlphaTabService } from '../services/AlphaTabService';
 import { ExternalMediaService } from '../services/ExternalMediaService';
 import { createPlayBar } from '../components/PlayBar';
-import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 导入新的服务
+// import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 旧的基于 localStorage 的服务，现替换为 TrackStateStore
 import { TracksModal } from '../components/TracksModal'; // 导入 TracksModal
+import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
 import { t } from 'i18n';
 
@@ -44,7 +45,8 @@ export class TabView extends FileView {
 	private fileModifyHandler: (file: TFile) => void;
 	public eventBus: EventBus; // Public for external interaction
 	private alphaTabService: AlphaTabService;
-	private scorePersistenceService: ScorePersistenceService; // 新增服务实例
+	// private scorePersistenceService: ScorePersistenceService; // 已弃用，使用 trackStateStore
+	private trackStateStore: TrackStateStore;
 	private _api!: alphaTab.AlphaTabApi;
 	private plugin: Plugin;
 	private resources: AlphaTabResources;
@@ -91,7 +93,8 @@ export class TabView extends FileView {
 		this.plugin = plugin;
 		this.resources = resources;
 		this.eventBus = eventBus ?? new EventBus();
-		this.scorePersistenceService = new ScorePersistenceService(); // 初始化服务
+		// 从插件实例获取 TrackStateStore
+		this.trackStateStore = (plugin as any).trackStateStore as TrackStateStore;
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
@@ -144,20 +147,7 @@ export class TabView extends FileView {
 			}
 		}
 
-		// 保存音轨设置（通过 ScorePersistenceService 从 localStorage 获取）
-		if (this.currentFile?.path) {
-			try {
-				const raw = localStorage.getItem(`tabflow-viewstate:${this.currentFile.path}`);
-				if (raw) {
-					const savedState = JSON.parse(raw);
-					if (savedState.trackSettings) {
-						state.trackSettings = savedState.trackSettings;
-					}
-				}
-			} catch (e) {
-				console.warn('[TabView] 获取音轨设置状态失败:', e);
-			}
-		}
+		// 视图持久化不再保存 trackSettings（交由 TrackStateStore 插件级处理）
 
 		return state;
 	}
@@ -500,7 +490,7 @@ export class TabView extends FileView {
 			this.eventBus.publish('命令:重建AlphaTabApi');
 		});
 
-		// 服务层 API 重建完成后，更新本视图引用并重新加载当前文件
+		// 服务层 API 重建完成后，更新本视图引用并重新加载当前文件，并应用 TrackStateStore 状态
 		this.eventBus.subscribe('状态:API已重建', (newApi: alphaTab.AlphaTabApi) => {
 			try {
 				this._api = newApi;
@@ -519,10 +509,47 @@ export class TabView extends FileView {
 							(score as unknown as { filePath?: string }).filePath =
 								this.currentFile?.path;
 						}
-						this.scorePersistenceService.loadScoreViewState(
-							this._api,
-							this.currentFile?.path || ''
-						);
+						// 应用 TrackStateStore 中的状态到 api
+						const filePath = this.currentFile?.path || '';
+						if (filePath) {
+							// 确保有默认条目
+							this.trackStateStore.ensureDefaultsFromApi(filePath, this._api);
+							const state = this.trackStateStore.getFileState(filePath);
+							// 应用选中音轨
+							if (state.selectedTracks && state.selectedTracks.length) {
+								const tracks = this._api.score?.tracks || [];
+								const selected = tracks.filter((t) =>
+									state.selectedTracks!.includes(t.index)
+								);
+								if (selected.length) this._api.renderTracks(selected as any);
+							}
+							// 应用轨道参数
+							if (state.trackSettings && this._api.score?.tracks) {
+								for (const track of this._api.score.tracks) {
+									const s = state.trackSettings[String(track.index)];
+									if (!s) continue;
+									try {
+										if (typeof s.solo === 'boolean')
+											this._api.changeTrackSolo([track], s.solo);
+										if (typeof s.mute === 'boolean')
+											this._api.changeTrackMute([track], s.mute);
+										if (typeof s.volume === 'number')
+											this._api.changeTrackVolume(
+												[track],
+												Math.max(0, Math.min(16, s.volume)) / 16
+											);
+										if (typeof s.transpose === 'number')
+											this._api.changeTrackTranspositionPitch(
+												[track],
+												s.transpose
+											);
+										// transposeAudio 当前仅逻辑存储，暂无 API 调用
+									} catch (e) {
+										console.warn('[TabView] 应用轨道参数失败', e);
+									}
+								}
+							}
+						}
 
 						this.leaf?.setViewState(
 							{
@@ -554,7 +581,7 @@ export class TabView extends FileView {
 			this.scrollToBottom();
 		});
 
-		// 订阅 UI:showTracksModal 事件，弹出 TracksModal
+		// 订阅 UI:showTracksModal 事件，弹出 TracksModal（使用 TrackStateStore 即时模式）
 		this.eventBus.subscribe('UI:showTracksModal', () => {
 			const api = this._api || this.alphaTabService.getApi();
 			const tracks = api.score?.tracks || [];
@@ -562,38 +589,23 @@ export class TabView extends FileView {
 				new Notice('没有可用的音轨');
 				return;
 			}
+			const filePath = this.currentFile?.path || '';
 			const modal = new TracksModal(
 				this.app,
 				tracks,
-				(selectedTracks: alphaTab.model.Track[]) => {
-					if (selectedTracks && selectedTracks.length > 0) {
-						api.renderTracks(selectedTracks);
-						// 音轨选择变化时请求保存布局
-						this.app.workspace.requestSaveLayout();
-					}
-				},
+				filePath,
 				api,
 				this.eventBus,
-				this.scorePersistenceService // 传递 ScorePersistenceService
+				this.trackStateStore
 			);
 			modal.open();
 		});
 
-		// 监听音轨参数变化事件，在参数变化时请求保存布局
-		this.eventBus.subscribe('track:solo', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:mute', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:volume', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:transpose', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:transposeAudio', () => {
-			this.app.workspace.requestSaveLayout();
+		// Track 状态变化统一由 TrackStateStore 处理；如需触发布局保存，可监听 store 事件
+		this.trackStateStore.on((ev) => {
+			if (ev.filePath === this.currentFile?.path) {
+				this.app.workspace.requestSaveLayout();
+			}
 		});
 
 		// 订阅设置滚动模式事件
