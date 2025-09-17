@@ -58,6 +58,49 @@ export class TabView extends FileView {
 	private horizontalScrollCleanup?: () => void; // 用于清理横向滚动监听器
 	private settingsAction: HTMLElement | null = null;
 
+	/**
+	 * 将 TrackStateStore 中持久化的音轨状态应用到当前 API。
+	 * 1. 确保存在默认条目（根据当前 score.tracks 初始化缺失项）
+	 * 2. 先应用每个轨道的 solo/mute/volume/transpose（不触发重新渲染）
+	 * 3. 再根据 selectedTracks 渲染所选轨道
+	 */
+	private _applyStoredTrackState() {
+		try {
+			if (!this._api || !this._api.score) return;
+			const filePath = this.currentFile?.path || '';
+			if (!filePath) return;
+			this.trackStateStore.ensureDefaultsFromApi(filePath, this._api);
+			const state = this.trackStateStore.getFileState(filePath);
+			// 参数应用
+			if (state.trackSettings && this._api.score?.tracks) {
+				for (const track of this._api.score.tracks) {
+					const s = state.trackSettings[String(track.index)];
+					if (!s) continue;
+					try {
+						if (typeof s.solo === 'boolean') this._api.changeTrackSolo([track], s.solo);
+						if (typeof s.mute === 'boolean') this._api.changeTrackMute([track], s.mute);
+						if (typeof s.volume === 'number')
+							this._api.changeTrackVolume([track], Math.max(0, Math.min(16, s.volume)) / 16);
+						if (typeof s.transpose === 'number')
+							this._api.changeTrackTranspositionPitch([track], s.transpose);
+						// transposeAudio 暂无 API，可后续扩展
+					} catch (e) {
+						console.warn('[TabView] 应用轨道参数失败', e);
+					}
+				}
+			}
+			// 轨道选择（渲染）
+			if (state.selectedTracks && state.selectedTracks.length) {
+				const tracks = this._api.score.tracks.filter((t) =>
+					state.selectedTracks!.includes(t.index)
+				);
+				if (tracks.length) this._api.renderTracks(tracks as any);
+			}
+		} catch (e) {
+			console.warn('[TabView] _applyStoredTrackState 执行失败', e);
+		}
+	}
+
 	private isAudioLoaded(): boolean {
 		try {
 			if (!this._api?.player) {
@@ -380,12 +423,13 @@ export class TabView extends FileView {
 		// 渲染 DebugBar
 		this._renderDebugBarIfEnabled();
 
-		// 监听 scoreLoaded，乐谱加载后挂载播放栏
+		// 监听 scoreLoaded：首次加载时挂载播放栏并应用持久化音轨状态
 		if (this._api && this._api.scoreLoaded) {
 			this._api.scoreLoaded.on(() => {
 				setTimeout(() => {
 					this._mountPlayBarInternal();
 					this.configureScrollElement(); // 确保在 PlayBar 挂载后配置滚动元素
+					this._applyStoredTrackState(); // 首次加载应用音轨状态
 				}, 100);
 			});
 		} else {
@@ -393,6 +437,7 @@ export class TabView extends FileView {
 			setTimeout(() => {
 				this._mountPlayBarInternal();
 				this.configureScrollElement();
+				this._applyStoredTrackState();
 			}, 500);
 		}
 
@@ -509,47 +554,8 @@ export class TabView extends FileView {
 							(score as unknown as { filePath?: string }).filePath =
 								this.currentFile?.path;
 						}
-						// 应用 TrackStateStore 中的状态到 api
-						const filePath = this.currentFile?.path || '';
-						if (filePath) {
-							// 确保有默认条目
-							this.trackStateStore.ensureDefaultsFromApi(filePath, this._api);
-							const state = this.trackStateStore.getFileState(filePath);
-							// 应用选中音轨
-							if (state.selectedTracks && state.selectedTracks.length) {
-								const tracks = this._api.score?.tracks || [];
-								const selected = tracks.filter((t) =>
-									state.selectedTracks!.includes(t.index)
-								);
-								if (selected.length) this._api.renderTracks(selected as any);
-							}
-							// 应用轨道参数
-							if (state.trackSettings && this._api.score?.tracks) {
-								for (const track of this._api.score.tracks) {
-									const s = state.trackSettings[String(track.index)];
-									if (!s) continue;
-									try {
-										if (typeof s.solo === 'boolean')
-											this._api.changeTrackSolo([track], s.solo);
-										if (typeof s.mute === 'boolean')
-											this._api.changeTrackMute([track], s.mute);
-										if (typeof s.volume === 'number')
-											this._api.changeTrackVolume(
-												[track],
-												Math.max(0, Math.min(16, s.volume)) / 16
-											);
-										if (typeof s.transpose === 'number')
-											this._api.changeTrackTranspositionPitch(
-												[track],
-												s.transpose
-											);
-										// transposeAudio 当前仅逻辑存储，暂无 API 调用
-									} catch (e) {
-										console.warn('[TabView] 应用轨道参数失败', e);
-									}
-								}
-							}
-						}
+						// API 重建后再次应用持久化音轨状态
+						this._applyStoredTrackState();
 
 						this.leaf?.setViewState(
 							{
