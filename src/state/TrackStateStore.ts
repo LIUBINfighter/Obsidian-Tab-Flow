@@ -144,8 +144,8 @@ export class TrackStateStore {
 
 	/** 可选：清理指定文件的状态 */
 	clearFile(filePath: string) {
-		delete this.data.files[filePath];
-		this.emit(filePath, {}, {});
+		this.data.files[filePath] = {};
+		this.emit(filePath, this.data.files[filePath], {});
 		this.saveDebounced();
 	}
 
