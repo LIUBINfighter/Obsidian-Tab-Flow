@@ -544,241 +544,159 @@ export class ShareCardModal extends Modal {
 		const activeFile = this.app.workspace.getActiveFile();
 		titleInput.value = activeFile ? activeFile.basename : 'alphatex-card';
 
-		// 基础配置卡片
-		const basicCard = left.createDiv({ cls: 'share-card-basic-grid' });
-		// 宽度
-		basicCard.createEl('div', { text: t('shareCard.cardWidth'), cls: 'sc-label' });
-		const widthInput = basicCard.createEl('input') as HTMLInputElement;
-		widthInput.type = 'number';
-		widthInput.value = '800';
-		// 分辨率
-		basicCard.createEl('div', { text: t('shareCard.resolution'), cls: 'sc-label' });
-		const resSelect = basicCard.createEl('select') as HTMLSelectElement;
-		['1x', '2x', '3x'].forEach((r) => {
-			const opt = resSelect.createEl('option', { text: r });
-			opt.value = r;
-		});
-		resSelect.value = '2x';
-		resSelect.addEventListener('change', () => {
-			this.stateManager?.updateField('resolution', resSelect.value as any);
-			refreshDirtyIndicator();
-		});
-		// 格式
-		basicCard.createEl('div', { text: t('shareCard.format'), cls: 'sc-label' });
-		const formatSelect = basicCard.createEl('select') as HTMLSelectElement;
-		[
-			['png', 'png'],
-			['jpg', 'jpg'],
-			['webp', 'webp'],
-		].forEach(([t, v]) => {
-			const opt = formatSelect.createEl('option', { text: String(t) });
-			opt.value = String(v);
-		});
-		formatSelect.value = 'png';
-		formatSelect.addEventListener('change', () => {
-			this.stateManager?.updateField('format', formatSelect.value as any);
-			refreshDirtyIndicator();
-		});
-		// 导出背景模式
-		basicCard.createEl('div', { text: t('shareCard.exportBg.label'), cls: 'sc-label' });
-		const bgModeSelect = basicCard.createEl('select') as HTMLSelectElement;
-		[
-			[t('shareCard.exportBg.options.default'), 'default'],
-			[t('shareCard.exportBg.options.auto'), 'auto'],
-			[t('shareCard.exportBg.options.custom'), 'custom'],
-		].forEach(([label, v]) => {
-			const opt = bgModeSelect.createEl('option', { text: String(label) });
-			opt.value = String(v);
-		});
-		bgModeSelect.value = 'default';
-		// 自定义颜色输入
-		const customColorLabel = basicCard.createEl('div', {
-			text: t('shareCard.customColor'),
-			cls: 'sc-label',
-		});
-		const customColorInput = basicCard.createEl('input') as HTMLInputElement;
-		customColorInput.type = 'color';
-		// ensure stored value is normalized hex
-		customColorInput.value = normalizeColorToHex(this.exportBgCustomColor);
-		customColorInput.style.display = 'none';
-		// 禁用懒加载
-		basicCard.createEl('div', { text: t('shareCard.disableLazyLabel'), cls: 'sc-label' });
-		const lazyWrapInner = basicCard.createDiv({ cls: 'share-card-field-checkbox' });
-		const disableLazyId2 = 'share-disable-lazy-' + Date.now();
-		const lazyCb = lazyWrapInner.createEl('input', {
-			attr: { type: 'checkbox', id: disableLazyId2 },
-		}) as HTMLInputElement;
-		const lazyLabel2 = lazyWrapInner.createEl('label', {
-			text: t('shareCard.disableLazy'),
-			attr: { for: disableLazyId2 },
-		});
-		lazyLabel2.style.marginLeft = '4px';
-		// 旧的 lazyWrap/lazyCb 移除（保持变量名一致用于后续逻辑）
-		// END 基础配置卡片
-
-		bgModeSelect.addEventListener('change', () => {
-			this.exportBgMode = bgModeSelect.value as any;
-			this.stateManager?.updateField('exportBgMode', this.exportBgMode);
-			const st = this.stateManager?.getState();
-			if (st) st.working.exportBgMode = this.exportBgMode; // 保持同步
-			if (this.exportBgMode === 'custom') {
-				customColorLabel.textContent = t('shareCard.customColor');
-				customColorLabel.style.display = '';
-				customColorInput.style.display = '';
-			} else {
-				customColorLabel.style.display = 'none';
-				customColorInput.style.display = 'none';
+		// 基础配置卡片（抽离为组件）
+		// initial 和 callbacks 传入方便把 stateManager wiring 封装在此处
+		// createBasicControls 返回一组控件引用
+		const basic = (await import('./ShareCardBasicControls')).createBasicControls(
+			left,
+			{
+				t,
+				cardWidth: runtime.working.cardWidth,
+				resolution: runtime.working.resolution,
+				format: runtime.working.format,
+				exportBgMode: runtime.working.exportBgMode,
+				exportBgCustomColor: runtime.working.exportBgCustomColor,
+				disableLazy: runtime.working.disableLazy,
+			},
+			{
+				onWidthChange: (w: number) => {
+					this.stateManager?.updateField('cardWidth', w);
+					if (this.cardRoot) this.cardRoot.style.width = w + 'px';
+					try {
+						this.playgroundHandle?.refresh();
+					} catch (e) {
+						/* ignore refresh errors */
+					}
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onResolutionChange: (r: string) => {
+					this.stateManager?.updateField('resolution', r as any);
+					refreshDirtyIndicator();
+				},
+				onFormatChange: (f: string) => {
+					this.stateManager?.updateField('format', f as any);
+					refreshDirtyIndicator();
+				},
+				onExportBgModeChange: (m: string) => {
+					this.exportBgMode = m as any;
+					this.stateManager?.updateField('exportBgMode', this.exportBgMode);
+					const st = this.stateManager?.getState();
+					if (st) st.working.exportBgMode = this.exportBgMode;
+					refreshDirtyIndicator();
+				},
+				onCustomColorChange: (hex: string) => {
+					const h = normalizeColorToHex(hex);
+					this.exportBgCustomColor = h;
+					this.stateManager?.updateField('exportBgCustomColor', h);
+					refreshDirtyIndicator();
+				},
+				onLazyChange: (v: boolean) => {
+					this.stateManager?.updateField('disableLazy', v);
+					this.__shareCardDisableLazy = v;
+					refreshDirtyIndicator();
+				},
 			}
-			refreshDirtyIndicator();
-		});
-		customColorInput.addEventListener('change', () => {
-			if (customColorInput.value) {
-				const hex = normalizeColorToHex(customColorInput.value);
-				this.exportBgCustomColor = hex;
-				this.stateManager?.updateField('exportBgCustomColor', this.exportBgCustomColor);
-			}
-			refreshDirtyIndicator();
-		});
+		);
+		const widthInput = basic.widthInput;
+		const resSelect = basic.resSelect;
+		const formatSelect = basic.formatSelect;
+		const bgModeSelect = basic.bgModeSelect;
+		const customColorLabel = basic.customColorLabel;
+		const customColorInput = basic.customColorInput;
+		const lazyCb = basic.lazyCb;
 
-		lazyCb.checked = runtime.working.disableLazy;
-
-		// --- 作者信息相关（modal-local，不持久化） ---
-		// Compact two-column form grid for author settings
-		const authorSection = left.createDiv({ cls: 'share-card-form-grid' });
-		authorSection.createEl('div', { text: t('shareCard.showAuthor'), cls: 'sc-label' });
-		const authorShowCb = authorSection.createEl('input', {
-			attr: { type: 'checkbox' },
-		}) as HTMLInputElement;
-		authorShowCb.checked = runtime.working.showAuthor;
-		authorShowCb.addEventListener('change', () => {
-			this.showAuthor = authorShowCb.checked;
-			this.stateManager?.updateField('showAuthor', this.showAuthor);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-		authorSection.createEl('div', { text: t('shareCard.authorName'), cls: 'sc-label' });
-		const authorNameInput = authorSection.createEl('input') as HTMLInputElement;
-		authorNameInput.type = 'text';
-		authorNameInput.value = runtime.working.authorName;
-		authorNameInput.addEventListener('input', () => {
-			this.authorName = authorNameInput.value;
-			this.stateManager?.updateField('authorName', this.authorName);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-		authorSection.createEl('div', { text: t('shareCard.authorRemark'), cls: 'sc-label' });
-		const authorRemarkInput = authorSection.createEl('input') as HTMLInputElement;
-		authorRemarkInput.type = 'text';
-		authorRemarkInput.value = runtime.working.authorRemark;
-		authorRemarkInput.addEventListener('input', () => {
-			this.authorRemark = authorRemarkInput.value;
-			this.stateManager?.updateField('authorRemark', this.authorRemark);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-		authorSection.createEl('div', { text: t('shareCard.showAvatar'), cls: 'sc-label' });
-		const authorAvatarCb = authorSection.createEl('input', {
-			attr: { type: 'checkbox' },
-		}) as HTMLInputElement;
-		authorAvatarCb.checked = runtime.working.showAvatar;
-		authorAvatarCb.addEventListener('change', () => {
-			this.showAvatar = authorAvatarCb.checked;
-			this.stateManager?.updateField('showAvatar', this.showAvatar);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-		authorSection.createEl('div', { text: t('shareCard.avatarUpload'), cls: 'sc-label' });
-		const avatarInput = authorSection.createEl('input') as HTMLInputElement;
-		avatarInput.type = 'file';
-		avatarInput.accept = 'image/*';
-		avatarInput.addEventListener('change', async () => {
-			const f = avatarInput.files?.[0];
-			if (!f) return;
-			const arr = await f.arrayBuffer();
-			const blob = new Blob([arr], { type: f.type });
-			const reader = new FileReader();
-			reader.onload = () => {
-				this.avatarDataUrl = String(reader.result);
-				// 将头像持久化到 working avatarSource
-				if (this.avatarDataUrl) {
+		// 作者信息部分（抽离）
+		const author = (await import('./ShareCardAuthorBlock')).createAuthorBlock(
+			left,
+			{
+				t,
+				showAuthor: runtime.working.showAuthor,
+				authorName: runtime.working.authorName,
+				authorRemark: runtime.working.authorRemark,
+				showAvatar: runtime.working.showAvatar,
+				authorAlign: runtime.working.authorAlign,
+				authorPosition: runtime.working.authorPosition,
+				authorBg: runtime.working.authorBg,
+				authorTextColor: runtime.working.authorTextColor,
+				authorFontSize: runtime.working.authorFontSize,
+			},
+			{
+				onShowAuthor: (v: boolean) => {
+					this.showAuthor = v;
+					this.stateManager?.updateField('showAuthor', v);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAuthorName: (v: string) => {
+					this.authorName = v;
+					this.stateManager?.updateField('authorName', v);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAuthorRemark: (v: string) => {
+					this.authorRemark = v;
+					this.stateManager?.updateField('authorRemark', v);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onShowAvatar: (v: boolean) => {
+					this.showAvatar = v;
+					this.stateManager?.updateField('showAvatar', v);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAvatarChange: (dataUrl: string) => {
+					this.avatarDataUrl = dataUrl;
 					this.stateManager?.updateField('avatarSource', {
 						type: 'data-url',
-						data: this.avatarDataUrl,
+						data: dataUrl,
 					});
-				}
-				this.renderAuthorBlock();
-				refreshDirtyIndicator();
-			};
-			reader.readAsDataURL(blob);
-		});
-
-		authorSection.createEl('div', { text: t('shareCard.authorAlign'), cls: 'sc-label' });
-		const authorAlignSelect = authorSection.createEl('select') as HTMLSelectElement;
-		[
-			[t('shareCard.align.left'), 'left'],
-			[t('shareCard.align.center'), 'center'],
-			[t('shareCard.align.right'), 'right'],
-		].forEach(([t, v]) => {
-			const opt = authorAlignSelect.createEl('option', { text: t });
-			opt.value = v;
-		});
-		authorAlignSelect.value = runtime.working.authorAlign;
-		authorAlignSelect.addEventListener('change', () => {
-			this.authorAlign = authorAlignSelect.value as any;
-			this.stateManager?.updateField('authorAlign', this.authorAlign);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-
-		authorSection.createEl('div', { text: t('shareCard.authorPosition'), cls: 'sc-label' });
-		const authorPosSelect = authorSection.createEl('select') as HTMLSelectElement;
-		[
-			[t('shareCard.position.top'), 'top'],
-			[t('shareCard.position.bottom'), 'bottom'],
-		].forEach(([label, v]) => {
-			const opt = authorPosSelect.createEl('option', { text: String(label) });
-			opt.value = String(v);
-		});
-		authorPosSelect.value = runtime.working.authorPosition;
-		authorPosSelect.addEventListener('change', () => {
-			this.authorPosition = authorPosSelect.value as any;
-			this.stateManager?.updateField('authorPosition', this.authorPosition);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-
-		authorSection.createEl('div', { text: t('shareCard.authorBg'), cls: 'sc-label' });
-		const authorBgInput = authorSection.createEl('input') as HTMLInputElement;
-		authorBgInput.type = 'color';
-		authorBgInput.value = runtime.working.authorBg || '#ffffff';
-		authorBgInput.addEventListener('change', () => {
-			this.authorBg = authorBgInput.value;
-			this.stateManager?.updateField('authorBg', this.authorBg);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-
-		authorSection.createEl('div', { text: t('shareCard.authorTextColor'), cls: 'sc-label' });
-		const authorColorInput = authorSection.createEl('input') as HTMLInputElement;
-		authorColorInput.type = 'color';
-		authorColorInput.value = runtime.working.authorTextColor || '#000000';
-		authorColorInput.addEventListener('change', () => {
-			this.authorTextColor = authorColorInput.value;
-			this.stateManager?.updateField('authorTextColor', this.authorTextColor);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
-
-		authorSection.createEl('div', { text: t('shareCard.authorFontSize'), cls: 'sc-label' });
-		const authorFontInput = authorSection.createEl('input') as HTMLInputElement;
-		authorFontInput.type = 'number';
-		authorFontInput.value = String(runtime.working.authorFontSize);
-		authorFontInput.addEventListener('change', () => {
-			this.authorFontSize = Number(authorFontInput.value) || 13;
-			this.stateManager?.updateField('authorFontSize', this.authorFontSize);
-			this.renderAuthorBlock();
-			refreshDirtyIndicator();
-		});
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAuthorAlign: (v: string) => {
+					this.authorAlign = v as any;
+					this.stateManager?.updateField('authorAlign', v as any);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAuthorPosition: (v: string) => {
+					this.authorPosition = v as any;
+					this.stateManager?.updateField('authorPosition', v as any);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAuthorBg: (v: string) => {
+					this.authorBg = v;
+					this.stateManager?.updateField('authorBg', v);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAuthorColor: (v: string) => {
+					this.authorTextColor = v;
+					this.stateManager?.updateField('authorTextColor', v);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+				onAuthorFontSize: (v: number) => {
+					this.authorFontSize = v;
+					this.stateManager?.updateField('authorFontSize', v);
+					this.renderAuthorBlock();
+					refreshDirtyIndicator();
+				},
+			}
+		);
+		const authorShowCb = author.authorShowCb;
+		const authorNameInput = author.authorNameInput;
+		const authorRemarkInput = author.authorRemarkInput;
+		const authorAvatarCb = author.authorAvatarCb;
+		// avatarInput provided by author component but not used here
+		const authorAlignSelect = author.authorAlignSelect;
+		const authorPosSelect = author.authorPosSelect;
+		const authorBgInput = author.authorBgInput;
+		const authorColorInput = author.authorColorInput;
+		const authorFontInput = author.authorFontInput;
 
 		// Buttons
 		const btnRow = left.createDiv({ cls: 'share-card-actions' });
