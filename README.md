@@ -6,7 +6,11 @@ Play and create your guitar tabs in Obsidian!
 
 ## Feature
 
+
+
 ### Customed Play experience
+
+
 
 ![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
 
@@ -62,6 +66,7 @@ https://github.com/LIUBINfighter/Obsidian-Tab-Flow
 <!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6f89ad16-5206-4119-a42c-b5d35a19aa37" /> -->
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6a4bc746-f292-4076-be1f-7c43192ba774" />
 <!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/76a27078-f711-4f35-a9d2-23bae403ad56" /> -->
+
 ![download-assets](https://github.com/user-attachments/assets/b3ca9620-83df-4517-a005-fd0a3acba0c9)
 
 
