@@ -37,6 +37,15 @@ export class TracksModal extends Modal {
 		this.titleEl.setText('');
 		this.uiRefs.clear();
 
+		// 确保 Store 中存在基于当前 API 的默认值（不直接改动 API）
+		try {
+			if (this.filePath) {
+				this.trackStateStore.ensureDefaultsFromApi(this.filePath, this.api);
+			}
+		} catch {
+			// ignore
+		}
+
 		// 读全局状态
 		const globalState = this.filePath ? this.trackStateStore.getFileState(this.filePath) : {};
 		const savedTrackSettings = globalState.trackSettings || {};
@@ -107,10 +116,11 @@ export class TracksModal extends Modal {
 
 			// === 独奏按钮 ===
 			trackSetting.addExtraButton((btn) => {
-				const setting = savedTrackSettings[String(track.index)] || {};
-				if (typeof setting.solo === 'boolean') (track.playbackInfo as any).isSolo = setting.solo;
 				const updateUI = () => {
-					const current = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)] || {};
+					const current =
+						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
+							String(track.index)
+						] || {};
 					const isSolo = current.solo ?? (track.playbackInfo as any).isSolo;
 					btn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
 						isSolo ? t('tracks.unsolo') : t('tracks.solo')
@@ -119,7 +129,12 @@ export class TracksModal extends Modal {
 				};
 				updateUI();
 				btn.onClick(() => {
-					const prev = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)]?.solo ?? (track.playbackInfo as any).isSolo ?? false;
+					const prev =
+						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
+							String(track.index)
+						]?.solo ??
+						(track.playbackInfo as any).isSolo ??
+						false;
 					const newSolo = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 						solo: newSolo,
@@ -135,10 +150,11 @@ export class TracksModal extends Modal {
 
 			// === 静音按钮 ===
 			trackSetting.addExtraButton((btn) => {
-				const setting = savedTrackSettings[String(track.index)] || {};
-				if (typeof setting.mute === 'boolean') (track.playbackInfo as any).isMute = setting.mute;
 				const updateUI = () => {
-					const current = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)] || {};
+					const current =
+						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
+							String(track.index)
+						] || {};
 					const isMute = current.mute ?? (track.playbackInfo as any).isMute;
 					btn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(
 						isMute ? t('tracks.unmute') : t('tracks.mute')
@@ -147,7 +163,12 @@ export class TracksModal extends Modal {
 				};
 				updateUI();
 				btn.onClick(() => {
-					const prev = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)]?.mute ?? (track.playbackInfo as any).isMute ?? false;
+					const prev =
+						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
+							String(track.index)
+						]?.mute ??
+						(track.playbackInfo as any).isMute ??
+						false;
 					const newMute = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 						mute: newMute,
@@ -182,12 +203,20 @@ export class TracksModal extends Modal {
 			volInput.min = '0';
 			volInput.max = '16';
 			volInput.value = volSlider.value;
+			// 简易防抖，避免高频更新导致过多 Store 事件与 API 调用，同时确保最后一次值被应用
+			let volDebounce: number | null = null;
 			const applyVolume = (v: number) => {
 				v = Math.max(0, Math.min(16, v));
-				this.trackStateStore.updateTrackSetting(this.filePath, track.index, { volume: v });
-				volSlider.value = String(v);
-				volValue.textContent = String(v);
-				volInput.value = String(v);
+				if (volDebounce) window.clearTimeout(volDebounce);
+				volDebounce = window.setTimeout(() => {
+					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
+						volume: v,
+					});
+					volSlider.value = String(v);
+					volValue.textContent = String(v);
+					volInput.value = String(v);
+					volDebounce = null;
+				}, 60);
 			};
 			volSlider.oninput = (e) => applyVolume(Number((e.target as HTMLInputElement).value));
 			volInput.onchange = (e) => applyVolume(Number((e.target as HTMLInputElement).value));
@@ -225,14 +254,19 @@ export class TracksModal extends Modal {
 			trInput.min = '-12';
 			trInput.max = '12';
 			trInput.value = trSlider.value;
+			let trDebounce: number | null = null;
 			const applyTranspose = (v: number) => {
 				v = Math.max(-12, Math.min(12, v));
-				this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
-					transpose: v,
-				});
-				trSlider.value = String(v);
-				trValue.textContent = String(v);
-				trInput.value = String(v);
+				if (trDebounce) window.clearTimeout(trDebounce);
+				trDebounce = window.setTimeout(() => {
+					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
+						transpose: v,
+					});
+					trSlider.value = String(v);
+					trValue.textContent = String(v);
+					trInput.value = String(v);
+					trDebounce = null;
+				}, 60);
 			};
 			trSlider.oninput = (e) => applyTranspose(Number((e.target as HTMLInputElement).value));
 			trInput.onchange = (e) => applyTranspose(Number((e.target as HTMLInputElement).value));
@@ -270,15 +304,20 @@ export class TracksModal extends Modal {
 			taInput.min = '-12';
 			taInput.max = '12';
 			taInput.value = taSlider.value;
+			let taDebounce: number | null = null;
 			const applyTa = (v: number) => {
 				v = Math.max(-12, Math.min(12, v));
 				// 暂无 API；仅存储逻辑值
-				this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
-					transposeAudio: v,
-				});
-				taSlider.value = String(v);
-				taValue.textContent = String(v);
-				taInput.value = String(v);
+				if (taDebounce) window.clearTimeout(taDebounce);
+				taDebounce = window.setTimeout(() => {
+					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
+						transposeAudio: v,
+					});
+					taSlider.value = String(v);
+					taValue.textContent = String(v);
+					taInput.value = String(v);
+					taDebounce = null;
+				}, 60);
 			};
 			taSlider.oninput = (e) => applyTa(Number((e.target as HTMLInputElement).value));
 			taInput.onchange = (e) => applyTa(Number((e.target as HTMLInputElement).value));
@@ -324,14 +363,14 @@ export class TracksModal extends Modal {
 				const sel = new Set(changed.selectedTracks);
 				// 更新本地 selectedTracks 集合
 				this.selectedTracks = new Set(
-					this.tracks.filter((t) => sel.size ? sel.has(t.index) : true)
+					this.tracks.filter((t) => (sel.size ? sel.has(t.index) : true))
 				);
 				// 刷新 toggle
 				this.tracks.forEach((t) => {
 					const ref = this.uiRefs.get(t.index);
 					if (ref?.toggle) {
 						this.suppressToggleEvent = true;
-						ref.toggle.setValue(sel.has(t.index));
+						ref.toggle.setValue(sel.size ? sel.has(t.index) : true);
 						this.suppressToggleEvent = false;
 					}
 				});
@@ -342,18 +381,18 @@ export class TracksModal extends Modal {
 				const s = entry.trackSettings?.[String(idx)] || {};
 				// 独奏
 				if (ref?.soloBtn && (patch.solo !== undefined || s.solo !== undefined)) {
-					const isSolo = (patch.solo ?? s.solo) ?? false;
-					ref.soloBtn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
-						isSolo ? t('tracks.unsolo') : t('tracks.solo')
-					);
+					const isSolo = patch.solo ?? s.solo ?? false;
+					ref.soloBtn
+						.setIcon(isSolo ? 'star' : 'star-off')
+						.setTooltip(isSolo ? t('tracks.unsolo') : t('tracks.solo'));
 					ref.soloBtn.extraSettingsEl.toggleClass('active', !!isSolo);
 				}
 				// 静音
 				if (ref?.muteBtn && (patch.mute !== undefined || s.mute !== undefined)) {
-					const isMute = (patch.mute ?? s.mute) ?? false;
-					ref.muteBtn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(
-						isMute ? t('tracks.unmute') : t('tracks.mute')
-					);
+					const isMute = patch.mute ?? s.mute ?? false;
+					ref.muteBtn
+						.setIcon(isMute ? 'volume-x' : 'volume-2')
+						.setTooltip(isMute ? t('tracks.unmute') : t('tracks.mute'));
 					ref.muteBtn.extraSettingsEl.toggleClass('active', !!isMute);
 				}
 				// 音量
@@ -371,7 +410,10 @@ export class TracksModal extends Modal {
 					ref.tr.value.textContent = String(v);
 				}
 				// 音频移调（逻辑）
-				if (ref?.ta && (patch.transposeAudio !== undefined || s.transposeAudio !== undefined)) {
+				if (
+					ref?.ta &&
+					(patch.transposeAudio !== undefined || s.transposeAudio !== undefined)
+				) {
 					const v = Number(patch.transposeAudio ?? s.transposeAudio ?? 0);
 					ref.ta.slider.value = String(v);
 					ref.ta.input.value = String(v);
@@ -398,7 +440,9 @@ export class TracksModal extends Modal {
 		try {
 			if (this.unsubscribeStore) this.unsubscribeStore();
 			this.unsubscribeStore = undefined;
-		} catch {/* ignore */}
+		} catch {
+			/* ignore */
+		}
 		this.uiRefs.clear();
 	}
 }

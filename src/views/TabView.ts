@@ -158,13 +158,16 @@ export class TabView extends FileView {
 		filePath: string;
 		changed: Partial<{
 			selectedTracks?: number[];
-			trackSettings?: Record<string, Partial<{
-				solo?: boolean;
-				mute?: boolean;
-				volume?: number;
-				transpose?: number;
-				transposeAudio?: number;
-			}>>;
+			trackSettings?: Record<
+				string,
+				Partial<{
+					solo?: boolean;
+					mute?: boolean;
+					volume?: number;
+					transpose?: number;
+					transposeAudio?: number;
+				}>
+			>;
 		}> | null;
 	}) {
 		try {
@@ -173,10 +176,15 @@ export class TabView extends FileView {
 			const changed = ev.changed;
 			if (!changed) return; // ensureDefaultsFromApi 时可能为 null，只需忽略
 
-			// 1) 渲染所选音轨
+			// 1) 渲染所选音轨（空集合按“全部”处理）
 			if (changed.selectedTracks && Array.isArray(changed.selectedTracks)) {
-				const indices = new Set(changed.selectedTracks);
-				const tracksToRender = this._api.score.tracks.filter((t) => indices.has(t.index));
+				let tracksToRender: alphaTab.model.Track[];
+				if (changed.selectedTracks.length === 0) {
+					tracksToRender = this._api.score.tracks;
+				} else {
+					const indices = new Set(changed.selectedTracks);
+					tracksToRender = this._api.score.tracks.filter((t) => indices.has(t.index));
+				}
 				if (tracksToRender.length) {
 					try {
 						this._api.renderTracks(tracksToRender as any);
@@ -206,7 +214,10 @@ export class TabView extends FileView {
 							this._api.changeTrackVolume([track], v);
 						}
 						if (typeof settingsPatch.transpose === 'number') {
-							this._api.changeTrackTranspositionPitch([track], settingsPatch.transpose);
+							this._api.changeTrackTranspositionPitch(
+								[track],
+								settingsPatch.transpose
+							);
 						}
 						// transposeAudio 暂无 API，留作将来：settingsPatch.transposeAudio
 					} catch (e) {
@@ -691,12 +702,7 @@ export class TabView extends FileView {
 			modal.open();
 		});
 
-		// Track 状态变化统一由 TrackStateStore 处理；如需触发布局保存，可监听 store 事件
-		this.trackStateStore.on((ev) => {
-			if (ev.filePath === this.currentFile?.path) {
-				this.app.workspace.requestSaveLayout();
-			}
-		});
+		// 已通过 unsubscribeTrackStore 订阅进行处理与保存布局，这里移除重复订阅避免重复操作
 
 		// 订阅设置滚动模式事件
 		this.eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
