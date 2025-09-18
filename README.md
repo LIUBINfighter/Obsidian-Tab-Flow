@@ -8,6 +8,7 @@ Play and create your guitar tabs in Obsidian!
 
 ### Customed Play experience
 
+<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/7334f1e9-cdc4-404e-81a7-89683ebfab7f" />
 
 
 ![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
