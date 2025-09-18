@@ -115,6 +115,7 @@ function mergeTabViewFiles() {
     console.log(`Merged ${mergedFiles.length} TabView related files into ${outputFile}`);
     console.log('包含的文件:');
     mergedFiles.forEach(file => console.log(`  - ${file}`));
+    console.log(`Output file: ${outputFile}`);
 }
 
 // ## 3. 主执行部分
