@@ -13,6 +13,7 @@ import { DEFAULT_SETTINGS, TabFlowSettings } from './settings/defaults';
 import ShareCardPresetService from './services/ShareCardPresetService';
 import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
+import { TrackStateStore } from './state/TrackStateStore';
 
 // AssetStatus moved to src/types/assets.ts
 
@@ -20,6 +21,7 @@ export default class TabFlowPlugin extends Plugin {
 	settings: TabFlowSettings;
 	resources!: AlphaTabResources;
 	actualPluginDir?: string;
+	trackStateStore!: TrackStateStore; // 新增：全局音轨状态存储
 	// 运行期 UI 覆盖：仅会话级，不落盘
 	runtimeUiOverride?: {
 		components?: Record<string, boolean>;
@@ -285,6 +287,9 @@ export default class TabFlowPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+
+		// 初始化 TrackStateStore（依赖 settings 已加载）
+		this.trackStateStore = new TrackStateStore(this);
 
 		// ShareCard 预设迁移 / 初始化
 		try {

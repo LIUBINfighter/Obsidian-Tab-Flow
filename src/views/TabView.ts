@@ -9,8 +9,9 @@ import { EventBus, isMessy, formatTime, setupHorizontalScroll } from '../utils';
 import { AlphaTabService } from '../services/AlphaTabService';
 import { ExternalMediaService } from '../services/ExternalMediaService';
 import { createPlayBar } from '../components/PlayBar';
-import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 导入新的服务
+// import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 旧的基于 localStorage 的服务，现替换为 TrackStateStore
 import { TracksModal } from '../components/TracksModal'; // 导入 TracksModal
+import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
 import { t } from 'i18n';
 
@@ -44,7 +45,8 @@ export class TabView extends FileView {
 	private fileModifyHandler: (file: TFile) => void;
 	public eventBus: EventBus; // Public for external interaction
 	private alphaTabService: AlphaTabService;
-	private scorePersistenceService: ScorePersistenceService; // 新增服务实例
+	// private scorePersistenceService: ScorePersistenceService; // 已弃用，使用 trackStateStore
+	private trackStateStore: TrackStateStore;
 	private _api!: alphaTab.AlphaTabApi;
 	private plugin: Plugin;
 	private resources: AlphaTabResources;
@@ -55,6 +57,53 @@ export class TabView extends FileView {
 	private settingsChangeHandler?: () => void;
 	private horizontalScrollCleanup?: () => void; // 用于清理横向滚动监听器
 	private settingsAction: HTMLElement | null = null;
+	private unsubscribeTrackStore?: () => void; // 解除 TrackStateStore 订阅
+
+	/**
+	 * 将 TrackStateStore 中持久化的音轨状态应用到当前 API。
+	 * 1. 确保存在默认条目（根据当前 score.tracks 初始化缺失项）
+	 * 2. 先应用每个轨道的 solo/mute/volume/transpose（不触发重新渲染）
+	 * 3. 再根据 selectedTracks 渲染所选轨道
+	 */
+	private _applyStoredTrackState() {
+		try {
+			if (!this._api || !this._api.score) return;
+			const filePath = this.currentFile?.path || '';
+			if (!filePath) return;
+			this.trackStateStore.ensureDefaultsFromApi(filePath, this._api);
+			const state = this.trackStateStore.getFileState(filePath);
+			// 参数应用
+			if (state.trackSettings && this._api.score?.tracks) {
+				for (const track of this._api.score.tracks) {
+					const s = state.trackSettings[String(track.index)];
+					if (!s) continue;
+					try {
+						if (typeof s.solo === 'boolean') this._api.changeTrackSolo([track], s.solo);
+						if (typeof s.mute === 'boolean') this._api.changeTrackMute([track], s.mute);
+						if (typeof s.volume === 'number')
+							this._api.changeTrackVolume(
+								[track],
+								Math.max(0, Math.min(16, s.volume)) / 16
+							);
+						if (typeof s.transpose === 'number')
+							this._api.changeTrackTranspositionPitch([track], s.transpose);
+						// transposeAudio 暂无 API，可后续扩展
+					} catch (e) {
+						console.warn('[TabView] 应用轨道参数失败', e);
+					}
+				}
+			}
+			// 轨道选择（渲染）
+			if (state.selectedTracks && state.selectedTracks.length) {
+				const tracks = this._api.score.tracks.filter((t) =>
+					state.selectedTracks!.includes(t.index)
+				);
+				if (tracks.length) this._api.renderTracks(tracks as any);
+			}
+		} catch (e) {
+			console.warn('[TabView] _applyStoredTrackState 执行失败', e);
+		}
+	}
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -91,7 +140,8 @@ export class TabView extends FileView {
 		this.plugin = plugin;
 		this.resources = resources;
 		this.eventBus = eventBus ?? new EventBus();
-		this.scorePersistenceService = new ScorePersistenceService(); // 初始化服务
+		// 从插件实例获取 TrackStateStore
+		this.trackStateStore = (plugin as any).trackStateStore as TrackStateStore;
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
@@ -99,6 +149,85 @@ export class TabView extends FileView {
 				this.reloadFile();
 			}
 		};
+	}
+
+	/**
+	 * 处理 TrackStateStore 的增量变化，将其翻译为 alphaTab API 调用。
+	 */
+	private handleTrackStateChange(ev: {
+		filePath: string;
+		changed: Partial<{
+			selectedTracks?: number[];
+			trackSettings?: Record<
+				string,
+				Partial<{
+					solo?: boolean;
+					mute?: boolean;
+					volume?: number;
+					transpose?: number;
+					transposeAudio?: number;
+				}>
+			>;
+		}> | null;
+	}) {
+		try {
+			if (!this.currentFile || ev.filePath !== this.currentFile.path) return;
+			if (!this._api || !this._api.score) return;
+			const changed = ev.changed;
+			if (!changed) return; // ensureDefaultsFromApi 时可能为 null，只需忽略
+
+			// 1) 渲染所选音轨（空集合按“全部”处理）
+			if (changed.selectedTracks && Array.isArray(changed.selectedTracks)) {
+				let tracksToRender: alphaTab.model.Track[];
+				if (changed.selectedTracks.length === 0) {
+					tracksToRender = this._api.score.tracks;
+				} else {
+					const indices = new Set(changed.selectedTracks);
+					tracksToRender = this._api.score.tracks.filter((t) => indices.has(t.index));
+				}
+				if (tracksToRender.length) {
+					try {
+						this._api.renderTracks(tracksToRender as any);
+					} catch (e) {
+						console.warn('[TabView] 应用选中音轨失败', e);
+					}
+				}
+			}
+
+			// 2) 应用单轨设置变化
+			if (changed.trackSettings && this._api.score?.tracks) {
+				for (const key of Object.keys(changed.trackSettings)) {
+					const idx = Number(key);
+					const settingsPatch = changed.trackSettings[key];
+					if (!settingsPatch) continue;
+					const track = this._api.score.tracks.find((t) => t.index === idx);
+					if (!track) continue;
+					try {
+						if (typeof settingsPatch.solo === 'boolean') {
+							this._api.changeTrackSolo([track], settingsPatch.solo);
+						}
+						if (typeof settingsPatch.mute === 'boolean') {
+							this._api.changeTrackMute([track], settingsPatch.mute);
+						}
+						if (typeof settingsPatch.volume === 'number') {
+							const v = Math.max(0, Math.min(16, settingsPatch.volume)) / 16;
+							this._api.changeTrackVolume([track], v);
+						}
+						if (typeof settingsPatch.transpose === 'number') {
+							this._api.changeTrackTranspositionPitch(
+								[track],
+								settingsPatch.transpose
+							);
+						}
+						// transposeAudio 暂无 API，留作将来：settingsPatch.transposeAudio
+					} catch (e) {
+						console.warn(`[TabView] 应用轨道 ${idx} 参数更新失败`, e);
+					}
+				}
+			}
+		} catch (e) {
+			console.warn('[TabView] handleTrackStateChange 处理失败', e);
+		}
 	}
 
 	getViewType(): string {
@@ -144,20 +273,7 @@ export class TabView extends FileView {
 			}
 		}
 
-		// 保存音轨设置（通过 ScorePersistenceService 从 localStorage 获取）
-		if (this.currentFile?.path) {
-			try {
-				const raw = localStorage.getItem(`tabflow-viewstate:${this.currentFile.path}`);
-				if (raw) {
-					const savedState = JSON.parse(raw);
-					if (savedState.trackSettings) {
-						state.trackSettings = savedState.trackSettings;
-					}
-				}
-			} catch (e) {
-				console.warn('[TabView] 获取音轨设置状态失败:', e);
-			}
-		}
+		// 视图持久化不再保存 trackSettings（交由 TrackStateStore 插件级处理）
 
 		return state;
 	}
@@ -390,12 +506,13 @@ export class TabView extends FileView {
 		// 渲染 DebugBar
 		this._renderDebugBarIfEnabled();
 
-		// 监听 scoreLoaded，乐谱加载后挂载播放栏
+		// 监听 scoreLoaded：首次加载时挂载播放栏并应用持久化音轨状态
 		if (this._api && this._api.scoreLoaded) {
 			this._api.scoreLoaded.on(() => {
 				setTimeout(() => {
 					this._mountPlayBarInternal();
 					this.configureScrollElement(); // 确保在 PlayBar 挂载后配置滚动元素
+					this._applyStoredTrackState(); // 首次加载应用音轨状态
 				}, 100);
 			});
 		} else {
@@ -403,7 +520,20 @@ export class TabView extends FileView {
 			setTimeout(() => {
 				this._mountPlayBarInternal();
 				this.configureScrollElement();
+				this._applyStoredTrackState();
 			}, 500);
+		}
+
+		// 长期订阅 TrackStateStore，响应状态变化
+		if (!this.unsubscribeTrackStore) {
+			this.unsubscribeTrackStore = this.trackStateStore.on((storeEv) => {
+				// 保持轻量：仅在相关文件变化时才处理
+				if (storeEv.filePath === this.currentFile?.path) {
+					this.handleTrackStateChange(storeEv as any);
+					// 可选：布局保存
+					this.app.workspace.requestSaveLayout();
+				}
+			});
 		}
 
 		// 订阅刷新播放器命令：对当前文件执行完整重载
@@ -500,7 +630,7 @@ export class TabView extends FileView {
 			this.eventBus.publish('命令:重建AlphaTabApi');
 		});
 
-		// 服务层 API 重建完成后，更新本视图引用并重新加载当前文件
+		// 服务层 API 重建完成后，更新本视图引用并重新加载当前文件，并应用 TrackStateStore 状态
 		this.eventBus.subscribe('状态:API已重建', (newApi: alphaTab.AlphaTabApi) => {
 			try {
 				this._api = newApi;
@@ -519,10 +649,8 @@ export class TabView extends FileView {
 							(score as unknown as { filePath?: string }).filePath =
 								this.currentFile?.path;
 						}
-						this.scorePersistenceService.loadScoreViewState(
-							this._api,
-							this.currentFile?.path || ''
-						);
+						// API 重建后再次应用持久化音轨状态
+						this._applyStoredTrackState();
 
 						this.leaf?.setViewState(
 							{
@@ -554,7 +682,7 @@ export class TabView extends FileView {
 			this.scrollToBottom();
 		});
 
-		// 订阅 UI:showTracksModal 事件，弹出 TracksModal
+		// 订阅 UI:showTracksModal 事件，弹出 TracksModal（使用 TrackStateStore 即时模式）
 		this.eventBus.subscribe('UI:showTracksModal', () => {
 			const api = this._api || this.alphaTabService.getApi();
 			const tracks = api.score?.tracks || [];
@@ -562,39 +690,19 @@ export class TabView extends FileView {
 				new Notice('没有可用的音轨');
 				return;
 			}
+			const filePath = this.currentFile?.path || '';
 			const modal = new TracksModal(
 				this.app,
 				tracks,
-				(selectedTracks: alphaTab.model.Track[]) => {
-					if (selectedTracks && selectedTracks.length > 0) {
-						api.renderTracks(selectedTracks);
-						// 音轨选择变化时请求保存布局
-						this.app.workspace.requestSaveLayout();
-					}
-				},
+				filePath,
 				api,
 				this.eventBus,
-				this.scorePersistenceService // 传递 ScorePersistenceService
+				this.trackStateStore
 			);
 			modal.open();
 		});
 
-		// 监听音轨参数变化事件，在参数变化时请求保存布局
-		this.eventBus.subscribe('track:solo', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:mute', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:volume', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:transpose', () => {
-			this.app.workspace.requestSaveLayout();
-		});
-		this.eventBus.subscribe('track:transposeAudio', () => {
-			this.app.workspace.requestSaveLayout();
-		});
+		// 已通过 unsubscribeTrackStore 订阅进行处理与保存布局，这里移除重复订阅避免重复操作
 
 		// 订阅设置滚动模式事件
 		this.eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
@@ -695,6 +803,16 @@ export class TabView extends FileView {
 		if (this.horizontalScrollCleanup) {
 			this.horizontalScrollCleanup();
 			this.horizontalScrollCleanup = undefined;
+		}
+
+		// 解绑 TrackStateStore 订阅
+		try {
+			if (this.unsubscribeTrackStore) {
+				this.unsubscribeTrackStore();
+				this.unsubscribeTrackStore = undefined;
+			}
+		} catch {
+			// ignore
 		}
 
 		this.currentFile = null;
