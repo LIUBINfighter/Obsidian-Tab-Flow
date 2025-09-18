@@ -40,11 +40,11 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-files
-          path: |
-            main.js
-            manifest.json
-            styles.css
+    #   - name: Upload build artifacts
+    #     uses: actions/upload-artifact@v4
+    #     with:
+    #       name: build-files
+    #       path: |
+    #         main.js
+    #         manifest.json
+    #         styles.css
