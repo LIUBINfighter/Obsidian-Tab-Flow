@@ -62,7 +62,7 @@ export async function renderEditorTab(
 					(text as any).inputEl.setAttribute('step', '0.01');
 					(text as any).inputEl.setAttribute('min', '0');
 				} catch (e) {
-					console.debug('set input attributes failed', e);
+					// console.debug('set input attributes failed', e);
 				}
 				text.setValue(fontDefault.num).onChange(async (numStr) => {
 					const unit = (sFont as any).__unitValue || fontDefault.unit;
@@ -156,7 +156,7 @@ export async function renderEditorTab(
 				(text as any).inputEl.setAttribute('step', '1');
 				(text as any).inputEl.setAttribute('min', '0');
 			} catch (e) {
-				console.debug('set input attributes failed', e);
+				// console.debug('set input attributes failed', e);
 			}
 			text.setValue(gapDefault.num).onChange(async (numStr) => {
 				const unit = (sGap as any).__unitValue || gapDefault.unit;

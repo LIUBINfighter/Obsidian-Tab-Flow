@@ -45,7 +45,7 @@ export class ExternalMediaService {
 		// 添加媒体元素事件监听
 		this.addMediaEventListeners();
 
-		console.debug('[ExternalMediaService] 已连接外部媒体元素');
+		// console.debug('[ExternalMediaService] 已连接外部媒体元素');
 	}
 
 	/**
@@ -71,7 +71,7 @@ export class ExternalMediaService {
 		}
 
 		this.mediaElement = null;
-		console.debug('[ExternalMediaService] 已断开外部媒体元素');
+		// console.debug('[ExternalMediaService] 已断开外部媒体元素');
 	}
 
 	/**

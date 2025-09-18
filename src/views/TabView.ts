@@ -145,7 +145,7 @@ export class TabView extends FileView {
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
-				console.debug(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
+				// console.debug(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
 				this.reloadFile();
 			}
 		};
@@ -569,7 +569,7 @@ export class TabView extends FileView {
 		this.registerEvent(
 			(this.app.workspace as any).on('tabflow:scroll-mode-changed', (newMode: string) => {
 				try {
-					console.debug(`[TabView] 滚动模式变更: ${newMode}`);
+					// console.debug(`[TabView] 滚动模式变更: ${newMode}`);
 					this.configureScrollElement();
 				} catch (e) {
 					console.warn('[TabView] Failed to apply scroll mode change:', e);
@@ -601,7 +601,7 @@ export class TabView extends FileView {
 
 		// 监听手动刷新事件 - 使用事件总线
 		this.eventBus.subscribe('命令:手动刷新', () => {
-			console.debug('[TabView] 收到手动刷新事件');
+			// console.debug('[TabView] 收到手动刷新事件');
 			this._mountPlayBarInternal();
 			this.configureScrollElement();
 		});
@@ -715,7 +715,7 @@ export class TabView extends FileView {
 					this.configureScrollElement();
 					// 触发滚动模式变更事件
 					this.app.workspace.trigger('tabflow:scroll-mode-changed', mode);
-					console.debug(`[TabView] 滚动模式已更新为: ${mode}`);
+					// console.debug(`[TabView] 滚动模式已更新为: ${mode}`);
 				}
 			} catch (e) {
 				console.warn('[TabView] 更新滚动模式失败:', e);
@@ -745,13 +745,13 @@ export class TabView extends FileView {
 	}
 
 	async onClose() {
-		console.debug('[TabView] Starting cleanup process');
+		// console.debug('[TabView] Starting cleanup process');
 
 		document.body.classList.remove('tabflow-hide-statusbar');
 
 		if (this._fontStyle) {
 			this._fontStyle.remove();
-			console.debug('[TabView] Removed injected @font-face style.');
+			// console.debug('[TabView] Removed injected @font-face style.');
 		}
 
 		this.unregisterFileWatcher();
@@ -759,7 +759,7 @@ export class TabView extends FileView {
 		if (this._api) {
 			try {
 				this._api.destroy();
-				console.debug('[TabView] AlphaTab API destroyed successfully');
+				// console.debug('[TabView] AlphaTab API destroyed successfully');
 			} catch (error) {
 				console.error('[TabView] Error destroying AlphaTab API:', error);
 			}
@@ -817,13 +817,13 @@ export class TabView extends FileView {
 
 		this.currentFile = null;
 
-		console.debug('[TabView] View unloaded and resources cleaned up');
+		// console.debug('[TabView] View unloaded and resources cleaned up');
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
 		this.currentFile = file;
 		try {
-			console.debug(`[TabView] Loading file: ${file.name}`);
+			// console.debug(`[TabView] Loading file: ${file.name}`);
 
 			// 使用 AlphaTabService 加载文件
 			if (file.extension && ['alphatab', 'alphatex'].includes(file.extension.toLowerCase())) {
@@ -835,7 +835,7 @@ export class TabView extends FileView {
 			}
 			// 配置滚动元素 - 在乐谱加载后设置
 			this.configureScrollElement();
-			console.debug(`[TabView] File loaded successfully: ${file.name}`);
+			// console.debug(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error('[TabView] Failed to load file:', error);
 			new Notice(`加载乐谱文件失败: ${error.message || '未知错误'}`);
@@ -862,10 +862,10 @@ export class TabView extends FileView {
 
 		if (scrollElement) {
 			this._api.settings.player.scrollElement = scrollElement;
-			console.debug('[TabView] 设置滚动容器:', scrollElement.className);
+			// console.debug('[TabView] 设置滚动容器:', scrollElement.className);
 		} else {
 			this._api.settings.player.scrollElement = 'html,body';
-			console.debug('[TabView] 使用默认滚动容器');
+			// console.debug('[TabView] 使用默认滚动容器');
 		}
 
 		this._api.updateSettings();
@@ -892,7 +892,7 @@ export class TabView extends FileView {
 				this._api.settings.player.scrollMode = sm;
 				this._api.settings.player.enableCursor = true;
 				this._api.updateSettings();
-				console.debug(`[TabView] 应用滚动模式: ${mode}`);
+				// console.debug(`[TabView] 应用滚动模式: ${mode}`);
 			}
 		}, 100);
 
@@ -907,12 +907,12 @@ export class TabView extends FileView {
 
 	private registerFileWatcher(): void {
 		this.app.vault.on('modify', this.fileModifyHandler);
-		console.debug('[TabView] 已注册文件监听');
+		// console.debug('[TabView] 已注册文件监听');
 	}
 
 	private unregisterFileWatcher(): void {
 		this.app.vault.off('modify', this.fileModifyHandler);
-		console.debug('[TabView] 已注销文件监听');
+		// console.debug('[TabView] 已注销文件监听');
 	}
 
 	private async reloadFile(): Promise<void> {
@@ -931,14 +931,14 @@ export class TabView extends FileView {
 				const inputFile = await this.app.vault.readBinary(this.currentFile);
 				this._api.load(new Uint8Array(inputFile));
 			}
-			console.debug(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
+			// console.debug(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
 		} catch (error) {
 			console.error('[TabView] 重新加载文件失败', error);
 		}
 	}
 
 	override async onUnloadFile(file: TFile): Promise<void> {
-		console.debug(`[TabView] Unloading file: ${file.name}`);
+		// console.debug(`[TabView] Unloading file: ${file.name}`);
 		this.currentFile = null;
 		await super.onUnloadFile(file);
 	}
