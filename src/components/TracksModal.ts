@@ -346,6 +346,20 @@ export class TracksModal extends Modal {
 				this.trackStateStore.clearFile(this.filePath);
 				this.contentEl.empty();
 				this.onOpen();
+				// 将选中轨道设置为第一条（index 0 或列表第一项），驱动 TabView 只渲染第一轨
+				if (this.tracks.length) {
+					const first = this.tracks.find((tr) => tr.index === 0) || this.tracks[0];
+					// 更新 Store（触发 TabView 渲染第一轨）
+					this.trackStateStore.setSelectedTracks(this.filePath, [first.index]);
+					// 同步 Modal UI toggle 显示
+					this.suppressToggleEvent = true;
+					this.selectedTracks = new Set([first]);
+					this.tracks.forEach((tr) => {
+						const ref = this.uiRefs.get(tr.index);
+						if (ref?.toggle) ref.toggle.setValue(tr.index === first.index);
+					});
+					this.suppressToggleEvent = false;
+				}
 			} catch (e) {
 				console.warn('[TracksModal] 重置轨道状态失败', e);
 			}

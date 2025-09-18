@@ -145,6 +145,7 @@ export class TrackStateStore {
 	/** 可选：清理指定文件的状态 */
 	clearFile(filePath: string) {
 		this.data.files[filePath] = {};
+		// 发出清空后的通知（无特定变更，交由调用方明确下发 selectedTracks）
 		this.emit(filePath, this.data.files[filePath], {});
 		this.saveDebounced();
 	}
