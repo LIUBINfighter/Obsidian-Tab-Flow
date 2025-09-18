@@ -4,8 +4,14 @@ import { t } from '../i18n';
 import { createAlphaTexPlayground, AlphaTexPlaygroundHandle } from './AlphaTexPlayground';
 import * as domtoimage from 'dom-to-image-more';
 import { waitAlphaTabFullRender, withExportLock } from '../utils/alphaTabRenderWait';
+import {
+	normalizeColorToHex,
+	computeExportBgColor,
+	measureCaptureDimensions,
+} from '../utils/shareCardUtils';
 import ShareCardPresetService from '../services/ShareCardPresetService';
 import ShareCardStateManager from '../state/ShareCardStateManager';
+import { createShareCardPreview } from './ShareCardPreview';
 
 export class ShareCardModal extends Modal {
 	private plugin: TabFlowPlugin;
@@ -91,59 +97,7 @@ export class ShareCardModal extends Modal {
 	 * Try to normalize any CSS color string to a 6-digit hex like #rrggbb.
 	 * Falls back to provided default (#ffffff) when unable to parse.
 	 */
-	private normalizeColorToHex(color: string | undefined | null, fallback = '#ffffff'): string {
-		if (!color) return fallback;
-		const s = String(color).trim();
-		// already hex (#fff or #ffffff)
-		if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s)) {
-			if (s.length === 4) {
-				// expand short hex #abc -> #aabbcc
-				return (
-					'#' +
-					s
-						.slice(1)
-						.split('')
-						.map((c) => c + c)
-						.join('')
-				).toLowerCase();
-			}
-			return s.toLowerCase();
-		}
-		// rgb/rgba
-		const m = s.match(/rgba?\s*\(([^)]+)\)/i);
-		if (m) {
-			const parts = m[1].split(',').map((p) => p.trim());
-			if (parts.length >= 3) {
-				const r = Math.max(0, Math.min(255, parseInt(parts[0], 10) || 0));
-				const g = Math.max(0, Math.min(255, parseInt(parts[1], 10) || 0));
-				const b = Math.max(0, Math.min(255, parseInt(parts[2], 10) || 0));
-				return (
-					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
-				).toLowerCase();
-			}
-		}
-		// try letting browser parse named colors etc.
-		try {
-			const el = document.createElement('div');
-			el.style.color = s;
-			document.body.appendChild(el);
-			const cs = getComputedStyle(el).color;
-			document.body.removeChild(el);
-			const mm = String(cs).match(/rgba?\s*\(([^)]+)\)/i);
-			if (mm) {
-				const parts = mm[1].split(',').map((p) => p.trim());
-				const r = Math.max(0, Math.min(255, parseInt(parts[0], 10) || 0));
-				const g = Math.max(0, Math.min(255, parseInt(parts[1], 10) || 0));
-				const b = Math.max(0, Math.min(255, parseInt(parts[2], 10) || 0));
-				return (
-					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
-				).toLowerCase();
-			}
-		} catch (e) {
-			// ignore and fallthrough to fallback
-		}
-		return fallback;
-	}
+	// normalizeColorToHex extracted to utils/shareCardUtils.ts
 
 	// Render or update the author info block inside cardRoot according to modal-local fields
 	private renderAuthorBlock() {
@@ -241,13 +195,7 @@ export class ShareCardModal extends Modal {
 		}
 	}
 
-	private buildExportStyle(scale: number) {
-		// Combine current translation (pan) with zoom * resolution scale
-		return {
-			transformOrigin: 'top left',
-			transform: `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.zoomScale * scale})`,
-		};
-	}
+	// buildExportStyle extracted to utils/shareCardUtils.ts
 
 	// 获取需要被完整导出的乐谱根节点（包含全部 SVG / 多页内容）
 	private getCaptureElement(): HTMLElement | null {
@@ -284,32 +232,9 @@ export class ShareCardModal extends Modal {
 		// 问题根因：我们之前使用 getBoundingClientRect() 在 panWrapper 存在 transform(scale/translate) 时，
 		// 返回的是“视觉缩放后”的尺寸（被 zoom 缩小则高度变小），导致传入 dom-to-image 的 width/height 过小 -> 底部被裁剪。
 		// 解决：临时移除 panWrapper 的 transform，使用 scrollWidth/scrollHeight 获得未缩放原始尺寸。
-		let width: number;
-		let height: number;
-		let restoreTransform: string | null = null;
-		try {
-			if (this.panWrapper && this.panWrapper.style.transform) {
-				restoreTransform = this.panWrapper.style.transform;
-				this.panWrapper.style.transform = 'none';
-			}
-			// 强制 reflow
-			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-			captureEl.offsetHeight;
-			const rawW = captureEl.scrollWidth || captureEl.clientWidth;
-			const rawH = captureEl.scrollHeight || captureEl.clientHeight;
-			width = Math.ceil(rawW * resolution);
-			height = Math.ceil(rawH * resolution);
-			if (!rawH) {
-				// 退回到 rect 方案
-				const rectFallback = captureEl.getBoundingClientRect();
-				width = Math.ceil(rectFallback.width * resolution);
-				height = Math.ceil(rectFallback.height * resolution);
-			}
-		} finally {
-			if (restoreTransform !== null && this.panWrapper) {
-				this.panWrapper.style.transform = restoreTransform;
-			}
-		}
+		const dims = measureCaptureDimensions(captureEl, this.panWrapper, resolution);
+		const width = dims.width;
+		const height = dims.height;
 		// 对非常大的尺寸做一个软上限提示（例如高度>30000 px）避免内存 OOM
 		const SOFT_LIMIT = 30000;
 		if (height > SOFT_LIMIT) {
@@ -320,29 +245,13 @@ export class ShareCardModal extends Modal {
 		// - exportBgMode === 'default' : 兼容旧行为（仅为 jpeg 设置白底，png/webp 保持透明）
 		// - exportBgMode === 'auto'    : 尝试读取 preview root 的计算背景色，若透明则回退到白色
 		// - exportBgMode === 'custom'  : 使用用户输入的自定义颜色
-		let bgcolorToUse: string | undefined = undefined;
-		try {
-			if (this.exportBgMode === 'custom') {
-				bgcolorToUse = this.exportBgCustomColor || undefined;
-			} else if (this.exportBgMode === 'auto') {
-				const bgSource = (this.cardRoot || captureEl) as HTMLElement;
-				if (bgSource) {
-					const cs = getComputedStyle(bgSource);
-					const computedBg = cs && cs.backgroundColor ? cs.backgroundColor : undefined;
-					const isTransparent =
-						!computedBg ||
-						computedBg === 'transparent' ||
-						/^rgba\(\s*0,\s*0,\s*0,\s*0\s*\)$/i.test(computedBg || '');
-					bgcolorToUse = isTransparent ? this.exportBgCustomColor || '#fff' : computedBg;
-				}
-			} else {
-				// default: 保持向后兼容，仍然只为 jpeg 设置白底
-				if (mime === 'image/jpeg') bgcolorToUse = '#fff';
-			}
-		} catch (e) {
-			// 读取样式或正则出错则回退：若 jpeg 则白色，否则 undefined
-			bgcolorToUse = mime === 'image/jpeg' ? '#fff' : undefined;
-		}
+		const bgcolorToUse = computeExportBgColor(
+			this.exportBgMode,
+			this.exportBgCustomColor,
+			this.cardRoot,
+			captureEl,
+			mime
+		);
 
 		const options: any = {
 			width,
@@ -499,7 +408,7 @@ export class ShareCardModal extends Modal {
 					customColorLabel.style.display = 'none';
 					customColorInput.style.display = 'none';
 				}
-				const norm = this.normalizeColorToHex(st2.working.exportBgCustomColor);
+				const norm = normalizeColorToHex(st2.working.exportBgCustomColor);
 				customColorInput.value = norm;
 				authorShowCb.checked = st2.working.showAuthor;
 				authorNameInput.value = st2.working.authorName;
@@ -552,7 +461,7 @@ export class ShareCardModal extends Modal {
 				format: st.working.format,
 				disableLazy: st.working.disableLazy,
 				exportBgMode: st.working.exportBgMode,
-				exportBgCustomColor: this.normalizeColorToHex(st.working.exportBgCustomColor),
+				exportBgCustomColor: normalizeColorToHex(st.working.exportBgCustomColor),
 				showAuthor: st.working.showAuthor,
 				authorName: st.working.authorName,
 				authorRemark: st.working.authorRemark,
@@ -601,7 +510,7 @@ export class ShareCardModal extends Modal {
 					customColorLabel.style.display = 'none';
 					customColorInput.style.display = 'none';
 				}
-				customColorInput.value = this.normalizeColorToHex(st.working.exportBgCustomColor);
+				customColorInput.value = normalizeColorToHex(st.working.exportBgCustomColor);
 				authorShowCb.checked = st.working.showAuthor;
 				authorNameInput.value = st.working.authorName;
 				authorRemarkInput.value = st.working.authorRemark;
@@ -690,7 +599,7 @@ export class ShareCardModal extends Modal {
 		const customColorInput = basicCard.createEl('input') as HTMLInputElement;
 		customColorInput.type = 'color';
 		// ensure stored value is normalized hex
-		customColorInput.value = this.normalizeColorToHex(this.exportBgCustomColor);
+		customColorInput.value = normalizeColorToHex(this.exportBgCustomColor);
 		customColorInput.style.display = 'none';
 		// 禁用懒加载
 		basicCard.createEl('div', { text: t('shareCard.disableLazyLabel'), cls: 'sc-label' });
@@ -724,7 +633,7 @@ export class ShareCardModal extends Modal {
 		});
 		customColorInput.addEventListener('change', () => {
 			if (customColorInput.value) {
-				const hex = this.normalizeColorToHex(customColorInput.value);
+				const hex = normalizeColorToHex(customColorInput.value);
 				this.exportBgCustomColor = hex;
 				this.stateManager?.updateField('exportBgCustomColor', this.exportBgCustomColor);
 			}
@@ -877,13 +786,13 @@ export class ShareCardModal extends Modal {
 		const exportBtn = btnRow.createEl('button', { text: t('shareCard.export') });
 		const closeBtn = btnRow.createEl('button', { text: t('shareCard.close') });
 
-		// Preview area (add a pan wrapper so we can translate content)
-		const previewWrap = right.createDiv({ cls: 'share-card-preview' });
-		this.panWrapper = previewWrap.createDiv({ cls: 'share-card-pan-wrapper' });
-		this.cardRoot = this.panWrapper.createDiv({ cls: 'share-card-root' });
-		this.cardRoot.style.width = widthInput.value + 'px';
+		// Preview area (create via helper to keep modal file smaller)
+		const preview = createShareCardPreview(right, widthInput.value);
+		const previewWrap = preview.previewWrap;
+		this.panWrapper = preview.panWrapper as HTMLElement;
+		this.cardRoot = preview.cardRoot as HTMLElement;
 		// inner content container for playground rendering (so we can keep author block separate)
-		this.playgroundContent = this.cardRoot.createDiv({ cls: 'share-card-content' });
+		this.playgroundContent = preview.playgroundContent as HTMLElement;
 		this.applyPanTransform();
 
 		// 点击模态框外部关闭（增加一致的心智模型）
@@ -903,7 +812,7 @@ export class ShareCardModal extends Modal {
 		document.addEventListener('pointerdown', this.outsidePointerDownHandler);
 
 		// Pan interaction
-		previewWrap.addEventListener('pointerdown', (e) => {
+		previewWrap.addEventListener('pointerdown', (e: PointerEvent) => {
 			if (!this.panWrapper) return;
 			this.isPanning = true;
 			this.panStartX = e.clientX;
@@ -913,7 +822,7 @@ export class ShareCardModal extends Modal {
 			previewWrap.classList.add('panning');
 			previewWrap.setPointerCapture(e.pointerId);
 		});
-		previewWrap.addEventListener('pointermove', (e) => {
+		previewWrap.addEventListener('pointermove', (e: PointerEvent) => {
 			if (!this.isPanning) return;
 			const dx = e.clientX - this.panStartX;
 			const dy = e.clientY - this.panStartY;
@@ -937,7 +846,7 @@ export class ShareCardModal extends Modal {
 		// Wheel zoom: Ctrl+wheel 或 Alt+wheel 触发缩放
 		previewWrap.addEventListener(
 			'wheel',
-			(e) => {
+			(e: WheelEvent) => {
 				// Always treat wheel as zoom inside the preview (prevent page scroll)
 				e.preventDefault();
 				const delta = e.deltaY;
@@ -1157,7 +1066,7 @@ export class ShareCardModal extends Modal {
 			customColorLabel.style.display = 'none';
 			customColorInput.style.display = 'none';
 		}
-		const initHex = this.normalizeColorToHex(runtime.working.exportBgCustomColor);
+		const initHex = normalizeColorToHex(runtime.working.exportBgCustomColor);
 		customColorInput.value = initHex;
 		this.exportBgMode = runtime.working.exportBgMode;
 		this.exportBgCustomColor = initHex;
