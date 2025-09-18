@@ -57,6 +57,7 @@ export class TabView extends FileView {
 	private settingsChangeHandler?: () => void;
 	private horizontalScrollCleanup?: () => void; // 用于清理横向滚动监听器
 	private settingsAction: HTMLElement | null = null;
+	private unsubscribeTrackStore?: () => void; // 解除 TrackStateStore 订阅
 
 	/**
 	 * 将 TrackStateStore 中持久化的音轨状态应用到当前 API。
@@ -80,7 +81,10 @@ export class TabView extends FileView {
 						if (typeof s.solo === 'boolean') this._api.changeTrackSolo([track], s.solo);
 						if (typeof s.mute === 'boolean') this._api.changeTrackMute([track], s.mute);
 						if (typeof s.volume === 'number')
-							this._api.changeTrackVolume([track], Math.max(0, Math.min(16, s.volume)) / 16);
+							this._api.changeTrackVolume(
+								[track],
+								Math.max(0, Math.min(16, s.volume)) / 16
+							);
 						if (typeof s.transpose === 'number')
 							this._api.changeTrackTranspositionPitch([track], s.transpose);
 						// transposeAudio 暂无 API，可后续扩展
@@ -145,6 +149,74 @@ export class TabView extends FileView {
 				this.reloadFile();
 			}
 		};
+	}
+
+	/**
+	 * 处理 TrackStateStore 的增量变化，将其翻译为 alphaTab API 调用。
+	 */
+	private handleTrackStateChange(ev: {
+		filePath: string;
+		changed: Partial<{
+			selectedTracks?: number[];
+			trackSettings?: Record<string, Partial<{
+				solo?: boolean;
+				mute?: boolean;
+				volume?: number;
+				transpose?: number;
+				transposeAudio?: number;
+			}>>;
+		}> | null;
+	}) {
+		try {
+			if (!this.currentFile || ev.filePath !== this.currentFile.path) return;
+			if (!this._api || !this._api.score) return;
+			const changed = ev.changed;
+			if (!changed) return; // ensureDefaultsFromApi 时可能为 null，只需忽略
+
+			// 1) 渲染所选音轨
+			if (changed.selectedTracks && Array.isArray(changed.selectedTracks)) {
+				const indices = new Set(changed.selectedTracks);
+				const tracksToRender = this._api.score.tracks.filter((t) => indices.has(t.index));
+				if (tracksToRender.length) {
+					try {
+						this._api.renderTracks(tracksToRender as any);
+					} catch (e) {
+						console.warn('[TabView] 应用选中音轨失败', e);
+					}
+				}
+			}
+
+			// 2) 应用单轨设置变化
+			if (changed.trackSettings && this._api.score?.tracks) {
+				for (const key of Object.keys(changed.trackSettings)) {
+					const idx = Number(key);
+					const settingsPatch = changed.trackSettings[key];
+					if (!settingsPatch) continue;
+					const track = this._api.score.tracks.find((t) => t.index === idx);
+					if (!track) continue;
+					try {
+						if (typeof settingsPatch.solo === 'boolean') {
+							this._api.changeTrackSolo([track], settingsPatch.solo);
+						}
+						if (typeof settingsPatch.mute === 'boolean') {
+							this._api.changeTrackMute([track], settingsPatch.mute);
+						}
+						if (typeof settingsPatch.volume === 'number') {
+							const v = Math.max(0, Math.min(16, settingsPatch.volume)) / 16;
+							this._api.changeTrackVolume([track], v);
+						}
+						if (typeof settingsPatch.transpose === 'number') {
+							this._api.changeTrackTranspositionPitch([track], settingsPatch.transpose);
+						}
+						// transposeAudio 暂无 API，留作将来：settingsPatch.transposeAudio
+					} catch (e) {
+						console.warn(`[TabView] 应用轨道 ${idx} 参数更新失败`, e);
+					}
+				}
+			}
+		} catch (e) {
+			console.warn('[TabView] handleTrackStateChange 处理失败', e);
+		}
 	}
 
 	getViewType(): string {
@@ -441,6 +513,18 @@ export class TabView extends FileView {
 			}, 500);
 		}
 
+		// 长期订阅 TrackStateStore，响应状态变化
+		if (!this.unsubscribeTrackStore) {
+			this.unsubscribeTrackStore = this.trackStateStore.on((storeEv) => {
+				// 保持轻量：仅在相关文件变化时才处理
+				if (storeEv.filePath === this.currentFile?.path) {
+					this.handleTrackStateChange(storeEv as any);
+					// 可选：布局保存
+					this.app.workspace.requestSaveLayout();
+				}
+			});
+		}
+
 		// 订阅刷新播放器命令：对当前文件执行完整重载
 		this.eventBus.subscribe('命令:刷新播放器', async () => {
 			if (this.currentFile) {
@@ -713,6 +797,16 @@ export class TabView extends FileView {
 		if (this.horizontalScrollCleanup) {
 			this.horizontalScrollCleanup();
 			this.horizontalScrollCleanup = undefined;
+		}
+
+		// 解绑 TrackStateStore 订阅
+		try {
+			if (this.unsubscribeTrackStore) {
+				this.unsubscribeTrackStore();
+				this.unsubscribeTrackStore = undefined;
+			}
+		} catch {
+			// ignore
 		}
 
 		this.currentFile = null;

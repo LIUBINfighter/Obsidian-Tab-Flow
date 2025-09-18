@@ -56,15 +56,12 @@ export class TracksModal extends Modal {
 		scrollContainer.className = 'tracks-scroll-container';
 		this.contentEl.appendChild(scrollContainer);
 
-		const applySelectedToApi = () => {
-			if (!this.api) return;
+		const applySelectedToStore = () => {
 			const list = Array.from(this.selectedTracks).sort((a, b) => a.index - b.index);
-			if (list.length) this.api.renderTracks(list as any);
 			this.trackStateStore.setSelectedTracks(
 				this.filePath,
 				list.map((t) => t.index)
 			);
-			this.eventBus?.publish('track:selectedTracks', { tracks: list });
 		};
 
 		this.tracks.forEach((track) => {
@@ -85,7 +82,7 @@ export class TracksModal extends Modal {
 						}
 						this.selectedTracks.delete(track);
 					}
-					applySelectedToApi();
+					applySelectedToStore();
 				});
 			});
 
@@ -105,15 +102,9 @@ export class TracksModal extends Modal {
 				btn.onClick(() => {
 					const newSolo = !(track.playbackInfo as any).isSolo;
 					(track.playbackInfo as any).isSolo = newSolo;
-					try {
-						this.api.changeTrackSolo([track], newSolo);
-					} catch {
-						/* ignore solo error */
-					}
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 						solo: newSolo,
 					});
-					this.eventBus?.publish('track:solo', { track, value: newSolo });
 					updateUI();
 				});
 				return btn;
@@ -135,15 +126,9 @@ export class TracksModal extends Modal {
 				btn.onClick(() => {
 					const newMute = !(track.playbackInfo as any).isMute;
 					(track.playbackInfo as any).isMute = newMute;
-					try {
-						this.api.changeTrackMute([track], newMute);
-					} catch {
-						/* ignore mute error */
-					}
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 						mute: newMute,
 					});
-					this.eventBus?.publish('track:mute', { track, value: newMute });
 					updateUI();
 				});
 				return btn;
@@ -172,13 +157,7 @@ export class TracksModal extends Modal {
 			volInput.value = volSlider.value;
 			const applyVolume = (v: number) => {
 				v = Math.max(0, Math.min(16, v));
-				try {
-					this.api.changeTrackVolume([track], v / 16);
-				} catch {
-					/* ignore volume error */
-				}
 				this.trackStateStore.updateTrackSetting(this.filePath, track.index, { volume: v });
-				this.eventBus?.publish('track:volume', { track, value: v });
 				volSlider.value = String(v);
 				volValue.textContent = String(v);
 				volInput.value = String(v);
@@ -215,15 +194,9 @@ export class TracksModal extends Modal {
 			trInput.value = trSlider.value;
 			const applyTranspose = (v: number) => {
 				v = Math.max(-12, Math.min(12, v));
-				try {
-					this.api.changeTrackTranspositionPitch([track], v);
-				} catch {
-					/* ignore transpose error */
-				}
 				this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 					transpose: v,
 				});
-				this.eventBus?.publish('track:transpose', { track, value: v });
 				trSlider.value = String(v);
 				trValue.textContent = String(v);
 				trInput.value = String(v);
@@ -264,7 +237,6 @@ export class TracksModal extends Modal {
 				this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 					transposeAudio: v,
 				});
-				this.eventBus?.publish('track:transposeAudio', { track, value: v });
 				taSlider.value = String(v);
 				taValue.textContent = String(v);
 				taInput.value = String(v);
