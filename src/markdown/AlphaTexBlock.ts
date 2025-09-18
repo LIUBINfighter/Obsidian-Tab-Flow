@@ -220,7 +220,7 @@ export function mountAlphaTexBlock(
 	// Cursor and highlight styles (aligned with TabView)
 	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
 	const runtimeStyle = document.createElement('style');
-	// 使用 DOM API 替代 innerHTML，避免安全风险
+
 	const styleContent = `
 		.alphatex-block .at-cursor-bar { background: ${accent}; opacity: 0.2; }
 		.alphatex-block .at-selection div { background: ${accent}; opacity: 0.4; }
@@ -671,7 +671,7 @@ export function mountAlphaTexBlock(
 			} catch {
 				// Ignore API destroy errors
 			}
-			// 使用 DOM API 替代 innerHTML，避免安全风险
+
 			try {
 				while (rootEl.firstChild) {
 					rootEl.removeChild(rootEl.firstChild);

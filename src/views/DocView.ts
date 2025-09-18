@@ -164,7 +164,7 @@ export class DocView extends ItemView {
 			attr: { target: '_blank', rel: 'noopener', 'aria-label': 'GitHub' },
 			cls: 'mod-cta',
 		});
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 		svg.setAttribute('width', '22');
 		svg.setAttribute('height', '22');

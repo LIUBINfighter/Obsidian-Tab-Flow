@@ -51,7 +51,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	// 内部函数
 	function updatePlayPauseButton() {
 		if (!playPauseBtn) return;
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		while (playPauseBtn.firstChild) {
 			playPauseBtn.removeChild(playPauseBtn.firstChild);
 		}
@@ -63,7 +63,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateMetronomeBtn() {
 		if (!metronomeBtn) return;
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		while (metronomeBtn.firstChild) {
 			metronomeBtn.removeChild(metronomeBtn.firstChild);
 		}
@@ -79,7 +79,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateCountInBtn() {
 		if (!countInBtn) return;
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		while (countInBtn.firstChild) {
 			countInBtn.removeChild(countInBtn.firstChild);
 		}
@@ -95,7 +95,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateLayoutToggleBtn() {
 		if (!layoutToggleBtn) return;
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		while (layoutToggleBtn.firstChild) {
 			layoutToggleBtn.removeChild(layoutToggleBtn.firstChild);
 		}

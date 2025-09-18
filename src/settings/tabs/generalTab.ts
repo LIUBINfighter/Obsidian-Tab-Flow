@@ -88,7 +88,6 @@ export async function renderGeneralTab(
 		const icon = s.exists ? '✅' : '❌';
 		const sizeText = s.size != null ? ` - ${(s.size / 1024).toFixed(1)} KB` : '';
 
-		// 使用 DOM API 替代 innerHTML，避免安全风险
 		// 创建第一个span元素（文件名和图标）
 		const fileSpan = document.createElement('span');
 		fileSpan.style.color = color;
