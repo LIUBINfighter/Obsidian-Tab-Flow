@@ -1,4 +1,4 @@
-import { Modal, Setting, App } from 'obsidian';
+import { Modal, Setting, App, type ExtraButtonComponent, type ToggleComponent } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { EventBus } from '../utils';
 import { TrackStateStore } from '../state/TrackStateStore';
@@ -6,6 +6,19 @@ import { t } from '../i18n';
 
 export class TracksModal extends Modal {
 	private selectedTracks: Set<alphaTab.model.Track>;
+	private uiRefs = new Map<
+		number,
+		{
+			toggle?: ToggleComponent;
+			soloBtn?: ExtraButtonComponent;
+			muteBtn?: ExtraButtonComponent;
+			vol?: { slider: HTMLInputElement; input: HTMLInputElement; value: HTMLElement };
+			tr?: { slider: HTMLInputElement; input: HTMLInputElement; value: HTMLElement };
+			ta?: { slider: HTMLInputElement; input: HTMLInputElement; value: HTMLElement };
+		}
+	>();
+	private unsubscribeStore?: () => void;
+	private suppressToggleEvent = false;
 	constructor(
 		app: App,
 		private tracks: alphaTab.model.Track[],
@@ -22,6 +35,7 @@ export class TracksModal extends Modal {
 	onOpen() {
 		this.contentEl.empty();
 		this.titleEl.setText('');
+		this.uiRefs.clear();
 
 		// 读全局状态
 		const globalState = this.filePath ? this.trackStateStore.getFileState(this.filePath) : {};
@@ -73,6 +87,7 @@ export class TracksModal extends Modal {
 			// 选择音轨 toggle -> 即时更新
 			trackSetting.addToggle((toggle) => {
 				toggle.setValue(this.selectedTracks.has(track)).onChange((val) => {
+					if (this.suppressToggleEvent) return; // 避免从 Store 回推时触发循环
 					if (val) this.selectedTracks.add(track);
 					else {
 						if (this.selectedTracks.size === 1) {
@@ -84,15 +99,19 @@ export class TracksModal extends Modal {
 					}
 					applySelectedToStore();
 				});
+				// 保存引用以便 Store 变化时刷新
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.toggle = toggle;
+				this.uiRefs.set(track.index, ref);
 			});
 
 			// === 独奏按钮 ===
 			trackSetting.addExtraButton((btn) => {
 				const setting = savedTrackSettings[String(track.index)] || {};
-				if (typeof setting.solo === 'boolean')
-					(track.playbackInfo as any).isSolo = setting.solo;
+				if (typeof setting.solo === 'boolean') (track.playbackInfo as any).isSolo = setting.solo;
 				const updateUI = () => {
-					const isSolo = (track.playbackInfo as any).isSolo;
+					const current = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)] || {};
+					const isSolo = current.solo ?? (track.playbackInfo as any).isSolo;
 					btn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
 						isSolo ? t('tracks.unsolo') : t('tracks.solo')
 					);
@@ -100,23 +119,27 @@ export class TracksModal extends Modal {
 				};
 				updateUI();
 				btn.onClick(() => {
-					const newSolo = !(track.playbackInfo as any).isSolo;
-					(track.playbackInfo as any).isSolo = newSolo;
+					const prev = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)]?.solo ?? (track.playbackInfo as any).isSolo ?? false;
+					const newSolo = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 						solo: newSolo,
 					});
 					updateUI();
 				});
+				// 保存引用
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.soloBtn = btn;
+				this.uiRefs.set(track.index, ref);
 				return btn;
 			});
 
 			// === 静音按钮 ===
 			trackSetting.addExtraButton((btn) => {
 				const setting = savedTrackSettings[String(track.index)] || {};
-				if (typeof setting.mute === 'boolean')
-					(track.playbackInfo as any).isMute = setting.mute;
+				if (typeof setting.mute === 'boolean') (track.playbackInfo as any).isMute = setting.mute;
 				const updateUI = () => {
-					const isMute = (track.playbackInfo as any).isMute;
+					const current = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)] || {};
+					const isMute = current.mute ?? (track.playbackInfo as any).isMute;
 					btn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(
 						isMute ? t('tracks.unmute') : t('tracks.mute')
 					);
@@ -124,13 +147,17 @@ export class TracksModal extends Modal {
 				};
 				updateUI();
 				btn.onClick(() => {
-					const newMute = !(track.playbackInfo as any).isMute;
-					(track.playbackInfo as any).isMute = newMute;
+					const prev = this.trackStateStore.getFileState(this.filePath).trackSettings?.[String(track.index)]?.mute ?? (track.playbackInfo as any).isMute ?? false;
+					const newMute = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
 						mute: newMute,
 					});
 					updateUI();
 				});
+				// 保存引用
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.muteBtn = btn;
+				this.uiRefs.set(track.index, ref);
 				return btn;
 			});
 
@@ -169,6 +196,12 @@ export class TracksModal extends Modal {
 			volWrapper.appendChild(volValue);
 			volWrapper.appendChild(volInput);
 			trackSetting.settingEl.appendChild(volWrapper);
+			// 保存引用
+			{
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.vol = { slider: volSlider, input: volInput, value: volValue };
+				this.uiRefs.set(track.index, ref);
+			}
 
 			// === 全局移调 ===
 			const trWrapper = document.createElement('div');
@@ -208,6 +241,12 @@ export class TracksModal extends Modal {
 			trWrapper.appendChild(trValue);
 			trWrapper.appendChild(trInput);
 			trackSetting.settingEl.appendChild(trWrapper);
+			// 保存引用
+			{
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.tr = { slider: trSlider, input: trInput, value: trValue };
+				this.uiRefs.set(track.index, ref);
+			}
 
 			// === 音频移调（逻辑） ===
 			const taWrapper = document.createElement('div');
@@ -248,6 +287,12 @@ export class TracksModal extends Modal {
 			taWrapper.appendChild(taValue);
 			taWrapper.appendChild(taInput);
 			trackSetting.settingEl.appendChild(taWrapper);
+			// 保存引用
+			{
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.ta = { slider: taSlider, input: taInput, value: taValue };
+				this.uiRefs.set(track.index, ref);
+			}
 		});
 
 		// === 底部操作区：恢复默认按钮（仅清除存储，不主动改动当前播放状态） ===
@@ -268,9 +313,92 @@ export class TracksModal extends Modal {
 		};
 		footer.appendChild(resetBtn);
 		this.contentEl.appendChild(footer);
+
+		// 订阅 Store 变化，实时刷新 UI（仅在本文件变化时）
+		this.unsubscribeStore = this.trackStateStore.on((ev) => {
+			if (ev.filePath !== this.filePath) return;
+			const entry = this.trackStateStore.getFileState(this.filePath);
+			const changed = ev.changed;
+			// 选中轨道更新
+			if (changed?.selectedTracks) {
+				const sel = new Set(changed.selectedTracks);
+				// 更新本地 selectedTracks 集合
+				this.selectedTracks = new Set(
+					this.tracks.filter((t) => sel.size ? sel.has(t.index) : true)
+				);
+				// 刷新 toggle
+				this.tracks.forEach((t) => {
+					const ref = this.uiRefs.get(t.index);
+					if (ref?.toggle) {
+						this.suppressToggleEvent = true;
+						ref.toggle.setValue(sel.has(t.index));
+						this.suppressToggleEvent = false;
+					}
+				});
+			}
+			// 每轨设置更新
+			const applyTrackPatch = (idx: number, patch: any) => {
+				const ref = this.uiRefs.get(idx);
+				const s = entry.trackSettings?.[String(idx)] || {};
+				// 独奏
+				if (ref?.soloBtn && (patch.solo !== undefined || s.solo !== undefined)) {
+					const isSolo = (patch.solo ?? s.solo) ?? false;
+					ref.soloBtn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
+						isSolo ? t('tracks.unsolo') : t('tracks.solo')
+					);
+					ref.soloBtn.extraSettingsEl.toggleClass('active', !!isSolo);
+				}
+				// 静音
+				if (ref?.muteBtn && (patch.mute !== undefined || s.mute !== undefined)) {
+					const isMute = (patch.mute ?? s.mute) ?? false;
+					ref.muteBtn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(
+						isMute ? t('tracks.unmute') : t('tracks.mute')
+					);
+					ref.muteBtn.extraSettingsEl.toggleClass('active', !!isMute);
+				}
+				// 音量
+				if (ref?.vol && (patch.volume !== undefined || s.volume !== undefined)) {
+					const v = Number(patch.volume ?? s.volume ?? 8);
+					ref.vol.slider.value = String(v);
+					ref.vol.input.value = String(v);
+					ref.vol.value.textContent = String(v);
+				}
+				// 全局移调
+				if (ref?.tr && (patch.transpose !== undefined || s.transpose !== undefined)) {
+					const v = Number(patch.transpose ?? s.transpose ?? 0);
+					ref.tr.slider.value = String(v);
+					ref.tr.input.value = String(v);
+					ref.tr.value.textContent = String(v);
+				}
+				// 音频移调（逻辑）
+				if (ref?.ta && (patch.transposeAudio !== undefined || s.transposeAudio !== undefined)) {
+					const v = Number(patch.transposeAudio ?? s.transposeAudio ?? 0);
+					ref.ta.slider.value = String(v);
+					ref.ta.input.value = String(v);
+					ref.ta.value.textContent = String(v);
+				}
+			};
+
+			if (changed?.trackSettings) {
+				Object.keys(changed.trackSettings).forEach((key) => {
+					const idx = Number(key);
+					const patch = changed.trackSettings![key] || {};
+					applyTrackPatch(idx, patch);
+				});
+			} else if (!changed) {
+				// 全量刷新（例如 ensureDefaultsFromApi 触发）
+				this.tracks.forEach((t) => applyTrackPatch(t.index, {}));
+			}
+		});
 	}
 
 	onClose() {
 		this.contentEl.empty();
+		// 解绑 Store 订阅，清理引用
+		try {
+			if (this.unsubscribeStore) this.unsubscribeStore();
+			this.unsubscribeStore = undefined;
+		} catch {/* ignore */}
+		this.uiRefs.clear();
 	}
 }

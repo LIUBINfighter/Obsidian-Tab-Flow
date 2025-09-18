@@ -247,37 +247,7 @@ export class AlphaTabService {
 		this.eventBus.subscribe('命令:重建AlphaTabApi', () => {
 			this.reconstructApi();
 		});
-		// 轨道事件处理 - 用于状态同步和日志记录
-		this.eventBus.subscribe(
-			'track:solo',
-			(data: { track: Record<string, unknown>; value: boolean }) => {
-				console.debug(`[AlphaTabService] 轨道 ${data.track.name} 独奏状态: ${data.value}`);
-			}
-		);
-		this.eventBus.subscribe(
-			'track:mute',
-			(data: { track: Record<string, unknown>; value: boolean }) => {
-				console.debug(`[AlphaTabService] 轨道 ${data.track.name} 静音状态: ${data.value}`);
-			}
-		);
-		this.eventBus.subscribe(
-			'track:volume',
-			(data: { track: Record<string, unknown>; value: number }) => {
-				console.debug(`[AlphaTabService] 轨道 ${data.track.name} 音量: ${data.value}`);
-			}
-		);
-		this.eventBus.subscribe(
-			'track:transpose',
-			(data: { track: Record<string, unknown>; value: number }) => {
-				console.debug(`[AlphaTabService] 轨道 ${data.track.name} 移调: ${data.value}`);
-			}
-		);
-		this.eventBus.subscribe(
-			'track:transposeAudio',
-			(data: { track: Record<string, unknown>; value: number }) => {
-				console.debug(`[AlphaTabService] 轨道 ${data.track.name} 音频移调: ${data.value}`);
-			}
-		);
+		// 轨道事件订阅已移除：改为 TrackStateStore -> TabView -> API 的单向数据流
 	}
 
 	private registerApiListeners() {
