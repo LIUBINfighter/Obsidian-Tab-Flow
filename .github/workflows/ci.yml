@@ -5,19 +5,25 @@ on:
     branches: [ master, dev ]
   pull_request:
     branches: [ master, dev ]
+  workflow_dispatch:
 
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
@@ -26,17 +32,50 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      - name: Check formatting
-        run: npm run format:check
+      - name: Run formatting
+        run: npm run format
+      - name: Commit and push formatted code
+        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet || (git add . && git commit -m "chore: format code" && git push)
 
       - name: Build project
         run: npm run build
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+  codeql-analysis:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
         with:
-          name: build-files
-          path: |
-            main.js
-            manifest.json
-            styles.css
+          languages: javascript
+          # include custom queries
+          queries: ./.github/codeql-custom-queries
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Run CodeQL database analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "security-and-quality"
+
+    #   - name: Upload build artifacts
+    #     uses: actions/upload-artifact@v4
+    #     with:
+    #       name: build-files
+    #       path: |
+    #         main.js
+    #         manifest.json
+    #         styles.css

@@ -9,8 +9,9 @@ import { EventBus, isMessy, formatTime, setupHorizontalScroll } from '../utils';
 import { AlphaTabService } from '../services/AlphaTabService';
 import { ExternalMediaService } from '../services/ExternalMediaService';
 import { createPlayBar } from '../components/PlayBar';
-import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 导入新的服务
+// import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 旧的基于 localStorage 的服务，现替换为 TrackStateStore
 import { TracksModal } from '../components/TracksModal'; // 导入 TracksModal
+import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
 import { t } from 'i18n';
 
@@ -20,6 +21,22 @@ export type AlphaTabResources = {
 	soundFontUri: string;
 };
 
+// 音轨状态持久化接口
+interface ITabViewPersistedState extends Record<string, unknown> {
+	filePath: string;
+	selectedTracks?: number[];
+	trackSettings?: Record<
+		string,
+		{
+			solo?: boolean;
+			mute?: boolean;
+			volume?: number;
+			transpose?: number;
+			transposeAudio?: number;
+		}
+	>;
+}
+
 export class TabView extends FileView {
 	private static instanceId = 0;
 	private _styles: HTMLStyleElement;
@@ -28,7 +45,8 @@ export class TabView extends FileView {
 	private fileModifyHandler: (file: TFile) => void;
 	public eventBus: EventBus; // Public for external interaction
 	private alphaTabService: AlphaTabService;
-	private scorePersistenceService: ScorePersistenceService; // 新增服务实例
+	// private scorePersistenceService: ScorePersistenceService; // 已弃用，使用 trackStateStore
+	private trackStateStore: TrackStateStore;
 	private _api!: alphaTab.AlphaTabApi;
 	private plugin: Plugin;
 	private resources: AlphaTabResources;
@@ -38,6 +56,54 @@ export class TabView extends FileView {
 	private externalMediaService: ExternalMediaService | null = null;
 	private settingsChangeHandler?: () => void;
 	private horizontalScrollCleanup?: () => void; // 用于清理横向滚动监听器
+	private settingsAction: HTMLElement | null = null;
+	private unsubscribeTrackStore?: () => void; // 解除 TrackStateStore 订阅
+
+	/**
+	 * 将 TrackStateStore 中持久化的音轨状态应用到当前 API。
+	 * 1. 确保存在默认条目（根据当前 score.tracks 初始化缺失项）
+	 * 2. 先应用每个轨道的 solo/mute/volume/transpose（不触发重新渲染）
+	 * 3. 再根据 selectedTracks 渲染所选轨道
+	 */
+	private _applyStoredTrackState() {
+		try {
+			if (!this._api || !this._api.score) return;
+			const filePath = this.currentFile?.path || '';
+			if (!filePath) return;
+			this.trackStateStore.ensureDefaultsFromApi(filePath, this._api);
+			const state = this.trackStateStore.getFileState(filePath);
+			// 参数应用
+			if (state.trackSettings && this._api.score?.tracks) {
+				for (const track of this._api.score.tracks) {
+					const s = state.trackSettings[String(track.index)];
+					if (!s) continue;
+					try {
+						if (typeof s.solo === 'boolean') this._api.changeTrackSolo([track], s.solo);
+						if (typeof s.mute === 'boolean') this._api.changeTrackMute([track], s.mute);
+						if (typeof s.volume === 'number')
+							this._api.changeTrackVolume(
+								[track],
+								Math.max(0, Math.min(16, s.volume)) / 16
+							);
+						if (typeof s.transpose === 'number')
+							this._api.changeTrackTranspositionPitch([track], s.transpose);
+						// transposeAudio 暂无 API，可后续扩展
+					} catch (e) {
+						console.warn('[TabView] 应用轨道参数失败', e);
+					}
+				}
+			}
+			// 轨道选择（渲染）
+			if (state.selectedTracks && state.selectedTracks.length) {
+				const tracks = this._api.score.tracks.filter((t) =>
+					state.selectedTracks!.includes(t.index)
+				);
+				if (tracks.length) this._api.renderTracks(tracks as any);
+			}
+		} catch (e) {
+			console.warn('[TabView] _applyStoredTrackState 执行失败', e);
+		}
+	}
 
 	private isAudioLoaded(): boolean {
 		try {
@@ -74,14 +140,94 @@ export class TabView extends FileView {
 		this.plugin = plugin;
 		this.resources = resources;
 		this.eventBus = eventBus ?? new EventBus();
-		this.scorePersistenceService = new ScorePersistenceService(); // 初始化服务
+		// 从插件实例获取 TrackStateStore
+		this.trackStateStore = (plugin as any).trackStateStore as TrackStateStore;
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
-				console.debug(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
+				// console.debug(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
 				this.reloadFile();
 			}
 		};
+	}
+
+	/**
+	 * 处理 TrackStateStore 的增量变化，将其翻译为 alphaTab API 调用。
+	 */
+	private handleTrackStateChange(ev: {
+		filePath: string;
+		changed: Partial<{
+			selectedTracks?: number[];
+			trackSettings?: Record<
+				string,
+				Partial<{
+					solo?: boolean;
+					mute?: boolean;
+					volume?: number;
+					transpose?: number;
+					transposeAudio?: number;
+				}>
+			>;
+		}> | null;
+	}) {
+		try {
+			if (!this.currentFile || ev.filePath !== this.currentFile.path) return;
+			if (!this._api || !this._api.score) return;
+			const changed = ev.changed;
+			if (!changed) return; // ensureDefaultsFromApi 时可能为 null，只需忽略
+
+			// 1) 渲染所选音轨（空集合按“全部”处理）
+			if (changed.selectedTracks && Array.isArray(changed.selectedTracks)) {
+				let tracksToRender: alphaTab.model.Track[];
+				if (changed.selectedTracks.length === 0) {
+					tracksToRender = this._api.score.tracks;
+				} else {
+					const indices = new Set(changed.selectedTracks);
+					tracksToRender = this._api.score.tracks.filter((t) => indices.has(t.index));
+				}
+				if (tracksToRender.length) {
+					try {
+						this._api.renderTracks(tracksToRender as any);
+					} catch (e) {
+						console.warn('[TabView] 应用选中音轨失败', e);
+					}
+				}
+			}
+
+			// 2) 应用单轨设置变化
+			if (changed.trackSettings && this._api.score?.tracks) {
+				for (const key of Object.keys(changed.trackSettings)) {
+					const idx = Number(key);
+					const settingsPatch = changed.trackSettings[key];
+					if (!settingsPatch) continue;
+					const track = this._api.score.tracks.find((t) => t.index === idx);
+					if (!track) continue;
+					try {
+						if (typeof settingsPatch.solo === 'boolean') {
+							this._api.changeTrackSolo([track], settingsPatch.solo);
+						}
+						if (typeof settingsPatch.mute === 'boolean') {
+							this._api.changeTrackMute([track], settingsPatch.mute);
+						}
+						if (typeof settingsPatch.volume === 'number') {
+							const v = Math.max(0, Math.min(16, settingsPatch.volume)) / 16;
+							this._api.changeTrackVolume([track], v);
+						}
+						if (typeof settingsPatch.transpose === 'number') {
+							this._api.changeTrackTranspositionPitch(
+								[track],
+								settingsPatch.transpose
+							);
+						}
+						// transposeAudio 暂无 API，留作将来：settingsPatch.transposeAudio
+					} catch (e) {
+						console.warn(`[TabView] 应用轨道 ${idx} 参数更新失败`, e);
+					}
+				}
+			}
+		} catch (e) {
+			console.warn('[TabView] handleTrackStateChange 处理失败', e);
+		}
 	}
 
 	getViewType(): string {
@@ -104,6 +250,79 @@ export class TabView extends FileView {
 		}
 		if (this.currentFile) return this.currentFile.basename;
 		return 'alphaTab';
+	}
+
+	/**
+	 * 获取当前视图的状态用于持久化。
+	 * 当 Obsidian 序列化布局时调用此方法。
+	 */
+	getState(): ITabViewPersistedState {
+		const state: ITabViewPersistedState = {
+			filePath: this.currentFile?.path || '',
+		};
+
+		// 保存选中的音轨
+		if (this._api?.score?.tracks && this._api.tracks) {
+			// 通过检查音轨是否在渲染的音轨列表中来确定选中的音轨
+			const renderedTrackIndices = new Set(this._api.tracks.map((track) => track.index));
+			const selectedTracks = this._api.score.tracks.filter((track) =>
+				renderedTrackIndices.has(track.index)
+			);
+			if (selectedTracks.length > 0) {
+				state.selectedTracks = selectedTracks.map((track) => track.index);
+			}
+		}
+
+		// 视图持久化不再保存 trackSettings（交由 TrackStateStore 插件级处理）
+
+		return state;
+	}
+
+	/**
+	 * 设置视图的状态。
+	 * 当 Obsidian 反序列化布局时调用此方法。
+	 */
+	async setState(state: ITabViewPersistedState, result: any): Promise<void> {
+		// 应用文件路径
+		if (state.filePath && state.filePath !== this.currentFile?.path) {
+			try {
+				const file = this.app.vault.getAbstractFileByPath(state.filePath);
+				if (file instanceof TFile) {
+					await this.onLoadFile(file);
+				}
+			} catch (e) {
+				console.warn('[TabView] 设置文件路径状态失败:', e);
+			}
+		}
+
+		// 应用选中的音轨（在乐谱加载完成后通过事件处理）
+		if (state.selectedTracks && Array.isArray(state.selectedTracks)) {
+			// 保存选中的音轨索引，等待乐谱加载完成后应用
+			const selectedTrackIndices = new Set(state.selectedTracks);
+
+			// 监听乐谱加载事件来应用音轨选择
+			const applyTrackSelection = () => {
+				if (this._api?.score?.tracks) {
+					const tracksToRender = this._api.score.tracks.filter((track) =>
+						selectedTrackIndices.has(track.index)
+					);
+					if (tracksToRender.length > 0) {
+						this._api.renderTracks(tracksToRender as any);
+					}
+				}
+			};
+
+			// 如果 API 已经就绪，立即应用
+			if (this._api && this._api.score) {
+				applyTrackSelection();
+			} else if (this._api && this._api.scoreLoaded) {
+				// 监听乐谱加载完成事件
+				this._api.scoreLoaded.on(applyTrackSelection);
+			}
+		}
+
+		// 调用父类的 setState
+		await super.setState(state, result);
 	}
 
 	/**
@@ -237,13 +456,13 @@ export class TabView extends FileView {
 		`;
 		this._fontStyle = this.containerEl.ownerDocument.createElement('style');
 		this._fontStyle.id = `alphatab-font-style-${TabView.instanceId}`;
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		this._fontStyle.appendChild(document.createTextNode(fontFaceRule));
 		this.containerEl.ownerDocument.head.appendChild(this._fontStyle);
 
 		const cls = `alphatab-${TabView.instanceId++}`;
 		const styles = this.containerEl.createEl('style');
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		const styleContent = `
 		.${cls} .at-cursor-bar {
 			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
@@ -263,7 +482,7 @@ export class TabView extends FileView {
 		}
 		`;
 		styles.appendChild(document.createTextNode(styleContent));
-		// 使用 DOM API 替代 innerHTML，避免安全风险
+
 		const additionalStyle = `.tabflow-hide-statusbar .status-bar { display: none !important; }`;
 		styles.appendChild(document.createTextNode(additionalStyle));
 		this._styles = styles;
@@ -287,12 +506,13 @@ export class TabView extends FileView {
 		// 渲染 DebugBar
 		this._renderDebugBarIfEnabled();
 
-		// 监听 scoreLoaded，乐谱加载后挂载播放栏
+		// 监听 scoreLoaded：首次加载时挂载播放栏并应用持久化音轨状态
 		if (this._api && this._api.scoreLoaded) {
 			this._api.scoreLoaded.on(() => {
 				setTimeout(() => {
 					this._mountPlayBarInternal();
 					this.configureScrollElement(); // 确保在 PlayBar 挂载后配置滚动元素
+					this._applyStoredTrackState(); // 首次加载应用音轨状态
 				}, 100);
 			});
 		} else {
@@ -300,7 +520,20 @@ export class TabView extends FileView {
 			setTimeout(() => {
 				this._mountPlayBarInternal();
 				this.configureScrollElement();
+				this._applyStoredTrackState();
 			}, 500);
+		}
+
+		// 长期订阅 TrackStateStore，响应状态变化
+		if (!this.unsubscribeTrackStore) {
+			this.unsubscribeTrackStore = this.trackStateStore.on((storeEv) => {
+				// 保持轻量：仅在相关文件变化时才处理
+				if (storeEv.filePath === this.currentFile?.path) {
+					this.handleTrackStateChange(storeEv as any);
+					// 可选：布局保存
+					this.app.workspace.requestSaveLayout();
+				}
+			});
 		}
 
 		// 订阅刷新播放器命令：对当前文件执行完整重载
@@ -332,6 +565,18 @@ export class TabView extends FileView {
 			})
 		);
 
+		// Listen for scroll mode changes triggered by settings UI or playbar
+		this.registerEvent(
+			(this.app.workspace as any).on('tabflow:scroll-mode-changed', (newMode: string) => {
+				try {
+					// console.debug(`[TabView] 滚动模式变更: ${newMode}`);
+					this.configureScrollElement();
+				} catch (e) {
+					console.warn('[TabView] Failed to apply scroll mode change:', e);
+				}
+			})
+		);
+
 		// 监听设置变化，实时响应 Debug Bar 挂载/卸载
 		this.settingsChangeHandler = () => {
 			this._renderDebugBarIfEnabled();
@@ -356,7 +601,7 @@ export class TabView extends FileView {
 
 		// 监听手动刷新事件 - 使用事件总线
 		this.eventBus.subscribe('命令:手动刷新', () => {
-			console.debug('[TabView] 收到手动刷新事件');
+			// console.debug('[TabView] 收到手动刷新事件');
 			this._mountPlayBarInternal();
 			this.configureScrollElement();
 		});
@@ -385,7 +630,7 @@ export class TabView extends FileView {
 			this.eventBus.publish('命令:重建AlphaTabApi');
 		});
 
-		// 服务层 API 重建完成后，更新本视图引用并重新加载当前文件
+		// 服务层 API 重建完成后，更新本视图引用并重新加载当前文件，并应用 TrackStateStore 状态
 		this.eventBus.subscribe('状态:API已重建', (newApi: alphaTab.AlphaTabApi) => {
 			try {
 				this._api = newApi;
@@ -404,10 +649,8 @@ export class TabView extends FileView {
 							(score as unknown as { filePath?: string }).filePath =
 								this.currentFile?.path;
 						}
-						this.scorePersistenceService.loadScoreViewState(
-							this._api,
-							this.currentFile?.path || ''
-						);
+						// API 重建后再次应用持久化音轨状态
+						this._applyStoredTrackState();
 
 						this.leaf?.setViewState(
 							{
@@ -439,7 +682,7 @@ export class TabView extends FileView {
 			this.scrollToBottom();
 		});
 
-		// 订阅 UI:showTracksModal 事件，弹出 TracksModal
+		// 订阅 UI:showTracksModal 事件，弹出 TracksModal（使用 TrackStateStore 即时模式）
 		this.eventBus.subscribe('UI:showTracksModal', () => {
 			const api = this._api || this.alphaTabService.getApi();
 			const tracks = api.score?.tracks || [];
@@ -447,30 +690,68 @@ export class TabView extends FileView {
 				new Notice('没有可用的音轨');
 				return;
 			}
+			const filePath = this.currentFile?.path || '';
 			const modal = new TracksModal(
 				this.app,
 				tracks,
-				(selectedTracks: alphaTab.model.Track[]) => {
-					if (selectedTracks && selectedTracks.length > 0) {
-						api.renderTracks(selectedTracks);
-					}
-				},
+				filePath,
 				api,
 				this.eventBus,
-				this.scorePersistenceService // 传递 ScorePersistenceService
+				this.trackStateStore
 			);
 			modal.open();
 		});
+
+		// 已通过 unsubscribeTrackStore 订阅进行处理与保存布局，这里移除重复订阅避免重复操作
+
+		// 订阅设置滚动模式事件
+		this.eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
+			try {
+				const plugin = this.plugin as any;
+				if (plugin && plugin.settings) {
+					plugin.settings.scrollMode = mode;
+					plugin.saveSettings();
+					// 应用新的滚动模式
+					this.configureScrollElement();
+					// 触发滚动模式变更事件
+					this.app.workspace.trigger('tabflow:scroll-mode-changed', mode);
+					// console.debug(`[TabView] 滚动模式已更新为: ${mode}`);
+				}
+			} catch (e) {
+				console.warn('[TabView] 更新滚动模式失败:', e);
+			}
+		});
+		// 添加右上角设置按钮，跳转到 SettingTab 的 player 子页签
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+				this.settingsAction = null;
+			}
+			const btn = this.addAction(
+				'settings',
+				t('settings.tabs.player', undefined, '设置'),
+				() => {
+					try {
+						this.app.workspace.trigger('tabflow:open-plugin-settings-player');
+					} catch {
+						// ignore
+					}
+				}
+			);
+			this.settingsAction = btn as unknown as HTMLElement;
+		} catch (e) {
+			// ignore
+		}
 	}
 
 	async onClose() {
-		console.debug('[TabView] Starting cleanup process');
+		// console.debug('[TabView] Starting cleanup process');
 
 		document.body.classList.remove('tabflow-hide-statusbar');
 
 		if (this._fontStyle) {
 			this._fontStyle.remove();
-			console.debug('[TabView] Removed injected @font-face style.');
+			// console.debug('[TabView] Removed injected @font-face style.');
 		}
 
 		this.unregisterFileWatcher();
@@ -478,7 +759,7 @@ export class TabView extends FileView {
 		if (this._api) {
 			try {
 				this._api.destroy();
-				console.debug('[TabView] AlphaTab API destroyed successfully');
+				// console.debug('[TabView] AlphaTab API destroyed successfully');
 			} catch (error) {
 				console.error('[TabView] Error destroying AlphaTab API:', error);
 			}
@@ -486,6 +767,16 @@ export class TabView extends FileView {
 
 		if (this._styles) {
 			this._styles.remove();
+		}
+
+		// 清理右上角设置按钮
+		try {
+			if (this.settingsAction && this.settingsAction.parentElement) {
+				this.settingsAction.remove();
+			}
+			this.settingsAction = null;
+		} catch (e) {
+			// ignore
 		}
 
 		try {
@@ -514,15 +805,25 @@ export class TabView extends FileView {
 			this.horizontalScrollCleanup = undefined;
 		}
 
+		// 解绑 TrackStateStore 订阅
+		try {
+			if (this.unsubscribeTrackStore) {
+				this.unsubscribeTrackStore();
+				this.unsubscribeTrackStore = undefined;
+			}
+		} catch {
+			// ignore
+		}
+
 		this.currentFile = null;
 
-		console.debug('[TabView] View unloaded and resources cleaned up');
+		// console.debug('[TabView] View unloaded and resources cleaned up');
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
 		this.currentFile = file;
 		try {
-			console.debug(`[TabView] Loading file: ${file.name}`);
+			// console.debug(`[TabView] Loading file: ${file.name}`);
 
 			// 使用 AlphaTabService 加载文件
 			if (file.extension && ['alphatab', 'alphatex'].includes(file.extension.toLowerCase())) {
@@ -534,7 +835,7 @@ export class TabView extends FileView {
 			}
 			// 配置滚动元素 - 在乐谱加载后设置
 			this.configureScrollElement();
-			console.debug(`[TabView] File loaded successfully: ${file.name}`);
+			// console.debug(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error('[TabView] Failed to load file:', error);
 			new Notice(`加载乐谱文件失败: ${error.message || '未知错误'}`);
@@ -561,20 +862,37 @@ export class TabView extends FileView {
 
 		if (scrollElement) {
 			this._api.settings.player.scrollElement = scrollElement;
-			console.debug('[TabView] 设置滚动容器:', scrollElement.className);
+			// console.debug('[TabView] 设置滚动容器:', scrollElement.className);
 		} else {
 			this._api.settings.player.scrollElement = 'html,body';
-			console.debug('[TabView] 使用默认滚动容器');
+			// console.debug('[TabView] 使用默认滚动容器');
 		}
 
 		this._api.updateSettings();
 
+		// 延迟应用滚动模式及智能阈值设置
 		setTimeout(() => {
 			if (this._api.settings.player) {
-				this._api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
+				// 根据用户设置选择滚动模式
+				const mode = (this.plugin as any).settings.scrollMode || 'continuous';
+				let sm: alphaTab.ScrollMode;
+				switch (mode) {
+					case 'continuous':
+						sm = alphaTab.ScrollMode.Continuous;
+						break;
+					case 'offScreen':
+						sm = alphaTab.ScrollMode.OffScreen;
+						break;
+					case 'off':
+						sm = alphaTab.ScrollMode.Off;
+						break;
+					default:
+						sm = alphaTab.ScrollMode.Continuous;
+				}
+				this._api.settings.player.scrollMode = sm;
 				this._api.settings.player.enableCursor = true;
 				this._api.updateSettings();
-				console.debug('[TabView] 滚动配置已更新');
+				// console.debug(`[TabView] 应用滚动模式: ${mode}`);
 			}
 		}, 100);
 
@@ -589,12 +907,12 @@ export class TabView extends FileView {
 
 	private registerFileWatcher(): void {
 		this.app.vault.on('modify', this.fileModifyHandler);
-		console.debug('[TabView] 已注册文件监听');
+		// console.debug('[TabView] 已注册文件监听');
 	}
 
 	private unregisterFileWatcher(): void {
 		this.app.vault.off('modify', this.fileModifyHandler);
-		console.debug('[TabView] 已注销文件监听');
+		// console.debug('[TabView] 已注销文件监听');
 	}
 
 	private async reloadFile(): Promise<void> {
@@ -613,14 +931,14 @@ export class TabView extends FileView {
 				const inputFile = await this.app.vault.readBinary(this.currentFile);
 				this._api.load(new Uint8Array(inputFile));
 			}
-			console.debug(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
+			// console.debug(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
 		} catch (error) {
 			console.error('[TabView] 重新加载文件失败', error);
 		}
 	}
 
 	override async onUnloadFile(file: TFile): Promise<void> {
-		console.debug(`[TabView] Unloading file: ${file.name}`);
+		// console.debug(`[TabView] Unloading file: ${file.name}`);
 		this.currentFile = null;
 		await super.onUnloadFile(file);
 	}

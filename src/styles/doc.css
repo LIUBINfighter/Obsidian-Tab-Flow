@@ -142,9 +142,9 @@
 .inmarkdown-editor-cm .cm-editor {
 	background: transparent;
 	font-family: var(--font-monospace);
-	font-size: 13px;
-	line-height: 1.5;
-	max-height: 260px;
+	font-size: 18px;
+	line-height: 2;
+	max-height: 600px;
 	/* keep a reasonable height */
 	overflow: auto;
 }
@@ -364,7 +364,7 @@
 	color: var(--text-normal);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
 	.doc-nav {
 		flex-direction: column;
 	}
@@ -393,4 +393,76 @@
 		width: 100%;
 		box-sizing: border-box;
 	}
+}
+
+/* 快速滚动动画设置 */
+.tabflow-doc-layout {
+	scroll-behavior: smooth;
+	scroll-behavior: smooth !important;
+}
+
+/* 使用更快的滚动时长和缓动函数 */
+.tabflow-doc-layout * {
+	scroll-behavior: smooth;
+	transition: scroll-behavior 0.08s ease-out; /* 从0.15s减少到0.08s，使用ease-out让开始更快 */
+}
+
+/* 针对滚动容器的优化 */
+.tabflow-doc-markdown {
+	scroll-behavior: smooth;
+	scroll-margin-top: 20px;
+	scroll-behavior: smooth !important;
+}
+
+/* 使用CSS变量控制滚动速度 */
+:root {
+	--scroll-duration: 0.05s;
+	--scroll-easing: cubic-bezier(0.4, 0, 0.2, 1); /* 更快的缓动曲线 */
+}
+
+/* 确保滚动动画在不同浏览器中表现一致 */
+@media (prefers-reduced-motion: no-preference) {
+	.tabflow-doc-layout {
+		scroll-behavior: smooth;
+		scroll-behavior: smooth !important;
+	}
+
+	.tabflow-doc-layout * {
+		scroll-behavior: smooth;
+		scroll-behavior: smooth !important;
+		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
+	}
+
+	/* 特别针对滚动容器的优化 */
+	.tabflow-doc-markdown {
+		scroll-behavior: smooth;
+		scroll-behavior: smooth !important;
+		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
+	}
+}
+
+/* Articulation table copy buttons */
+.articulation-table .copy-btn {
+	background: transparent;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 4px 8px;
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--text-normal);
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+	min-width: auto;
+	width: 100%;
+	text-align: left;
+}
+
+.articulation-table .copy-btn:hover {
+	border-color: var(--interactive-accent);
+	background-color: var(--background-modifier-hover);
+}
+
+.articulation-table .copy-btn:active {
+	background-color: var(--background-modifier-active);
 }

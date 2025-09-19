@@ -1,3 +1,97 @@
+/* AlphaTex Editor View Styles */
+.alphatex-editor-layout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.alphatex-editor-playbar {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.alphatex-editor-toolbar {
+	display: flex;
+	gap: 8px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.alphatex-editor-toolbar .clickable-icon {
+	padding: 6px;
+	border-radius: 4px;
+	transition: background 0.15s ease;
+}
+
+.alphatex-editor-toolbar .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+}
+
+.alphatex-editor-section,
+.alphatex-preview-section {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-section,
+.alphatex-editor-layout.is-vertical .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-layout.is-horizontal {
+	flex-direction: row;
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-section,
+.alphatex-editor-layout.is-horizontal .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-wrapper {
+	height: 100%;
+	padding: 12px;
+	background: var(--background-primary);
+	/* 注意：不要在 wrapper 上直接增加 padding-bottom，因为 CodeMirror
+	   的滚动容器位于内部，直接在 .cm-content 上添加伪元素可以
+	   增加真实的滚动高度，从而使 "最后一行" 在滚动到底部时显得更高。 */
+}
+
+/* 在实际的滚动内容末尾增加占位，以扩展滚动高度并保留底部空白。 */
+.alphatex-editor-wrapper .cm-content::after {
+	content: '';
+	display: block;
+	/* 默认留白为页面高度的一半，方便最后一行在滚动到底部时向上留出更多空间 */
+	height: var(--alphatex-editor-bottom-gap, 40vh);
+	width: 1px;
+	pointer-events: none;
+}
+
+/* 调整编辑器内部字体略小一些，避免占用过多垂直空间 */
+.alphatex-editor-wrapper .cm-content,
+.alphatex-editor-wrapper .cm-editor {
+	font-size: var(--alphatex-editor-font-size, 0.95rem);
+	line-height: 1.45;
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-wrapper {
+	border-bottom: none;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-wrapper {
+	border-right: none;
+}
+
+.alphatex-preview-section {
+	padding: 12px;
+	background: var(--background-primary);
+	overflow: auto;
+}
+
 .alphatex-block {
 	margin: 0.5rem 0 1rem 0;
 }
@@ -24,9 +118,321 @@
 	gap: 0.25rem;
 	align-items: center;
 }
+
+/* Background for visible whitespace characters (spaces/tabs) in the editor. */
+:root {
+	--alphatex-space-bg: rgba(0, 0, 0, 0.03);
+}
+/* Style for visible whitespace characters decorated by whitespaceHighlightPlugin */
+.inmarkdown-editor-cm .cm-content .cm-whitespace,
+.cm-editor .cm-content .cm-whitespace,
+.cm-content .cm-whitespace {
+	/* use theme-aware hover modifier as whitespace background for better integration */
+	background: var(--background-modifier-hover, var(--alphatex-space-bg));
+	display: inline-block; /* allow padding/background to be visible */
+	border-radius: 2px;
+	padding: 0 2px;
+	line-height: 1;
+}
+
+/* Render regular ASCII space as a mid-dot, keep original editor background */
+.cm-content .cm-whitespace-space {
+	/* keep background transparent so original bg shows through */
+	background: transparent;
+	color: transparent; /* hide the real space */
+	position: relative;
+}
+.cm-content .cm-whitespace-space::before {
+	content: '·';
+	color: var(--text-muted);
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
+	pointer-events: none;
+}
+.cm-content .cm-surrounded {
+	/* use theme highlight background; fallback to light red */
+	background: var(--background-modifier-hover, rgba(220, 38, 38, 0.12));
+	border-radius: 3px;
+	border: 1px solid var(--background-modifier-border);
+	display: inline-block;
+	padding: 0 2px;
+}
 .alphatex-error {
 	color: var(--text-error);
 }
 .alphatex-note {
 	color: var(--text-muted);
+}
+
+/* 错误消息容器使用flexbox布局 */
+.alphatex-messages {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+/* 错误消息容器中的复制按钮靠右显示 */
+.alphatex-messages .clickable-icon[aria-label='复制错误与原文'] {
+	align-self: flex-end;
+	margin-bottom: 0.25rem;
+}
+
+/* markdown post processing*/
+
+/* Highlight for dot symbol in embedded editor */
+.highlighted-dot {
+	/* Simple dot highlight: use accent color and bold weight only. */
+	display: inline-block;
+	color: var(--text-accent, var(--color-accent));
+	background: transparent;
+	font-weight: 700;
+	padding: 0 1px;
+}
+
+/* Highlight for bar line symbol (|) in embedded editor */
+.highlighted-bar {
+	background-color: var(--color-accent);
+	opacity: 0.5;
+	border-radius: 2px;
+}
+
+/* Token styling for AlphaTex language tokens */
+.cm-content .cm-atx-meta,
+.atx-meta {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+.cm-content .cm-atx-comment,
+.atx-comment {
+	color: var(--text-muted);
+	opacity: 0.9;
+}
+
+/* Brackets and braces styling (for () and {}) */
+.cm-content .cm-bracket,
+.cm-bracket,
+.atx-bracket {
+	color: var(--color-accent);
+	font-weight: 700;
+}
+
+/* Metadata backslash tokens (e.g. \title, \tempo) */
+.cm-content .cm-meta,
+.cm-meta,
+.atx-meta {
+	color: var(--text-accent);
+	font-weight: 700;
+}
+
+/* Comments styling (// ...) */
+.cm-content .cm-comment,
+.cm-comment {
+	color: var(--text-muted);
+}
+
+.cm-content .cm-atx-keyword,
+.atx-keyword {
+	color: var(--color-accent);
+	font-weight: 600;
+}
+
+.cm-content .cm-atx-string,
+.atx-string {
+	color: var(--text-success);
+}
+
+.cm-content .cm-atx-number,
+.atx-number {
+	color: var(--text-faint);
+}
+
+/* Bars and section dots */
+.cm-content .cm-atx-bar,
+.atx-bar {
+	background-color: transparent;
+	color: var(--color-accent);
+	font-weight: 700;
+	padding: 0 2px;
+}
+
+/* Section separator dot rendered larger and aligned */
+.cm-content .cm-dot,
+.highlighted-dot,
+.atx-dot {
+	/* Keep dot highlight minimal: accent color and bold. Avoid custom fonts/size/offsets. */
+	display: inline-block;
+	color: var(--text-accent, var(--color-accent));
+	font-weight: 700;
+	padding: 0 1px;
+}
+
+/* Note tokens (fret.string.duration) */
+.cm-content .cm-note,
+.atx-note {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+/* Chord group */
+.cm-content .cm-chord,
+.atx-chord {
+	color: var(--text-accent);
+	background: rgba(0, 0, 0, 0.02);
+	border-radius: 2px;
+	padding: 0 2px;
+}
+
+/* Effect blocks { ... } */
+.cm-content .cm-effect,
+.atx-effect {
+	color: var(--text-warning);
+	font-weight: 600;
+}
+
+/* Bar number widget (kept) */
+.bar-number {
+	color: var(--text-muted);
+	font-size: 0.8em;
+	font-weight: bold;
+	margin-left: 2px;
+	opacity: 0.7;
+}
+
+/* Debug highlight styles: high-contrast, intentionally loud for visual inspection */
+.cm-debug-meta {
+	background: rgba(255, 105, 180, 0.12);
+	color: #ff69b4;
+	font-weight: 700;
+}
+.cm-debug-string {
+	background: rgba(255, 99, 71, 0.06);
+	color: #ff4500;
+	font-weight: 700;
+}
+.cm-debug-number {
+	background: rgba(255, 165, 0, 0.06);
+	color: #ff8c00;
+	font-weight: 700;
+}
+.cm-debug-note {
+	background: rgba(255, 235, 59, 0.08);
+	color: #b58900;
+	font-weight: 800;
+}
+.cm-debug-effect-key {
+	background: rgba(218, 112, 214, 0.08);
+	color: #800080;
+	font-weight: 800;
+}
+.cm-debug-effect-arg {
+	background: rgba(173, 255, 47, 0.06);
+	color: #6b8e23;
+	font-weight: 700;
+}
+.cm-debug-lbrace,
+.cm-debug-rbrace {
+	background: rgba(30, 144, 255, 0.06);
+	color: #1e90ff;
+	font-weight: 800;
+}
+.cm-debug-lparen,
+.cm-debug-rparen {
+	background: rgba(100, 149, 237, 0.04);
+	color: #4b6cb7;
+	font-weight: 700;
+}
+.cm-debug-pipe {
+	background: rgba(148, 0, 211, 0.12);
+	color: #9400d3;
+	font-weight: 900;
+	border-radius: 2px;
+}
+.cm-debug-lessthan {
+	background: rgba(0, 206, 209, 0.06);
+	color: #008b8b;
+	font-weight: 700;
+}
+.cm-debug-dot {
+	background: rgba(0, 191, 165, 0.06);
+	color: #00695c;
+	font-weight: 900;
+}
+.cm-debug-duration {
+	background: rgba(255, 215, 0, 0.06);
+	color: #b8860b;
+	font-weight: 700;
+}
+.cm-debug-multiply {
+	background: rgba(199, 21, 133, 0.06);
+	color: #c71585;
+	font-weight: 800;
+}
+
+/* make debug marks slightly padded so they're visible inline */
+.cm-debug-meta,
+.cm-debug-string,
+.cm-debug-number,
+.cm-debug-note,
+.cm-debug-effect-key,
+.cm-debug-effect-arg,
+.cm-debug-pipe,
+.cm-debug-dot {
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+/* 当前小节信息栏 */
+.alphatex-bar-info {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	font-size: 0.9em;
+	color: var(--text-muted);
+	text-align: center;
+}
+
+/* New styles for TextMate-inspired tokens, no background to match original */
+.cm-duration {
+	color: #b8860b;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-effect-beat {
+	color: #800080;
+	font-weight: 800;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-effect-note {
+	color: #6b8e23;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-tuning {
+	color: #ff4500;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-boolean {
+	color: #ff8c00;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-metadata {
+	color: var(--text-accent);
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
 }

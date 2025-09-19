@@ -88,9 +88,18 @@
 		"yOffset": "Y偏移:",
 		"nativeScroll": "原生滚动:",
 		"useNativeBrowserSmoothScroll": "使用浏览器原生平滑滚动",
+		"scrollMode": "滚动模式",
+		"scrollModeDesc": "控制乐谱播放时的页面滚动行为",
+		"scrollModeOptions": {
+			"continuous": "连续滚动",
+			"offScreen": "智能翻页",
+			"off": "不滚动"
+		},
+		"scrollModeUpdated": "滚动模式已更新",
 		"tabs": {
 			"general": "资产管理",
 			"player": "播放器配置",
+			"editor": "编辑器设置",
 			"about": "关于"
 		},
 		"about": {
@@ -124,6 +133,7 @@
 				"speed": "速度选择",
 				"staveProfile": "谱表选择",
 				"zoom": "缩放选择",
+				"scrollMode": "滚动模式选择",
 				"audioPlayer": "原生音频播放器（实验性）",
 				"audioPlayerDesc": "暂不可用，存在与 AlphaTab 播放器冲突风险"
 			},
@@ -137,6 +147,70 @@
 				"debugBarEnabled": "已启用 Debug Bar",
 				"debugBarDisabled": "已隐藏 Debug Bar"
 			}
+		},
+		"editor": {
+			"viewTitle": "编辑器视图设置",
+			"barTitle": "编辑器栏设置",
+			"defaultLayout": "默认布局",
+			"defaultLayoutDesc": "编辑器视图的默认布局模式",
+			"layoutHorizontal": "水平布局",
+			"layoutVertical": "垂直布局",
+			"layoutHorizontalSwapped": "水平布局（交换）",
+			"layoutVerticalSwapped": "垂直布局（交换）",
+			"layoutSingleBar": "单小节模式",
+			"layoutSaved": "布局设置已保存",
+			"resetToDefault": "重置为默认",
+			"resetToDefaultDesc": "重置编辑器栏组件的显示开关与顺序为默认配置",
+			"resetToDefaultSuccess": "编辑器栏设置已重置",
+			"resetToDefaultFailed": "重置编辑器栏设置失败",
+			"resetHighlightToDefault": "重置高亮为默认",
+			"resetHighlightToDefaultDesc": "重置所有语法高亮设置到默认值",
+			"resetHighlightToDefaultSuccess": "高亮设置已重置",
+			"resetHighlightToDefaultFailed": "重置高亮设置失败",
+			"fontSize": "编辑器字体大小",
+			"fontSizeDesc": "数值 + 单位，例如 0.95 rem；仅接受数字并从下拉选择单位",
+			"bottomGap": "编辑器底部留白",
+			"bottomGapDesc": "数值 + 单位，例如 40 vh；仅接受数字并从下拉选择单位",
+			"invalidCss": "非法 CSS 值",
+			"resetToDefaultMessage": "已重置为默认",
+			"saved": "设置已保存",
+			"highlights": {
+				"dot": "点符号 (.)",
+				"bar": "小节竖线 (|)",
+				"bracket": "括号 ()/{}",
+				"meta": "元信息 (\\title, \\tempo)",
+				"comment": "行注释 (//)",
+				"debug": "Debug 高亮（仅调试）",
+				"whitespace": "可见空白",
+				"surrounded": "被空白包围的序列",
+				"duration": "时长标记 (:4)",
+				"effect": "效果关键字",
+				"tuning": "调弦文字 (A4)",
+				"boolean": "布尔字面量"
+			},
+			"components": {
+				"playPause": "播放/暂停",
+				"stop": "停止",
+				"metronome": "节拍器",
+				"countIn": "预备拍",
+				"tracks": "选择音轨",
+				"refresh": "刷新/重建播放器",
+				"locateCursor": "滚动到光标",
+				"layoutToggle": "布局切换",
+				"exportMenu": "导出菜单",
+				"toTop": "回到顶部",
+				"toBottom": "回到底部",
+				"openSettings": "打开设置",
+				"progressBar": "进度条",
+				"speed": "速度选择",
+				"staveProfile": "谱表选择",
+				"zoom": "缩放选择",
+				"scrollMode": "滚动模式选择",
+				"audioPlayer": "原生音频播放器（实验性）",
+				"audioPlayerDesc": "编辑器视图中暂不支持音频播放器"
+			},
+			"moveUp": "上移",
+			"moveDown": "下移"
 		}
 	},
 	"navigation": {
@@ -146,7 +220,9 @@
 		"toBottom": "回到底部",
 		"locateCursor": "定位光标",
 		"scrollToTop": "滚动到顶部",
-		"scrollToBottom": "滚动到底部"
+		"scrollToBottom": "滚动到底部",
+		"previous": "上一条",
+		"next": "下一条"
 	},
 	"status": {
 		"audioNotLoaded": "音频资源未加载",
@@ -210,7 +286,8 @@
 		}
 	},
 	"alphatex": {
-		"missingResources": "AlphaTab 资源缺失，无法渲染此代码块。"
+		"missingResources": "AlphaTab 资源缺失，无法渲染此代码块。",
+		"currentBar": "当前小节: {{number}}"
 	},
 	"fileMenu": {
 		"createNewAlphaTab": "创建新的 AlphaTab 文件",
@@ -219,6 +296,78 @@
 		"newFileBaseName": "新的吉他谱"
 	},
 	"commands": {
-		"openDocumentation": "打开 AlphaTex 文档"
+		"openDocumentation": "打开 TabFlow 文档"
+	},
+	"docView": {
+		"displayText": "TabFlow 文档（示例）",
+		"title": "TabFlow 文档",
+		"renderError": "渲染面板时出错",
+		"settings": "设置",
+		"alphaTabOfficialDoc": "alphaTab.js 官方文档"
+	},
+	"ribbon.openDocumentation": "打开 TabFlow 文档",
+	"shareCard": {
+		"title": "分享卡片",
+		"preset": "预设",
+		"presetSave": "保存",
+		"presetSaveAs": "另存为",
+		"presetSetDefault": "设为默认",
+		"presetReset": "重置",
+		"confirmPresetDirty": "当前预设有未保存的更改。确定=保存并切换，取消=弹出二次确认",
+		"confirmPresetDiscard": "放弃未保存更改并切换? 确定=放弃并切换 取消=继续编辑",
+		"notice": {
+			"presetSaved": "预设已保存",
+			"presetCreated": "已创建新预设",
+			"presetSetDefault": "已设为默认",
+			"savedTo": "已保存到 {{path}}",
+			"exportFailed": "导出失败",
+			"copiedToClipboard": "已复制到剪贴板",
+			"clipboardNotSupported": "复制到剪贴板不被支持",
+			"copyFailed": "复制失败"
+		},
+		"prompt": {
+			"newPresetName": "新预设名称",
+			"newPresetDefault": "新预设"
+		},
+		"fileName": "导出文件名",
+		"cardWidth": "卡片宽度(px)",
+		"resolution": "分辨率",
+		"format": "格式",
+		"exportBg": {
+			"label": "导出背景",
+			"options": {
+				"default": "默认（与之前相同）",
+				"auto": "自动（使用预览背景）",
+				"custom": "自定义颜色"
+			}
+		},
+		"customColor": "颜色参数",
+		"customColorPlaceholder": "#ffffff 或 rgb(...)",
+		"disableLazyLabel": "完全渲染",
+		"disableLazy": "禁用懒加载",
+		"showAuthor": "显示作者信息",
+		"authorName": "作者姓名",
+		"authorRemark": "额外文案",
+		"showAvatar": "显示头像",
+		"avatarUpload": "头像(上传)",
+		"authorAlign": "对齐方式",
+		"authorPosition": "显示位置",
+		"position": {
+			"top": "顶部",
+			"bottom": "底部"
+		},
+		"authorBg": "背景色",
+		"authorTextColor": "文字颜色",
+		"authorFontSize": "字号(px)",
+		"copy": "复制",
+		"export": "导出",
+		"close": "关闭",
+		"hint": "拖动移动，滚轮缩放，双击重置",
+		"previewCreateFailed": "预览创建失败",
+		"align": {
+			"left": "左",
+			"center": "居中",
+			"right": "右"
+		}
 	}
 }

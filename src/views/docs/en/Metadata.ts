@@ -10,7 +10,7 @@ const SAMPLE = `// Song information (only at the beginning)
   \\album 'My Album'
   \\words Daniel
   \\music alphaTab
-  \\copyright Daniel
+  \\copyright 'Daniel (Creator of alphaTab)'
   \\instructions "This is an example.\\nWith instructions."
   \\notices "Additional notes\\nEmbedded in the data model."
   \\tab "Daniel"

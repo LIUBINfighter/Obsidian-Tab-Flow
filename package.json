@@ -1,24 +1,27 @@
 {
 	"name": "obsidian-tab-flow",
-	"version": "0.1.1",
+	"version": "0.2.1",
 	"description": "",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {
-		"dev": "node ./scripts/merge-styles.js --dir src/styles && node esbuild.config.mjs",
-		"build": "node ./scripts/merge-styles.js --dir src/styles && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+		"dev": "npm run lint:fix && npm run format && node ./scripts/merge-styles.js --dir src/styles && node esbuild.config.mjs",
+		"build": "node ./scripts/merge-styles.js --dir src/styles && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && echo ======================================= && echo ' build done.'",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"mix": "node ./scripts/mix-code.js --dir ../src",
+		"mix-tabview": "node ./scripts/mix-code-tabview.js --dir ../src",
 		"clean": "node ./scripts/clean.js",
 		"clean-build": "node ./scripts/clean.js --delete styles.css data.json main.js",
 		"test": "vitest",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest --coverage",
 		"test:ui": "vitest --ui",
-		"lint": "eslint src --ext .ts,.js",
-		"lint:fix": "eslint src --ext .ts,.js --fix",
+		"lint": "eslint src --ext .ts,.js,.md,.json",
+		"lint:fix": "eslint src --ext .ts,.js,.md,.json --fix",
 		"format": "prettier --write \"src/**/*.{ts,js,json,css,md}\"",
-		"format:check": "prettier --check \"src/**/*.{ts,js,json,css,md}\""
+		"format:check": "prettier --check \"src/**/*.{ts,js,json,css,md}\"",
+		"scan":"node ./scripts/scan-codeql.js",
+		"check": "npm run clean && npm run lint && npm run lint:fix && npm run format && npm run format:check && npm run build  && npm run scan && echo ======================================= && echo ' All checks passed successfully!'"
 	},
 	"keywords": [],
 	"author": "Jay Bridge",
@@ -40,16 +43,20 @@
 		"tslib": "2.4.0",
 		"typescript": "4.7.4",
 		"vitest": "^1.6.0"
-	},	"dependencies": {
+	},
+	"dependencies": {
 		"@codemirror/commands": "^6.8.1",
+		"@codemirror/highlight": "^0.19.8",
 		"@codemirror/language": "^6.11.1",
 		"@codemirror/rangeset": "^0.19.2",
 		"@codemirror/state": "^6.4.1",
+		"@codemirror/stream-parser": "^0.19.9",
 		"@codemirror/view": "^6.26.3",
 		"@coderline/alphatab": "^1.6.0",
 		"@types/mime-types": "^3.0.0",
 		"jszip": "^3.10.1",
-		"monkey-around": "^3.0.0",
-		"mime-types": "^3.0.1"
+		"mime-types": "^3.0.1",
+		"dom-to-image-more": "^2.9.0",
+		"monkey-around": "^3.0.0"
 	}
 }
