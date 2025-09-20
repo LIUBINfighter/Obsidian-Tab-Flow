@@ -1,4 +1,291 @@
-/* build: build */
+/* This file is auto generated, to edit this please refer to ./src/styles/*.css  */ 
+/* --- ShareModal.css --- */
+/* ShareCard Modal Styles */
+.share-card-modal {
+	display: flex;
+	gap: 1.25rem;
+	max-height: 100%;
+	min-height: 480px;
+	box-sizing: border-box;
+	width: 100%;
+	overflow: hidden;
+}
+
+/* 给外层 Obsidian modal container 增加可选加宽类 */
+/* 容器加宽：同时兼容 modal-container 与 modal 本身加类的情况 */
+/* Center the modal using a full-bleed flex container to avoid transform-based
+   centering (which can promote compositing and disable ClearType on Windows). */
+.modal-container.share-card-wide {
+	position: fixed;
+	inset: 0; /* top:0; right:0; bottom:0; left:0; */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0 !important;
+}
+
+/* Ensure modal itself retains the intended size when the class is applied to
+   the modal element instead of the container. */
+.modal.share-card-wide {
+	width: 96vw !important;
+	max-width: 96vw !important;
+	height: 88vh !important;
+	max-height: 88vh !important;
+	display: flex;
+	flex-direction: column;
+	margin: 0 !important;
+}
+
+.modal-container.share-card-wide .modal,
+.modal.share-card-wide {
+	/* When the container has the sizing class, target the inner .modal to
+	   adopt the intended modal dimensions; when the class is on the modal
+	   itself, the rule above already applies. */
+	width: 96vw !important;
+	max-width: 96vw !important;
+	height: 88vh !important;
+	max-height: 88vh !important;
+	display: flex;
+	flex-direction: column;
+}
+
+/* 让 content 区域填满以摆放左右布局 */
+.modal-container.share-card-wide .modal-content,
+.modal.share-card-wide .modal-content {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+/* 让我们内部根布局自适应剩余空间 */
+.modal-container.share-card-wide .share-card-modal,
+.modal.share-card-wide .share-card-modal {
+	height: 100%;
+}
+
+/* Soft rounded card + subtle shadow for a polished look */
+.modal-container.share-card-wide .share-card-modal,
+.modal.share-card-wide .share-card-modal {
+	border-radius: 12px;
+	box-shadow:
+		0 10px 30px rgba(0, 0, 0, 0.12),
+		0 4px 8px rgba(0, 0, 0, 0.06);
+	overflow: hidden; /* ensure rounded corners clip children */
+	transition:
+		transform 160ms ease,
+		box-shadow 200ms ease,
+		opacity 120ms ease;
+}
+
+.share-card-left {
+	flex: 0 0 300px;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	font-size: 13px;
+	overflow-y: auto;
+	scrollbar-width: none; /* 隐藏滚动条（Firefox） */
+	padding-right: 4px;
+	/* 防止潜在父级 transform 影响子像素文本渲染 */
+	/*transform: translateZ(0);*/ /* 独立图层，有时可改善/有时会加重；若仍模糊可改成 none */
+	backface-visibility: hidden;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	/* 提供稳定背景，避免透明叠加导致 ClearType 失效 */
+	background: var(--background-primary);
+	/* 微调让滚动文本更锐利 */
+	text-rendering: optimizeLegibility;
+}
+.share-card-left label {
+	font-weight: 600;
+	margin-top: 4px;
+}
+.share-card-left input,
+.share-card-left select,
+.share-card-left button {
+	font-size: 13px;
+}
+.share-card-actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+.share-card-actions button {
+	flex: 1 1 auto;
+}
+
+.share-card-right {
+	flex: 1 1 auto;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+}
+.share-card-preview {
+	position: relative;
+	flex: 1 1 auto;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	overflow: hidden; /* hide panned content */
+	cursor: grab;
+	user-select: none;
+}
+.share-card-preview.panning {
+	cursor: grabbing;
+}
+
+.share-card-pan-wrapper {
+	position: absolute;
+	top: 0;
+	left: 0;
+	transform-origin: top left;
+}
+.share-card-root {
+	box-sizing: border-box;
+	padding: 12px;
+	background: var(--background-primary);
+	/* Ensure inner root respects the outer radius and does not overflow */
+	border-radius: 12px;
+	overflow: hidden;
+	/* little elevation on the inner card to visually separate controls */
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* Playground 内容容器（与作者信息分离） */
+.share-card-content {
+	position: relative;
+}
+
+/* Author block styles (preview & export friendly defaults) */
+.share-card-author-container {
+	box-sizing: border-box;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 8px;
+}
+.share-card-author-container:first-child {
+	/* 顶部模式时去掉上 margin */
+	margin-top: 0;
+	margin-bottom: 8px;
+}
+.share-card-author-avatar {
+	flex: 0 0 auto;
+	box-shadow:
+		0 0 0 1px rgba(255, 255, 255, 0.08),
+		0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.share-card-author-name {
+	font-weight: 600;
+}
+.share-card-author-remark {
+	opacity: 0.85;
+}
+
+/* Two-column compact form grid for author settings */
+.share-card-form-grid {
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	align-items: center;
+	row-gap: 6px;
+	column-gap: 8px;
+	margin-top: 12px;
+	padding: 10px 10px 12px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+}
+
+/* 基础配置卡片，与作者设置视觉一致，字段更少但复用 grid 模式 */
+.share-card-basic-grid {
+	display: grid;
+	grid-template-columns: 110px 1fr;
+	align-items: center;
+	row-gap: 6px;
+	column-gap: 8px;
+	margin-top: 4px;
+	padding: 10px 10px 12px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+}
+.share-card-basic-grid .sc-label {
+	font-weight: 600;
+	font-size: 12px;
+	opacity: 0.9;
+	line-height: 1.2;
+}
+.share-card-basic-grid input[type='text'],
+.share-card-basic-grid input[type='number'],
+.share-card-basic-grid input[type='file'],
+.share-card-basic-grid input[type='color'],
+.share-card-basic-grid select {
+	width: 100%;
+	box-sizing: border-box;
+}
+.share-card-basic-grid input[type='checkbox'] {
+	justify-self: start;
+}
+.share-card-form-grid .sc-label {
+	font-weight: 600;
+	font-size: 12px;
+	opacity: 0.9;
+	line-height: 1.2;
+}
+.share-card-form-grid input[type='text'],
+.share-card-form-grid input[type='number'],
+.share-card-form-grid input[type='file'],
+.share-card-form-grid input[type='color'],
+.share-card-form-grid select {
+	width: 100%;
+	box-sizing: border-box;
+}
+.share-card-form-grid input[type='checkbox'] {
+	justify-self: start; /* keep checkbox near left edge of its cell */
+}
+
+/* tighter buttons inside grid if any future ones appear */
+.share-card-form-grid button {
+	font-size: 12px;
+	padding: 4px 8px;
+}
+
+/* Remove the dashed/document-style border from tabflow content inside the share modal.
+   Keep this override scoped to the modal so other views are unaffected. */
+.modal-container.share-card-wide .share-card-modal .tabflow-doc-main-content,
+.modal.share-card-wide .share-card-modal .tabflow-doc-main-content {
+	border: none !important;
+	background: transparent !important; /* let .share-card-root provide the background */
+	padding: 0 !important; /* avoid double padding inside the card root */
+	border-radius: 0 !important;
+}
+
+.share-card-hint {
+	margin-top: 6px;
+	font-size: 11px;
+	opacity: 0.7;
+}
+
+/* Prevent accidental text selection while panning */
+.share-card-preview * {
+	-webkit-user-drag: none;
+}
+
+/* 兜底隐藏光标/播放相关高亮（双保险：即使未成功传 player:'disable' 也不显示） */
+.share-card-root .at-cursor-bar,
+.share-card-root .at-cursor-beat,
+.share-card-root .at-selection,
+.share-card-root .alphatex-controls,
+.share-card-root .nav-buttons-container {
+	display: none !important;
+}
+
+/* 在文件末尾添加（隐藏滚动条，Chrome/Safari/Edge） */
+.share-card-left::-webkit-scrollbar {
+	display: none;
+}
+
 /* --- TrackModal.css --- */
 .tracks-modal .setting-item {
 	display: flex;
@@ -85,6 +372,100 @@
 }
 
 /* --- alphatex.css --- */
+/* AlphaTex Editor View Styles */
+.alphatex-editor-layout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.alphatex-editor-playbar {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.alphatex-editor-toolbar {
+	display: flex;
+	gap: 8px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.alphatex-editor-toolbar .clickable-icon {
+	padding: 6px;
+	border-radius: 4px;
+	transition: background 0.15s ease;
+}
+
+.alphatex-editor-toolbar .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+}
+
+.alphatex-editor-section,
+.alphatex-preview-section {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-section,
+.alphatex-editor-layout.is-vertical .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-layout.is-horizontal {
+	flex-direction: row;
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-section,
+.alphatex-editor-layout.is-horizontal .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-wrapper {
+	height: 100%;
+	padding: 12px;
+	background: var(--background-primary);
+	/* 注意：不要在 wrapper 上直接增加 padding-bottom，因为 CodeMirror
+	   的滚动容器位于内部，直接在 .cm-content 上添加伪元素可以
+	   增加真实的滚动高度，从而使 "最后一行" 在滚动到底部时显得更高。 */
+}
+
+/* 在实际的滚动内容末尾增加占位，以扩展滚动高度并保留底部空白。 */
+.alphatex-editor-wrapper .cm-content::after {
+	content: '';
+	display: block;
+	/* 默认留白为页面高度的一半，方便最后一行在滚动到底部时向上留出更多空间 */
+	height: var(--alphatex-editor-bottom-gap, 40vh);
+	width: 1px;
+	pointer-events: none;
+}
+
+/* 调整编辑器内部字体略小一些，避免占用过多垂直空间 */
+.alphatex-editor-wrapper .cm-content,
+.alphatex-editor-wrapper .cm-editor {
+	font-size: var(--alphatex-editor-font-size, 0.95rem);
+	line-height: 1.45;
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-wrapper {
+	border-bottom: none;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-wrapper {
+	border-right: none;
+}
+
+.alphatex-preview-section {
+	padding: 12px;
+	background: var(--background-primary);
+	overflow: auto;
+}
+
 .alphatex-block {
 	margin: 0.5rem 0 1rem 0;
 }
@@ -111,11 +492,323 @@
 	gap: 0.25rem;
 	align-items: center;
 }
+
+/* Background for visible whitespace characters (spaces/tabs) in the editor. */
+:root {
+	--alphatex-space-bg: rgba(0, 0, 0, 0.03);
+}
+/* Style for visible whitespace characters decorated by whitespaceHighlightPlugin */
+.inmarkdown-editor-cm .cm-content .cm-whitespace,
+.cm-editor .cm-content .cm-whitespace,
+.cm-content .cm-whitespace {
+	/* use theme-aware hover modifier as whitespace background for better integration */
+	background: var(--background-modifier-hover, var(--alphatex-space-bg));
+	display: inline-block; /* allow padding/background to be visible */
+	border-radius: 2px;
+	padding: 0 2px;
+	line-height: 1;
+}
+
+/* Render regular ASCII space as a mid-dot, keep original editor background */
+.cm-content .cm-whitespace-space {
+	/* keep background transparent so original bg shows through */
+	background: transparent;
+	color: transparent; /* hide the real space */
+	position: relative;
+}
+.cm-content .cm-whitespace-space::before {
+	content: '·';
+	color: var(--text-muted);
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
+	pointer-events: none;
+}
+.cm-content .cm-surrounded {
+	/* use theme highlight background; fallback to light red */
+	background: var(--background-modifier-hover, rgba(220, 38, 38, 0.12));
+	border-radius: 3px;
+	border: 1px solid var(--background-modifier-border);
+	display: inline-block;
+	padding: 0 2px;
+}
 .alphatex-error {
 	color: var(--text-error);
 }
 .alphatex-note {
 	color: var(--text-muted);
+}
+
+/* 错误消息容器使用flexbox布局 */
+.alphatex-messages {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+/* 错误消息容器中的复制按钮靠右显示 */
+.alphatex-messages .clickable-icon[aria-label='复制错误与原文'] {
+	align-self: flex-end;
+	margin-bottom: 0.25rem;
+}
+
+/* markdown post processing*/
+
+/* Highlight for dot symbol in embedded editor */
+.highlighted-dot {
+	/* Simple dot highlight: use accent color and bold weight only. */
+	display: inline-block;
+	color: var(--text-accent, var(--color-accent));
+	background: transparent;
+	font-weight: 700;
+	padding: 0 1px;
+}
+
+/* Highlight for bar line symbol (|) in embedded editor */
+.highlighted-bar {
+	background-color: var(--color-accent);
+	opacity: 0.5;
+	border-radius: 2px;
+}
+
+/* Token styling for AlphaTex language tokens */
+.cm-content .cm-atx-meta,
+.atx-meta {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+.cm-content .cm-atx-comment,
+.atx-comment {
+	color: var(--text-muted);
+	opacity: 0.9;
+}
+
+/* Brackets and braces styling (for () and {}) */
+.cm-content .cm-bracket,
+.cm-bracket,
+.atx-bracket {
+	color: var(--color-accent);
+	font-weight: 700;
+}
+
+/* Metadata backslash tokens (e.g. \title, \tempo) */
+.cm-content .cm-meta,
+.cm-meta,
+.atx-meta {
+	color: var(--text-accent);
+	font-weight: 700;
+}
+
+/* Comments styling (// ...) */
+.cm-content .cm-comment,
+.cm-comment {
+	color: var(--text-muted);
+}
+
+.cm-content .cm-atx-keyword,
+.atx-keyword {
+	color: var(--color-accent);
+	font-weight: 600;
+}
+
+.cm-content .cm-atx-string,
+.atx-string {
+	color: var(--text-success);
+}
+
+.cm-content .cm-atx-number,
+.atx-number {
+	color: var(--text-faint);
+}
+
+/* Bars and section dots */
+.cm-content .cm-atx-bar,
+.atx-bar {
+	background-color: transparent;
+	color: var(--color-accent);
+	font-weight: 700;
+	padding: 0 2px;
+}
+
+/* Section separator dot rendered larger and aligned */
+.cm-content .cm-dot,
+.highlighted-dot,
+.atx-dot {
+	/* Keep dot highlight minimal: accent color and bold. Avoid custom fonts/size/offsets. */
+	display: inline-block;
+	color: var(--text-accent, var(--color-accent));
+	font-weight: 700;
+	padding: 0 1px;
+}
+
+/* Note tokens (fret.string.duration) */
+.cm-content .cm-note,
+.atx-note {
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+/* Chord group */
+.cm-content .cm-chord,
+.atx-chord {
+	color: var(--text-accent);
+	background: rgba(0, 0, 0, 0.02);
+	border-radius: 2px;
+	padding: 0 2px;
+}
+
+/* Effect blocks { ... } */
+.cm-content .cm-effect,
+.atx-effect {
+	color: var(--text-warning);
+	font-weight: 600;
+}
+
+/* Bar number widget (kept) */
+.bar-number {
+	color: var(--text-muted);
+	font-size: 0.8em;
+	font-weight: bold;
+	margin-left: 2px;
+	opacity: 0.7;
+}
+
+/* Debug highlight styles: high-contrast, intentionally loud for visual inspection */
+.cm-debug-meta {
+	background: rgba(255, 105, 180, 0.12);
+	color: #ff69b4;
+	font-weight: 700;
+}
+.cm-debug-string {
+	background: rgba(255, 99, 71, 0.06);
+	color: #ff4500;
+	font-weight: 700;
+}
+.cm-debug-number {
+	background: rgba(255, 165, 0, 0.06);
+	color: #ff8c00;
+	font-weight: 700;
+}
+.cm-debug-note {
+	background: rgba(255, 235, 59, 0.08);
+	color: #b58900;
+	font-weight: 800;
+}
+.cm-debug-effect-key {
+	background: rgba(218, 112, 214, 0.08);
+	color: #800080;
+	font-weight: 800;
+}
+.cm-debug-effect-arg {
+	background: rgba(173, 255, 47, 0.06);
+	color: #6b8e23;
+	font-weight: 700;
+}
+.cm-debug-lbrace,
+.cm-debug-rbrace {
+	background: rgba(30, 144, 255, 0.06);
+	color: #1e90ff;
+	font-weight: 800;
+}
+.cm-debug-lparen,
+.cm-debug-rparen {
+	background: rgba(100, 149, 237, 0.04);
+	color: #4b6cb7;
+	font-weight: 700;
+}
+.cm-debug-pipe {
+	background: rgba(148, 0, 211, 0.12);
+	color: #9400d3;
+	font-weight: 900;
+	border-radius: 2px;
+}
+.cm-debug-lessthan {
+	background: rgba(0, 206, 209, 0.06);
+	color: #008b8b;
+	font-weight: 700;
+}
+.cm-debug-dot {
+	background: rgba(0, 191, 165, 0.06);
+	color: #00695c;
+	font-weight: 900;
+}
+.cm-debug-duration {
+	background: rgba(255, 215, 0, 0.06);
+	color: #b8860b;
+	font-weight: 700;
+}
+.cm-debug-multiply {
+	background: rgba(199, 21, 133, 0.06);
+	color: #c71585;
+	font-weight: 800;
+}
+
+/* make debug marks slightly padded so they're visible inline */
+.cm-debug-meta,
+.cm-debug-string,
+.cm-debug-number,
+.cm-debug-note,
+.cm-debug-effect-key,
+.cm-debug-effect-arg,
+.cm-debug-pipe,
+.cm-debug-dot {
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+/* 当前小节信息栏 */
+.alphatex-bar-info {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	font-size: 0.9em;
+	color: var(--text-muted);
+	text-align: center;
+}
+
+/* New styles for TextMate-inspired tokens, no background to match original */
+.cm-duration {
+	color: #b8860b;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-effect-beat {
+	color: #800080;
+	font-weight: 800;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-effect-note {
+	color: #6b8e23;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-tuning {
+	color: #ff4500;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-boolean {
+	color: #ff8c00;
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
+}
+
+.cm-metadata {
+	color: var(--text-accent);
+	font-weight: 700;
+	padding: 0 2px;
+	border-radius: 2px;
 }
 
 /* --- debug.css --- */
@@ -306,9 +999,9 @@
 .inmarkdown-editor-cm .cm-editor {
 	background: transparent;
 	font-family: var(--font-monospace);
-	font-size: 13px;
-	line-height: 1.5;
-	max-height: 260px;
+	font-size: 18px;
+	line-height: 2;
+	max-height: 600px;
 	/* keep a reasonable height */
 	overflow: auto;
 }
@@ -528,7 +1221,7 @@
 	color: var(--text-normal);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
 	.doc-nav {
 		flex-direction: column;
 	}
@@ -557,6 +1250,78 @@
 		width: 100%;
 		box-sizing: border-box;
 	}
+}
+
+/* 快速滚动动画设置 */
+.tabflow-doc-layout {
+	scroll-behavior: smooth;
+	scroll-behavior: smooth !important;
+}
+
+/* 使用更快的滚动时长和缓动函数 */
+.tabflow-doc-layout * {
+	scroll-behavior: smooth;
+	transition: scroll-behavior 0.08s ease-out; /* 从0.15s减少到0.08s，使用ease-out让开始更快 */
+}
+
+/* 针对滚动容器的优化 */
+.tabflow-doc-markdown {
+	scroll-behavior: smooth;
+	scroll-margin-top: 20px;
+	scroll-behavior: smooth !important;
+}
+
+/* 使用CSS变量控制滚动速度 */
+:root {
+	--scroll-duration: 0.05s;
+	--scroll-easing: cubic-bezier(0.4, 0, 0.2, 1); /* 更快的缓动曲线 */
+}
+
+/* 确保滚动动画在不同浏览器中表现一致 */
+@media (prefers-reduced-motion: no-preference) {
+	.tabflow-doc-layout {
+		scroll-behavior: smooth;
+		scroll-behavior: smooth !important;
+	}
+
+	.tabflow-doc-layout * {
+		scroll-behavior: smooth;
+		scroll-behavior: smooth !important;
+		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
+	}
+
+	/* 特别针对滚动容器的优化 */
+	.tabflow-doc-markdown {
+		scroll-behavior: smooth;
+		scroll-behavior: smooth !important;
+		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
+	}
+}
+
+/* Articulation table copy buttons */
+.articulation-table .copy-btn {
+	background: transparent;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 4px 8px;
+	cursor: pointer;
+	font-size: 14px;
+	color: var(--text-normal);
+	transition:
+		border-color 0.2s ease,
+		background-color 0.2s ease;
+	min-width: auto;
+	width: 100%;
+	text-align: left;
+}
+
+.articulation-table .copy-btn:hover {
+	border-color: var(--interactive-accent);
+	background-color: var(--background-modifier-hover);
+}
+
+.articulation-table .copy-btn:active {
+	background-color: var(--background-modifier-active);
 }
 
 /* --- play.css --- */
@@ -811,9 +1576,9 @@
 	padding: 1em 0;
 }
 
-/* 统一去除 setting-item 顶部多余分隔线 */
-.itabs-settings-contents .setting-item.mod-toggle {
-	border-top: none !important;
+/* 针对特定插件设置项去除顶部边框，避免覆盖Obsidian原生样式 */
+.itabs-settings-contents .setting-item.tabflow-no-border {
+	border-top: none;
 	padding: 0;
 }
 
@@ -876,35 +1641,79 @@
 	outline: 2px dashed var(--interactive-accent);
 }
 
-.setting-item-description {
+.tabflow-setting-description {
 	color: var(--text-muted);
 	font-size: 0.95em;
 	margin-bottom: 0.5em;
 }
 
-pre.setting-item-description {
+pre.tabflow-setting-description {
 	background-color: var(--background-secondary);
-	padding: 10px;
-	border-radius: 5px;
+	padding: 12px 16px;
+	border-radius: 6px;
 	overflow-x: auto;
-	font-family: monospace;
+	font-family:
+		-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	font-size: 0.9em;
+	line-height: 1.4;
 	margin-top: 8px;
 	margin-bottom: 16px;
+	border: 1px solid var(--background-modifier-border);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-pre.setting-item-description code {
+pre.tabflow-setting-description code {
 	white-space: pre;
-	font-size: 0.85em;
+	font-size: 0.9em;
+	color: var(--text-normal);
 }
 
-ol.setting-item-description,
-ul.setting-item-description {
+ol.tabflow-setting-description,
+ul.tabflow-setting-description {
 	margin-left: 1.5em;
 	margin-bottom: 0.5em;
 }
 
-ol.setting-item-description li,
-ul.setting-item-description li {
+ol.tabflow-setting-description li,
+ul.tabflow-setting-description li {
 	margin-bottom: 0.2em;
 }
+
+/* Invalid input styling */
+.tabflow-invalid-input {
+	border-color: var(--text-error, #e74c3c) !important;
+	box-shadow: 0 0 0 1px var(--text-error, #e74c3c) !important;
+}
+
+/* Custom Highlight settings - Two column layout */
+.tabflow-highlight-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 6px;
+	margin-top: 8px;
+	margin-bottom: 8px;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+	.tabflow-highlight-grid {
+		grid-template-columns: 1fr;
+		gap: 4px;
+	}
+}
+
+/* Ensure setting items in grid don't have unwanted borders */
+.tabflow-highlight-grid .setting-item {
+	border-top: none !important;
+	padding: 8px 12px;
+	margin: 0;
+}
+
+/* Improve spacing for highlight preview elements */
+.tabflow-highlight-grid .setting-item .setting-item-description {
+	margin-top: 4px;
+	font-size: 0.85em;
+}
+
+/* reset styling intentionally uses existing setting-item styles to match other reset buttons */
 

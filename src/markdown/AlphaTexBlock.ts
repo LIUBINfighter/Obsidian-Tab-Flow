@@ -25,6 +25,7 @@ export interface AlphaTexInitOptions {
 
 export interface AlphaTexMountHandle {
 	destroy: () => void;
+	api?: alphaTab.AlphaTabApi | null;
 }
 
 // function fromScrollModeEnum(value: number | undefined): string | undefined {
@@ -40,8 +41,12 @@ export function mountAlphaTexBlock(
 	const { opts, body } = parseInlineInit(source);
 	const merged: AlphaTexInitOptions = { ...(defaults || {}), ...(opts || {}) };
 
+	// 自定义扩展：外层可通过 defaults 传入 alphaTabOptions.__disableLazyLoading
+	// 我们不在类型上正式暴露此字段，保持局部影响。
+	const disableLazyLoading = (defaults as any)?.alphaTabOptions?.__disableLazyLoading === true;
+
 	// extract optional UI override from init
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	const uiOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = (opts as any)?.ui;
@@ -215,7 +220,7 @@ export function mountAlphaTexBlock(
 	// Cursor and highlight styles (aligned with TabView)
 	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
 	const runtimeStyle = document.createElement('style');
-	// 使用 DOM API 替代 innerHTML，避免安全风险
+
 	const styleContent = `
 		.alphatex-block .at-cursor-bar { background: ${accent}; opacity: 0.2; }
 		.alphatex-block .at-selection div { background: ${accent}; opacity: 0.4; }
@@ -230,6 +235,8 @@ export function mountAlphaTexBlock(
 	let api: alphaTab.AlphaTabApi | null = null;
 	const ERROR_STOP_THRESHOLD = 50;
 	let errorEventsCount = 0;
+	// eslint-disable-next-line prefer-const
+	let handle: AlphaTexMountHandle;
 	const stopAlphaEngine = (reason?: string) => {
 		if (!api) return;
 		try {
@@ -255,6 +262,9 @@ export function mountAlphaTexBlock(
 						])
 					: new Map()) as unknown as Map<number, string>,
 				fontDirectory: '',
+				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
+				// @ts-ignore
+				enableLazyLoading: disableLazyLoading ? false : undefined,
 			},
 			player: {
 				enablePlayer: playerEnabled,
@@ -282,6 +292,9 @@ export function mountAlphaTexBlock(
 				scale: merged.scale ?? 1.0,
 			},
 		});
+
+		// Update handle.api after creating the API
+		handle.api = api;
 
 		// Subscribe error events from AlphaTab and surface them in UI
 		const onApiError = (e: unknown) => {
@@ -649,7 +662,7 @@ export function mountAlphaTexBlock(
 	// 推迟并限制初始化
 	scheduleInit(heavyInit);
 
-	return {
+	handle = {
 		destroy: () => {
 			if (destroyed) return;
 			destroyed = true;
@@ -658,7 +671,7 @@ export function mountAlphaTexBlock(
 			} catch {
 				// Ignore API destroy errors
 			}
-			// 使用 DOM API 替代 innerHTML，避免安全风险
+
 			try {
 				while (rootEl.firstChild) {
 					rootEl.removeChild(rootEl.firstChild);
@@ -678,5 +691,8 @@ export function mountAlphaTexBlock(
 				// Ignore UI override clear errors
 			}
 		},
+		api: api,
 	};
+
+	return handle;
 }

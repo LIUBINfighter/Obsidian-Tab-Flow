@@ -6,28 +6,8 @@ export interface DocPanel {
 
 import { getCurrentLanguageCode } from '../../i18n';
 
-// 动态导入文档面板
-async function importDocPanel(panelName: string): Promise<{ default: DocPanel }> {
-	const language = getCurrentLanguageCode();
-
-	try {
-		// 优先加载对应语言版本
-		if (language === 'zh') {
-			return await import(`./zh/${panelName}`);
-		} else {
-			return await import(`./en/${panelName}`);
-		}
-	} catch (error) {
-		console.warn(
-			`[TabFlow Docs] Failed to load ${language}/${panelName}, falling back to default`
-		);
-		// fallback到根目录版本
-		return await import(`./${panelName}`);
-	}
-}
-
 // 面板配置
-const panelConfigs: Array<{ id: string; module: string }> = [
+export const panelConfigs: Array<{ id: string; module: string }> = [
 	{ id: 'readme', module: 'ReadMe' },
 	{ id: 'inMarkdownRender', module: 'InMarkdownRender' },
 	{ id: 'overview', module: 'Overview' },
@@ -45,24 +25,7 @@ const panelConfigs: Array<{ id: string; module: string }> = [
 	// { id: 'simpleTabify', module: 'SimpleTabify' }, // 暂时不挂载，simpleTabify项目还未推出
 ];
 
-// 异步加载所有面板
-export async function loadDocPanels(): Promise<DocPanel[]> {
-	const panels: DocPanel[] = [];
-
-	for (const config of panelConfigs) {
-		// 暂时跳过 simpleTabify，项目还未推出
-		if (config.id === 'simpleTabify') continue;
-
-		try {
-			const module = await importDocPanel(config.module);
-			panels.push(module.default);
-		} catch (error) {
-			console.error(`[TabFlow Docs] Failed to load panel ${config.id}:`, error);
-		}
-	}
-
-	return panels;
-}
+// (动态加载逻辑已移除；保留同步按语言导入以避免运行时 fetch 问题)
 
 // 为了向后兼容，保留同步版本（使用默认语言版本）
 import ReadMe from './en/ReadMe';
@@ -79,9 +42,25 @@ import Lyrics from './en/Lyrics';
 import Percussion from './en/Percussion';
 import SyncPoints from './en/SyncPoints';
 import ExampleProgression from './en/ExampleProgression';
+// 同步导入中文面板（保证在运行时无需动态 fetch）
+import ReadMe_zh from './zh/ReadMe';
+import InMarkdownRender_zh from './zh/InMarkdownRender';
+import Overview_zh from './zh/Overview';
+import MetadataPanel_zh from './zh/Metadata';
+import InstrumentsTuning_zh from './zh/InstrumentsTuning';
+import Notes_zh from './zh/Notes';
+import Stylesheet_zh from './zh/Stylesheet';
+import BarMetadata_zh from './zh/BarMetadata';
+import BeatEffects_zh from './zh/BeatEffects';
+import NoteEffects_zh from './zh/NoteEffects';
+import Lyrics_zh from './zh/Lyrics';
+import Percussion_zh from './zh/Percussion';
+import SyncPoints_zh from './zh/SyncPoints';
+import ExampleProgression_zh from './zh/ExampleProgression';
 // import SimpleTabifyPanel from './en/SimpleTabify'; // 暂时不挂载，simpleTabify项目还未推出
 
-export const panels: DocPanel[] = [
+// 将中/英文面板分别导出，避免运行时动态 fetch 问题
+export const enPanels: DocPanel[] = [
 	ReadMe,
 	InMarkdownRender,
 	Overview,
@@ -96,7 +75,30 @@ export const panels: DocPanel[] = [
 	Percussion,
 	SyncPoints,
 	ExampleProgression,
-	// SimpleTabifyPanel, // 暂时不挂载，simpleTabify项目还未推出
 ];
 
-export default panels;
+export const zhPanels: DocPanel[] = [
+	ReadMe_zh,
+	InMarkdownRender_zh,
+	Overview_zh,
+	MetadataPanel_zh,
+	InstrumentsTuning_zh,
+	Notes_zh,
+	Stylesheet_zh,
+	BarMetadata_zh,
+	BeatEffects_zh,
+	NoteEffects_zh,
+	Lyrics_zh,
+	Percussion_zh,
+	SyncPoints_zh,
+	ExampleProgression_zh,
+];
+
+// 兼容导出：默认返回enPanels（保持向后兼容）
+export default enPanels;
+
+// 可按语言参数获取面板集合
+export function loadDocPanels(language?: 'en' | 'zh'): DocPanel[] {
+	const lang = language || getCurrentLanguageCode();
+	return lang === 'zh' ? zhPanels : enPanels;
+}

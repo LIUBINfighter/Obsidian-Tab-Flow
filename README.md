@@ -1,3 +1,5 @@
+[![CI](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/actions/workflows/ci.yml)
+
 # Obsidian Tab Flow
 
 Play and create your guitar tabs in Obsidian!

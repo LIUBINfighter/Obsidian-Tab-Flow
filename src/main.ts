@@ -1,6 +1,7 @@
 import { Plugin, TFile, Notice, requestUrl, MarkdownRenderChild } from 'obsidian';
 import { TabView, VIEW_TYPE_TAB } from './views/TabView';
 import { DocView, VIEW_TYPE_TABFLOW_DOC } from './views/DocView';
+import { EditorView, VIEW_TYPE_ALPHATEX_EDITOR } from './views/EditorView';
 import {
 	ResourceLoaderService,
 	AlphaTabResources,
@@ -9,8 +10,10 @@ import {
 import * as path from 'path';
 import { SettingTab } from './settings/SettingTab';
 import { DEFAULT_SETTINGS, TabFlowSettings } from './settings/defaults';
+import ShareCardPresetService from './services/ShareCardPresetService';
 import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
+import { TrackStateStore } from './state/TrackStateStore';
 
 // AssetStatus moved to src/types/assets.ts
 
@@ -18,6 +21,7 @@ export default class TabFlowPlugin extends Plugin {
 	settings: TabFlowSettings;
 	resources!: AlphaTabResources;
 	actualPluginDir?: string;
+	trackStateStore!: TrackStateStore; // 新增：全局音轨状态存储
 	// 运行期 UI 覆盖：仅会话级，不落盘
 	runtimeUiOverride?: {
 		components?: Record<string, boolean>;
@@ -284,6 +288,32 @@ export default class TabFlowPlugin extends Plugin {
 	async onload() {
 		await this.loadSettings();
 
+		// 初始化 TrackStateStore（依赖 settings 已加载）
+		this.trackStateStore = new TrackStateStore(this);
+
+		// ShareCard 预设迁移 / 初始化
+		try {
+			const presetSvc = new ShareCardPresetService(this);
+			presetSvc.ensureMigration();
+			await this.saveSettings();
+		} catch (e) {
+			console.warn('[TabFlowPlugin] ShareCard preset migration failed', e);
+		}
+
+		// Apply editor UI preferences as CSS variables so they take effect immediately
+		try {
+			document.documentElement.style.setProperty(
+				'--alphatex-editor-font-size',
+				this.settings.editorFontSize || '0.95rem'
+			);
+			document.documentElement.style.setProperty(
+				'--alphatex-editor-bottom-gap',
+				this.settings.editorBottomGap || '40vh'
+			);
+		} catch (e) {
+			// ignore environments without DOM
+		}
+
 		// 加载翻译系统
 		loadTranslations(this.app);
 
@@ -303,8 +333,25 @@ export default class TabFlowPlugin extends Plugin {
 		// 注册设置面板
 		this.addSettingTab(new SettingTab(this.app, this));
 
+		// 添加侧边栏 Robin 图标，调用打开 TabFlow 文档命令
+		this.addRibbonIcon(
+			'guitar',
+			t('ribbon.openDocumentation', undefined, '打开 TabFlow 文档'),
+			async () => {
+				const leaf = this.app.workspace.getLeaf(true);
+				await leaf.setViewState({
+					type: VIEW_TYPE_TABFLOW_DOC,
+					active: true,
+				});
+				this.app.workspace.revealLeaf(leaf);
+			}
+		);
+
 		// 注册 AlphaTex 文档视图
 		this.registerView(VIEW_TYPE_TABFLOW_DOC, (leaf) => new DocView(leaf, this));
+
+		// 注册 AlphaTex 编辑器视图
+		this.registerView(VIEW_TYPE_ALPHATEX_EDITOR, (leaf) => new EditorView(leaf, this));
 
 		this.addCommand({
 			id: 'open-tabflow-doc-view',
@@ -314,6 +361,37 @@ export default class TabFlowPlugin extends Plugin {
 				await leaf.setViewState({
 					type: VIEW_TYPE_TABFLOW_DOC,
 					active: true,
+				});
+				this.app.workspace.revealLeaf(leaf);
+			},
+		});
+
+		this.addCommand({
+			id: 'open-alphatex-editor',
+			name: t('commands.openEditor', undefined, 'Open AlphaTex Editor'),
+			callback: async () => {
+				const leaf = this.app.workspace.getLeaf(true);
+				await leaf.setViewState({
+					type: VIEW_TYPE_ALPHATEX_EDITOR,
+					active: true,
+				});
+				this.app.workspace.revealLeaf(leaf);
+			},
+		});
+
+		this.addCommand({
+			id: 'open-alphatex-editor-horizontal',
+			name: t(
+				'commands.openEditorHorizontal',
+				undefined,
+				'Open AlphaTex Editor (Horizontal)'
+			),
+			callback: async () => {
+				const leaf = this.app.workspace.getLeaf(true);
+				await leaf.setViewState({
+					type: VIEW_TYPE_ALPHATEX_EDITOR,
+					active: true,
+					state: { layout: 'horizontal' },
 				});
 				this.app.workspace.revealLeaf(leaf);
 			},
@@ -397,7 +475,7 @@ export default class TabFlowPlugin extends Plugin {
 					}
 
 					// remove legacy two-way binding to init line (UI options now runtime-only)
-					const onUpdateInit = async (_partial: any) => {
+					const onUpdateInit = async (_partial: Partial<Record<string, boolean>>) => {
 						/* no-op by design */
 					};
 
@@ -414,7 +492,7 @@ export default class TabFlowPlugin extends Plugin {
 							} | null
 						) => {
 							try {
-								(this as any).runtimeUiOverride = override || null;
+								this.runtimeUiOverride = override || null;
 							} catch {
 								// Ignore UI override errors
 							}
@@ -426,7 +504,7 @@ export default class TabFlowPlugin extends Plugin {
 						},
 						clearUiOverride: () => {
 							try {
-								(this as any).runtimeUiOverride = null;
+								this.runtimeUiOverride = null;
 							} catch {
 								/* empty */
 							}
@@ -455,6 +533,9 @@ export default class TabFlowPlugin extends Plugin {
 		} else {
 			this.registerExtensions(['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7'], VIEW_TYPE_TAB);
 		}
+
+		// 注册 AlphaTex 编辑器文件扩展名
+		this.registerExtensions(['alphatex', 'alphatab'], VIEW_TYPE_ALPHATEX_EDITOR);
 
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
@@ -496,6 +577,22 @@ export default class TabFlowPlugin extends Plugin {
 						});
 				});
 
+				// 在编辑器中打开菜单项
+				if (file instanceof TFile) {
+					menu.addItem((item) => {
+						item.setTitle(t('fileMenu.openInEditor', undefined, 'Open in Editor'))
+							.setIcon('edit')
+							.onClick(async () => {
+								const leaf = this.app.workspace.getLeaf(false);
+								await leaf.setViewState({
+									type: VIEW_TYPE_ALPHATEX_EDITOR,
+									state: { file: file.path },
+								});
+								this.app.workspace.revealLeaf(leaf);
+							});
+					});
+				}
+
 				// Preview 菜单项 - 在当前面板预览
 				if (file instanceof TFile) {
 					menu.addItem((item) => {
@@ -518,7 +615,7 @@ export default class TabFlowPlugin extends Plugin {
 						item.setTitle(
 							t('fileMenu.openEditorAndPreview', undefined, 'Open editor & Preview')
 						)
-							.setIcon('layout-sidebar-right')
+							.setIcon('columns')
 							.onClick(async () => {
 								// 在左栏打开默认编辑器
 								const leftLeaf = this.app.workspace.getLeaf(false);
@@ -540,7 +637,7 @@ export default class TabFlowPlugin extends Plugin {
 										const tabViews =
 											this.app.workspace.getLeavesOfType(VIEW_TYPE_TAB);
 										tabViews.forEach((leaf) => {
-											const view = leaf.view as any;
+											const view = leaf.view as TabView;
 											if (
 												view &&
 												view.eventBus &&
@@ -566,10 +663,15 @@ export default class TabFlowPlugin extends Plugin {
 	private refreshLanguageDependentUI(): void {
 		try {
 			// 刷新设置面板（如果打开的话）
-			const settingTabs = (this.app as any).setting?.activeTab;
+			const settingInstance = (
+				this.app as unknown as {
+					setting?: { activeTab?: { id?: string }; openTabById?: (id: string) => void };
+				}
+			).setting;
+			const settingTabs = settingInstance?.activeTab;
 			if (settingTabs && settingTabs.id === 'tabflow') {
 				// 重新渲染设置标签页
-				(this.app as any).setting?.openTabById?.('tabflow');
+				settingInstance?.openTabById?.('tabflow');
 			}
 
 			// 触发自定义事件，通知其他组件语言已变化

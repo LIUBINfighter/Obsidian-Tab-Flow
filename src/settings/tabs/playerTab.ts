@@ -14,6 +14,7 @@ export async function renderPlayerTab(
 	new Setting(tabContents)
 		.setName(t('settings.player.resetToDefault'))
 		.setDesc(t('settings.player.resetToDefaultDesc'))
+		.setClass('tabflow-no-border')
 		.addButton((btn) => {
 			btn.setButtonText(t('settings.player.resetToDefault')).onClick(async () => {
 				try {
@@ -101,6 +102,11 @@ export async function renderPlayerTab(
 		},
 		{ key: 'zoom', label: t('settings.player.components.zoom'), icon: 'lucide-zoom-in' },
 		{
+			key: 'scrollMode',
+			label: t('settings.player.components.scrollMode'),
+			icon: 'lucide-scroll',
+		},
+		{
 			key: 'audioPlayer',
 			label: t('settings.player.components.audioPlayer'),
 			icon: 'audio-file',
@@ -127,10 +133,25 @@ export async function renderPlayerTab(
 			'speed',
 			'staveProfile',
 			'zoom',
+			'scrollMode',
 			'audioPlayer',
 		];
 		const saved = plugin.settings.playBar?.order;
-		return Array.isArray(saved) && saved.length ? saved.slice() : def.slice();
+
+		if (Array.isArray(saved) && saved.length > 0) {
+			const savedSet = new Set(saved);
+			const missing = def.filter((item) => !savedSet.has(item));
+			if (missing.length > 0) {
+				const newOrder = [...saved, ...missing];
+				if (plugin.settings.playBar) {
+					plugin.settings.playBar.order = newOrder;
+					plugin.saveSettings();
+				}
+				return newOrder;
+			}
+			return saved.slice();
+		}
+		return def.slice();
 	};
 
 	let draggingKey: string | null = null;
@@ -188,25 +209,31 @@ export async function renderPlayerTab(
 			});
 			setIcon(downIcon, 'lucide-arrow-down');
 
-			new Setting(right).addToggle((t) => {
-				const current = !!(comp as any)[key];
-				t.setValue(m.disabled ? false : current).onChange(async (v) => {
-					plugin.settings.playBar = plugin.settings.playBar || { components: {} as any };
-					(plugin.settings.playBar as any).components =
-						plugin.settings.playBar?.components || {};
-					(plugin.settings.playBar as any).components[key] = m.disabled ? false : v;
-					await plugin.saveSettings();
-					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:playbar-components-changed'
-						);
-					} catch {
-						// Ignore workspace trigger errors
-					}
-				});
-				if (m.disabled)
-					(t as any).toggleEl.querySelector('input')?.setAttribute('disabled', 'true');
-			});
+			new Setting(right)
+				.addToggle((t) => {
+					const current = !!(comp as any)[key];
+					t.setValue(m.disabled ? false : current).onChange(async (v) => {
+						plugin.settings.playBar = plugin.settings.playBar || {
+							components: {} as any,
+						};
+						(plugin.settings.playBar as any).components =
+							plugin.settings.playBar?.components || {};
+						(plugin.settings.playBar as any).components[key] = m.disabled ? false : v;
+						await plugin.saveSettings();
+						try {
+							/* @ts-ignore */ app.workspace.trigger(
+								'tabflow:playbar-components-changed'
+							);
+						} catch {
+							// Ignore workspace trigger errors
+						}
+					});
+					if (m.disabled)
+						(t as any).toggleEl
+							.querySelector('input')
+							?.setAttribute('disabled', 'true');
+				})
+				.setClass('tabflow-no-border');
 
 			const getScrollContainer = (el: HTMLElement): HTMLElement | Window => {
 				let node: HTMLElement | null = el.parentElement;
@@ -366,12 +393,13 @@ export async function renderPlayerTab(
 	tabContents.createEl('h3', { text: t('settings.player.debugBar.title') });
 	tabContents.createEl('div', {
 		text: t('settings.player.debugBar.description'),
-		cls: 'setting-item-description',
+		cls: 'tabflow-setting-description',
 	});
 
 	new Setting(tabContents)
 		.setName(t('settings.player.debugBar.showDebugBar'))
 		.setDesc(t('settings.player.debugBar.showDebugBarDesc'))
+		.setClass('tabflow-no-border')
 		.addToggle((toggle) => {
 			toggle.setValue(plugin.settings.showDebugBar ?? false).onChange(async (value) => {
 				plugin.settings.showDebugBar = value;

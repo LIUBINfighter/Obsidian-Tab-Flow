@@ -97,7 +97,7 @@ export function setupAlphaTabAudioSync(api: alphaTab.AlphaTabApi, audio: HTMLAud
 	// 设置处理器
 	(api.player!.output as alphaTab.synth.IExternalMediaSynthOutput).handler = handler;
 
-	console.debug('[AudioPlayer] AlphaTab audio synchronization setup completed');
+	// console.debug('[AudioPlayer] AlphaTab audio synchronization setup completed');
 }
 
 /**
@@ -153,16 +153,16 @@ export function setupAudioEventListeners(
 	audio.addEventListener('volumechange', onVolumeChange);
 	audio.addEventListener('ratechange', onRateChange);
 
-	console.debug('[AudioPlayer] Audio event listeners setup completed');
+	// console.debug('[AudioPlayer] Audio event listeners setup completed');
 }
 
 // 音量和播放速度变化处理函数
 function onVolumeChange(this: HTMLAudioElement) {
 	// 这里可以添加音量变化的处理逻辑
-	console.debug('[AudioPlayer] Volume changed:', this.volume);
+	// console.debug('[AudioPlayer] Volume changed:', this.volume);
 }
 
 function onRateChange(this: HTMLAudioElement) {
 	// 这里可以添加播放速度变化的处理逻辑
-	console.debug('[AudioPlayer] Playback rate changed:', this.playbackRate);
+	// console.debug('[AudioPlayer] Playback rate changed:', this.playbackRate);
 }

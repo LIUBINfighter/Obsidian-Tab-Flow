@@ -16,6 +16,7 @@ export async function renderAboutTab(
 	new Setting(tabContents)
 		.setName(t('settings.about.alphaTexDoc'))
 		.setDesc(t('settings.about.alphaTexDocDesc'))
+		.setClass('tabflow-no-border')
 		.addButton((btn) => {
 			btn.setButtonText(t('settings.about.openDoc')).onClick(async () => {
 				try {

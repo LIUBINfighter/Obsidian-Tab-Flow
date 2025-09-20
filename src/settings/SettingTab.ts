@@ -36,6 +36,50 @@ export class SettingTab extends PluginSettingTab {
 					// Ignore event binding errors
 				}
 			});
+
+			// 添加 editor 子页签的事件监听
+			// @ts-ignore
+			this.app.workspace.on('tabflow:open-plugin-settings-editor', async () => {
+				try {
+					// 打开设置面板并定位到本插件设置页
+					// @ts-ignore
+					(this.app as any).setting?.open?.();
+					if ((this.app as any).setting?.openTabById) {
+						(this.app as any).setting.openTabById(this.plugin.manifest.id);
+					}
+					// 标记强制激活 editor 子页签
+					(this as any)._forceActiveInnerTab = 'editor';
+					try {
+						await this.display();
+					} catch {
+						// Ignore display errors
+					}
+				} catch {
+					// Ignore event binding errors
+				}
+			});
+
+			// 添加 about 子页签的事件监听
+			// @ts-ignore
+			this.app.workspace.on('tabflow:open-plugin-settings-about', async () => {
+				try {
+					// 打开设置面板并定位到本插件设置页
+					// @ts-ignore
+					(this.app as any).setting?.open?.();
+					if ((this.app as any).setting?.openTabById) {
+						(this.app as any).setting.openTabById(this.plugin.manifest.id);
+					}
+					// 标记强制激活 about 子页签
+					(this as any)._forceActiveInnerTab = 'about';
+					try {
+						await this.display();
+					} catch {
+						// Ignore display errors
+					}
+				} catch {
+					// Ignore event binding errors
+				}
+			});
 			this._eventBound = true;
 		}
 	}
@@ -50,6 +94,7 @@ export class SettingTab extends PluginSettingTab {
 		const tabList = [
 			{ id: 'general', name: t('settings.tabs.general') },
 			{ id: 'player', name: t('settings.tabs.player') },
+			{ id: 'editor', name: t('settings.tabs.editor') },
 			{ id: 'about', name: t('settings.tabs.about') },
 		];
 
@@ -64,6 +109,9 @@ export class SettingTab extends PluginSettingTab {
 			} else if (tabId === 'player') {
 				const mod = await import('./tabs/playerTab');
 				await mod.renderPlayerTab(contentsEl, this.plugin, this.app);
+			} else if (tabId === 'editor') {
+				const mod = await import('./tabs/editorTab');
+				await mod.renderEditorTab(contentsEl, this.plugin, this.app);
 			} else if (tabId === 'about') {
 				const mod = await import('./tabs/aboutTab');
 				await mod.renderAboutTab(contentsEl, this.plugin, this.app);

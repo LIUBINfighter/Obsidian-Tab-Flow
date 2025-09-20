@@ -88,9 +88,18 @@
 		"yOffset": "Y Offset:",
 		"nativeScroll": "Native Scroll:",
 		"useNativeBrowserSmoothScroll": "Use browser native smooth scroll",
+		"scrollMode": "Scroll Mode",
+		"scrollModeDesc": "Control page scrolling behavior during score playback",
+		"scrollModeOptions": {
+			"continuous": "Continuous Scroll",
+			"offScreen": "Smart Page Turn",
+			"off": "No Scroll"
+		},
+		"scrollModeUpdated": "Scroll mode updated",
 		"tabs": {
 			"general": "Asset Management",
 			"player": "Player Settings",
+			"editor": "Editor Settings",
 			"about": "About"
 		},
 		"about": {
@@ -124,6 +133,7 @@
 				"speed": "Speed Selection",
 				"staveProfile": "Stave Selection",
 				"zoom": "Zoom Selection",
+				"scrollMode": "Scroll Mode Selection",
 				"audioPlayer": "Native Audio Player (Experimental)",
 				"audioPlayerDesc": "Not available, may conflict with AlphaTab player"
 			},
@@ -137,6 +147,70 @@
 				"debugBarEnabled": "Debug Bar enabled",
 				"debugBarDisabled": "Debug Bar hidden"
 			}
+		},
+		"editor": {
+			"viewTitle": "Editor View",
+			"barTitle": "Editor Bar",
+			"defaultLayout": "Default Layout",
+			"defaultLayoutDesc": "Default layout mode for the editor view",
+			"layoutHorizontal": "Horizontal Layout",
+			"layoutVertical": "Vertical Layout",
+			"layoutHorizontalSwapped": "Horizontal Layout (Swapped)",
+			"layoutVerticalSwapped": "Vertical Layout (Swapped)",
+			"layoutSingleBar": "Single Bar Mode (Experimental)",
+			"layoutSaved": "Layout setting saved",
+			"resetToDefault": "Reset to Default",
+			"resetToDefaultDesc": "Reset editor bar component visibility and order to default configuration",
+			"resetToDefaultSuccess": "Editor bar settings reset",
+			"resetToDefaultFailed": "Failed to reset editor bar settings",
+			"resetHighlightToDefault": "Reset Highlight to Default",
+			"resetHighlightToDefaultDesc": "Reset all syntax highlight settings to default values",
+			"resetHighlightToDefaultSuccess": "Highlight settings reset",
+			"resetHighlightToDefaultFailed": "Failed to reset highlight settings",
+			"fontSize": "Editor Font Size",
+			"fontSizeDesc": "Numeric value + unit, e.g. 0.95 rem; Only accepts numbers and select unit from dropdown",
+			"bottomGap": "Editor Bottom Gap",
+			"bottomGapDesc": "Numeric value + unit, e.g. 40 vh; Only accepts numbers and select unit from dropdown",
+			"invalidCss": "Invalid CSS value",
+			"resetToDefaultMessage": "Reset to default",
+			"saved": "Settings saved",
+			"highlights": {
+				"dot": "Dot symbol (.)",
+				"bar": "Bar line (|)",
+				"bracket": "Brackets ()/{}",
+				"meta": "Meta information (\\title, \\tempo)",
+				"comment": "Line comment (//)",
+				"debug": "Debug highlight (debug only)",
+				"whitespace": "Visible whitespace",
+				"surrounded": "Whitespace-surrounded sequences",
+				"duration": "Duration marker (:4)",
+				"effect": "Effect keywords",
+				"tuning": "Tuning text (A4)",
+				"boolean": "Boolean literals"
+			},
+			"components": {
+				"playPause": "Play/Pause",
+				"stop": "Stop",
+				"metronome": "Metronome",
+				"countIn": "Count-in",
+				"tracks": "Select Tracks",
+				"refresh": "Refresh/Rebuild Player",
+				"locateCursor": "Scroll to Cursor",
+				"layoutToggle": "Layout Toggle",
+				"exportMenu": "Export Menu",
+				"toTop": "To Top",
+				"toBottom": "To Bottom",
+				"openSettings": "Open Settings",
+				"progressBar": "Progress Bar",
+				"speed": "Speed Selection",
+				"staveProfile": "Stave Selection",
+				"zoom": "Zoom Selection",
+				"scrollMode": "Scroll Mode Selection",
+				"audioPlayer": "Native Audio Player (Experimental)",
+				"audioPlayerDesc": "Not available in editor view"
+			},
+			"moveUp": "Move Up",
+			"moveDown": "Move Down"
 		}
 	},
 	"navigation": {
@@ -146,7 +220,9 @@
 		"toBottom": "To Bottom",
 		"locateCursor": "Locate Cursor",
 		"scrollToTop": "Scroll to Top",
-		"scrollToBottom": "Scroll to Bottom"
+		"scrollToBottom": "Scroll to Bottom",
+		"previous": "Previous",
+		"next": "Next"
 	},
 	"status": {
 		"audioNotLoaded": "Audio resources not loaded",
@@ -210,7 +286,8 @@
 		}
 	},
 	"alphatex": {
-		"missingResources": "AlphaTab resources missing, unable to render this code block."
+		"missingResources": "AlphaTab resources missing, unable to render this code block.",
+		"currentBar": "Current Bar: {{number}}"
 	},
 	"fileMenu": {
 		"createNewAlphaTab": "Create a new AlphaTab file",
@@ -219,6 +296,79 @@
 		"newFileBaseName": "New guitar tab"
 	},
 	"commands": {
-		"openDocumentation": "Open AlphaTex Documentation"
+		"openDocumentation": "Open TabFlow Documentation"
+	},
+	"docView": {
+		"displayText": "TabFlow Documentation (Example)",
+		"title": "TabFlow Documentation",
+		"renderError": "Error rendering panel",
+		"settings": "Settings",
+		"alphaTabOfficialDoc": "alphaTab.js Official Documentation"
+	},
+	"ribbon.openDocumentation": "Open TabFlow Documentation",
+	"shareCard": {
+		"title": "Share Card",
+		"preset": "Preset",
+		"presetSave": "Save",
+		"presetSaveAs": "Save As",
+		"presetSetDefault": "Set as Default",
+		"presetReset": "Reset",
+		"confirmPresetDirty": "Current preset has unsaved changes. OK = save and switch, Cancel = show second confirmation",
+		"confirmPresetDiscard": "Discard unsaved changes and switch? OK = discard and switch, Cancel = continue editing",
+		"notice": {
+			"presetSaved": "Preset saved",
+			"presetCreated": "New preset created",
+			"presetSetDefault": "Set as default",
+			"savedTo": "Saved to {{path}}",
+			"exportFailed": "Export failed",
+			"copiedToClipboard": "Copied to clipboard",
+			"clipboardNotSupported": "Copy to clipboard not supported",
+			"copyFailed": "Copy failed"
+		},
+		"prompt": {
+			"newPresetName": "New preset name",
+			"newPresetDefault": "New preset"
+		},
+		"fileName": "File Name",
+		"cardWidth": "Card width (px)",
+		"resolution": "Resolution",
+		"format": "Format",
+		"exportBg": {
+			"label": "Export background",
+			"options": {
+				"default": "Default (same as before)",
+				"auto": "Auto (use preview background)",
+				"custom": "Custom color"
+			}
+		},
+		"customColor": "Color parameter",
+		"customColorPlaceholder": "#ffffff or rgb(...)",
+		"disableLazyLabel": "Full render",
+		"disableLazy": "Disable lazy loading",
+		"showAuthor": "Show author info",
+		"authorName": "Author name",
+		"authorRemark": "Extra remark",
+		"showAvatar": "Show avatar",
+		"avatarUpload": "Avatar (upload)",
+		"chooseFile": "Choose file",
+		"authorAlign": "Align",
+		"authorPosition": "Position",
+		"position": {
+			"top": "Top",
+			"bottom": "Bottom"
+		},
+		"authorBg": "Background color",
+		"authorTextColor": "Text color",
+		"authorFontSize": "Font size (px)",
+		"copy": "Copy",
+		"export": "Export",
+		"close": "Close",
+		"hint": "Drag to move, wheel to zoom, double click to reset",
+		"previewCreateFailed": "Preview creation failed",
+		"align": {
+			"left": "Left",
+			"center": "Center",
+			"right": "Right"
+		}
 	}
 }

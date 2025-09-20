@@ -5,6 +5,7 @@
 merged.txt
 merged*.mix.txt
 merged-*.mix.txt
+/scripts/mix
 
 # obsidian
 .obsidian
