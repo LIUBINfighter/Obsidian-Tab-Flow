@@ -41,7 +41,7 @@ function tokenBase(stream: any, state: any) {
 	}
 
 	// Strings "..." or '...'
-	if (stream.match(/"(?:\\.|[^"])*"/) || stream.match(/'(?:\\.|[^'])*'/)) {
+	if (stream.match(/"(?:\\.|[^"\\])*"/) || stream.match(/'(?:\\.|[^'\\])*'/)) {
 		return 'string';
 	}
 

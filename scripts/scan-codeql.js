@@ -38,7 +38,9 @@ function main() {
 
   // Use existing build script if present
   // We run `npm run build` to produce compiled artifacts for analysis if the repo needs it.
-  const buildStatus = run(process.platform === 'win32' ? 'cmd' : 'npm', process.platform === 'win32' ? ['/c','npm','run','build'] : ['run','build'], { cwd: repoRoot });
+  // Use hardcoded paths to prevent command injection via environment variables
+  const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+  const buildStatus = run(npmCmd, ['run', 'build'], { cwd: repoRoot });
   if (buildStatus !== 0) {
     console.error('Build step failed. Aborting CodeQL scan.');
     process.exit(buildStatus);

@@ -226,7 +226,7 @@ export function debugHighlightPlugin() {
 				const builder = new RangeSetBuilder<Decoration>();
 				const doc = view.state.doc;
 
-				const stringRegex = /"(?:\\.|[^"])*"|'(?:\\.|[^'])*'/g;
+				const stringRegex = /"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'/g;
 				const metaRegex = /\\[A-Za-z_][A-Za-z0-9_-]*/g; // \tag
 				const noteRegex = /(?:[0-9x-]+)\.[0-9]+(?:\.[0-9]+)?/g; // 3.3.4
 				const doubleDotRegex = /:[0-9]+/g; // :4

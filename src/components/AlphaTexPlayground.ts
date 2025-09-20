@@ -258,7 +258,7 @@ export function createAlphaTexPlayground(
 				const content =
 					`\`\`\`alphatex\n${embedded ? embedded.value : currentValue}\n\`\`\``.replace(
 						/`/g,
-						'`'
+						'\\`'
 					);
 				// vault.create() 已经返回 Promise<TFile>，不需要类型转换
 				const file = await plugin.app.vault.create(filePath, content);
