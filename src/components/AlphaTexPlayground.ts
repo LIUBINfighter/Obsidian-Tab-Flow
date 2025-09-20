@@ -255,11 +255,9 @@ export function createAlphaTexPlayground(
 				} catch {
 					// Ignore folder creation errors
 				}
-				const content =
-					`\`\`\`alphatex\n${embedded ? embedded.value : currentValue}\n\`\`\``.replace(
-						/`/g,
-						'\\`'
-					);
+				const rawValue = embedded ? embedded.value : currentValue;
+				const escapedValue = rawValue.replace(/\\/g, '\\\\').replace(/`/g, '\\`'); // Escape backslash, then backtick
+				const content = `\`\`\`alphatex\n${escapedValue}\n\`\`\``;
 				// vault.create() 已经返回 Promise<TFile>，不需要类型转换
 				const file = await plugin.app.vault.create(filePath, content);
 				// 使用类型守卫确保是 TFile 实例
