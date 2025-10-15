@@ -33,6 +33,7 @@ export class PlayerController {
 	private plugin: Plugin;
 	private resources: PlayerControllerResources;
 	private pendingFileLoad: (() => Promise<void>) | null = null; // 添加待处理加载任务
+	private eventHandlers: Map<string, any> = new Map(); // 事件处理器引用管理
 
 	constructor(plugin: Plugin, resources: PlayerControllerResources) {
 		this.plugin = plugin;
@@ -115,10 +116,29 @@ export class PlayerController {
 	}
 
 	private shouldRebuildApi(newConfig: AlphaTabPlayerConfig): boolean {
-		if (!this.lastConfig) return true;
+		if (!this.lastConfig) {
+			console.log('[PlayerController] No lastConfig, rebuild needed');
+			return true;
+		}
 
-		// 简单对比（生产环境可用 deep-equal 库）
-		return JSON.stringify(this.lastConfig) !== JSON.stringify(newConfig);
+		// 排除 scoreSource，因为它只记录当前加载的文件，不影响 alphaTab API 设置
+		// scoreSource 的变化不应该触发 API 重建
+		const { scoreSource: oldSource, ...oldRest } = this.lastConfig;
+		const { scoreSource: newSource, ...newRest } = newConfig;
+
+		const oldConfigStr = JSON.stringify(oldRest);
+		const newConfigStr = JSON.stringify(newRest);
+		const needsRebuild = oldConfigStr !== newConfigStr;
+
+		if (needsRebuild) {
+			console.log('[PlayerController] Config changed (excluding scoreSource), rebuild needed');
+			console.log('[PlayerController] Old scoreSource:', oldSource);
+			console.log('[PlayerController] New scoreSource:', newSource);
+		} else {
+			console.log('[PlayerController] Only scoreSource changed, no rebuild needed');
+		}
+
+		return needsRebuild;
 	}
 
 	// ========== API Lifecycle ==========
@@ -174,6 +194,10 @@ export class PlayerController {
 	private destroyApi(): void {
 		if (this.api) {
 			try {
+				// 先解绑事件
+				this.unbindApiEvents();
+				
+				// 再销毁 API
 				this.api.destroy();
 				console.log('[PlayerController] API destroyed');
 			} catch (error) {
@@ -287,34 +311,73 @@ export class PlayerController {
 		return settings;
 	} // ========== API Events ==========
 
+	/**
+	 * 解绑所有 API 事件
+	 */
+	private unbindApiEvents(): void {
+		if (!this.api || this.eventHandlers.size === 0) {
+			return;
+		}
+
+		try {
+			console.log(`[PlayerController] Unbinding ${this.eventHandlers.size} event handlers`);
+
+			this.eventHandlers.forEach((handler, eventName) => {
+				try {
+					// AlphaTab 事件解绑使用 off 方法
+					const event = (this.api as any)[eventName];
+					if (event && typeof event.off === 'function') {
+						event.off(handler);
+					}
+				} catch (error) {
+					console.warn(`[PlayerController] Failed to unbind event ${eventName}:`, error);
+				}
+			});
+
+			this.eventHandlers.clear();
+			console.log('[PlayerController] All events unbound');
+		} catch (error) {
+			console.error('[PlayerController] Failed to unbind events:', error);
+		}
+	}
+
 	private bindApiEvents(): void {
 		if (!this.api) {
 			console.warn('[PlayerController] Cannot bind events - API not initialized');
 			return;
 		}
 
+		// 先解绑旧事件，防止重复绑定
+		this.unbindApiEvents();
+
 		try {
 			// Score Loaded
-			this.api.scoreLoaded.on(() => {
+			const scoreLoadedHandler = () => {
 				console.log('[PlayerController] scoreLoaded');
 				useRuntimeStore.getState().setScoreLoaded(true);
 				useRuntimeStore.getState().setRenderState('idle');
-			});
+			};
+			this.api.scoreLoaded.on(scoreLoadedHandler);
+			this.eventHandlers.set('scoreLoaded', scoreLoadedHandler);
 
 			// Render Started
-			this.api.renderStarted.on(() => {
+			const renderStartedHandler = () => {
 				console.log('[PlayerController] renderStarted');
 				useRuntimeStore.getState().setRenderState('rendering');
-			});
+			};
+			this.api.renderStarted.on(renderStartedHandler);
+			this.eventHandlers.set('renderStarted', renderStartedHandler);
 
 			// Render Finished
-			this.api.renderFinished.on(() => {
+			const renderFinishedHandler = () => {
 				console.log('[PlayerController] renderFinished');
 				useRuntimeStore.getState().setRenderState('finished');
-			});
+			};
+			this.api.renderFinished.on(renderFinishedHandler);
+			this.eventHandlers.set('renderFinished', renderFinishedHandler);
 
 			// Player Ready
-			this.api.playerReady.on(async () => {
+			const playerReadyHandler = async () => {
 				console.log('[PlayerController] playerReady');
 				useRuntimeStore.getState().setApiReady(true);
 
@@ -324,10 +387,12 @@ export class PlayerController {
 					await this.pendingFileLoad();
 					this.pendingFileLoad = null;
 				}
-			});
+			};
+			this.api.playerReady.on(playerReadyHandler);
+			this.eventHandlers.set('playerReady', playerReadyHandler);
 
 			// Player State Changed
-			this.api.playerStateChanged.on((e: any) => {
+			const playerStateChangedHandler = (e: any) => {
 				console.log('[PlayerController] playerStateChanged:', e.state);
 				const stateMap: Record<number, 'idle' | 'playing' | 'paused' | 'stopped'> = {
 					0: 'paused',
@@ -335,24 +400,30 @@ export class PlayerController {
 					2: 'stopped',
 				};
 				useRuntimeStore.getState().setPlaybackState(stateMap[e.state] || 'idle');
-			});
+			};
+			this.api.playerStateChanged.on(playerStateChangedHandler);
+			this.eventHandlers.set('playerStateChanged', playerStateChangedHandler);
 
 			// Player Position Changed
-			this.api.playerPositionChanged.on((e: any) => {
+			const playerPositionChangedHandler = (e: any) => {
 				useRuntimeStore.getState().setPosition(e.currentTime);
 				useRuntimeStore.getState().setCurrentBeat({
 					bar: e.currentBar,
 					beat: e.currentBeat,
 					tick: e.currentTick || 0,
 				});
-			});
+			};
+			this.api.playerPositionChanged.on(playerPositionChangedHandler);
+			this.eventHandlers.set('playerPositionChanged', playerPositionChangedHandler);
 
 			// Error
-			this.api.error.on((error: any) => {
+			const errorHandler = (error: any) => {
 				console.error('[PlayerController] alphaTab error:', error);
 				useRuntimeStore.getState().setError('api-init', error.message || String(error));
 				useUIStore.getState().showToast('error', 'An error occurred in the player');
-			});
+			};
+			this.api.error.on(errorHandler);
+			this.eventHandlers.set('error', errorHandler);
 
 			console.log('[PlayerController] Events bound successfully');
 		} catch (error) {
