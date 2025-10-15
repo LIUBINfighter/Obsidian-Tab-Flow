@@ -159,6 +159,5 @@ export const useUIStore = create<UIStore>((set, get) => ({
 			},
 			toasts: [],
 		});
-		console.log('[UIStore] State has been reset.');
 	},
 }));

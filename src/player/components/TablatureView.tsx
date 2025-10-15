@@ -11,9 +11,6 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	
 	// 订阅 runtime state
-	const apiReady = useRuntimeStore((s) => s.apiReady);
-	const scoreLoaded = useRuntimeStore((s) => s.scoreLoaded);
-	const renderState = useRuntimeStore((s) => s.renderState);
 	const error = useRuntimeStore((s) => s.error);
 	
 	// 订阅 UI state
@@ -22,26 +19,13 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	useEffect(() => {
 		if (!containerRef.current) return;
 
-		console.log('[TablatureView] Initializing PlayerController');
 		controller.init(containerRef.current);
 
 		// 清理函数
 		return () => {
-			console.log('[TablatureView] Destroying PlayerController');
 			controller.destroy();
 		};
 	}, [controller]);
-
-	// 调试输出
-	useEffect(() => {
-		console.log('[TablatureView] State:', {
-			apiReady,
-			scoreLoaded,
-			renderState,
-			error,
-			loading,
-		});
-	}, [apiReady, scoreLoaded, renderState, error, loading]);
 
 	return (
 		<div 

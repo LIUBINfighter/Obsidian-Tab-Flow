@@ -36,9 +36,7 @@ export class ReactView extends FileView {
 	}
 
 	async onOpen() {
-		console.debug('[ReactView] Opening view. Resetting stores...');
-
-		// ***** 关键步骤：在所有操作之前重置状态 *****
+		// 在所有操作之前重置状态
 		useRuntimeStore.getState().reset();
 		useUIStore.getState().reset();
 
@@ -54,7 +52,6 @@ export class ReactView extends FileView {
 			this.fontStyle.id = `alphatab-font-style-${ReactView.instanceId++}`;
 			this.fontStyle.appendChild(document.createTextNode(fontFaceRule));
 			this.containerEl.ownerDocument.head.appendChild(this.fontStyle);
-			console.debug('[ReactView] Font face injected');
 		}
 
 		// 创建 PlayerController（传递 resources）
@@ -71,18 +68,13 @@ export class ReactView extends FileView {
 		// 创建 React root 并渲染
 		this.root = createRoot(this.reactContainer);
 		this.renderReactComponent();
-
-		console.debug('[ReactView] View opened');
 	}
 
 	async onClose() {
-		console.debug('[ReactView] Closing view. Cleaning up and resetting stores...');
-
 		// 移除字体样式
 		if (this.fontStyle) {
 			this.fontStyle.remove();
 			this.fontStyle = null;
-			console.debug('[ReactView] Font face removed');
 		}
 
 		// 清理 React root
@@ -105,16 +97,13 @@ export class ReactView extends FileView {
 
 		this.currentFile = null;
 
-		// ***** 关键步骤：在关闭后再次重置，为下一个视图实例提供干净环境 *****
+		// 在关闭后再次重置，为下一个视图实例提供干净环境
 		useRuntimeStore.getState().reset();
 		useUIStore.getState().reset();
-
-		console.debug('[ReactView] View closed and resources cleaned up');
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
 		this.currentFile = file;
-		console.debug(`[ReactView] Handing file over to controller: ${file.name}`);
 
 		if (!this.controller) {
 			console.error('[ReactView] PlayerController not initialized, cannot load file.');
@@ -128,7 +117,6 @@ export class ReactView extends FileView {
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {
-		console.debug(`[ReactView] Unloading file: ${file.name}`);
 		this.currentFile = null;
 		await super.onUnloadFile(file);
 	}

@@ -38,7 +38,6 @@ export class PlayerController {
 	constructor(plugin: Plugin, resources: PlayerControllerResources) {
 		this.plugin = plugin;
 		this.resources = resources;
-		console.log('[PlayerController] Initialized with resources:', resources);
 
 		// 初始化配置中的资源路径
 		this.initializeResourcePaths();
@@ -66,17 +65,10 @@ export class PlayerController {
 	 * @param container alphaTab 渲染容器
 	 */
 	init(container: HTMLElement): void {
-		console.log('[PlayerController] init() called with container:', container);
 		this.container = container;
 
 		// 检查容器是否有有效的尺寸
 		const rect = container.getBoundingClientRect();
-		console.log('[PlayerController] Container dimensions:', {
-			width: rect.width,
-			height: rect.height,
-			visible: rect.width > 0 && rect.height > 0,
-		});
-
 		if (rect.width === 0 || rect.height === 0) {
 			console.warn(
 				'[PlayerController] Container has zero dimensions! This may cause rendering issues.'
@@ -95,7 +87,6 @@ export class PlayerController {
 	 * 销毁控制器
 	 */
 	destroy(): void {
-		console.log('[PlayerController] destroy() called');
 		this.destroyApi();
 		this.unsubscribeConfig?.();
 		this.container = null;
@@ -117,30 +108,19 @@ export class PlayerController {
 
 	private shouldRebuildApi(newConfig: AlphaTabPlayerConfig): boolean {
 		if (!this.lastConfig) {
-			console.log('[PlayerController] No lastConfig, rebuild needed');
 			return true;
 		}
 
 		// 排除 scoreSource，因为它只记录当前加载的文件，不影响 alphaTab API 设置
 		// scoreSource 的变化不应该触发 API 重建
-		const { scoreSource: oldSource, ...oldRest } = this.lastConfig;
-		const { scoreSource: newSource, ...newRest } = newConfig;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { scoreSource: _oldSource, ...oldRest } = this.lastConfig;
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
+		const { scoreSource: _newSource, ...newRest } = newConfig;
 
 		const oldConfigStr = JSON.stringify(oldRest);
 		const newConfigStr = JSON.stringify(newRest);
-		const needsRebuild = oldConfigStr !== newConfigStr;
-
-		if (needsRebuild) {
-			console.log(
-				'[PlayerController] Config changed (excluding scoreSource), rebuild needed'
-			);
-			console.log('[PlayerController] Old scoreSource:', oldSource);
-			console.log('[PlayerController] New scoreSource:', newSource);
-		} else {
-			console.log('[PlayerController] Only scoreSource changed, no rebuild needed');
-		}
-
-		return needsRebuild;
+		return oldConfigStr !== newConfigStr;
 	}
 
 	// ========== API Lifecycle ==========
@@ -174,14 +154,11 @@ export class PlayerController {
 			// 更新最后配置
 			this.lastConfig = JSON.parse(JSON.stringify(config));
 
-			// *** 新增逻辑：API 准备好后，检查是否有待加载的文件 ***
+			// API 准备好后，检查是否有待加载的文件
 			if (this.pendingFileLoad) {
-				console.log('[PlayerController] API is ready, executing pending file load.');
 				await this.pendingFileLoad();
-				this.pendingFileLoad = null; // 清空任务
+				this.pendingFileLoad = null;
 			}
-
-			console.log('[PlayerController] API rebuilt successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to rebuild API:', error);
 			useRuntimeStore
@@ -201,7 +178,6 @@ export class PlayerController {
 
 				// 再销毁 API
 				this.api.destroy();
-				console.log('[PlayerController] API destroyed');
 			} catch (error) {
 				console.warn('[PlayerController] Error destroying API:', error);
 			}
@@ -220,10 +196,8 @@ export class PlayerController {
 			const workspaceLeaf = this.container.closest('.workspace-leaf-content');
 			if (workspaceLeaf) {
 				scrollElement = workspaceLeaf as HTMLElement;
-				console.log('[PlayerController] Using workspace-leaf-content as scroll element');
 			} else {
 				scrollElement = this.container;
-				console.log('[PlayerController] Using container as scroll element');
 			}
 		}
 
@@ -268,14 +242,7 @@ export class PlayerController {
 					settings.core.smuflFontSources = new Map([
 						[FontFileFormat.Woff2, this.resources.bravuraUri],
 					]) as unknown as Map<number, string>;
-					console.log(
-						'[PlayerController] Font source configured:',
-						this.resources.bravuraUri
-					);
 				} else {
-					console.warn(
-						'[PlayerController] FontFileFormat.Woff2 not available, using fallback'
-					);
 					settings.core.smuflFontSources = new Map([
 						[0, this.resources.bravuraUri],
 					]) as unknown as Map<number, string>;
@@ -303,13 +270,6 @@ export class PlayerController {
 			};
 		}
 
-		console.log('[PlayerController] Settings created:', {
-			...settings,
-			core: {
-				...settings.core,
-				smuflFontSources: settings.core.smuflFontSources ? 'Map configured' : 'none',
-			},
-		});
 		return settings;
 	} // ========== API Events ==========
 
@@ -322,8 +282,6 @@ export class PlayerController {
 		}
 
 		try {
-			console.log(`[PlayerController] Unbinding ${this.eventHandlers.size} event handlers`);
-
 			this.eventHandlers.forEach((handler, eventName) => {
 				try {
 					// AlphaTab 事件解绑使用 off 方法
@@ -337,7 +295,6 @@ export class PlayerController {
 			});
 
 			this.eventHandlers.clear();
-			console.log('[PlayerController] All events unbound');
 		} catch (error) {
 			console.error('[PlayerController] Failed to unbind events:', error);
 		}
@@ -355,7 +312,6 @@ export class PlayerController {
 		try {
 			// Score Loaded
 			const scoreLoadedHandler = () => {
-				console.log('[PlayerController] scoreLoaded');
 				useRuntimeStore.getState().setScoreLoaded(true);
 				useRuntimeStore.getState().setRenderState('idle');
 			};
@@ -364,7 +320,6 @@ export class PlayerController {
 
 			// Render Started
 			const renderStartedHandler = () => {
-				console.log('[PlayerController] renderStarted');
 				useRuntimeStore.getState().setRenderState('rendering');
 			};
 			this.api.renderStarted.on(renderStartedHandler);
@@ -372,7 +327,6 @@ export class PlayerController {
 
 			// Render Finished
 			const renderFinishedHandler = () => {
-				console.log('[PlayerController] renderFinished');
 				useRuntimeStore.getState().setRenderState('finished');
 			};
 			this.api.renderFinished.on(renderFinishedHandler);
@@ -380,12 +334,10 @@ export class PlayerController {
 
 			// Player Ready
 			const playerReadyHandler = async () => {
-				console.log('[PlayerController] playerReady');
 				useRuntimeStore.getState().setApiReady(true);
 
-				// *** 新增逻辑：播放器就绪后，检查是否有待加载的文件 ***
+				// 播放器就绪后，检查是否有待加载的文件
 				if (this.pendingFileLoad) {
-					console.log('[PlayerController] Player is ready, executing pending file load.');
 					await this.pendingFileLoad();
 					this.pendingFileLoad = null;
 				}
@@ -395,7 +347,6 @@ export class PlayerController {
 
 			// Player State Changed
 			const playerStateChangedHandler = (e: any) => {
-				console.log('[PlayerController] playerStateChanged:', e.state);
 				const stateMap: Record<number, 'idle' | 'playing' | 'paused' | 'stopped'> = {
 					0: 'paused',
 					1: 'playing',
@@ -426,8 +377,6 @@ export class PlayerController {
 			};
 			this.api.error.on(errorHandler);
 			this.eventHandlers.set('error', errorHandler);
-
-			console.log('[PlayerController] Events bound successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to bind API events:', error);
 			useRuntimeStore.getState().setError('api-init', 'Failed to bind API events');
@@ -477,7 +426,7 @@ export class PlayerController {
 	// ========== Score Loading ==========
 
 	/**
-	 * 新增：智能加载文件，处理API未就绪的情况
+	 * 智能加载文件，处理API未就绪的情况
 	 */
 	async loadFileWhenReady(file: TFile): Promise<void> {
 		const loadTask = async () => {
@@ -492,10 +441,8 @@ export class PlayerController {
 
 		// 如果 API 已经就绪，立即执行。否则，放入队列。
 		if (useRuntimeStore.getState().apiReady && this.api) {
-			console.log('[PlayerController] API is already ready, loading file immediately.');
 			await loadTask();
 		} else {
-			console.log('[PlayerController] API not ready, queuing file load.');
 			this.pendingFileLoad = loadTask;
 		}
 	}
