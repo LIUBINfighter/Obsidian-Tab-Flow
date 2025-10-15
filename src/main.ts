@@ -5,8 +5,8 @@ import { DocView, VIEW_TYPE_TABFLOW_DOC } from './views/DocView';
 import { EditorView, VIEW_TYPE_ALPHATEX_EDITOR } from './views/EditorView';
 import {
 	ResourceLoaderService,
-	AlphaTabResources,
 	ASSET_FILES,
+	type AlphaTabResources,
 } from './services/ResourceLoaderService';
 import * as path from 'path';
 import { SettingTab } from './settings/SettingTab';
@@ -430,11 +430,7 @@ export default class TabFlowPlugin extends Plugin {
 		if (this.resources.bravuraUri && this.resources.alphaTabWorkerUri) {
 			// 注册 ReactView 替换原有的 TabView
 			this.registerView(VIEW_TYPE_REACT, (leaf) => {
-				return new ReactView(leaf, this, {
-					bravuraUri: this.resources.bravuraUri || '',
-					alphaTabWorkerUri: this.resources.alphaTabWorkerUri || '',
-					soundFontUri: this.resources.soundFontUri || '',
-				});
+				return new ReactView(leaf, this);
 			});
 
 			// 原有的 TabView 注册已注释掉

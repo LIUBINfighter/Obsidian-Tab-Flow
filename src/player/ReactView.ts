@@ -2,31 +2,21 @@ import { FileView, TFile, WorkspaceLeaf, Plugin } from 'obsidian';
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { TablatureView } from './components/TablatureView';
-import { usePlayerStore } from './store/playerStore';
+import { PlayerController } from './PlayerController';
+import { useRuntimeStore } from './store/runtimeStore';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
-
-export type AlphaTabResources = {
-	bravuraUri: string;
-	alphaTabWorkerUri: string;
-	soundFontUri: string;
-};
 
 export class ReactView extends FileView {
 	private currentFile: TFile | null = null;
 	private plugin: Plugin;
-	private resources: AlphaTabResources;
 	private root: Root | null = null;
 	private reactContainer: HTMLDivElement | null = null;
+	private controller: PlayerController | null = null;
 
-	constructor(
-		leaf: WorkspaceLeaf,
-		plugin: Plugin,
-		resources: AlphaTabResources
-	) {
+	constructor(leaf: WorkspaceLeaf, plugin: Plugin) {
 		super(leaf);
 		this.plugin = plugin;
-		this.resources = resources;
 	}
 
 	getViewType(): string {
@@ -34,23 +24,24 @@ export class ReactView extends FileView {
 	}
 
 	getDisplayText(): string {
-		const scoreTitle = usePlayerStore.getState().scoreTitle;
-		if (scoreTitle && scoreTitle.trim()) {
-			return scoreTitle;
-		}
 		if (this.currentFile) {
 			return this.currentFile.basename;
 		}
-		return 'React Tab View';
+		return 'Tab Player';
 	}
 
 	async onOpen() {
+		console.debug('[ReactView] Opening view');
+
+		// 创建 PlayerController
+		this.controller = new PlayerController();
+
 		// 创建容器元素
-		this.reactContainer = this.contentEl.createDiv({ 
+		this.reactContainer = this.contentEl.createDiv({
 			cls: 'react-tab-view-container',
 			attr: {
-				style: 'width: 100%; height: 100%; position: relative;'
-			}
+				style: 'width: 100%; height: 100%; position: relative;',
+			},
 		});
 
 		// 创建 React root 并渲染
@@ -61,27 +52,24 @@ export class ReactView extends FileView {
 	}
 
 	async onClose() {
+		console.debug('[ReactView] Closing view');
+
 		// 清理 React root
 		if (this.root) {
 			this.root.unmount();
 			this.root = null;
 		}
 
+		// 清理 PlayerController
+		if (this.controller) {
+			this.controller.destroy();
+			this.controller = null;
+		}
+
 		// 清理容器
 		if (this.reactContainer) {
 			this.reactContainer.remove();
 			this.reactContainer = null;
-		}
-
-		// 清理 store 中的 API
-		const { api, setApi } = usePlayerStore.getState();
-		if (api) {
-			try {
-				api.destroy();
-			} catch (error) {
-				console.error('[ReactView] Error destroying AlphaTab API:', error);
-			}
-			setApi(null);
 		}
 
 		this.currentFile = null;
@@ -92,28 +80,32 @@ export class ReactView extends FileView {
 		this.currentFile = file;
 		console.debug(`[ReactView] Loading file: ${file.name}`);
 
+		if (!this.controller) {
+			console.error('[ReactView] PlayerController not initialized');
+			return;
+		}
+
 		try {
-			const { api } = usePlayerStore.getState();
-			
-			if (!api) {
-				console.warn('[ReactView] AlphaTab API not ready yet, waiting...');
-				// 等待 API 初始化
-				await new Promise(resolve => setTimeout(resolve, 500));
+			// 等待 API 准备好
+			const maxRetries = 10;
+			let retries = 0;
+			while (!useRuntimeStore.getState().apiReady && retries < maxRetries) {
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				retries++;
 			}
 
-			const currentApi = usePlayerStore.getState().api;
-			if (!currentApi) {
-				console.error('[ReactView] AlphaTab API still not available');
+			if (!useRuntimeStore.getState().apiReady) {
+				console.error('[ReactView] API not ready after retries');
 				return;
 			}
 
 			// 加载文件内容
 			if (file.extension && ['alphatab', 'alphatex'].includes(file.extension.toLowerCase())) {
 				const textContent = await this.app.vault.read(file);
-				currentApi.tex(textContent);
+				await this.controller.loadScoreFromAlphaTex(textContent);
 			} else {
 				const inputFile = await this.app.vault.readBinary(file);
-				currentApi.load(new Uint8Array(inputFile));
+				await this.controller.loadScoreFromFile(inputFile, file.name);
 			}
 
 			console.debug(`[ReactView] File loaded successfully: ${file.name}`);
@@ -129,11 +121,11 @@ export class ReactView extends FileView {
 	}
 
 	private renderReactComponent() {
-		if (!this.root) return;
+		if (!this.root || !this.controller) return;
 
 		this.root.render(
 			React.createElement(TablatureView, {
-				resources: this.resources
+				controller: this.controller,
 			})
 		);
 	}
