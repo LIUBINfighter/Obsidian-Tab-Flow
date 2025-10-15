@@ -1,17 +1,16 @@
 import React from 'react';
 import type { PlayerController } from '../PlayerController';
 
-interface MetronomeToggleProps {
+interface CountInToggleProps {
 	controller: PlayerController;
 	enabled: boolean;
 	onToggle: (enabled: boolean) => void;
 }
 
 /**
- * MetronomeToggle - 节拍器开关
- * 显示节拍器图标,支持开关切换
+ * CountInToggle - 预备拍开关
  */
-export const MetronomeToggle: React.FC<MetronomeToggleProps> = ({
+export const CountInToggle: React.FC<CountInToggleProps> = ({
 	controller,
 	enabled,
 	onToggle,
@@ -19,20 +18,18 @@ export const MetronomeToggle: React.FC<MetronomeToggleProps> = ({
 	const handleToggle = () => {
 		const newState = !enabled;
 		onToggle(newState);
-		
-		// 通过 controller 设置节拍器
-		controller.setMetronome(newState);
+		controller.setCountIn(newState);
 	};
 
 	return (
-		<div className="play-bar-metronome">
-			<label className="metronome-label">节拍器:</label>
+		<div className="play-bar-countin">
+			<label className="countin-label">预备拍:</label>
 			<input
 				type="checkbox"
 				checked={enabled}
 				onChange={handleToggle}
-				aria-label="Metronome"
-				title="Toggle Metronome"
+				aria-label="Count In"
+				title="Toggle Count In"
 			/>
 		</div>
 	);

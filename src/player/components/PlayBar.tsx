@@ -4,6 +4,12 @@ import { PlayControls } from './PlayControls';
 import { TimeDisplay } from './TimeDisplay';
 import { SpeedControl } from './SpeedControl';
 import { MetronomeToggle } from './MetronomeToggle';
+import { CountInToggle } from './CountInToggle';
+import { LoopToggle } from './LoopToggle';
+import { LayoutToggle } from './LayoutToggle';
+import { ZoomControl } from './ZoomControl';
+import { StaveProfileControl } from './StaveProfileControl';
+import { ScrollModeControl } from './ScrollModeControl';
 
 interface PlayBarProps {
 	controller: PlayerController;
@@ -32,6 +38,7 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
 
 	// 本地状态
 	const [metronomeEnabled, setMetronomeEnabled] = useState(false);
+	const [countInEnabled, setCountInEnabled] = useState(false);
 
 	// 判断按钮状态
 	const isPlaying = playbackState === 'playing';
@@ -54,6 +61,28 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
 				enabled={metronomeEnabled}
 				onToggle={setMetronomeEnabled}
 			/>
+
+			{/* 预备拍开关 */}
+			<CountInToggle
+				controller={controller}
+				enabled={countInEnabled}
+				onToggle={setCountInEnabled}
+			/>
+
+			{/* 循环播放 */}
+			<LoopToggle controller={controller} />
+
+			{/* 布局切换 */}
+			<LayoutToggle controller={controller} />
+
+			{/* 缩放控制 */}
+			<ZoomControl controller={controller} />
+
+			{/* 谱表模式 */}
+			<StaveProfileControl controller={controller} />
+
+			{/* 滚动模式 */}
+			<ScrollModeControl controller={controller} />
 
 			{/* 状态指示器（调试用） */}
 			{!scoreLoaded && (

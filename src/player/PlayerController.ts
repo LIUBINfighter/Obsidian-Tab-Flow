@@ -442,6 +442,103 @@ export class PlayerController {
 		this.api.countInVolume = volume;
 	}
 
+	// ========== Player Settings ==========
+
+	/**
+	 * 设置节拍器音量（0-1）
+	 */
+	setMetronome(enabled: boolean): void {
+		if (!this.api) return;
+		this.api.metronomeVolume = enabled ? 1 : 0;
+	}
+
+	/**
+	 * 设置预备拍音量（0-1）
+	 */
+	setCountIn(enabled: boolean): void {
+		if (!this.api) return;
+		this.api.countInVolume = enabled ? 1 : 0;
+	}
+
+	/**
+	 * 设置循环播放
+	 */
+	setLooping(enabled: boolean): void {
+		if (!this.api) return;
+		this.api.isLooping = enabled;
+	}
+
+	/**
+	 * 设置缩放比例
+	 */
+	setZoom(scale: number): void {
+		if (!this.api) return;
+		this.api.settings.display.scale = scale;
+		this.api.updateSettings();
+		this.api.render();
+	}
+
+	/**
+	 * 设置布局模式
+	 */
+	setLayoutMode(mode: alphaTab.LayoutMode): void {
+		if (!this.api) return;
+		this.api.settings.display.layoutMode = mode;
+		this.api.updateSettings();
+		this.api.render();
+	}
+
+	/**
+	 * 设置谱表模式
+	 */
+	setStaveProfile(profile: alphaTab.StaveProfile): void {
+		if (!this.api) return;
+		// StaveProfile 需要通过 settings.display.staveProfile 设置
+		this.api.settings.display.staveProfile = profile;
+		this.api.updateSettings();
+		this.api.render();
+	}
+
+	/**
+	 * 设置滚动模式
+	 */
+	setScrollMode(mode: alphaTab.ScrollMode): void {
+		if (!this.api) return;
+		this.api.settings.player.scrollMode = mode;
+		this.api.updateSettings();
+	}
+
+	/**
+	 * 设置滚动速度（毫秒）
+	 */
+	setScrollSpeed(speed: number): void {
+		if (!this.api) return;
+		this.api.settings.player.scrollSpeed = speed;
+		this.api.updateSettings();
+	}
+
+	/**
+	 * 手动滚动到当前光标位置
+	 */
+	scrollToCursor(): void {
+		if (!this.api) return;
+		// AlphaTab 会在播放时自动滚动，这里可以强制触发
+		// 通过暂时切换 scrollMode 来实现
+		const currentMode = this.api.settings.player.scrollMode;
+		if (currentMode === alphaTab.ScrollMode.Off) {
+			// 如果已经关闭滚动，暂时启用
+			this.api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
+			this.api.updateSettings();
+			// 触发一次位置更新
+			setTimeout(() => {
+				if (this.api) {
+					this.api.settings.player.scrollMode = currentMode;
+					this.api.updateSettings();
+				}
+			}, 100);
+		}
+	}
+
 	// ========== Score Loading ==========
 
 	/**
