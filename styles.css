@@ -1540,6 +1540,421 @@
 	height: 32px;
 }
 
+/* --- playbar.css --- */
+/* PlayBar - 播放控制栏样式 (参考 DebugBar 设计) */
+
+/* ============================================
+   主容器 - 圆角边框 + flex-wrap 布局
+   ============================================ */
+.tab-flow-play-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+	padding: 0.5em;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin: 0.5em 0;
+	flex-shrink: 0;
+	user-select: none;
+}
+
+/* ============================================
+   播放控制按钮组
+   ============================================ */
+.play-bar-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.play-bar-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.play-bar-btn:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.play-bar-btn:active:not(:disabled) {
+	background: var(--background-modifier-active-hover);
+	transform: scale(0.95);
+}
+
+.play-bar-btn:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+
+/* 播放/暂停按钮特殊样式 */
+.play-pause-btn.playing {
+	color: var(--interactive-accent);
+}
+
+.play-pause-btn.playing:hover:not(:disabled) {
+	color: var(--interactive-accent-hover);
+}
+
+/* SVG 图标样式 */
+.play-bar-btn svg {
+	width: 18px;
+	height: 18px;
+	stroke-width: 2;
+}
+
+/* ============================================
+   时间显示
+   ============================================ */
+.play-bar-time {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	color: var(--text-normal);
+	font-variant-numeric: tabular-nums;
+	min-width: 90px;
+	margin-left: 0.5em;
+}
+
+.time-current {
+	color: var(--interactive-accent);
+	font-weight: 500;
+}
+
+.time-separator {
+	color: var(--text-muted);
+}
+
+.time-total {
+	color: var(--text-muted);
+}
+
+/* ============================================
+   速度控制
+   ============================================ */
+.play-bar-speed {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 0.5em;
+}
+
+.speed-label {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.speed-select {
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: border-color 0.15s ease;
+}
+
+.speed-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.speed-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* ============================================
+   节拍器开关
+   ============================================ */
+.play-bar-metronome {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 0.5em;
+}
+
+.metronome-label {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.play-bar-metronome input[type="checkbox"] {
+	cursor: pointer;
+}
+
+/* ============================================
+   状态指示器
+   ============================================ */
+.play-bar-status {
+	margin-left: auto;
+	font-size: 12px;
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+/* ============================================
+   响应式设计 - 小屏幕优化
+   ============================================ */
+@media (max-width: 768px) {
+	.tab-flow-play-bar {
+		gap: 0.4em;
+		padding: 0.4em;
+	}
+
+	.play-bar-btn {
+		width: 28px;
+		height: 28px;
+	}
+
+	.play-bar-btn svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.play-bar-time {
+		font-size: 12px;
+		min-width: 80px;
+	}
+
+	.speed-select,
+	.speed-label,
+	.metronome-label {
+		font-size: 12px;
+	}
+}
+
+/* ============================================
+   深色/浅色模式优化
+   ============================================ */
+.theme-dark .tab-flow-play-bar {
+	background: var(--background-primary-alt);
+}
+
+.theme-light .tab-flow-play-bar {
+	background: var(--background-secondary);
+}
+
+/* ============================================
+   聚焦样式 - 键盘导航
+   ============================================ */
+.play-bar-btn:focus-visible,
+.speed-select:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+/* ============================================
+   加载状态
+   ============================================ */
+.play-bar-btn.loading {
+	pointer-events: none;
+	opacity: 0.6;
+}
+
+.play-bar-btn.loading svg {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* --- player-cursor.css --- */
+/* ============================================
+   AlphaTab 播放器光标样式
+   符合 Obsidian 主题的播放指示器
+   ============================================ */
+
+/* 
+ * 1. 小节光标 - 当前播放小节的背景高亮
+ * 使用半透明的主题色调，不遮挡乐谱内容
+ */
+.at-cursor-bar {
+	background: var(--interactive-accent, #7c3aed);
+	opacity: 0.08;
+	transition: opacity 0.1s ease;
+}
+
+/* 深色模式下调整透明度 */
+.theme-dark .at-cursor-bar {
+	opacity: 0.12;
+}
+
+/* 
+ * 2. 拍子光标 - 当前拍的竖线指示器
+ * 使用主题色的垂直线条，清晰指示播放位置
+ */
+.at-cursor-beat {
+	background: var(--interactive-accent, #7c3aed);
+	opacity: 0.75;
+	width: 3px;
+	border-radius: 1px;
+	transition: opacity 0.1s ease;
+}
+
+/* 深色模式下增强可见度 */
+.theme-dark .at-cursor-beat {
+	opacity: 0.85;
+	box-shadow: 0 0 4px rgba(124, 58, 237, 0.3);
+}
+
+/* 
+ * 3. 选择范围背景 - 用户选择的播放范围
+ * 使用主题色的淡背景，区分选择区域
+ */
+.at-selection div {
+	background: var(--interactive-accent, #7c3aed);
+	opacity: 0.1;
+	transition: opacity 0.15s ease;
+}
+
+/* 悬停时增强反馈 */
+.at-selection div:hover {
+	opacity: 0.15;
+}
+
+/* 深色模式下的选择范围 */
+.theme-dark .at-selection div {
+	opacity: 0.15;
+}
+
+.theme-dark .at-selection div:hover {
+	opacity: 0.2;
+}
+
+/* 
+ * 4. 音符高亮 - 正在播放的音符着色
+ * 使用主题色填充和描边，SVG 元素着色
+ */
+.at-highlight * {
+	fill: var(--interactive-accent, #7c3aed) !important;
+	stroke: var(--interactive-accent, #7c3aed) !important;
+	opacity: 0.9;
+	transition: fill 0.1s ease, stroke 0.1s ease;
+}
+
+/* 深色模式下使用更亮的颜色 */
+.theme-dark .at-highlight * {
+	fill: var(--interactive-accent-hover, #8b5cf6) !important;
+	stroke: var(--interactive-accent-hover, #8b5cf6) !important;
+	opacity: 1;
+}
+
+/* 
+ * 5. 性能优化 - 使用 GPU 加速
+ * 确保光标移动流畅
+ */
+.at-cursor-bar,
+.at-cursor-beat,
+.at-selection div,
+.at-highlight {
+	will-change: transform, opacity;
+}
+
+/* 
+ * 6. 可访问性增强 - 高对比度模式
+ * 在系统高对比度模式下提供更清晰的指示器
+ */
+@media (prefers-contrast: high) {
+	.at-cursor-bar {
+		opacity: 0.2;
+		outline: 2px solid var(--interactive-accent);
+	}
+
+	.at-cursor-beat {
+		width: 4px;
+		opacity: 1;
+	}
+
+	.at-selection div {
+		opacity: 0.25;
+		outline: 1px solid var(--interactive-accent);
+	}
+
+	.at-highlight * {
+		opacity: 1 !important;
+	}
+}
+
+/* 
+ * 7. 减少动画模式 - 尊重用户偏好
+ * 当用户偏好减少动画时，移除过渡效果
+ */
+@media (prefers-reduced-motion: reduce) {
+	.at-cursor-bar,
+	.at-cursor-beat,
+	.at-selection div,
+	.at-highlight * {
+		transition: none;
+	}
+}
+
+/* 
+ * 8. 打印模式 - 隐藏所有光标
+ * 打印时不显示播放指示器
+ */
+@media print {
+	.at-cursor-bar,
+	.at-cursor-beat,
+	.at-selection,
+	.at-highlight {
+		display: none !important;
+	}
+}
+
+/* 
+ * 9. 响应式调整 - 小屏幕优化
+ * 在移动设备上使用更醒目的指示器
+ */
+@media (max-width: 768px) {
+	.at-cursor-beat {
+		width: 4px;
+	}
+
+	.at-cursor-bar {
+		opacity: 0.12;
+	}
+
+	.theme-dark .at-cursor-bar {
+		opacity: 0.16;
+	}
+}
+
+/* 
+ * 10. 焦点状态 - 键盘导航时的光标增强
+ * 当用户使用键盘控制播放时，增强光标可见度
+ */
+.tab-flow-player-container:focus-within .at-cursor-beat {
+	opacity: 0.9;
+	box-shadow: 0 0 6px var(--interactive-accent);
+}
+
+.theme-dark .tab-flow-player-container:focus-within .at-cursor-beat {
+	opacity: 1;
+	box-shadow: 0 0 8px var(--interactive-accent-hover);
+}
+
 /* --- settingtab.css --- */
 .itabs-settings-tabs {
 	display: flex;

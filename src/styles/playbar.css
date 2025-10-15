@@ -1,0 +1,238 @@
+/* PlayBar - 播放控制栏样式 (参考 DebugBar 设计) */
+
+/* ============================================
+   主容器 - 圆角边框 + flex-wrap 布局
+   ============================================ */
+.tab-flow-play-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+	padding: 0.5em;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin: 0.5em 0;
+	flex-shrink: 0;
+	user-select: none;
+}
+
+/* ============================================
+   播放控制按钮组
+   ============================================ */
+.play-bar-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.play-bar-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.play-bar-btn:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.play-bar-btn:active:not(:disabled) {
+	background: var(--background-modifier-active-hover);
+	transform: scale(0.95);
+}
+
+.play-bar-btn:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+
+/* 播放/暂停按钮特殊样式 */
+.play-pause-btn.playing {
+	color: var(--interactive-accent);
+}
+
+.play-pause-btn.playing:hover:not(:disabled) {
+	color: var(--interactive-accent-hover);
+}
+
+/* SVG 图标样式 */
+.play-bar-btn svg {
+	width: 18px;
+	height: 18px;
+	stroke-width: 2;
+}
+
+/* ============================================
+   时间显示
+   ============================================ */
+.play-bar-time {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	color: var(--text-normal);
+	font-variant-numeric: tabular-nums;
+	min-width: 90px;
+	margin-left: 0.5em;
+}
+
+.time-current {
+	color: var(--interactive-accent);
+	font-weight: 500;
+}
+
+.time-separator {
+	color: var(--text-muted);
+}
+
+.time-total {
+	color: var(--text-muted);
+}
+
+/* ============================================
+   速度控制
+   ============================================ */
+.play-bar-speed {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 0.5em;
+}
+
+.speed-label {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.speed-select {
+	padding: 2px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: border-color 0.15s ease;
+}
+
+.speed-select:hover {
+	border-color: var(--interactive-accent);
+}
+
+.speed-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
+}
+
+/* ============================================
+   节拍器开关
+   ============================================ */
+.play-bar-metronome {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: 0.5em;
+}
+
+.metronome-label {
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.play-bar-metronome input[type="checkbox"] {
+	cursor: pointer;
+}
+
+/* ============================================
+   状态指示器
+   ============================================ */
+.play-bar-status {
+	margin-left: auto;
+	font-size: 12px;
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+/* ============================================
+   响应式设计 - 小屏幕优化
+   ============================================ */
+@media (max-width: 768px) {
+	.tab-flow-play-bar {
+		gap: 0.4em;
+		padding: 0.4em;
+	}
+
+	.play-bar-btn {
+		width: 28px;
+		height: 28px;
+	}
+
+	.play-bar-btn svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.play-bar-time {
+		font-size: 12px;
+		min-width: 80px;
+	}
+
+	.speed-select,
+	.speed-label,
+	.metronome-label {
+		font-size: 12px;
+	}
+}
+
+/* ============================================
+   深色/浅色模式优化
+   ============================================ */
+.theme-dark .tab-flow-play-bar {
+	background: var(--background-primary-alt);
+}
+
+.theme-light .tab-flow-play-bar {
+	background: var(--background-secondary);
+}
+
+/* ============================================
+   聚焦样式 - 键盘导航
+   ============================================ */
+.play-bar-btn:focus-visible,
+.speed-select:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+/* ============================================
+   加载状态
+   ============================================ */
+.play-bar-btn.loading {
+	pointer-events: none;
+	opacity: 0.6;
+}
+
+.play-bar-btn.loading svg {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}

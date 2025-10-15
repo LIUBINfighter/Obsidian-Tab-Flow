@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useRuntimeStore } from '../store/runtimeStore';
 import { useUIStore } from '../store/uiStore';
 import type { PlayerController } from '../PlayerController';
+import { PlayBar } from './PlayBar';
 
 interface TablatureViewProps {
 	controller: PlayerController;
@@ -35,8 +36,13 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				height: '100%',
 				position: 'relative',
 				overflow: 'hidden',
+				display: 'flex',
+				flexDirection: 'column',
 			}}
 		>
+			{/* PlayBar - 播放控制栏 */}
+			<PlayBar controller={controller} />
+
 			{/* Loading Indicator */}
 			{loading.isLoading && (
 				<div 
@@ -112,7 +118,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				className="alphatab-container"
 				style={{
 					width: '100%',
-					height: '100%',
+					flex: 1,
 					overflow: 'auto',
 					position: 'relative',
 				}}

@@ -314,6 +314,16 @@ export class PlayerController {
 			const scoreLoadedHandler = () => {
 				useRuntimeStore.getState().setScoreLoaded(true);
 				useRuntimeStore.getState().setRenderState('idle');
+				
+				// 设置总时长（关键：从 score.duration 获取）
+				if (this.api?.score) {
+					const durationMs = this.api.score.masterBars.reduce(
+						(sum, bar) => sum + bar.calculateDuration(),
+						0
+					);
+					useRuntimeStore.getState().setDuration(durationMs);
+					console.log('[PlayerController] Score loaded, duration:', durationMs, 'ms');
+				}
 			};
 			this.api.scoreLoaded.on(scoreLoadedHandler);
 			this.eventHandlers.set('scoreLoaded', scoreLoadedHandler);
@@ -334,6 +344,7 @@ export class PlayerController {
 
 			// Player Ready
 			const playerReadyHandler = async () => {
+				console.log('[PlayerController] Player ready - can now play music');
 				useRuntimeStore.getState().setApiReady(true);
 
 				// 播放器就绪后，检查是否有待加载的文件
@@ -421,6 +432,16 @@ export class PlayerController {
 	setMasterVolume(volume: number): void {
 		if (!this.api) return;
 		this.api.masterVolume = volume;
+	}
+
+	setMetronomeVolume(volume: number): void {
+		if (!this.api) return;
+		this.api.metronomeVolume = volume;
+	}
+
+	setCountInVolume(volume: number): void {
+		if (!this.api) return;
+		this.api.countInVolume = volume;
 	}
 
 	// ========== Score Loading ==========
