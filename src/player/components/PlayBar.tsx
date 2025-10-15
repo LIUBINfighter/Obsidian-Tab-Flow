@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useRuntimeStore } from '../store/runtimeStore';
 import type { PlayerController } from '../PlayerController';
 import { PlayControls } from './PlayControls';
 import { TimeDisplay } from './TimeDisplay';
@@ -22,11 +21,14 @@ interface PlayBarProps {
  * - MetronomeToggle: 节拍器开关
  */
 export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
+	// 使用 controller 的实例 store
+	const runtimeStore = controller.getRuntimeStore();
+	
 	// 订阅播放状态
-	const playbackState = useRuntimeStore((s) => s.playbackState);
-	const positionMs = useRuntimeStore((s) => s.positionMs);
-	const durationMs = useRuntimeStore((s) => s.durationMs);
-	const scoreLoaded = useRuntimeStore((s) => s.scoreLoaded);
+	const playbackState = runtimeStore((s) => s.playbackState);
+	const positionMs = runtimeStore((s) => s.positionMs);
+	const durationMs = runtimeStore((s) => s.durationMs);
+	const scoreLoaded = runtimeStore((s) => s.scoreLoaded);
 
 	// 本地状态
 	const [metronomeEnabled, setMetronomeEnabled] = useState(false);

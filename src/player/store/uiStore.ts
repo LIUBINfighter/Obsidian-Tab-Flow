@@ -6,9 +6,11 @@
  * 2. 管理加载状态和进度提示
  * 3. 管理 Toast 通知
  * 4. 不持久化到 localStorage
+ *
+ * 架构更新：使用工厂模式支持多实例（多标签页隔离）
  */
 
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 
 export interface ToastMessage {
 	id: string;
@@ -17,7 +19,7 @@ export interface ToastMessage {
 	duration?: number; // ms，默认 3000
 }
 
-interface UIStore {
+export interface UIStore {
 	// State
 	panels: {
 		tracksModal: boolean;
@@ -51,113 +53,123 @@ interface UIStore {
 	reset: () => void;
 }
 
-export const useUIStore = create<UIStore>((set, get) => ({
-	// Initial State
-	panels: {
-		tracksModal: false,
-		settingsPanel: false,
-		debugBar: false,
-		exportModal: false,
-		shareCardModal: false,
-	},
-	loading: {
-		isLoading: false,
-		message: '',
-	},
-	toasts: [],
+/**
+ * 工厂函数：创建独立的 UIStore 实例
+ * 每个 PlayerController 应该创建自己的 store 实例，避免多标签页状态冲突
+ */
+export function createUIStore(): UseBoundStore<StoreApi<UIStore>> {
+	return create<UIStore>((set, get) => ({
+		// Initial State
+		panels: {
+			tracksModal: false,
+			settingsPanel: false,
+			debugBar: false,
+			exportModal: false,
+			shareCardModal: false,
+		},
+		loading: {
+			isLoading: false,
+			message: '',
+		},
+		toasts: [],
 
-	// Panel Management
-	togglePanel: (panel) => {
-		set((state) => ({
-			panels: {
-				...state.panels,
-				[panel]: !state.panels[panel],
-			},
-		}));
-	},
+		// Panel Management
+		togglePanel: (panel) => {
+			set((state) => ({
+				panels: {
+					...state.panels,
+					[panel]: !state.panels[panel],
+				},
+			}));
+		},
 
-	showPanel: (panel) => {
-		set((state) => ({
-			panels: {
-				...state.panels,
-				[panel]: true,
-			},
-		}));
-	},
+		showPanel: (panel) => {
+			set((state) => ({
+				panels: {
+					...state.panels,
+					[panel]: true,
+				},
+			}));
+		},
 
-	hidePanel: (panel) => {
-		set((state) => ({
-			panels: {
-				...state.panels,
-				[panel]: false,
-			},
-		}));
-	},
+		hidePanel: (panel) => {
+			set((state) => ({
+				panels: {
+					...state.panels,
+					[panel]: false,
+				},
+			}));
+		},
 
-	hideAllPanels: () => {
-		set({
-			panels: {
-				tracksModal: false,
-				settingsPanel: false,
-				debugBar: false,
-				exportModal: false,
-				shareCardModal: false,
-			},
-		});
-	},
+		hideAllPanels: () => {
+			set({
+				panels: {
+					tracksModal: false,
+					settingsPanel: false,
+					debugBar: false,
+					exportModal: false,
+					shareCardModal: false,
+				},
+			});
+		},
 
-	// Loading State
-	setLoading: (isLoading, message = '', progress) => {
-		set({
-			loading: {
-				isLoading,
-				message,
-				progress,
-			},
-		});
-	},
+		// Loading State
+		setLoading: (isLoading, message = '', progress) => {
+			set({
+				loading: {
+					isLoading,
+					message,
+					progress,
+				},
+			});
+		},
 
-	// Toast Management
-	showToast: (type, message, duration = 3000) => {
-		const id = `toast-${Date.now()}-${Math.random()}`;
-		const toast: ToastMessage = { id, type, message, duration };
+		// Toast Management
+		showToast: (type, message, duration = 3000) => {
+			const id = `toast-${Date.now()}-${Math.random()}`;
+			const toast: ToastMessage = { id, type, message, duration };
 
-		set((state) => ({
-			toasts: [...state.toasts, toast],
-		}));
+			set((state) => ({
+				toasts: [...state.toasts, toast],
+			}));
 
-		// 自动移除
-		if (duration > 0) {
-			setTimeout(() => {
-				get().removeToast(id);
-			}, duration);
-		}
-	},
+			// 自动移除
+			if (duration > 0) {
+				setTimeout(() => {
+					get().removeToast(id);
+				}, duration);
+			}
+		},
 
-	removeToast: (id) => {
-		set((state) => ({
-			toasts: state.toasts.filter((t) => t.id !== id),
-		}));
-	},
+		removeToast: (id) => {
+			set((state) => ({
+				toasts: state.toasts.filter((t) => t.id !== id),
+			}));
+		},
 
-	clearToasts: () => {
-		set({ toasts: [] });
-	},
+		clearToasts: () => {
+			set({ toasts: [] });
+		},
 
-	reset: () => {
-		set({
-			panels: {
-				tracksModal: false,
-				settingsPanel: false,
-				debugBar: false,
-				exportModal: false,
-				shareCardModal: false,
-			},
-			loading: {
-				isLoading: false,
-				message: '',
-			},
-			toasts: [],
-		});
-	},
-}));
+		reset: () => {
+			set({
+				panels: {
+					tracksModal: false,
+					settingsPanel: false,
+					debugBar: false,
+					exportModal: false,
+					shareCardModal: false,
+				},
+				loading: {
+					isLoading: false,
+					message: '',
+				},
+				toasts: [],
+			});
+		},
+	}));
+}
+
+// 保留全局单例用于向后兼容（旧代码/组件可能依赖）
+// 新代码应使用 createUIStore() 工厂函数
+export const useUIStore = createUIStore();

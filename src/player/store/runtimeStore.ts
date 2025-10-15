@@ -6,9 +6,11 @@
  * 2. 同步播放器运行时状态（播放位置、轨道状态等）
  * 3. 管理渲染状态和错误信息
  * 4. 不持久化到 localStorage
+ * 
+ * 架构更新：使用工厂模式支持多实例（多标签页隔离）
  */
 
-import { create } from 'zustand';
+import { create, type StoreApi, type UseBoundStore } from 'zustand';
 import type { SessionState } from '../types/config-schema';
 import { getInitialSessionState } from '../types/config-schema';
 
@@ -35,90 +37,100 @@ export interface RuntimeStore extends SessionState {
 	reset: () => void;
 }
 
-export const useRuntimeStore = create<RuntimeStore>((set) => ({
-	...getInitialSessionState(),
-	alphaTabApi: null,
+/**
+ * 工厂函数：创建独立的 RuntimeStore 实例
+ * 每个 PlayerController 应该创建自己的 store 实例，避免多标签页状态冲突
+ */
+export function createRuntimeStore(): UseBoundStore<StoreApi<RuntimeStore>> {
+	return create<RuntimeStore>((set) => ({
+		...getInitialSessionState(),
+		alphaTabApi: null,
 
-	// Actions
-	setApi: (api) => {
-		set({
-			alphaTabApi: api,
-			apiReady: !!api,
-		});
-	},
+		// Actions
+		setApi: (api) => {
+			set({
+				alphaTabApi: api,
+				apiReady: !!api,
+			});
+		},
 
-	setApiReady: (ready) => {
-		set({ apiReady: ready });
-	},
+		setApiReady: (ready) => {
+			set({ apiReady: ready });
+		},
 
-	setScoreLoaded: (loaded) => {
-		set({ scoreLoaded: loaded });
-	},
+		setScoreLoaded: (loaded) => {
+			set({ scoreLoaded: loaded });
+		},
 
-	setRenderState: (state) => {
-		set({ renderState: state });
-	},
+		setRenderState: (state) => {
+			set({ renderState: state });
+		},
 
-	setPlaybackState: (state) => {
-		set({ playbackState: state });
-	},
+		setPlaybackState: (state) => {
+			set({ playbackState: state });
+		},
 
-	setPosition: (positionMs) => {
-		set({ positionMs });
-	},
+		setPosition: (positionMs) => {
+			set({ positionMs });
+		},
 
-	setDuration: (durationMs) => {
-		set({ durationMs });
-	},
+		setDuration: (durationMs) => {
+			set({ durationMs });
+		},
 
-	setCurrentBeat: (beat) => {
-		set({ currentBeat: beat });
-	},
+		setCurrentBeat: (beat) => {
+			set({ currentBeat: beat });
+		},
 
-	setTrackOverride: (trackIndex, updates) => {
-		set((state) => ({
-			trackOverrides: {
-				...state.trackOverrides,
-				[trackIndex]: {
-					...state.trackOverrides[trackIndex],
-					...updates,
+		setTrackOverride: (trackIndex, updates) => {
+			set((state) => ({
+				trackOverrides: {
+					...state.trackOverrides,
+					[trackIndex]: {
+						...state.trackOverrides[trackIndex],
+						...updates,
+					},
 				},
-			},
-		}));
-	},
+			}));
+		},
 
-	removeTrackOverride: (trackIndex) => {
-		set((state) => {
-			const newOverrides = { ...state.trackOverrides };
-			delete newOverrides[trackIndex];
-			return { trackOverrides: newOverrides };
-		});
-	},
+		removeTrackOverride: (trackIndex) => {
+			set((state) => {
+				const newOverrides = { ...state.trackOverrides };
+				delete newOverrides[trackIndex];
+				return { trackOverrides: newOverrides };
+			});
+		},
 
-	setError: (type, message) => {
-		set({
-			error: {
-				type,
-				message,
-				timestamp: Date.now(),
-			},
-		});
-	},
+		setError: (type, message) => {
+			set({
+				error: {
+					type,
+					message,
+					timestamp: Date.now(),
+				},
+			});
+		},
 
-	clearError: () => {
-		set({
-			error: {
-				type: null,
-				message: null,
-				timestamp: null,
-			},
-		});
-	},
+		clearError: () => {
+			set({
+				error: {
+					type: null,
+					message: null,
+					timestamp: null,
+				},
+			});
+		},
 
-	reset: () => {
-		set({
-			...getInitialSessionState(),
-			alphaTabApi: null,
-		});
-	},
-}));
+		reset: () => {
+			set({
+				...getInitialSessionState(),
+				alphaTabApi: null,
+			});
+		},
+	}));
+}
+
+// 保留全局单例用于向后兼容（旧代码/组件可能依赖）
+// 新代码应使用 createRuntimeStore() 工厂函数
+export const useRuntimeStore = createRuntimeStore();

@@ -3,8 +3,6 @@ import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { TablatureView } from './components/TablatureView';
 import { PlayerController, type PlayerControllerResources } from './PlayerController';
-import { useRuntimeStore } from './store/runtimeStore';
-import { useUIStore } from './store/uiStore';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
@@ -39,10 +37,6 @@ export class ReactView extends FileView {
 	}
 
 	async onOpen() {
-		// 在所有操作之前重置状态
-		useRuntimeStore.getState().reset();
-		useUIStore.getState().reset();
-
 		// 全局只注入一次 CSS @font-face（作为 AlphaTab 的备用方案）
 		// AlphaTab 主要通过 smuflFontSources 加载字体,但 CSS 可提供后备
 		if (!fontStyleInjected && this.resources.bravuraUri) {
@@ -102,9 +96,7 @@ export class ReactView extends FileView {
 
 		this.currentFile = null;
 
-		// 在关闭后再次重置，为下一个视图实例提供干净环境
-		useRuntimeStore.getState().reset();
-		useUIStore.getState().reset();
+		// 注意：controller.destroy() 会清理实例状态，无需额外重置全局状态
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {

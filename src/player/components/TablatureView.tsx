@@ -1,6 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { useRuntimeStore } from '../store/runtimeStore';
-import { useUIStore } from '../store/uiStore';
 import type { PlayerController } from '../PlayerController';
 import { PlayBar } from './PlayBar';
 
@@ -11,11 +9,15 @@ interface TablatureViewProps {
 export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	
+	// 使用 controller 的实例 store
+	const runtimeStore = controller.getRuntimeStore();
+	const uiStore = controller.getUIStore();
+	
 	// 订阅 runtime state
-	const error = useRuntimeStore((s) => s.error);
+	const error = runtimeStore((s) => s.error);
 	
 	// 订阅 UI state
-	const loading = useUIStore((s) => s.loading);
+	const loading = uiStore((s) => s.loading);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
