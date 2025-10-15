@@ -1,6 +1,6 @@
 /**
  * Workspace Session Configuration Schema
- * 
+ *
  * 工作区会话配置（工作区特定，标签页关闭即清除）
  * 持久化方式：View.getState/setState
  */

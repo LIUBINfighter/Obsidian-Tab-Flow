@@ -1,6 +1,6 @@
 /**
  * Obsidian Plugin Storage Adapter
- * 
+ *
  * 使用 Obsidian Plugin 的 saveData/loadData API
  * 用于全局配置（跨工作区共享）
  */

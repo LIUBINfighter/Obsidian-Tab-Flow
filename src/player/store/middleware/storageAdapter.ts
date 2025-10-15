@@ -1,6 +1,6 @@
 /**
  * Storage Adapter Middleware for Zustand
- * 
+ *
  * 自定义 middleware，使用存储适配器替代 zustand/persist
  */
 
@@ -16,7 +16,7 @@ export interface StorageAdapterOptions {
 type StorageAdapterMiddleware = <
 	T,
 	Mps extends [StoreMutatorIdentifier, unknown][] = [],
-	Mcs extends [StoreMutatorIdentifier, unknown][] = []
+	Mcs extends [StoreMutatorIdentifier, unknown][] = [],
 >(
 	adapter: IStorageAdapter,
 	options: StorageAdapterOptions,

@@ -1,6 +1,6 @@
 /**
  * Workspace Session Configuration Store
- * 
+ *
  * 使用 ObsidianWorkspaceStorageAdapter 管理工作区会话配置
  * 数据持久化到 view.getState / setState (workspace.json)
  * 标签页关闭时自动清除
@@ -20,7 +20,7 @@ interface WorkspaceConfigState extends WorkspaceSessionConfig {
 	setLoopRange: (range: { startBar: number; endBar: number } | null) => void;
 	toggleLooping: () => void;
 	resetToDefaults: () => void;
-	
+
 	// Storage adapter (injected)
 	_adapter?: ObsidianWorkspaceStorageAdapter;
 }
@@ -30,7 +30,7 @@ const CURRENT_VERSION = 1;
 
 /**
  * 创建工作区会话配置 store 的工厂函数
- * 
+ *
  * @param adapter - ObsidianWorkspaceStorageAdapter 实例
  */
 export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdapter) => {
@@ -42,45 +42,50 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 				version: CURRENT_VERSION,
 				// 迁移函数（未来版本变更时使用）
 				migrate: (persistedState: any, version: number) => {
-					console.log('[WorkspaceConfigStore] Migrating from version', version, 'to', CURRENT_VERSION);
-					
+					console.log(
+						'[WorkspaceConfigStore] Migrating from version',
+						version,
+						'to',
+						CURRENT_VERSION
+					);
+
 					// Version 1 无需迁移
 					if (version === 0) {
 						// 从旧版本迁移（如果有）
 						return { ...getDefaultWorkspaceSessionConfig(), ...persistedState };
 					}
-					
+
 					return persistedState as WorkspaceConfigState;
 				},
 			},
 			(set, get) => ({
 				// 初始状态（默认值）
 				...getDefaultWorkspaceSessionConfig(),
-				
+
 				// Actions
 				setScoreSource: (source) => set({ scoreSource: source }),
-				
+
 				updatePlayerState: (state) =>
 					set((prev) => ({
-						sessionPlayerState: { ...prev.sessionPlayerState, ...state }
+						sessionPlayerState: { ...prev.sessionPlayerState, ...state },
 					})),
-				
+
 				setLoopRange: (range) =>
 					set((prev) => ({
 						sessionPlayerState: {
 							...prev.sessionPlayerState,
 							loopRange: range,
-						}
+						},
 					})),
-				
+
 				toggleLooping: () =>
 					set((prev) => ({
 						sessionPlayerState: {
 							...prev.sessionPlayerState,
 							isLooping: !prev.sessionPlayerState.isLooping,
-						}
+						},
 					})),
-				
+
 				resetToDefaults: () => {
 					const defaults = getDefaultWorkspaceSessionConfig();
 					set({
@@ -88,7 +93,7 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 						sessionPlayerState: defaults.sessionPlayerState,
 					});
 				},
-				
+
 				// Injected adapter
 				_adapter: adapter,
 			})

@@ -103,17 +103,17 @@ export const useConfigStore = create<ConfigStore>()(
 				if (version < 2) {
 					console.log('[ConfigStore] Migrating config from version', version, 'to 2');
 					const state = persistedState as any;
-					
+
 					// 修复 barsPerRow: null -> -1
 					if (state.config?.alphaTabSettings?.display?.barsPerRow === null) {
 						state.config.alphaTabSettings.display.barsPerRow = -1;
 					}
-					
+
 					// 修复 stretchForce: 0.8 -> 1.0
 					if (state.config?.alphaTabSettings?.display?.stretchForce === 0.8) {
 						state.config.alphaTabSettings.display.stretchForce = 1.0;
 					}
-					
+
 					console.log('[ConfigStore] Migration complete');
 				}
 				return persistedState;

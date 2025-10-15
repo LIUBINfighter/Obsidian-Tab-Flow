@@ -1,6 +1,6 @@
 /**
  * Global Configuration Schema
- * 
+ *
  * 全局配置（跨工作区共享）
  * 持久化方式：Plugin.saveData/loadData
  */

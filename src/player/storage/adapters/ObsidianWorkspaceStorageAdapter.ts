@@ -1,6 +1,6 @@
 /**
  * Obsidian Workspace Storage Adapter
- * 
+ *
  * 使用 Obsidian View 的 getState/setState API
  * 用于工作区会话配置（工作区特定，标签页关闭即清除）
  */
@@ -48,7 +48,6 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 			throw error;
 		}
 	}
-	}
 
 	async load<T>(key: string): Promise<T | null> {
 		if (!this.callbacks) {
@@ -59,7 +58,11 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 		try {
 			const state = this.callbacks.getViewState();
 			const value = state?.[key] ?? null;
-			console.log('[WorkspaceStorage] Loaded from workspace:', key, value ? 'found' : 'not found');
+			console.log(
+				'[WorkspaceStorage] Loaded from workspace:',
+				key,
+				value ? 'found' : 'not found'
+			);
 			return value;
 		} catch (error) {
 			console.error('[WorkspaceStorage] Load failed:', key, error);

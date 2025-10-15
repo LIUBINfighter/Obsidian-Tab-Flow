@@ -12,8 +12,7 @@
 
 import type { AlphaTabApi } from '@coderline/alphatab';
 import { useConfigStore } from './store/configStore';
-import { createRuntimeStore } from './store/runtimeStore';
-import { createUIStore } from './store/uiStore';
+import type { StoreCollection } from './store/StoreFactory';
 import type { AlphaTabPlayerConfig } from './types/config-schema';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
@@ -32,20 +31,23 @@ export class PlayerController {
 	private lastConfig: AlphaTabPlayerConfig | null = null;
 	private plugin: Plugin;
 	private resources: PlayerControllerResources;
-	private pendingFileLoad: (() => Promise<void>) | null = null; // 添加待处理加载任务
-	private eventHandlers: Map<string, any> = new Map(); // 事件处理器引用管理
+	private pendingFileLoad: (() => Promise<void>) | null = null;
+	private eventHandlers: Map<string, any> = new Map();
 
-	// 独立的 store 实例（工厂模式）
-	private runtimeStore: ReturnType<typeof createRuntimeStore>;
-	private uiStore: ReturnType<typeof createUIStore>;
+	// Store 集合（由 ReactView 注入）
+	private stores: StoreCollection;
 
-	constructor(plugin: Plugin, resources: PlayerControllerResources) {
+	constructor(plugin: Plugin, resources: PlayerControllerResources, stores: StoreCollection) {
 		this.plugin = plugin;
 		this.resources = resources;
+		this.stores = stores;
 
-		// 创建独立的 store 实例
-		this.runtimeStore = createRuntimeStore();
-		this.uiStore = createUIStore();
+		console.log('[PlayerController] Initialized with stores:', {
+			globalConfig: !!stores.globalConfig,
+			workspaceConfig: !!stores.workspaceConfig,
+			runtime: !!stores.runtime,
+			ui: !!stores.ui,
+		});
 
 		// 初始化配置中的资源路径
 		this.initializeResourcePaths();
@@ -149,8 +151,8 @@ export class PlayerController {
 			return;
 		}
 
-		this.uiStore.getState().setLoading(true, 'Loading score...');
-		this.runtimeStore.getState().setApiReady(false);
+		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.runtime.getState().setApiReady(false);
 
 		try {
 			// 销毁旧 API
@@ -166,7 +168,7 @@ export class PlayerController {
 			this.bindApiEvents();
 
 			// 保存到 runtimeStore
-			this.runtimeStore.getState().setApi(this.api);
+			this.stores.runtime.getState().setApi(this.api);
 
 			// 更新最后配置
 			this.lastConfig = JSON.parse(JSON.stringify(config));
@@ -178,12 +180,12 @@ export class PlayerController {
 			}
 		} catch (error) {
 			console.error('[PlayerController] Failed to rebuild API:', error);
-			this.runtimeStore
+			this.stores.runtime
 				.getState()
 				.setError('api-init', error instanceof Error ? error.message : String(error));
-			this.uiStore.getState().showToast('error', 'Failed to initialize player');
+			this.stores.ui.getState().showToast('error', 'Failed to initialize player');
 		} finally {
-			this.uiStore.getState().setLoading(false);
+			this.stores.ui.getState().setLoading(false);
 		}
 	}
 
@@ -374,8 +376,8 @@ export class PlayerController {
 		try {
 			// Score Loaded
 			const scoreLoadedHandler = () => {
-				this.runtimeStore.getState().setScoreLoaded(true);
-				this.runtimeStore.getState().setRenderState('idle');
+				this.stores.runtime.getState().setScoreLoaded(true);
+				this.stores.runtime.getState().setRenderState('idle');
 
 				// 设置总时长（关键：从 score.duration 获取）
 				if (this.api?.score) {
@@ -383,7 +385,7 @@ export class PlayerController {
 						(sum, bar) => sum + bar.calculateDuration(),
 						0
 					);
-					this.runtimeStore.getState().setDuration(durationMs);
+					this.stores.runtime.getState().setDuration(durationMs);
 					console.log('[PlayerController] Score loaded, duration:', durationMs, 'ms');
 				}
 
@@ -397,14 +399,14 @@ export class PlayerController {
 
 			// Render Started
 			const renderStartedHandler = () => {
-				this.runtimeStore.getState().setRenderState('rendering');
+				this.stores.runtime.getState().setRenderState('rendering');
 			};
 			this.api.renderStarted.on(renderStartedHandler);
 			this.eventHandlers.set('renderStarted', renderStartedHandler);
 
 			// Render Finished
 			const renderFinishedHandler = () => {
-				this.runtimeStore.getState().setRenderState('finished');
+				this.stores.runtime.getState().setRenderState('finished');
 			};
 			this.api.renderFinished.on(renderFinishedHandler);
 			this.eventHandlers.set('renderFinished', renderFinishedHandler);
@@ -412,7 +414,7 @@ export class PlayerController {
 			// Player Ready
 			const playerReadyHandler = async () => {
 				console.log('[PlayerController] Player ready - can now play music');
-				this.runtimeStore.getState().setApiReady(true);
+				this.stores.runtime.getState().setApiReady(true);
 
 				// 播放器就绪后，检查是否有待加载的文件
 				if (this.pendingFileLoad) {
@@ -430,15 +432,15 @@ export class PlayerController {
 					1: 'playing',
 					2: 'stopped',
 				};
-				this.runtimeStore.getState().setPlaybackState(stateMap[e.state] || 'idle');
+				this.stores.runtime.getState().setPlaybackState(stateMap[e.state] || 'idle');
 			};
 			this.api.playerStateChanged.on(playerStateChangedHandler);
 			this.eventHandlers.set('playerStateChanged', playerStateChangedHandler);
 
 			// Player Position Changed
 			const playerPositionChangedHandler = (e: any) => {
-				this.runtimeStore.getState().setPosition(e.currentTime);
-				this.runtimeStore.getState().setCurrentBeat({
+				this.stores.runtime.getState().setPosition(e.currentTime);
+				this.stores.runtime.getState().setCurrentBeat({
 					bar: e.currentBar,
 					beat: e.currentBeat,
 					tick: e.currentTick || 0,
@@ -450,14 +452,14 @@ export class PlayerController {
 			// Error
 			const errorHandler = (error: any) => {
 				console.error('[PlayerController] alphaTab error:', error);
-				this.runtimeStore.getState().setError('api-init', error.message || String(error));
-				this.uiStore.getState().showToast('error', 'An error occurred in the player');
+				this.stores.runtime.getState().setError('api-init', error.message || String(error));
+				this.stores.ui.getState().showToast('error', 'An error occurred in the player');
 			};
 			this.api.error.on(errorHandler);
 			this.eventHandlers.set('error', errorHandler);
 		} catch (error) {
 			console.error('[PlayerController] Failed to bind API events:', error);
-			this.runtimeStore.getState().setError('api-init', 'Failed to bind API events');
+			this.stores.runtime.getState().setError('api-init', 'Failed to bind API events');
 		}
 	}
 
@@ -625,7 +627,7 @@ export class PlayerController {
 		};
 
 		// 如果 API 已经就绪，立即执行。否则，放入队列。
-		if (this.runtimeStore.getState().apiReady && this.api) {
+		if (this.stores.runtime.getState().apiReady && this.api) {
 			await loadTask();
 		} else {
 			this.pendingFileLoad = loadTask;
@@ -637,23 +639,23 @@ export class PlayerController {
 			throw new Error('API not initialized');
 		}
 
-		this.uiStore.getState().setLoading(true, 'Loading score...');
-		this.runtimeStore.getState().setScoreLoaded(false);
-		this.runtimeStore.getState().clearError();
+		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.runtime.getState().setScoreLoaded(false);
+		this.stores.runtime.getState().clearError();
 
 		try {
 			await this.api.load(url);
 			useConfigStore.getState().updateScoreSource({ type: 'url', content: url });
-			this.uiStore.getState().showToast('success', 'Score loaded successfully');
+			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
-			this.runtimeStore
+			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
-			this.uiStore.getState().showToast('error', 'Failed to load score');
+			this.stores.ui.getState().showToast('error', 'Failed to load score');
 			throw error;
 		} finally {
-			this.uiStore.getState().setLoading(false);
+			this.stores.ui.getState().setLoading(false);
 		}
 	}
 
@@ -662,25 +664,25 @@ export class PlayerController {
 			throw new Error('API not initialized');
 		}
 
-		this.uiStore.getState().setLoading(true, 'Loading score...');
-		this.runtimeStore.getState().setScoreLoaded(false);
-		this.runtimeStore.getState().clearError();
+		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.runtime.getState().setScoreLoaded(false);
+		this.stores.runtime.getState().clearError();
 
 		try {
 			await this.api.load(new Uint8Array(arrayBuffer));
 			useConfigStore
 				.getState()
 				.updateScoreSource({ type: 'file', content: fileName || 'local-file' });
-			this.uiStore.getState().showToast('success', 'Score loaded successfully');
+			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
-			this.runtimeStore
+			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
-			this.uiStore.getState().showToast('error', 'Failed to load score');
+			this.stores.ui.getState().showToast('error', 'Failed to load score');
 			throw error;
 		} finally {
-			this.uiStore.getState().setLoading(false);
+			this.stores.ui.getState().setLoading(false);
 		}
 	}
 
@@ -689,23 +691,23 @@ export class PlayerController {
 			throw new Error('API not initialized');
 		}
 
-		this.uiStore.getState().setLoading(true, 'Loading score...');
-		this.runtimeStore.getState().setScoreLoaded(false);
-		this.runtimeStore.getState().clearError();
+		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.runtime.getState().setScoreLoaded(false);
+		this.stores.runtime.getState().clearError();
 
 		try {
 			this.api.tex(tex);
 			useConfigStore.getState().updateScoreSource({ type: 'alphatex', content: tex });
-			this.uiStore.getState().showToast('success', 'Score loaded successfully');
+			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
-			this.runtimeStore
+			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
-			this.uiStore.getState().showToast('error', 'Failed to load score');
+			this.stores.ui.getState().showToast('error', 'Failed to load score');
 			throw error;
 		} finally {
-			this.uiStore.getState().setLoading(false);
+			this.stores.ui.getState().setLoading(false);
 		}
 	}
 
@@ -717,7 +719,7 @@ export class PlayerController {
 		const track = this.api.score.tracks[trackIndex];
 		track.playbackInfo.isMute = mute;
 
-		this.runtimeStore.getState().setTrackOverride(String(trackIndex), { muteOverride: mute });
+		this.stores.runtime.getState().setTrackOverride(String(trackIndex), { muteOverride: mute });
 	}
 
 	soloTrack(trackIndex: number, solo: boolean): void {
@@ -726,7 +728,7 @@ export class PlayerController {
 		const track = this.api.score.tracks[trackIndex];
 		track.playbackInfo.isSolo = solo;
 
-		this.runtimeStore.getState().setTrackOverride(String(trackIndex), { soloOverride: solo });
+		this.stores.runtime.getState().setTrackOverride(String(trackIndex), { soloOverride: solo });
 	}
 
 	setTrackVolume(trackIndex: number, volume: number): void {
@@ -735,7 +737,7 @@ export class PlayerController {
 		const track = this.api.score.tracks[trackIndex];
 		track.playbackInfo.volume = Math.max(0, Math.min(16, volume * 16)); // alphaTab uses 0-16
 
-		this.runtimeStore
+		this.stores.runtime
 			.getState()
 			.setTrackOverride(String(trackIndex), { volumeOverride: volume });
 	}
@@ -745,14 +747,14 @@ export class PlayerController {
 	/**
 	 * 获取运行时状态存储实例（用于 React 组件）
 	 */
-	getRuntimeStore(): ReturnType<typeof createRuntimeStore> {
-		return this.runtimeStore;
+	getRuntimeStore() {
+		return this.stores.runtime;
 	}
 
 	/**
 	 * 获取 UI 状态存储实例（用于 React 组件）
 	 */
-	getUIStore(): ReturnType<typeof createUIStore> {
-		return this.uiStore;
+	getUIStore() {
+		return this.stores.ui;
 	}
 }
