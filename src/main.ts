@@ -1,5 +1,6 @@
 import { Plugin, TFile, Notice, requestUrl, MarkdownRenderChild } from 'obsidian';
-import { TabView, VIEW_TYPE_TAB } from './views/TabView';
+// import { TabView, VIEW_TYPE_TAB } from './views/TabView';
+import { ReactView, VIEW_TYPE_REACT } from './player/ReactView';
 import { DocView, VIEW_TYPE_TABFLOW_DOC } from './views/DocView';
 import { EditorView, VIEW_TYPE_ALPHATEX_EDITOR } from './views/EditorView';
 import {
@@ -427,14 +428,24 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 只在有足够资源的情况下注册视图
 		if (this.resources.bravuraUri && this.resources.alphaTabWorkerUri) {
-			this.registerView(VIEW_TYPE_TAB, (leaf) => {
-				// 这里我们需要确保传递的资源对象符合 TabView 所需的格式
-				return new TabView(leaf, this, {
+			// 注册 ReactView 替换原有的 TabView
+			this.registerView(VIEW_TYPE_REACT, (leaf) => {
+				return new ReactView(leaf, this, {
 					bravuraUri: this.resources.bravuraUri || '',
 					alphaTabWorkerUri: this.resources.alphaTabWorkerUri || '',
 					soundFontUri: this.resources.soundFontUri || '',
 				});
 			});
+
+			// 原有的 TabView 注册已注释掉
+			// this.registerView(VIEW_TYPE_TAB, (leaf) => {
+			// 	// 这里我们需要确保传递的资源对象符合 TabView 所需的格式
+			// 	return new TabView(leaf, this, {
+			// 		bravuraUri: this.resources.bravuraUri || '',
+			// 		alphaTabWorkerUri: this.resources.alphaTabWorkerUri || '',
+			// 		soundFontUri: this.resources.soundFontUri || '',
+			// 	});
+			// });
 
 			// 注册 Markdown 代码块处理器: alphatex
 			try {
@@ -528,10 +539,10 @@ export default class TabFlowPlugin extends Plugin {
 		if (this.settings.autoOpenAlphaTexFiles) {
 			this.registerExtensions(
 				['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7', 'alphatab', 'alphatex'],
-				VIEW_TYPE_TAB
+				VIEW_TYPE_REACT
 			);
 		} else {
-			this.registerExtensions(['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7'], VIEW_TYPE_TAB);
+			this.registerExtensions(['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7'], VIEW_TYPE_REACT);
 		}
 
 		// 注册 AlphaTex 编辑器文件扩展名
@@ -601,7 +612,7 @@ export default class TabFlowPlugin extends Plugin {
 							.onClick(async () => {
 								const leaf = this.app.workspace.getLeaf(false);
 								await leaf.setViewState({
-									type: VIEW_TYPE_TAB,
+									type: VIEW_TYPE_REACT,
 									state: { file: file.path },
 								});
 								this.app.workspace.revealLeaf(leaf);
@@ -621,29 +632,26 @@ export default class TabFlowPlugin extends Plugin {
 								const leftLeaf = this.app.workspace.getLeaf(false);
 								await leftLeaf.openFile(file);
 
-								// 在右栏打开 TabView 预览
+								// 在右栏打开 ReactView 预览
 								const rightLeaf = this.app.workspace.getLeaf('split', 'vertical');
 								await rightLeaf.setViewState({
-									type: VIEW_TYPE_TAB,
+									type: VIEW_TYPE_REACT,
 									state: { file: file.path },
 								});
 								this.app.workspace.revealLeaf(rightLeaf);
 
-								// 手动触发刷新事件，确保 TabView 正确加载
+								// 手动触发刷新事件，确保 ReactView 正确加载
 								setTimeout(() => {
 									// 通过全局事件总线触发刷新（如果存在的话）
 									try {
-										// 尝试获取右栏 TabView 的事件总线并触发刷新
-										const tabViews =
-											this.app.workspace.getLeavesOfType(VIEW_TYPE_TAB);
-										tabViews.forEach((leaf) => {
-											const view = leaf.view as TabView;
-											if (
-												view &&
-												view.eventBus &&
-												typeof view.eventBus.publish === 'function'
-											) {
-												view.eventBus.publish('命令:手动刷新');
+										// 尝试获取右栏 ReactView 的事件总线并触发刷新
+										const reactViews =
+											this.app.workspace.getLeavesOfType(VIEW_TYPE_REACT);
+										reactViews.forEach((leaf) => {
+											const view = leaf.view as ReactView;
+											if (view) {
+												// ReactView 使用 React 状态管理，不需要手动刷新
+												console.debug('[Main] ReactView loaded');
 											}
 										});
 									} catch (e) {

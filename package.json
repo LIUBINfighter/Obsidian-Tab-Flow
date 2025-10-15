@@ -20,7 +20,7 @@
 		"lint:fix": "eslint src --ext .ts,.js,.md,.json --fix",
 		"format": "prettier --write \"src/**/*.{ts,js,json,css,md}\"",
 		"format:check": "prettier --check \"src/**/*.{ts,js,json,css,md}\"",
-		"scan":"node ./scripts/scan-codeql.js",
+		"scan": "node ./scripts/scan-codeql.js",
 		"check": "npm run clean && npm run lint && npm run lint:fix && npm run format && npm run format:check && npm run build  && npm run scan && echo ======================================= && echo ' All checks passed successfully!'"
 	},
 	"keywords": [],
@@ -54,9 +54,14 @@
 		"@codemirror/view": "^6.26.3",
 		"@coderline/alphatab": "^1.6.0",
 		"@types/mime-types": "^3.0.0",
+		"@types/react": "^19.2.2",
+		"@types/react-dom": "^19.2.2",
+		"dom-to-image-more": "^2.9.0",
 		"jszip": "^3.10.1",
 		"mime-types": "^3.0.1",
-		"dom-to-image-more": "^2.9.0",
-		"monkey-around": "^3.0.0"
+		"monkey-around": "^3.0.0",
+		"react": "^19.2.0",
+		"react-dom": "^19.2.0",
+		"zustand": "^5.0.8"
 	}
 }
