@@ -141,9 +141,8 @@ export class PlayerController {
 			// 创建 alphaTab Settings
 			const settings = this.createAlphaTabSettings(config);
 
-			// 创建新 API（使用动态导入确保类型正确）
-			const alphaTabModule = await import('@coderline/alphatab');
-			this.api = new alphaTabModule.AlphaTabApi(this.container, settings);
+			// 创建新 API（直接使用静态导入的 alphaTab 模块）
+			this.api = new alphaTab.AlphaTabApi(this.container, settings);
 
 			// 绑定事件
 			this.bindApiEvents();
@@ -209,7 +208,7 @@ export class PlayerController {
 				logLevel: config.alphaTabSettings.core.logLevel,
 				includeNoteBounds: config.alphaTabSettings.core.includeNoteBounds,
 				scriptFile: this.resources.alphaTabWorkerUri,
-				fontDirectory: '',
+				// 不设置 fontDirectory,由 smuflFontSources 控制
 			},
 			player: {
 				enablePlayer: config.alphaTabSettings.player.enablePlayer,
@@ -233,23 +232,18 @@ export class PlayerController {
 			},
 		};
 
-		// 添加字体配置（使用与 AlphaTabService 相同的方式）
+		// 配置字体源 - 使用与 AlphaTabService 相同的方式
+		// 所有实例共享相同的 URI,AlphaTab 内部会处理字体缓存
 		if (this.resources.bravuraUri) {
-			try {
-				// 使用 Map 结构配置字体，参考 AlphaTabService.ts
-				const FontFileFormat = (alphaTab as any).rendering?.glyphs?.FontFileFormat;
-				if (FontFileFormat && FontFileFormat.Woff2 !== undefined) {
-					settings.core.smuflFontSources = new Map([
-						[FontFileFormat.Woff2, this.resources.bravuraUri],
-					]) as unknown as Map<number, string>;
-				} else {
-					settings.core.smuflFontSources = new Map([
-						[0, this.resources.bravuraUri],
-					]) as unknown as Map<number, string>;
-				}
-			} catch (error) {
-				console.error('[PlayerController] Failed to configure font:', error);
-			}
+			settings.core.smuflFontSources = (this.resources.bravuraUri
+				? new Map([
+						[
+							(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+							this.resources.bravuraUri,
+						],
+					])
+				: new Map()) as unknown as Map<number, string>;
+			console.log('[PlayerController] Font configured:', this.resources.bravuraUri);
 		}
 
 		// 添加颜色配置

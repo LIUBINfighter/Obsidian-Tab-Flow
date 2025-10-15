@@ -8,6 +8,10 @@ import { useUIStore } from './store/uiStore';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
+// 全局字体注入标记（避免多次注入冲突）
+let fontStyleInjected = false;
+let globalFontStyle: HTMLStyleElement | null = null;
+
 export class ReactView extends FileView {
 	private currentFile: TFile | null = null;
 	private plugin: Plugin;
@@ -15,7 +19,6 @@ export class ReactView extends FileView {
 	private reactContainer: HTMLDivElement | null = null;
 	private controller: PlayerController | null = null;
 	private resources: PlayerControllerResources;
-	private fontStyle: HTMLStyleElement | null = null;
 	private static instanceId = 0;
 
 	constructor(leaf: WorkspaceLeaf, plugin: Plugin, resources: PlayerControllerResources) {
@@ -40,18 +43,23 @@ export class ReactView extends FileView {
 		useRuntimeStore.getState().reset();
 		useUIStore.getState().reset();
 
-		// 注入字体样式（参考 TabView）
-		if (this.resources.bravuraUri) {
+		// 全局只注入一次 CSS @font-face（作为 AlphaTab 的备用方案）
+		// AlphaTab 主要通过 smuflFontSources 加载字体,但 CSS 可提供后备
+		if (!fontStyleInjected && this.resources.bravuraUri) {
 			const fontFaceRule = `
 				@font-face {
 					font-family: 'alphaTab';
 					src: url(${this.resources.bravuraUri});
+					font-weight: normal;
+					font-style: normal;
 				}
 			`;
-			this.fontStyle = this.containerEl.ownerDocument.createElement('style');
-			this.fontStyle.id = `alphatab-font-style-${ReactView.instanceId++}`;
-			this.fontStyle.appendChild(document.createTextNode(fontFaceRule));
-			this.containerEl.ownerDocument.head.appendChild(this.fontStyle);
+			globalFontStyle = this.containerEl.ownerDocument.createElement('style');
+			globalFontStyle.id = 'alphatab-font-style-global';
+			globalFontStyle.appendChild(document.createTextNode(fontFaceRule));
+			this.containerEl.ownerDocument.head.appendChild(globalFontStyle);
+			fontStyleInjected = true;
+			console.log('[ReactView] Global @font-face injected');
 		}
 
 		// 创建 PlayerController（传递 resources）
@@ -71,11 +79,8 @@ export class ReactView extends FileView {
 	}
 
 	async onClose() {
-		// 移除字体样式
-		if (this.fontStyle) {
-			this.fontStyle.remove();
-			this.fontStyle = null;
-		}
+		// 注意: 不移除全局字体样式,因为可能有其他实例在使用
+		// 字体样式会在插件卸载时自动清理
 
 		// 清理 React root
 		if (this.root) {
