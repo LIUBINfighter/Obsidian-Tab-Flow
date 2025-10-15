@@ -240,17 +240,13 @@ export class PlayerController {
 			},
 		};
 
-		// 配置字体源 - 使用与 AlphaTabService 相同的方式
-		// 所有实例共享相同的 URI,AlphaTab 内部会处理字体缓存
+		// 配置字体源 - 使用正确的字体格式枚举
+		// AlphaTab 的 FontFileFormat 枚举值：Woff2 = 0, Woff = 1, Ttf = 2
 		if (this.resources.bravuraUri) {
-			settings.core.smuflFontSources = (this.resources.bravuraUri
-				? new Map([
-						[
-							(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
-							this.resources.bravuraUri,
-						],
-					])
-				: new Map()) as unknown as Map<number, string>;
+			const FontFileFormat_Woff2 = 0; // alphaTab.rendering.glyphs.FontFileFormat.Woff2
+			settings.core.smuflFontSources = new Map([
+				[FontFileFormat_Woff2, this.resources.bravuraUri],
+			]);
 			console.log('[PlayerController] Font configured:', this.resources.bravuraUri);
 		}
 
