@@ -97,7 +97,27 @@ export const useConfigStore = create<ConfigStore>()(
 		}),
 		{
 			name: 'alphatab-player-config',
-			version: 1,
+			version: 2, // 增加版本号，使旧配置失效
+			migrate: (persistedState: any, version: number) => {
+				// 迁移逻辑：修复旧配置
+				if (version < 2) {
+					console.log('[ConfigStore] Migrating config from version', version, 'to 2');
+					const state = persistedState as any;
+					
+					// 修复 barsPerRow: null -> -1
+					if (state.config?.alphaTabSettings?.display?.barsPerRow === null) {
+						state.config.alphaTabSettings.display.barsPerRow = -1;
+					}
+					
+					// 修复 stretchForce: 0.8 -> 1.0
+					if (state.config?.alphaTabSettings?.display?.stretchForce === 0.8) {
+						state.config.alphaTabSettings.display.stretchForce = 1.0;
+					}
+					
+					console.log('[ConfigStore] Migration complete');
+				}
+				return persistedState;
+			},
 		}
 	)
 );

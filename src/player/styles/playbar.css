@@ -23,7 +23,7 @@
 }
 
 .tab-flow-play-bar select,
-.tab-flow-play-bar input[type="checkbox"] {
+.tab-flow-play-bar input[type='checkbox'] {
 	cursor: pointer;
 }
 
@@ -123,7 +123,7 @@
 }
 
 /* 复选框样式优化 */
-.tab-flow-play-bar input[type="checkbox"] {
+.tab-flow-play-bar input[type='checkbox'] {
 	width: 18px;
 	height: 18px;
 	accent-color: var(--interactive-accent);

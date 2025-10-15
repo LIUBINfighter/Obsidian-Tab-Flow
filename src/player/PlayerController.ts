@@ -12,8 +12,8 @@
 
 import type { AlphaTabApi } from '@coderline/alphatab';
 import { useConfigStore } from './store/configStore';
-import { createRuntimeStore, type RuntimeStore } from './store/runtimeStore';
-import { createUIStore, type UIStore } from './store/uiStore';
+import { createRuntimeStore } from './store/runtimeStore';
+import { createUIStore } from './store/uiStore';
 import type { AlphaTabPlayerConfig } from './types/config-schema';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
@@ -79,9 +79,19 @@ export class PlayerController {
 		const rect = container.getBoundingClientRect();
 		if (rect.width === 0 || rect.height === 0) {
 			console.warn(
-				'[PlayerController] Container has zero dimensions! This may cause rendering issues.'
+				'[PlayerController] Container has zero dimensions! Delaying API initialization...'
 			);
+			// 延迟初始化，等待容器尺寸就绪
+			setTimeout(() => this.init(container), 50);
+			return;
 		}
+
+		console.log(
+			'[PlayerController] Container ready, width:',
+			rect.width,
+			'height:',
+			rect.height
+		);
 
 		// 订阅配置变化
 		this.subscribeToConfig();
@@ -196,18 +206,6 @@ export class PlayerController {
 		// 获取当前容器的计算样式用于颜色配置
 		const style = this.container ? window.getComputedStyle(this.container) : null;
 
-		// 配置滚动元素（关键！需要设置为实际的容器或其父级）
-		let scrollElement: HTMLElement | string = 'html,body';
-		if (this.container) {
-			// 尝试查找 Obsidian 的滚动容器
-			const workspaceLeaf = this.container.closest('.workspace-leaf-content');
-			if (workspaceLeaf) {
-				scrollElement = workspaceLeaf as HTMLElement;
-			} else {
-				scrollElement = this.container;
-			}
-		}
-
 		const settings: any = {
 			core: {
 				file: config.alphaTabSettings.core.file,
@@ -228,7 +226,7 @@ export class PlayerController {
 				enableCursor: config.alphaTabSettings.player.enableCursor,
 				enableAnimatedBeatCursor: config.alphaTabSettings.player.enableAnimatedBeatCursor,
 				soundFont: this.resources.soundFontUri,
-				scrollElement: scrollElement,
+				scrollElement: 'html,body', // 先用默认值，在 renderFinished 后再设置
 				nativeBrowserSmoothScroll: false,
 			},
 			display: {
@@ -239,6 +237,15 @@ export class PlayerController {
 				stretchForce: config.alphaTabSettings.display.stretchForce,
 			},
 		};
+
+		// 调试：输出布局相关配置
+		console.log('[PlayerController] Layout settings:', {
+			layoutMode: settings.display.layoutMode,
+			barsPerRow: settings.display.barsPerRow,
+			stretchForce: settings.display.stretchForce,
+			scale: settings.display.scale,
+			containerWidth: this.container?.getBoundingClientRect().width,
+		});
 
 		// 配置字体源 - 使用正确的字体格式枚举
 		// AlphaTab 的 FontFileFormat 枚举值：Woff2 = 0, Woff = 1, Ttf = 2
@@ -269,7 +276,64 @@ export class PlayerController {
 		}
 
 		return settings;
-	} // ========== API Events ==========
+	}
+
+	/**
+	 * 配置滚动容器（在渲染完成后调用）
+	 * 参考 TabView 的实现，使用延迟确保 DOM 就绪
+	 */
+	private configureScrollElement(): void {
+		if (!this.api) return;
+
+		// 尝试多个选择器查找 Obsidian 的滚动容器
+		const selectors = [
+			'.workspace-leaf-content.mod-active',
+			'.view-content',
+			'.workspace-leaf-content',
+		];
+
+		let scrollElement: HTMLElement | null = null;
+		for (const selector of selectors) {
+			scrollElement = document.querySelector(selector) as HTMLElement;
+			if (scrollElement) {
+				break;
+			}
+		}
+
+		// 如果在 selectors 中没找到，尝试从 container 向上查找
+		if (!scrollElement && this.container) {
+			const workspaceLeaf = this.container.closest('.workspace-leaf-content');
+			if (workspaceLeaf) {
+				scrollElement = workspaceLeaf as HTMLElement;
+			}
+		}
+
+		if (scrollElement) {
+			this.api.settings.player.scrollElement = scrollElement;
+			console.log('[PlayerController] Scroll container configured:', scrollElement.className);
+		} else {
+			this.api.settings.player.scrollElement = 'html,body';
+			console.log('[PlayerController] Using default scroll container: html,body');
+		}
+
+		this.api.updateSettings();
+
+		// 延迟应用滚动模式及光标设置（参考 TabView）
+		setTimeout(() => {
+			if (this.api?.settings.player) {
+				const config = useConfigStore.getState().config;
+				this.api.settings.player.scrollMode = config.alphaTabSettings.player.scrollMode;
+				this.api.settings.player.enableCursor = config.alphaTabSettings.player.enableCursor;
+				this.api.updateSettings();
+				console.log(
+					'[PlayerController] Scroll mode applied:',
+					config.alphaTabSettings.player.scrollMode
+				);
+			}
+		}, 100);
+	}
+
+	// ========== API Events ==========
 
 	/**
 	 * 解绑所有 API 事件
@@ -322,6 +386,11 @@ export class PlayerController {
 					this.runtimeStore.getState().setDuration(durationMs);
 					console.log('[PlayerController] Score loaded, duration:', durationMs, 'ms');
 				}
+
+				// 延迟配置滚动容器，确保 DOM 就绪（参考 TabView）
+				setTimeout(() => {
+					this.configureScrollElement();
+				}, 100);
 			};
 			this.api.scoreLoaded.on(scoreLoadedHandler);
 			this.eventHandlers.set('scoreLoaded', scoreLoadedHandler);
@@ -666,7 +735,9 @@ export class PlayerController {
 		const track = this.api.score.tracks[trackIndex];
 		track.playbackInfo.volume = Math.max(0, Math.min(16, volume * 16)); // alphaTab uses 0-16
 
-		this.runtimeStore.getState().setTrackOverride(String(trackIndex), { volumeOverride: volume });
+		this.runtimeStore
+			.getState()
+			.setTrackOverride(String(trackIndex), { volumeOverride: volume });
 	}
 
 	// ========== Store Accessors ==========

@@ -178,8 +178,8 @@ export function getDefaultConfig(): AlphaTabPlayerConfig {
 				scale: 1.0,
 				startBar: 1,
 				layoutMode: alphaTab.LayoutMode.Page,
-				barsPerRow: null,
-				stretchForce: 0.8,
+				barsPerRow: -1, // 或 -1
+				stretchForce: 1.0,
 			},
 		},
 
