@@ -4,6 +4,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { TablatureView } from './components/TablatureView';
 import { PlayerController, type PlayerControllerResources } from './PlayerController';
 import { useRuntimeStore } from './store/runtimeStore';
+import { useUIStore } from './store/uiStore';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
@@ -35,7 +36,11 @@ export class ReactView extends FileView {
 	}
 
 	async onOpen() {
-		console.debug('[ReactView] Opening view');
+		console.debug('[ReactView] Opening view. Resetting stores...');
+
+		// ***** 关键步骤：在所有操作之前重置状态 *****
+		useRuntimeStore.getState().reset();
+		useUIStore.getState().reset();
 
 		// 注入字体样式（参考 TabView）
 		if (this.resources.bravuraUri) {
@@ -71,7 +76,7 @@ export class ReactView extends FileView {
 	}
 
 	async onClose() {
-		console.debug('[ReactView] Closing view');
+		console.debug('[ReactView] Closing view. Cleaning up and resetting stores...');
 
 		// 移除字体样式
 		if (this.fontStyle) {
@@ -99,45 +104,27 @@ export class ReactView extends FileView {
 		}
 
 		this.currentFile = null;
+
+		// ***** 关键步骤：在关闭后再次重置，为下一个视图实例提供干净环境 *****
+		useRuntimeStore.getState().reset();
+		useUIStore.getState().reset();
+
 		console.debug('[ReactView] View closed and resources cleaned up');
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
 		this.currentFile = file;
-		console.debug(`[ReactView] Loading file: ${file.name}`);
+		console.debug(`[ReactView] Handing file over to controller: ${file.name}`);
 
 		if (!this.controller) {
-			console.error('[ReactView] PlayerController not initialized');
+			console.error('[ReactView] PlayerController not initialized, cannot load file.');
 			return;
 		}
 
-		try {
-			// 等待 API 准备好
-			const maxRetries = 10;
-			let retries = 0;
-			while (!useRuntimeStore.getState().apiReady && retries < maxRetries) {
-				await new Promise((resolve) => setTimeout(resolve, 100));
-				retries++;
-			}
-
-			if (!useRuntimeStore.getState().apiReady) {
-				console.error('[ReactView] API not ready after retries');
-				return;
-			}
-
-			// 加载文件内容
-			if (file.extension && ['alphatab', 'alphatex'].includes(file.extension.toLowerCase())) {
-				const textContent = await this.app.vault.read(file);
-				await this.controller.loadScoreFromAlphaTex(textContent);
-			} else {
-				const inputFile = await this.app.vault.readBinary(file);
-				await this.controller.loadScoreFromFile(inputFile, file.name);
-			}
-
-			console.debug(`[ReactView] File loaded successfully: ${file.name}`);
-		} catch (error) {
-			console.error('[ReactView] Failed to load file:', error);
-		}
+		// 直接调用新方法，不再需要等待循环
+		this.controller.loadFileWhenReady(file).catch((error) => {
+			console.error(`[ReactView] Controller failed to load file:`, error);
+		});
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {

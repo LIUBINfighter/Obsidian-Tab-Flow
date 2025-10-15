@@ -120,5 +120,6 @@ export const useRuntimeStore = create<RuntimeStore>((set) => ({
 			...getInitialSessionState(),
 			alphaTabApi: null,
 		});
+		console.log('[RuntimeStore] State has been reset.');
 	},
 }));

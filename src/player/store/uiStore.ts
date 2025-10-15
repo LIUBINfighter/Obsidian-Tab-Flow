@@ -46,6 +46,9 @@ interface UIStore {
 	showToast: (type: ToastMessage['type'], message: string, duration?: number) => void;
 	removeToast: (id: string) => void;
 	clearToasts: () => void;
+
+	// Actions - Reset
+	reset: () => void;
 }
 
 export const useUIStore = create<UIStore>((set, get) => ({
@@ -139,5 +142,23 @@ export const useUIStore = create<UIStore>((set, get) => ({
 
 	clearToasts: () => {
 		set({ toasts: [] });
+	},
+
+	reset: () => {
+		set({
+			panels: {
+				tracksModal: false,
+				settingsPanel: false,
+				debugBar: false,
+				exportModal: false,
+				shareCardModal: false,
+			},
+			loading: {
+				isLoading: false,
+				message: '',
+			},
+			toasts: [],
+		});
+		console.log('[UIStore] State has been reset.');
 	},
 }));

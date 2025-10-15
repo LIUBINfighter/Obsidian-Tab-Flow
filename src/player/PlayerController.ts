@@ -15,7 +15,7 @@ import { useConfigStore } from './store/configStore';
 import { useRuntimeStore } from './store/runtimeStore';
 import { useUIStore } from './store/uiStore';
 import type { AlphaTabPlayerConfig } from './types/config-schema';
-import type { Plugin } from 'obsidian';
+import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import * as convert from 'color-convert';
 
@@ -32,6 +32,7 @@ export class PlayerController {
 	private lastConfig: AlphaTabPlayerConfig | null = null;
 	private plugin: Plugin;
 	private resources: PlayerControllerResources;
+	private pendingFileLoad: (() => Promise<void>) | null = null; // 添加待处理加载任务
 
 	constructor(plugin: Plugin, resources: PlayerControllerResources) {
 		this.plugin = plugin;
@@ -72,11 +73,13 @@ export class PlayerController {
 		console.log('[PlayerController] Container dimensions:', {
 			width: rect.width,
 			height: rect.height,
-			visible: rect.width > 0 && rect.height > 0
+			visible: rect.width > 0 && rect.height > 0,
 		});
 
 		if (rect.width === 0 || rect.height === 0) {
-			console.warn('[PlayerController] Container has zero dimensions! This may cause rendering issues.');
+			console.warn(
+				'[PlayerController] Container has zero dimensions! This may cause rendering issues.'
+			);
 		}
 
 		// 订阅配置变化
@@ -148,6 +151,13 @@ export class PlayerController {
 
 			// 更新最后配置
 			this.lastConfig = JSON.parse(JSON.stringify(config));
+
+			// *** 新增逻辑：API 准备好后，检查是否有待加载的文件 ***
+			if (this.pendingFileLoad) {
+				console.log('[PlayerController] API is ready, executing pending file load.');
+				await this.pendingFileLoad();
+				this.pendingFileLoad = null; // 清空任务
+			}
 
 			console.log('[PlayerController] API rebuilt successfully');
 		} catch (error) {
@@ -269,7 +279,10 @@ export class PlayerController {
 
 		console.log('[PlayerController] Settings created:', {
 			...settings,
-			core: { ...settings.core, smuflFontSources: settings.core.smuflFontSources ? 'Map configured' : 'none' }
+			core: {
+				...settings.core,
+				smuflFontSources: settings.core.smuflFontSources ? 'Map configured' : 'none',
+			},
 		});
 		return settings;
 	} // ========== API Events ==========
@@ -301,9 +314,16 @@ export class PlayerController {
 			});
 
 			// Player Ready
-			this.api.playerReady.on(() => {
+			this.api.playerReady.on(async () => {
 				console.log('[PlayerController] playerReady');
 				useRuntimeStore.getState().setApiReady(true);
+
+				// *** 新增逻辑：播放器就绪后，检查是否有待加载的文件 ***
+				if (this.pendingFileLoad) {
+					console.log('[PlayerController] Player is ready, executing pending file load.');
+					await this.pendingFileLoad();
+					this.pendingFileLoad = null;
+				}
 			});
 
 			// Player State Changed
@@ -382,6 +402,30 @@ export class PlayerController {
 	}
 
 	// ========== Score Loading ==========
+
+	/**
+	 * 新增：智能加载文件，处理API未就绪的情况
+	 */
+	async loadFileWhenReady(file: TFile): Promise<void> {
+		const loadTask = async () => {
+			if (file.extension && ['alphatab', 'alphatex'].includes(file.extension.toLowerCase())) {
+				const textContent = await this.plugin.app.vault.read(file);
+				await this.loadScoreFromAlphaTex(textContent);
+			} else {
+				const arrayBuffer = await this.plugin.app.vault.readBinary(file);
+				await this.loadScoreFromFile(arrayBuffer, file.name);
+			}
+		};
+
+		// 如果 API 已经就绪，立即执行。否则，放入队列。
+		if (useRuntimeStore.getState().apiReady && this.api) {
+			console.log('[PlayerController] API is already ready, loading file immediately.');
+			await loadTask();
+		} else {
+			console.log('[PlayerController] API not ready, queuing file load.');
+			this.pendingFileLoad = loadTask;
+		}
+	}
 
 	async loadScoreFromUrl(url: string): Promise<void> {
 		if (!this.api) {
