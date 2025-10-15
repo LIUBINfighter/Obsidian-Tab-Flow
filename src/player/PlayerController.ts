@@ -314,7 +314,7 @@ export class PlayerController {
 			const scoreLoadedHandler = () => {
 				useRuntimeStore.getState().setScoreLoaded(true);
 				useRuntimeStore.getState().setRenderState('idle');
-				
+
 				// 设置总时长（关键：从 score.duration 获取）
 				if (this.api?.score) {
 					const durationMs = this.api.score.masterBars.reduce(

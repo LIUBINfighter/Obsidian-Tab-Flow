@@ -1694,7 +1694,7 @@
 	color: var(--text-muted);
 }
 
-.play-bar-metronome input[type="checkbox"] {
+.play-bar-metronome input[type='checkbox'] {
 	cursor: pointer;
 }
 
@@ -1851,7 +1851,9 @@
 	fill: var(--interactive-accent, #7c3aed) !important;
 	stroke: var(--interactive-accent, #7c3aed) !important;
 	opacity: 0.9;
-	transition: fill 0.1s ease, stroke 0.1s ease;
+	transition:
+		fill 0.1s ease,
+		stroke 0.1s ease;
 }
 
 /* 深色模式下使用更亮的颜色 */
