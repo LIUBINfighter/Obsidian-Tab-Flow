@@ -131,7 +131,9 @@ export class PlayerController {
 		const needsRebuild = oldConfigStr !== newConfigStr;
 
 		if (needsRebuild) {
-			console.log('[PlayerController] Config changed (excluding scoreSource), rebuild needed');
+			console.log(
+				'[PlayerController] Config changed (excluding scoreSource), rebuild needed'
+			);
 			console.log('[PlayerController] Old scoreSource:', oldSource);
 			console.log('[PlayerController] New scoreSource:', newSource);
 		} else {
@@ -196,7 +198,7 @@ export class PlayerController {
 			try {
 				// 先解绑事件
 				this.unbindApiEvents();
-				
+
 				// 再销毁 API
 				this.api.destroy();
 				console.log('[PlayerController] API destroyed');
