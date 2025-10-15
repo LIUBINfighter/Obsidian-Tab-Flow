@@ -1,6 +1,6 @@
 /**
  * Config Store - 配置文件的持久化存储
- * 
+ *
  * 职责：
  * 1. 持久化到 localStorage
  * 2. 提供配置的读取和更新接口
@@ -9,7 +9,12 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AlphaTabPlayerConfig, ScoreSource, PlayerExtensions, UIConfig } from '../types/config-schema';
+import type {
+	AlphaTabPlayerConfig,
+	ScoreSource,
+	PlayerExtensions,
+	UIConfig,
+} from '../types/config-schema';
 import { getDefaultConfig } from '../types/config-schema';
 
 interface ConfigStore {

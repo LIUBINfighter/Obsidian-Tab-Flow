@@ -1,12 +1,12 @@
 /**
  * Player Controller - 播放器控制器（架构中的中台层）
- * 
+ *
  * 职责：
  * 1. 监听 configStore 的变化，自动重建 alphaTab API
  * 2. 监听 alphaTab API 事件，同步到 runtimeStore
  * 3. 提供播放控制命令接口（play, pause, stop, seek）
  * 4. 管理 alphaTab API 生命周期
- * 
+ *
  * 独立于 React 组件，可被任何视图层使用
  */
 
@@ -15,15 +15,48 @@ import { useConfigStore } from './store/configStore';
 import { useRuntimeStore } from './store/runtimeStore';
 import { useUIStore } from './store/uiStore';
 import type { AlphaTabPlayerConfig } from './types/config-schema';
+import type { Plugin } from 'obsidian';
+import * as alphaTab from '@coderline/alphatab';
+import * as convert from 'color-convert';
+
+export interface PlayerControllerResources {
+	bravuraUri: string;
+	alphaTabWorkerUri: string;
+	soundFontUri: string;
+}
 
 export class PlayerController {
 	private api: AlphaTabApi | null = null;
 	private container: HTMLElement | null = null;
 	private unsubscribeConfig: (() => void) | null = null;
 	private lastConfig: AlphaTabPlayerConfig | null = null;
+	private plugin: Plugin;
+	private resources: PlayerControllerResources;
 
-	constructor() {
-		console.log('[PlayerController] Initialized');
+	constructor(plugin: Plugin, resources: PlayerControllerResources) {
+		this.plugin = plugin;
+		this.resources = resources;
+		console.log('[PlayerController] Initialized with resources:', resources);
+
+		// 初始化配置中的资源路径
+		this.initializeResourcePaths();
+	}
+
+	/**
+	 * 初始化配置中的资源路径
+	 */
+	private initializeResourcePaths(): void {
+		const config = useConfigStore.getState().config;
+		const needsUpdate =
+			config.alphaTabSettings.core.scriptFile !== this.resources.alphaTabWorkerUri ||
+			config.alphaTabSettings.player.soundFont !== this.resources.soundFontUri;
+
+		if (needsUpdate) {
+			useConfigStore.getState().updateConfig((draft) => {
+				draft.alphaTabSettings.core.scriptFile = this.resources.alphaTabWorkerUri;
+				draft.alphaTabSettings.player.soundFont = this.resources.soundFontUri;
+			});
+		}
 	}
 
 	/**
@@ -31,8 +64,20 @@ export class PlayerController {
 	 * @param container alphaTab 渲染容器
 	 */
 	init(container: HTMLElement): void {
-		console.log('[PlayerController] init() called');
+		console.log('[PlayerController] init() called with container:', container);
 		this.container = container;
+
+		// 检查容器是否有有效的尺寸
+		const rect = container.getBoundingClientRect();
+		console.log('[PlayerController] Container dimensions:', {
+			width: rect.width,
+			height: rect.height,
+			visible: rect.width > 0 && rect.height > 0
+		});
+
+		if (rect.width === 0 || rect.height === 0) {
+			console.warn('[PlayerController] Container has zero dimensions! This may cause rendering issues.');
+		}
 
 		// 订阅配置变化
 		this.subscribeToConfig();
@@ -91,9 +136,9 @@ export class PlayerController {
 			// 创建 alphaTab Settings
 			const settings = this.createAlphaTabSettings(config);
 
-			// 创建新 API
-			const alphaTab = await import('@coderline/alphatab');
-			this.api = new alphaTab.AlphaTabApi(this.container, settings);
+			// 创建新 API（使用动态导入确保类型正确）
+			const alphaTabModule = await import('@coderline/alphatab');
+			this.api = new alphaTabModule.AlphaTabApi(this.container, settings);
 
 			// 绑定事件
 			this.bindApiEvents();
@@ -107,7 +152,9 @@ export class PlayerController {
 			console.log('[PlayerController] API rebuilt successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to rebuild API:', error);
-			useRuntimeStore.getState().setError('api-init', error instanceof Error ? error.message : String(error));
+			useRuntimeStore
+				.getState()
+				.setError('api-init', error instanceof Error ? error.message : String(error));
 			useUIStore.getState().showToast('error', 'Failed to initialize player');
 		} finally {
 			useUIStore.getState().setLoading(false);
@@ -127,76 +174,171 @@ export class PlayerController {
 	}
 
 	private createAlphaTabSettings(config: AlphaTabPlayerConfig): any {
-		return {
+		// 获取当前容器的计算样式用于颜色配置
+		const style = this.container ? window.getComputedStyle(this.container) : null;
+
+		// 配置滚动元素（关键！需要设置为实际的容器或其父级）
+		let scrollElement: HTMLElement | string = 'html,body';
+		if (this.container) {
+			// 尝试查找 Obsidian 的滚动容器
+			const workspaceLeaf = this.container.closest('.workspace-leaf-content');
+			if (workspaceLeaf) {
+				scrollElement = workspaceLeaf as HTMLElement;
+				console.log('[PlayerController] Using workspace-leaf-content as scroll element');
+			} else {
+				scrollElement = this.container;
+				console.log('[PlayerController] Using container as scroll element');
+			}
+		}
+
+		const settings: any = {
 			core: {
-				...config.alphaTabSettings.core,
+				file: config.alphaTabSettings.core.file,
+				engine: config.alphaTabSettings.core.engine || 'html5',
+				useWorkers: config.alphaTabSettings.core.useWorkers,
+				logLevel: config.alphaTabSettings.core.logLevel,
+				includeNoteBounds: config.alphaTabSettings.core.includeNoteBounds,
+				scriptFile: this.resources.alphaTabWorkerUri,
+				fontDirectory: '',
 			},
 			player: {
-				...config.alphaTabSettings.player,
+				enablePlayer: config.alphaTabSettings.player.enablePlayer,
+				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
+				scrollSpeed: config.alphaTabSettings.player.scrollSpeed,
+				scrollMode: config.alphaTabSettings.player.scrollMode,
+				scrollOffsetX: config.alphaTabSettings.player.scrollOffsetX,
+				scrollOffsetY: config.alphaTabSettings.player.scrollOffsetY,
+				enableCursor: config.alphaTabSettings.player.enableCursor,
+				enableAnimatedBeatCursor: config.alphaTabSettings.player.enableAnimatedBeatCursor,
+				soundFont: this.resources.soundFontUri,
+				scrollElement: scrollElement,
+				nativeBrowserSmoothScroll: false,
 			},
 			display: {
-				...config.alphaTabSettings.display,
+				scale: config.alphaTabSettings.display.scale,
+				startBar: config.alphaTabSettings.display.startBar,
+				layoutMode: config.alphaTabSettings.display.layoutMode,
+				barsPerRow: config.alphaTabSettings.display.barsPerRow,
+				stretchForce: config.alphaTabSettings.display.stretchForce,
 			},
 		};
-	}
 
-	// ========== API Events ==========
+		// 添加字体配置（使用与 AlphaTabService 相同的方式）
+		if (this.resources.bravuraUri) {
+			try {
+				// 使用 Map 结构配置字体，参考 AlphaTabService.ts
+				const FontFileFormat = (alphaTab as any).rendering?.glyphs?.FontFileFormat;
+				if (FontFileFormat && FontFileFormat.Woff2 !== undefined) {
+					settings.core.smuflFontSources = new Map([
+						[FontFileFormat.Woff2, this.resources.bravuraUri],
+					]) as unknown as Map<number, string>;
+					console.log(
+						'[PlayerController] Font source configured:',
+						this.resources.bravuraUri
+					);
+				} else {
+					console.warn(
+						'[PlayerController] FontFileFormat.Woff2 not available, using fallback'
+					);
+					settings.core.smuflFontSources = new Map([
+						[0, this.resources.bravuraUri],
+					]) as unknown as Map<number, string>;
+				}
+			} catch (error) {
+				console.error('[PlayerController] Failed to configure font:', error);
+			}
+		}
+
+		// 添加颜色配置
+		if (style) {
+			settings.display.resources = {
+				mainGlyphColor: style.getPropertyValue('--color-base-100') || '#000',
+				secondaryGlyphColor: style.getPropertyValue('--color-base-60') || '#666',
+				staffLineColor: style.getPropertyValue('--color-base-40') || '#ccc',
+				barSeparatorColor: style.getPropertyValue('--color-base-40') || '#ccc',
+				barNumberColor:
+					'#' +
+					convert.hsl.hex([
+						parseFloat(style.getPropertyValue('--accent-h')) || 0,
+						parseFloat(style.getPropertyValue('--accent-s')) || 50,
+						parseFloat(style.getPropertyValue('--accent-l')) || 50,
+					]),
+				scoreInfoColor: style.getPropertyValue('--color-base-100') || '#000',
+			};
+		}
+
+		console.log('[PlayerController] Settings created:', {
+			...settings,
+			core: { ...settings.core, smuflFontSources: settings.core.smuflFontSources ? 'Map configured' : 'none' }
+		});
+		return settings;
+	} // ========== API Events ==========
 
 	private bindApiEvents(): void {
-		if (!this.api) return;
+		if (!this.api) {
+			console.warn('[PlayerController] Cannot bind events - API not initialized');
+			return;
+		}
 
-		// Score Loaded
-		this.api.scoreLoaded.on(() => {
-			console.log('[PlayerController] scoreLoaded');
-			useRuntimeStore.getState().setScoreLoaded(true);
-			useRuntimeStore.getState().setRenderState('idle');
-		});
-
-		// Render Started
-		this.api.renderStarted.on(() => {
-			console.log('[PlayerController] renderStarted');
-			useRuntimeStore.getState().setRenderState('rendering');
-		});
-
-		// Render Finished
-		this.api.renderFinished.on(() => {
-			console.log('[PlayerController] renderFinished');
-			useRuntimeStore.getState().setRenderState('finished');
-		});
-
-		// Player Ready
-		this.api.playerReady.on(() => {
-			console.log('[PlayerController] playerReady');
-			useRuntimeStore.getState().setApiReady(true);
-		});
-
-		// Player State Changed
-		this.api.playerStateChanged.on((e: any) => {
-			console.log('[PlayerController] playerStateChanged:', e.state);
-			const stateMap: Record<number, 'idle' | 'playing' | 'paused' | 'stopped'> = {
-				0: 'paused',
-				1: 'playing',
-				2: 'stopped',
-			};
-			useRuntimeStore.getState().setPlaybackState(stateMap[e.state] || 'idle');
-		});
-
-		// Player Position Changed
-		this.api.playerPositionChanged.on((e: any) => {
-			useRuntimeStore.getState().setPosition(e.currentTime);
-			useRuntimeStore.getState().setCurrentBeat({
-				bar: e.currentBar,
-				beat: e.currentBeat,
-				tick: e.currentTick || 0,
+		try {
+			// Score Loaded
+			this.api.scoreLoaded.on(() => {
+				console.log('[PlayerController] scoreLoaded');
+				useRuntimeStore.getState().setScoreLoaded(true);
+				useRuntimeStore.getState().setRenderState('idle');
 			});
-		});
 
-		// Error
-		this.api.error.on((error: any) => {
-			console.error('[PlayerController] alphaTab error:', error);
-			useRuntimeStore.getState().setError('api-init', error.message || String(error));
-			useUIStore.getState().showToast('error', 'An error occurred in the player');
-		});
+			// Render Started
+			this.api.renderStarted.on(() => {
+				console.log('[PlayerController] renderStarted');
+				useRuntimeStore.getState().setRenderState('rendering');
+			});
+
+			// Render Finished
+			this.api.renderFinished.on(() => {
+				console.log('[PlayerController] renderFinished');
+				useRuntimeStore.getState().setRenderState('finished');
+			});
+
+			// Player Ready
+			this.api.playerReady.on(() => {
+				console.log('[PlayerController] playerReady');
+				useRuntimeStore.getState().setApiReady(true);
+			});
+
+			// Player State Changed
+			this.api.playerStateChanged.on((e: any) => {
+				console.log('[PlayerController] playerStateChanged:', e.state);
+				const stateMap: Record<number, 'idle' | 'playing' | 'paused' | 'stopped'> = {
+					0: 'paused',
+					1: 'playing',
+					2: 'stopped',
+				};
+				useRuntimeStore.getState().setPlaybackState(stateMap[e.state] || 'idle');
+			});
+
+			// Player Position Changed
+			this.api.playerPositionChanged.on((e: any) => {
+				useRuntimeStore.getState().setPosition(e.currentTime);
+				useRuntimeStore.getState().setCurrentBeat({
+					bar: e.currentBar,
+					beat: e.currentBeat,
+					tick: e.currentTick || 0,
+				});
+			});
+
+			// Error
+			this.api.error.on((error: any) => {
+				console.error('[PlayerController] alphaTab error:', error);
+				useRuntimeStore.getState().setError('api-init', error.message || String(error));
+				useUIStore.getState().showToast('error', 'An error occurred in the player');
+			});
+
+			console.log('[PlayerController] Events bound successfully');
+		} catch (error) {
+			console.error('[PlayerController] Failed to bind API events:', error);
+			useRuntimeStore.getState().setError('api-init', 'Failed to bind API events');
+		}
 	}
 
 	// ========== Playback Commands ==========
@@ -256,7 +398,9 @@ export class PlayerController {
 			useUIStore.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
-			useRuntimeStore.getState().setError('score-load', error instanceof Error ? error.message : String(error));
+			useRuntimeStore
+				.getState()
+				.setError('score-load', error instanceof Error ? error.message : String(error));
 			useUIStore.getState().showToast('error', 'Failed to load score');
 			throw error;
 		} finally {
@@ -275,11 +419,15 @@ export class PlayerController {
 
 		try {
 			await this.api.load(new Uint8Array(arrayBuffer));
-			useConfigStore.getState().updateScoreSource({ type: 'file', content: fileName || 'local-file' });
+			useConfigStore
+				.getState()
+				.updateScoreSource({ type: 'file', content: fileName || 'local-file' });
 			useUIStore.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
-			useRuntimeStore.getState().setError('score-load', error instanceof Error ? error.message : String(error));
+			useRuntimeStore
+				.getState()
+				.setError('score-load', error instanceof Error ? error.message : String(error));
 			useUIStore.getState().showToast('error', 'Failed to load score');
 			throw error;
 		} finally {
@@ -302,7 +450,9 @@ export class PlayerController {
 			useUIStore.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
-			useRuntimeStore.getState().setError('score-load', error instanceof Error ? error.message : String(error));
+			useRuntimeStore
+				.getState()
+				.setError('score-load', error instanceof Error ? error.message : String(error));
 			useUIStore.getState().showToast('error', 'Failed to load score');
 			throw error;
 		} finally {
@@ -314,28 +464,28 @@ export class PlayerController {
 
 	muteTrack(trackIndex: number, mute: boolean): void {
 		if (!this.api?.score?.tracks[trackIndex]) return;
-		
+
 		const track = this.api.score.tracks[trackIndex];
 		track.playbackInfo.isMute = mute;
-		
+
 		useRuntimeStore.getState().setTrackOverride(String(trackIndex), { muteOverride: mute });
 	}
 
 	soloTrack(trackIndex: number, solo: boolean): void {
 		if (!this.api?.score?.tracks[trackIndex]) return;
-		
+
 		const track = this.api.score.tracks[trackIndex];
 		track.playbackInfo.isSolo = solo;
-		
+
 		useRuntimeStore.getState().setTrackOverride(String(trackIndex), { soloOverride: solo });
 	}
 
 	setTrackVolume(trackIndex: number, volume: number): void {
 		if (!this.api?.score?.tracks[trackIndex]) return;
-		
+
 		const track = this.api.score.tracks[trackIndex];
 		track.playbackInfo.volume = Math.max(0, Math.min(16, volume * 16)); // alphaTab uses 0-16
-		
+
 		useRuntimeStore.getState().setTrackOverride(String(trackIndex), { volumeOverride: volume });
 	}
 }

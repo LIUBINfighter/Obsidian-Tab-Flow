@@ -1,13 +1,13 @@
 /**
  * AlphaTab Player Configuration Schema
  * Version: 1.0.0
- * 
+ *
  * 四层配置架构：
  * 1. Score Config - 曲谱来源
  * 2. Player Config - alphaTab Settings 完整对象
  * 3. Player Extensions - 超集字段
  * 4. UI Config - UI 偏好
- * 
+ *
  * Session State 不持久化，仅运行时存在
  */
 
@@ -30,8 +30,8 @@ export interface AlphaTabSettingsConfig {
 		useWorkers: boolean;
 		logLevel: number;
 		includeNoteBounds: boolean;
-		scriptFile?: string;
-		fontDirectory?: string;
+		scriptFile: string | null;
+		fontDirectory: string | null;
 	};
 
 	player: {
@@ -43,6 +43,7 @@ export interface AlphaTabSettingsConfig {
 		enableCursor: boolean;
 		enableAnimatedBeatCursor: boolean;
 		soundFont: string | null;
+		scrollElement?: HTMLElement | string;
 	};
 
 	display: {
@@ -51,6 +52,14 @@ export interface AlphaTabSettingsConfig {
 		layoutMode: alphaTab.LayoutMode;
 		barsPerRow: number | null;
 		stretchForce: number;
+		resources?: {
+			mainGlyphColor?: string;
+			secondaryGlyphColor?: string;
+			staffLineColor?: string;
+			barSeparatorColor?: string;
+			barNumberColor?: string;
+			scoreInfoColor?: string;
+		};
 	};
 }
 
@@ -152,6 +161,8 @@ export function getDefaultConfig(): AlphaTabPlayerConfig {
 				useWorkers: true,
 				logLevel: alphaTab.LogLevel.Warning,
 				includeNoteBounds: false,
+				scriptFile: null,
+				fontDirectory: null,
 			},
 			player: {
 				enablePlayer: true,

@@ -2,7 +2,7 @@ import { FileView, TFile, WorkspaceLeaf, Plugin } from 'obsidian';
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { TablatureView } from './components/TablatureView';
-import { PlayerController } from './PlayerController';
+import { PlayerController, type PlayerControllerResources } from './PlayerController';
 import { useRuntimeStore } from './store/runtimeStore';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
@@ -13,10 +13,14 @@ export class ReactView extends FileView {
 	private root: Root | null = null;
 	private reactContainer: HTMLDivElement | null = null;
 	private controller: PlayerController | null = null;
+	private resources: PlayerControllerResources;
+	private fontStyle: HTMLStyleElement | null = null;
+	private static instanceId = 0;
 
-	constructor(leaf: WorkspaceLeaf, plugin: Plugin) {
+	constructor(leaf: WorkspaceLeaf, plugin: Plugin, resources: PlayerControllerResources) {
 		super(leaf);
 		this.plugin = plugin;
+		this.resources = resources;
 	}
 
 	getViewType(): string {
@@ -33,8 +37,23 @@ export class ReactView extends FileView {
 	async onOpen() {
 		console.debug('[ReactView] Opening view');
 
-		// 创建 PlayerController
-		this.controller = new PlayerController();
+		// 注入字体样式（参考 TabView）
+		if (this.resources.bravuraUri) {
+			const fontFaceRule = `
+				@font-face {
+					font-family: 'alphaTab';
+					src: url(${this.resources.bravuraUri});
+				}
+			`;
+			this.fontStyle = this.containerEl.ownerDocument.createElement('style');
+			this.fontStyle.id = `alphatab-font-style-${ReactView.instanceId++}`;
+			this.fontStyle.appendChild(document.createTextNode(fontFaceRule));
+			this.containerEl.ownerDocument.head.appendChild(this.fontStyle);
+			console.debug('[ReactView] Font face injected');
+		}
+
+		// 创建 PlayerController（传递 resources）
+		this.controller = new PlayerController(this.plugin, this.resources);
 
 		// 创建容器元素
 		this.reactContainer = this.contentEl.createDiv({
@@ -53,6 +72,13 @@ export class ReactView extends FileView {
 
 	async onClose() {
 		console.debug('[ReactView] Closing view');
+
+		// 移除字体样式
+		if (this.fontStyle) {
+			this.fontStyle.remove();
+			this.fontStyle = null;
+			console.debug('[ReactView] Font face removed');
+		}
 
 		// 清理 React root
 		if (this.root) {

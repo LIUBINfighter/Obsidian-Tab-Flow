@@ -44,16 +44,55 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	}, [apiReady, scoreLoaded, renderState, error, loading]);
 
 	return (
-		<div className="tablature-view">
+		<div 
+			className="tablature-view"
+			style={{
+				width: '100%',
+				height: '100%',
+				position: 'relative',
+				overflow: 'hidden',
+			}}
+		>
 			{/* Loading Indicator */}
 			{loading.isLoading && (
-				<div className="loading-overlay">
-					<div className="loading-message">{loading.message}</div>
+				<div 
+					className="loading-overlay"
+					style={{
+						position: 'absolute',
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						display: 'flex',
+						flexDirection: 'column',
+						alignItems: 'center',
+						justifyContent: 'center',
+						backgroundColor: 'var(--background-primary)',
+						zIndex: 1000,
+					}}
+				>
+					<div className="loading-message" style={{ marginBottom: '10px' }}>
+						{loading.message}
+					</div>
 					{loading.progress !== undefined && (
-						<div className="loading-progress">
+						<div 
+							className="loading-progress"
+							style={{
+								width: '200px',
+								height: '4px',
+								backgroundColor: 'var(--background-modifier-border)',
+								borderRadius: '2px',
+								overflow: 'hidden',
+							}}
+						>
 							<div
 								className="loading-progress-bar"
-								style={{ width: `${loading.progress}%` }}
+								style={{ 
+									width: `${loading.progress}%`,
+									height: '100%',
+									backgroundColor: 'var(--interactive-accent)',
+									transition: 'width 0.3s ease',
+								}}
 							/>
 						</div>
 					)}
@@ -62,7 +101,21 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 
 			{/* Error Display */}
 			{error.type && error.message && (
-				<div className="error-overlay">
+				<div 
+					className="error-overlay"
+					style={{
+						position: 'absolute',
+						top: '20px',
+						left: '50%',
+						transform: 'translateX(-50%)',
+						maxWidth: '80%',
+						padding: '10px 20px',
+						backgroundColor: 'var(--background-modifier-error)',
+						border: '1px solid var(--background-modifier-error-border)',
+						borderRadius: '4px',
+						zIndex: 999,
+					}}
+				>
 					<div className="error-message">
 						<strong>Error ({error.type}):</strong> {error.message}
 					</div>
@@ -77,6 +130,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 					width: '100%',
 					height: '100%',
 					overflow: 'auto',
+					position: 'relative',
 				}}
 			/>
 		</div>

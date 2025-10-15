@@ -1,6 +1,6 @@
 /**
  * Runtime Store - 会话级别的运行时状态（非持久化）
- * 
+ *
  * 职责：
  * 1. 管理 alphaTab API 实例的引用
  * 2. 同步播放器运行时状态（播放位置、轨道状态等）
@@ -25,7 +25,10 @@ export interface RuntimeStore extends SessionState {
 	setPosition: (positionMs: number) => void;
 	setDuration: (durationMs: number) => void;
 	setCurrentBeat: (beat: SessionState['currentBeat']) => void;
-	setTrackOverride: (trackIndex: string, updates: Partial<{ soloOverride: boolean; muteOverride: boolean; volumeOverride: number }>) => void;
+	setTrackOverride: (
+		trackIndex: string,
+		updates: Partial<{ soloOverride: boolean; muteOverride: boolean; volumeOverride: number }>
+	) => void;
 	removeTrackOverride: (trackIndex: string) => void;
 	setError: (type: SessionState['error']['type'], message: string | null) => void;
 	clearError: () => void;
@@ -38,9 +41,9 @@ export const useRuntimeStore = create<RuntimeStore>((set) => ({
 
 	// Actions
 	setApi: (api) => {
-		set({ 
+		set({
 			alphaTabApi: api,
-			apiReady: !!api 
+			apiReady: !!api,
 		});
 	},
 
@@ -119,4 +122,3 @@ export const useRuntimeStore = create<RuntimeStore>((set) => ({
 		});
 	},
 }));
-
