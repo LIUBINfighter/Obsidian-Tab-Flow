@@ -34,7 +34,7 @@ export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
 					layoutMode === alphaTab.LayoutMode.Page ? '切换到横向滚动' : '切换到页面布局'
 				}
 			>
-				{layoutMode === alphaTab.LayoutMode.Page ? '📄 页面' : '↔️ 横向'}
+				{layoutMode === alphaTab.LayoutMode.Page ? '页面' : '横向'}
 			</button>
 		</div>
 	);
