@@ -17,6 +17,7 @@ import { SettingsToggle } from './SettingsToggle';
 interface PlayBarProps {
 	controller: PlayerController;
 	onSettingsClick?: () => void;
+	onTracksClick?: () => void;
 }
 
 /**
@@ -30,10 +31,10 @@ interface PlayBarProps {
  * - SpeedControl: 速度选择
  * - MetronomeToggle: 节拍器开关
  */
-export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick }) => {
+export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, onTracksClick }) => {
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
-	
+
 	// 订阅播放状态
 	const playbackState = runtimeStore((s) => s.playbackState);
 	const positionMs = runtimeStore((s) => s.positionMs);
@@ -44,9 +45,7 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick })
 	// 本地状态
 	const [metronomeEnabled, setMetronomeEnabled] = useState(false);
 	const [countInEnabled, setCountInEnabled] = useState(false);
-	const [tracksModalOpen, setTracksModalOpen] = useState(false);
-
-	// 判断按钮状态
+	const [tracksModalOpen, setTracksModalOpen] = useState(false);	// 判断按钮状态
 	const isPlaying = playbackState === 'playing';
 	const canPlay = scoreLoaded;
 
@@ -90,20 +89,12 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick })
 
 				{/* 滚动模式 */}
 				<ScrollModeControl controller={controller} />
-				
+
 				{/* 音轨管理按钮 */}
-				<TracksToggle 
-					controller={controller} 
-					onClick={() => setTracksModalOpen(true)} 
-				/>
-				
+				{onTracksClick && <TracksToggle controller={controller} onClick={onTracksClick} />}
+
 				{/* 设置面板按钮 */}
-				{onSettingsClick && (
-					<SettingsToggle 
-						controller={controller} 
-						onClick={onSettingsClick} 
-					/>
-				)}
+				{onSettingsClick && <SettingsToggle controller={controller} onClick={onSettingsClick} />}
 
 				{/* 状态指示器（调试用） */}
 				{!scoreLoaded && (
@@ -112,14 +103,10 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick })
 					</div>
 				)}
 			</div>
-			
-			{/* 音轨选择器模态框 */}
-			{api && (
-				<TracksModal
-					api={api}
-					isOpen={tracksModalOpen}
-					onClose={() => setTracksModalOpen(false)}
-				/>
+
+			{/* 音轨选择器模态框（保留作为备用，但通常不使用） */}
+			{tracksModalOpen && api && (
+				<TracksModal api={api} isOpen={tracksModalOpen} onClose={() => setTracksModalOpen(false)} />
 			)}
 		</>
 	);

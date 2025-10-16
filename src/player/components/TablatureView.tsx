@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { PlayerController } from '../PlayerController';
 import { PlayBar } from './PlayBar';
 import { SettingsPanel } from './SettingsPanel';
+import { TracksPanel } from './TracksPanel';
 
 interface TablatureViewProps {
 	controller: PlayerController;
@@ -10,12 +11,11 @@ interface TablatureViewProps {
 export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
-	
+	const [tracksPanelOpen, setTracksPanelOpen] = useState(false);
+
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
-	const uiStore = controller.getUIStore();
-	
-	// 订阅 runtime state
+	const uiStore = controller.getUIStore();	// 订阅 runtime state
 	const error = runtimeStore((s) => s.error);
 	
 	// 订阅 UI state
@@ -45,19 +45,25 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 			}}
 		>
 			{/* PlayBar - 播放控制栏 */}
-			<PlayBar 
-				controller={controller} 
-				onSettingsClick={() => setSettingsPanelOpen(true)} 
+			<PlayBar
+				controller={controller}
+				onSettingsClick={() => setSettingsPanelOpen(true)}
+				onTracksClick={() => setTracksPanelOpen(true)}
 			/>
 
-			{/* Settings Panel */}
+			{/* Tracks Panel - 音轨管理侧边栏 */}
+			<TracksPanel
+				controller={controller}
+				isOpen={tracksPanelOpen}
+				onClose={() => setTracksPanelOpen(false)}
+			/>
+
+			{/* Settings Panel - 设置侧边栏 */}
 			<SettingsPanel
 				controller={controller}
 				isOpen={settingsPanelOpen}
 				onClose={() => setSettingsPanelOpen(false)}
-			/>
-
-			{/* Loading Indicator */}
+			/>			{/* Loading Indicator */}
 			{loading.isLoading && (
 				<div 
 					className="loading-overlay"
