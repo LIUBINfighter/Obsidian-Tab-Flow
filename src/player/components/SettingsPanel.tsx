@@ -287,8 +287,8 @@ function buildSettingsGroups(): SettingsGroupSchema[] {
 			title: 'Display ▸ General',
 			settings: [
 				factory.buttonGroup('Render Engine', 'core.engine', [
-					['SVG', 'svg'],
-					['HTML5', 'html5'],
+					['SVG (Recommended)', 'svg'],
+					['HTML5 (Not Stable)', 'html5'],
 				]),
 				factory.numberRange('Scale', 'display.scale', 0.25, 2, 0.25),
 				factory.numberRange('Stretch Force', 'display.stretchForce', 0.25, 2, 0.25),
