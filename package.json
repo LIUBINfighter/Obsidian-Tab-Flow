@@ -9,6 +9,7 @@
 		"build": "node ./scripts/merge-styles.js --dir src/styles && tsc -noEmit -skipLibCheck && node esbuild.config.mjs production && echo ======================================= && echo ' build done.'",
 		"version": "node version-bump.mjs && git add manifest.json versions.json",
 		"mix": "node ./scripts/mix-code.js --dir ../src",
+		"mix-player": "node ./scripts/mix-code.js --dir src/player",
 		"mix-tabview": "node ./scripts/mix-code-tabview.js --dir ../src",
 		"clean": "node ./scripts/clean.js",
 		"clean-build": "node ./scripts/clean.js --delete styles.css data.json main.js",
