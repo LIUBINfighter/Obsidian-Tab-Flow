@@ -13,6 +13,7 @@ import { ScrollModeControl } from './ScrollModeControl';
 import { TracksToggle } from './TracksToggle';
 import { TracksModal } from './TracksModal';
 import { SettingsToggle } from './SettingsToggle';
+import { ExportModal } from './ExportModal';
 
 interface PlayBarProps {
 	controller: PlayerController;
@@ -45,7 +46,8 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 	// 本地状态
 	const [metronomeEnabled, setMetronomeEnabled] = useState(false);
 	const [countInEnabled, setCountInEnabled] = useState(false);
-	const [tracksModalOpen, setTracksModalOpen] = useState(false);	// 判断按钮状态
+	const [tracksModalOpen, setTracksModalOpen] = useState(false);
+	const [exportModalOpen, setExportModalOpen] = useState(false);	// 判断按钮状态
 	const isPlaying = playbackState === 'playing';
 	const canPlay = scoreLoaded;
 
@@ -93,6 +95,29 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 				{/* 音轨管理按钮 */}
 				{onTracksClick && <TracksToggle controller={controller} onClick={onTracksClick} />}
 
+				{/* 导出按钮 */}
+				<button
+					className="clickable-icon"
+					title="导出乐谱"
+					onClick={() => setExportModalOpen(true)}
+					disabled={!scoreLoaded}
+					style={{ padding: '6px' }}
+				>
+					<svg
+						className="svg-icon lucide-download"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+						<polyline points="7 10 12 15 17 10"></polyline>
+						<line x1="12" y1="15" x2="12" y2="3"></line>
+					</svg>
+				</button>
+
 				{/* 设置面板按钮 */}
 				{onSettingsClick && <SettingsToggle controller={controller} onClick={onSettingsClick} />}
 
@@ -108,6 +133,9 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 			{tracksModalOpen && api && (
 				<TracksModal api={api} isOpen={tracksModalOpen} onClose={() => setTracksModalOpen(false)} />
 			)}
+
+			{/* 导出模态框 */}
+			<ExportModal controller={controller} isOpen={exportModalOpen} onClose={() => setExportModalOpen(false)} />
 		</>
 	);
 };
