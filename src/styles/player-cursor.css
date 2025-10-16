@@ -11,6 +11,8 @@
 	background: var(--interactive-accent, #7c3aed);
 	opacity: 0.08;
 	transition: opacity 0.1s ease;
+	z-index: 900; /*  Panel (z-index: 1000) */
+	position: relative;
 }
 
 /* 深色模式下调整透明度 */
@@ -28,6 +30,8 @@
 	width: 3px;
 	border-radius: 1px;
 	transition: opacity 0.1s ease;
+	z-index: 900; /*  Panel (z-index: 1000) */
+	position: relative;
 }
 
 /* 深色模式下增强可见度 */
@@ -38,12 +42,14 @@
 
 /* 
  * 3. 选择范围背景 - 用户选择的播放范围
- * 使用主题色的淡背景，区分选择区域
+ * 使用主题色的淡背景,区分选择区域
  */
 .at-selection div {
 	background: var(--interactive-accent, #7c3aed);
 	opacity: 0.1;
 	transition: opacity 0.15s ease;
+	z-index: 900; /*  Panel (z-index: 1000) */
+	position: relative;
 }
 
 /* 悬停时增强反馈 */
@@ -89,6 +95,7 @@
 .at-selection div,
 .at-highlight {
 	will-change: transform, opacity;
+	z-index: 900; /*  Panel (z-index: 1000) */
 }
 
 /* 
