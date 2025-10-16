@@ -374,30 +374,21 @@ export class PlayerController {
 		this.unbindApiEvents();
 
 		try {
-			// Score Loaded
-			const scoreLoadedHandler = () => {
-				this.stores.runtime.getState().setScoreLoaded(true);
-				this.stores.runtime.getState().setRenderState('idle');
+		// Score Loaded
+		const scoreLoadedHandler = () => {
+			this.stores.runtime.getState().setScoreLoaded(true);
+			this.stores.runtime.getState().setRenderState('idle');
 
-				// 设置总时长（关键：从 score.duration 获取）
-				if (this.api?.score) {
-					const durationMs = this.api.score.masterBars.reduce(
-						(sum, bar) => sum + bar.calculateDuration(),
-						0
-					);
-					this.stores.runtime.getState().setDuration(durationMs);
-					console.log('[PlayerController] Score loaded, duration:', durationMs, 'ms');
-				}
+			// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
+			// 那才是考虑了速度等因素的实际播放时长
 
-				// 延迟配置滚动容器，确保 DOM 就绪（参考 TabView）
-				setTimeout(() => {
-					this.configureScrollElement();
-				}, 100);
-			};
-			this.api.scoreLoaded.on(scoreLoadedHandler);
-			this.eventHandlers.set('scoreLoaded', scoreLoadedHandler);
-
-			// Render Started
+			// 延迟配置滚动容器，确保 DOM 就绪（参考 TabView）
+			setTimeout(() => {
+				this.configureScrollElement();
+			}, 100);
+		};
+		this.api.scoreLoaded.on(scoreLoadedHandler);
+		this.eventHandlers.set('scoreLoaded', scoreLoadedHandler);			// Render Started
 			const renderStartedHandler = () => {
 				this.stores.runtime.getState().setRenderState('rendering');
 			};
@@ -437,19 +428,21 @@ export class PlayerController {
 			this.api.playerStateChanged.on(playerStateChangedHandler);
 			this.eventHandlers.set('playerStateChanged', playerStateChangedHandler);
 
-			// Player Position Changed
-			const playerPositionChangedHandler = (e: any) => {
-				this.stores.runtime.getState().setPosition(e.currentTime);
-				this.stores.runtime.getState().setCurrentBeat({
-					bar: e.currentBar,
-					beat: e.currentBeat,
-					tick: e.currentTick || 0,
-				});
-			};
-			this.api.playerPositionChanged.on(playerPositionChangedHandler);
-			this.eventHandlers.set('playerPositionChanged', playerPositionChangedHandler);
-
-			// Error
+		// Player Position Changed
+		const playerPositionChangedHandler = (e: any) => {
+			this.stores.runtime.getState().setPosition(e.currentTime);
+			// 重要：使用 e.endTime 作为总时长，这是考虑了速度等因素的实际播放时长
+			if (e.endTime !== undefined) {
+				this.stores.runtime.getState().setDuration(e.endTime);
+			}
+			this.stores.runtime.getState().setCurrentBeat({
+				bar: e.currentBar,
+				beat: e.currentBeat,
+				tick: e.currentTick || 0,
+			});
+		};
+		this.api.playerPositionChanged.on(playerPositionChangedHandler);
+		this.eventHandlers.set('playerPositionChanged', playerPositionChangedHandler);			// Error
 			const errorHandler = (error: any) => {
 				console.error('[PlayerController] alphaTab error:', error);
 				this.stores.runtime.getState().setError('api-init', error.message || String(error));
