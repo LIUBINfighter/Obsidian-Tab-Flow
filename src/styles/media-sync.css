@@ -1,17 +1,21 @@
 /**
  * MediaSync Panel Styles
  * 外部媒体同步面板样式
+ * 参考 PlayBar 的圆角边框设计
  */
 
 .media-sync-panel {
 	position: relative;
 	width: 100%;
-	background-color: var(--background-secondary);
-	border-top: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin: 0.5em 0;
 	display: flex;
 	flex-direction: column;
 	max-height: 60vh;
 	overflow: hidden;
+	flex-shrink: 0;
 }
 
 /* 工具栏 */
@@ -19,44 +23,56 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 8px 12px;
-	background-color: var(--background-primary);
+	padding: 0.5em;
+	background: transparent;
 	border-bottom: 1px solid var(--background-modifier-border);
 	flex-wrap: wrap;
-	gap: 8px;
+	gap: 0.5em;
+	user-select: none;
 }
 
 .media-sync-toolbar-left,
 .media-sync-toolbar-right {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 4px;
 }
 
-/* 媒体类型按钮 */
+/* 媒体类型按钮 - 参考 PlayBar 按钮样式 */
 .media-sync-btn {
 	display: flex;
 	align-items: center;
-	gap: 6px;
-	padding: 6px 12px;
-	border-radius: 4px;
-	border: 1px solid var(--background-modifier-border);
-	background-color: var(--background-primary);
-	color: var(--text-normal);
+	justify-content: center;
+	gap: 4px;
+	padding: 6px 8px;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-muted);
 	cursor: pointer;
+	transition: all 0.15s ease;
 	font-size: 13px;
-	transition: all 0.2s ease;
+	line-height: 1;
+	min-height: 28px;
 }
 
 .media-sync-btn:hover:not(:disabled) {
-	background-color: var(--background-modifier-hover);
-	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.media-sync-btn:active:not(:disabled) {
+	background: var(--background-modifier-active-hover);
+	transform: scale(0.98);
 }
 
 .media-sync-btn.active {
-	background-color: var(--interactive-accent);
+	background: var(--interactive-accent);
 	color: var(--text-on-accent);
-	border-color: var(--interactive-accent);
+}
+
+.media-sync-btn.active:hover:not(:disabled) {
+	background: var(--interactive-accent-hover);
 }
 
 .media-sync-btn:disabled {
@@ -67,25 +83,33 @@
 .media-sync-btn .svg-icon {
 	width: 16px;
 	height: 16px;
+	stroke-width: 2;
+	flex-shrink: 0;
+}
+
+.media-sync-btn span {
+	font-size: 12px;
+	font-weight: 500;
+	white-space: nowrap;
 }
 
 /* 状态文本 */
 .media-sync-status {
 	font-size: 12px;
-	color: var(--text-muted);
+	color: var(--text-faint);
 	padding: 4px 8px;
-	background-color: var(--background-secondary);
-	border-radius: 4px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
 }
 
 /* 内容区域 */
 .media-sync-content {
 	flex: 1;
-	padding: 16px;
+	padding: 0.5em;
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 0.5em;
 }
 
 /* 信息提示 */
@@ -187,4 +211,113 @@
 		flex: 1;
 		justify-content: center;
 	}
+}
+
+/* Vault 文件列表 */
+.media-file-list {
+	max-height: 300px;
+	overflow-y: auto;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary);
+	margin-top: 8px;
+}
+
+.media-file-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	cursor: pointer;
+	border-bottom: 1px solid var(--background-modifier-border);
+	transition: background-color 0.15s ease;
+}
+
+.media-file-item:last-child {
+	border-bottom: none;
+}
+
+.media-file-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.media-file-item.selected {
+	background-color: var(--background-modifier-active-hover);
+	border-left: 3px solid var(--interactive-accent);
+}
+
+.media-file-item .file-icon {
+	font-size: 24px;
+	flex-shrink: 0;
+	width: 32px;
+	text-align: center;
+}
+
+.media-file-item .file-info {
+	flex: 1;
+	min-width: 0; /* 允许 flex 子元素缩小 */
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.media-file-item .file-name {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.media-file-item .file-path {
+	font-size: 12px;
+	color: var(--text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.media-file-item .file-size {
+	font-size: 12px;
+	color: var(--text-faint);
+	flex-shrink: 0;
+	padding: 4px 8px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
+}
+
+/* MediaFileSuggestModal 样式 */
+.media-file-suggestion {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 12px;
+}
+
+.media-file-icon {
+	font-size: 20px;
+	width: 24px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.media-file-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.media-file-name {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.media-file-path {
+	font-size: 12px;
+	color: var(--text-muted);
+	margin-top: 2px;
 }

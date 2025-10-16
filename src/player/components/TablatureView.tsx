@@ -186,7 +186,13 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				/>
 			</div>
 			{/* MediaSync Panel - 底部媒体同步面板 */}
-			{mediaSyncOpen && <MediaSync controller={controller} isOpen={mediaSyncOpen} />}
+			{mediaSyncOpen && (
+				<MediaSync
+					controller={controller}
+					app={controller.getApp()}
+					isOpen={mediaSyncOpen}
+				/>
+			)}
 		</div>
 	);
 };

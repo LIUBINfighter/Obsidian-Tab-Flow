@@ -943,4 +943,11 @@ export class PlayerController {
 	getUIStore() {
 		return this.stores.ui;
 	}
+
+	/**
+	 * 获取 Obsidian App 实例
+	 */
+	getApp() {
+		return this.plugin.app;
+	}
 }

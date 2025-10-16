@@ -12,3 +12,4 @@ export { TracksToggle } from './TracksToggle';
 export { SettingsPanel, type SettingsPanelProps } from './SettingsPanel';
 export { SettingsToggle } from './SettingsToggle';
 export { MediaSync } from './MediaSync';
+export { MediaFileSuggestModal } from './MediaFileSuggestModal';

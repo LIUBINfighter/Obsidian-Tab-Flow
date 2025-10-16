@@ -5,12 +5,15 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import type { App, TFile } from 'obsidian';
 import type { PlayerController } from '../PlayerController';
 import { MediaType, type MediaState } from '../types/media-sync';
 import { MediaSyncService } from '../services/MediaSyncService';
+import { MediaFileSuggestModal } from './MediaFileSuggestModal';
 
 interface MediaSyncProps {
 	controller: PlayerController;
+	app: App;
 	isOpen: boolean;
 }
 
@@ -46,7 +49,7 @@ function extractYouTubeVideoId(input: string): string | null {
 	return null;
 }
 
-export const MediaSync: React.FC<MediaSyncProps> = ({ controller, isOpen }) => {
+export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen }) => {
 	const runtimeStore = controller.getRuntimeStore();
 	const api = runtimeStore((s) => s.alphaTabApi);
 
@@ -75,6 +78,33 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, isOpen }) => {
 			mediaSyncService.current?.destroy();
 		};
 	}, [api]);
+
+	// 打开文件选择 Modal
+	const openFileSelectModal = () => {
+		new MediaFileSuggestModal(app, async (file: TFile) => {
+			try {
+				// 读取文件并创建 Blob URL
+				const arrayBuffer = await app.vault.readBinary(file);
+				const blob = new Blob([arrayBuffer]);
+				const url = URL.createObjectURL(blob);
+
+				// 根据文件类型加载
+				const isAudio = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'].includes(
+					file.extension.toLowerCase()
+				);
+
+				if (isAudio) {
+					setAudioUrl(url);
+					setMediaState({ type: MediaType.Audio, url });
+				} else {
+					setVideoUrl(url);
+					setMediaState({ type: MediaType.Video, url });
+				}
+			} catch (error) {
+				console.error('[MediaSync] Failed to load file:', error);
+			}
+		}).open();
+	};
 
 	// 处理媒体类型切换
 	const switchToSynth = () => {
@@ -251,6 +281,18 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, isOpen }) => {
 				{mediaState.type === MediaType.Synth && (
 					<div className="media-sync-info">
 						<p>使用 AlphaTab 内置合成器播放</p>
+					</div>
+				)}
+
+				{/* Vault 文件选择按钮 */}
+				{(mediaState.type === MediaType.Synth ||
+					mediaState.type === MediaType.Audio ||
+					mediaState.type === MediaType.Video) && (
+					<div className="media-sync-input-group">
+						<label>从 Vault 中选择：</label>
+						<button className="media-sync-load-btn" onClick={openFileSelectModal}>
+							📁 选择媒体文件...
+						</button>
 					</div>
 				)}
 
