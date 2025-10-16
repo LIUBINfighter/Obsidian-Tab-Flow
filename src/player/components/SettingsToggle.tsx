@@ -33,9 +33,11 @@ export const SettingsToggle: React.FC<SettingsToggleProps> = ({ controller, onCl
 				strokeLinecap="round"
 				strokeLinejoin="round"
 			>
-				<circle cx="12" cy="12" r="3" />
-				<path d="M12 1v6m0 6v6m0-18a9 9 0 0 1 9 9m-18 0a9 9 0 0 1 9-9m9 9a9 9 0 0 1-9 9m0-18a9 9 0 0 0-9 9m18 0a9 9 0 0 0-9-9" />
-				<path d="M19.07 4.93 17 7m-10 10-2.07 2.07M4.93 4.93 7 7m10 10 2.07 2.07" />
+				<circle cx="13.5" cy="6.5" r=".5" />
+				<circle cx="17.5" cy="10.5" r=".5" />
+				<circle cx="8.5" cy="7.5" r=".5" />
+				<circle cx="6.5" cy="12.5" r=".5" />
+				<path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
 			</svg>
 			<span className="play-bar-button-text">Settings</span>
 		</button>

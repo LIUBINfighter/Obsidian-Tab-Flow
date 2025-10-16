@@ -1362,7 +1362,38 @@
 .media-sync-toolbar-right {
 	display: flex;
 	align-items: center;
-	gap: 4px;
+	gap: 8px;
+}
+
+/* 同步模式选择器 */
+.media-sync-mode-select,
+.media-sync-throttle-select {
+	padding: 4px 8px;
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.media-sync-mode-select:hover,
+.media-sync-throttle-select:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.media-sync-mode-select:focus,
+.media-sync-throttle-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+/* 性能优化提示 */
+.media-sync-throttle-select {
+	min-width: 110px;
 }
 
 /* 媒体类型按钮 - 参考 PlayBar 按钮样式 */

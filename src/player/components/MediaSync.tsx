@@ -2,6 +2,7 @@
  * MediaSync - 外部媒体同步面板
  *
  * 支持与 Audio/Video/YouTube 同步播放
+ * 支持三种同步模式：双向、媒体为主、曲谱为主
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -10,6 +11,7 @@ import type { PlayerController } from '../PlayerController';
 import { MediaType, type MediaState } from '../types/media-sync';
 import { MediaSyncService } from '../services/MediaSyncService';
 import { MediaFileSuggestModal } from './MediaFileSuggestModal';
+import { SyncMode } from '../types/sync-mode';
 
 interface MediaSyncProps {
 	controller: PlayerController;
@@ -56,7 +58,13 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 	// 媒体状态
 	const [mediaState, setMediaState] = useState<MediaState>({ type: MediaType.Synth });
 
-	// 媒体服务
+	// 同步模式
+	const [syncMode, setSyncMode] = useState<SyncMode>(SyncMode.Bidirectional);
+
+	// 性能优化：更新间隔（官方推荐 50ms）
+	const [updateInterval, setUpdateInterval] = useState<number>(50);
+
+	// Refs	// 媒体服务
 	const mediaSyncService = useRef<MediaSyncService | null>(null);
 
 	// 媒体元素引用
@@ -78,6 +86,20 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 			mediaSyncService.current?.destroy();
 		};
 	}, [api]);
+
+	// 同步模式变化时更新服务
+	useEffect(() => {
+		if (mediaSyncService.current) {
+			mediaSyncService.current.setSyncMode(syncMode);
+		}
+	}, [syncMode]);
+
+	// 更新间隔变化时更新服务
+	useEffect(() => {
+		if (mediaSyncService.current) {
+			mediaSyncService.current.setUpdateInterval(updateInterval);
+		}
+	}, [updateInterval]);
 
 	// 打开文件选择 Modal
 	const openFileSelectModal = () => {
@@ -266,6 +288,35 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 				</div>
 
 				<div className="media-sync-toolbar-right">
+					{/* 同步模式选择器 */}
+					{mediaState.type !== MediaType.Synth && (
+						<>
+							<select
+								className="media-sync-mode-select"
+								value={syncMode}
+								onChange={(e) => setSyncMode(e.target.value as SyncMode)}
+								title="选择同步模式"
+							>
+								<option value={SyncMode.Bidirectional}>⇄ 双向同步</option>
+								<option value={SyncMode.MediaMaster}>▶ 媒体为主</option>
+								<option value={SyncMode.ScoreMaster}>♪ 曲谱为主</option>
+							</select>
+
+							{/* 性能优化：更新频率控制 */}
+							<select
+								className="media-sync-throttle-select"
+								value={updateInterval}
+								onChange={(e) => setUpdateInterval(Number(e.target.value))}
+								title="光标更新频率（官方推荐 50ms）"
+							>
+								<option value={16}>🚀 60fps (16ms)</option>
+								<option value={33}>⚡ 30fps (33ms)</option>
+								<option value={50}>✅ 20fps (50ms) 推荐</option>
+								<option value={100}>� 10fps (100ms) 省电</option>
+							</select>
+						</>
+					)}
+
 					<span className="media-sync-status">
 						{mediaState.type === MediaType.Synth && '当前: 内置合成器'}
 						{mediaState.type === MediaType.Audio && '当前: 音频同步'}
