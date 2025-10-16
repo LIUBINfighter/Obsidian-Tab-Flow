@@ -8,7 +8,6 @@
 import React, { createContext, useContext, useEffect, useId, useState } from 'react';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
-import { useConfigStore } from '../store/configStore';
 import { exportConfigToJSON, importConfigFromJSON, copyConfigToClipboard } from '../utils/settingsUtils';
 
 // ========== Context ==========
@@ -140,12 +139,13 @@ const factory = {
 	},
 
 	// Config Store 访问器（持久化配置）
+	// 注意：现在使用 GlobalConfig store 而不是旧的 configStore
 	configAccessors(path: string, updateOptions?: UpdateSettingsOptions) {
 		const parts = path.split('.');
 		return {
 			getValue(context: SettingsContextProps) {
-				const config = useConfigStore.getState().config;
-				let obj: any = config;
+				const globalConfig = context.controller.getGlobalConfigStore().getState();
+				let obj: any = globalConfig;
 				for (const part of parts) {
 					obj = obj?.[part];
 				}
@@ -156,13 +156,33 @@ const factory = {
 					value = updateOptions.prepareValue(value);
 				}
 
-				useConfigStore.getState().updateConfig((draft) => {
-					let obj: any = draft;
-					for (let i = 0; i < parts.length - 1; i++) {
-						obj = obj[parts[i]];
+				// 根据路径更新相应的配置
+				if (parts[0] === 'alphaTabSettings') {
+					// 更新 alphaTabSettings
+					const settingPath = parts.slice(1);
+					const currentSettings = context.controller.getGlobalConfigStore().getState().alphaTabSettings;
+					const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
+					
+					let target: any = updatedSettings;
+					for (let i = 0; i < settingPath.length - 1; i++) {
+						target = target[settingPath[i]];
 					}
-					obj[parts[parts.length - 1]] = value;
-				});
+					target[settingPath[settingPath.length - 1]] = value;
+					
+					context.controller.getGlobalConfigStore().getState().updateAlphaTabSettings(updatedSettings);
+				} else if (parts[0] === 'playerExtensions') {
+					// 更新 playerExtensions
+					const extensionKey = parts[1];
+					context.controller.getGlobalConfigStore().getState().updatePlayerExtensions({
+						[extensionKey]: value
+					});
+				} else if (parts[0] === 'uiConfig') {
+					// 更新 uiConfig
+					const uiKey = parts[1];
+					context.controller.getGlobalConfigStore().getState().updateUIConfig({
+						[uiKey]: value
+					});
+				}
 
 				context.onSettingsUpdated();
 				updateOptions?.afterUpdate?.(context);
@@ -603,7 +623,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							onClick={() => {
 								if (api) {
 									console.log('[Settings] Current API Settings:', api.settings);
-									console.log('[Settings] Current Config Store:', useConfigStore.getState().config);
+									console.log('[Settings] Current Global Config:', controller.getGlobalConfigStore().getState());
+									console.log('[Settings] Current Workspace Config:', controller.getWorkspaceConfigStore().getState());
 								}
 							}}>
 							📋 Log Current Settings
@@ -612,8 +633,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							type="button"
 							className="settings-tool-button"
 							onClick={async () => {
-								const config = useConfigStore.getState().config;
-								const success = await copyConfigToClipboard(config);
+								const globalConfig = controller.getGlobalConfigStore().getState();
+								// 临时转换为旧格式以兼容工具函数
+								const legacyConfig: any = {
+									scoreSource: controller.getWorkspaceConfigStore().getState().scoreSource,
+									alphaTabSettings: globalConfig.alphaTabSettings,
+									playerExtensions: globalConfig.playerExtensions,
+									uiConfig: globalConfig.uiConfig,
+								};
+								const success = await copyConfigToClipboard(legacyConfig);
 								if (success) {
 									alert('Configuration copied to clipboard!');
 								} else {
@@ -626,8 +654,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							type="button"
 							className="settings-tool-button"
 							onClick={() => {
-								const config = useConfigStore.getState().config;
-								exportConfigToJSON(config);
+								const globalConfig = controller.getGlobalConfigStore().getState();
+								// 临时转换为旧格式以兼容工具函数
+								const legacyConfig: any = {
+									scoreSource: controller.getWorkspaceConfigStore().getState().scoreSource,
+									alphaTabSettings: globalConfig.alphaTabSettings,
+									playerExtensions: globalConfig.playerExtensions,
+									uiConfig: globalConfig.uiConfig,
+								};
+								exportConfigToJSON(legacyConfig);
 							}}>
 							💾 Export Config as JSON
 						</button>
@@ -637,7 +672,22 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							onClick={async () => {
 								const config = await importConfigFromJSON();
 								if (config) {
-									useConfigStore.getState().updateConfig(() => config);
+									// 导入配置需要更新 globalConfig
+									const store = controller.getGlobalConfigStore().getState();
+									if (config.alphaTabSettings) {
+										// 转换类型：处理 barsPerRow null -> -1
+										const settings: any = { ...config.alphaTabSettings };
+										if (settings.display?.barsPerRow === null) {
+											settings.display.barsPerRow = -1;
+										}
+										store.updateAlphaTabSettings(settings);
+									}
+									if (config.playerExtensions) {
+										store.updatePlayerExtensions(config.playerExtensions);
+									}
+									if (config.uiConfig) {
+										store.updateUIConfig(config.uiConfig);
+									}
 									alert('Configuration imported! Reloading...');
 									window.location.reload();
 								}
@@ -649,7 +699,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							className="settings-tool-button settings-tool-button-danger"
 							onClick={() => {
 								if (confirm('Reset all settings to defaults? This will reload the page.')) {
-									useConfigStore.getState().resetConfig();
+									controller.getGlobalConfigStore().getState().resetToDefaults();
 									window.location.reload();
 								}
 							}}>

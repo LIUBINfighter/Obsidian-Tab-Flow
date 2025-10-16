@@ -2,7 +2,7 @@
  * Player Controller - 播放器控制器（架构中的中台层）
  *
  * 职责：
- * 1. 监听 configStore 的变化，自动重建 alphaTab API
+ * 1. 监听 globalConfig 的变化，自动重建 alphaTab API
  * 2. 监听 alphaTab API 事件，同步到 runtimeStore
  * 3. 提供播放控制命令接口（play, pause, stop, seek）
  * 4. 管理 alphaTab API 生命周期
@@ -11,9 +11,7 @@
  */
 
 import type { AlphaTabApi } from '@coderline/alphatab';
-import { useConfigStore } from './store/configStore';
 import type { StoreCollection } from './store/StoreFactory';
-import type { AlphaTabPlayerConfig } from './types/config-schema';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import * as convert from 'color-convert';
@@ -28,8 +26,9 @@ export class PlayerController {
 	private api: AlphaTabApi | null = null;
 	private container: HTMLElement | null = null;
 	private scrollViewport: HTMLElement | null = null; // 新增：滚动容器引用
-	private unsubscribeConfig: (() => void) | null = null;
-	private lastConfig: AlphaTabPlayerConfig | null = null;
+	private unsubscribeGlobalConfig: (() => void) | null = null;
+	private unsubscribeWorkspaceConfig: (() => void) | null = null;
+	private lastConfigHash: string | null = null;
 	private plugin: Plugin;
 	private resources: PlayerControllerResources;
 	private pendingFileLoad: (() => Promise<void>) | null = null;
@@ -58,17 +57,34 @@ export class PlayerController {
 	 * 初始化配置中的资源路径
 	 */
 	private initializeResourcePaths(): void {
-		const config = useConfigStore.getState().config;
-		const needsUpdate =
-			config.alphaTabSettings.core.scriptFile !== this.resources.alphaTabWorkerUri ||
-			config.alphaTabSettings.player.soundFont !== this.resources.soundFontUri;
+		const globalConfig = this.stores.globalConfig.getState();
+		
+		// 检查是否需要更新资源路径（scriptFile 和 soundFont 不在 globalConfig 中）
+		// 这些路径会在创建 AlphaTab settings 时直接使用
+		console.log('[PlayerController] Resources initialized:', {
+			worker: this.resources.alphaTabWorkerUri,
+			soundFont: this.resources.soundFontUri,
+			font: this.resources.bravuraUri,
+		});
+	}
 
-		if (needsUpdate) {
-			useConfigStore.getState().updateConfig((draft) => {
-				draft.alphaTabSettings.core.scriptFile = this.resources.alphaTabWorkerUri;
-				draft.alphaTabSettings.player.soundFont = this.resources.soundFontUri;
-			});
-		}
+	/**
+	 * 获取当前的 AlphaTab 配置（合并 global 和 workspace）
+	 * 用于判断是否需要重建 API
+	 */
+	private getCurrentConfigHash(): string {
+		const globalConfig = this.stores.globalConfig.getState();
+		
+		// 只包含影响 AlphaTab API 的配置
+		const relevantConfig = {
+			alphaTabSettings: globalConfig.alphaTabSettings,
+			playerExtensions: {
+				// 只包含影响 API 初始化的扩展
+				masterVolume: globalConfig.playerExtensions.masterVolume,
+			},
+		};
+		
+		return JSON.stringify(relevantConfig);
 	}
 
 	/**
@@ -102,8 +118,7 @@ export class PlayerController {
 		this.subscribeToConfig();
 
 		// 初始化 API
-		const config = useConfigStore.getState().config;
-		this.rebuildApi(config);
+		this.rebuildApi();
 	}
 
 	/**
@@ -111,7 +126,8 @@ export class PlayerController {
 	 */
 	destroy(): void {
 		this.destroyApi();
-		this.unsubscribeConfig?.();
+		this.unsubscribeGlobalConfig?.();
+		this.unsubscribeWorkspaceConfig?.();
 		this.container = null;
 		this.scrollViewport = null;
 	}
@@ -119,37 +135,32 @@ export class PlayerController {
 	// ========== Config Subscription ==========
 
 	private subscribeToConfig(): void {
-		this.unsubscribeConfig = useConfigStore.subscribe((state) => {
-			const newConfig = state.config;
+		// 订阅全局配置变化
+		this.unsubscribeGlobalConfig = this.stores.globalConfig.subscribe(() => {
+			const newConfigHash = this.getCurrentConfigHash();
 
 			// 仅当配置真正改变时重建
-			if (this.shouldRebuildApi(newConfig)) {
-				console.log('[PlayerController] Config changed, rebuilding API');
-				this.rebuildApi(newConfig);
+			if (this.shouldRebuildApi(newConfigHash)) {
+				console.log('[PlayerController] Global config changed, rebuilding API');
+				this.rebuildApi();
 			}
 		});
+
+		// 工作区配置主要用于 scoreSource 等会话状态，不触发 API 重建
+		// 如果未来需要，可以在这里添加订阅
 	}
 
-	private shouldRebuildApi(newConfig: AlphaTabPlayerConfig): boolean {
-		if (!this.lastConfig) {
+	private shouldRebuildApi(newConfigHash: string): boolean {
+		if (!this.lastConfigHash) {
 			return true;
 		}
 
-		// 排除 scoreSource，因为它只记录当前加载的文件，不影响 alphaTab API 设置
-		// scoreSource 的变化不应该触发 API 重建
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { scoreSource: _oldSource, ...oldRest } = this.lastConfig;
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const { scoreSource: _newSource, ...newRest } = newConfig;
-
-		const oldConfigStr = JSON.stringify(oldRest);
-		const newConfigStr = JSON.stringify(newRest);
-		return oldConfigStr !== newConfigStr;
+		return this.lastConfigHash !== newConfigHash;
 	}
 
 	// ========== API Lifecycle ==========
 
-	private async rebuildApi(config: AlphaTabPlayerConfig): Promise<void> {
+	private async rebuildApi(): Promise<void> {
 		if (!this.container) {
 			console.warn('[PlayerController] No container, skipping rebuild');
 			return;
@@ -163,7 +174,7 @@ export class PlayerController {
 			this.destroyApi();
 
 			// 创建 alphaTab Settings
-			const settings = this.createAlphaTabSettings(config);
+			const settings = this.createAlphaTabSettings();
 
 			// 创建新 API（直接使用静态导入的 alphaTab 模块）
 			this.api = new alphaTab.AlphaTabApi(this.container, settings);
@@ -174,8 +185,8 @@ export class PlayerController {
 			// 保存到 runtimeStore
 			this.stores.runtime.getState().setApi(this.api);
 
-			// 更新最后配置
-			this.lastConfig = JSON.parse(JSON.stringify(config));
+			// 更新最后配置哈希
+			this.lastConfigHash = this.getCurrentConfigHash();
 
 			// API 准备好后，检查是否有待加载的文件
 			if (this.pendingFileLoad) {
@@ -208,7 +219,9 @@ export class PlayerController {
 		}
 	}
 
-	private createAlphaTabSettings(config: AlphaTabPlayerConfig): any {
+	private createAlphaTabSettings(): any {
+		const globalConfig = this.stores.globalConfig.getState();
+		
 		// 获取当前容器的计算样式用于颜色配置
 		const style = this.container ? window.getComputedStyle(this.container) : null;
 
@@ -245,33 +258,33 @@ export class PlayerController {
 
 		const settings: any = {
 			core: {
-				file: config.alphaTabSettings.core.file,
-				engine: config.alphaTabSettings.core.engine || 'html5',
-				useWorkers: config.alphaTabSettings.core.useWorkers,
-				logLevel: config.alphaTabSettings.core.logLevel,
-				includeNoteBounds: config.alphaTabSettings.core.includeNoteBounds,
+				file: null, // 总是 null，通过 API 方法加载
+				engine: globalConfig.alphaTabSettings.core.engine || 'html5',
+				useWorkers: globalConfig.alphaTabSettings.core.useWorkers,
+				logLevel: globalConfig.alphaTabSettings.core.logLevel,
+				includeNoteBounds: globalConfig.alphaTabSettings.core.includeNoteBounds,
 				scriptFile: this.resources.alphaTabWorkerUri,
 				// 不设置 fontDirectory,由 smuflFontSources 控制
 			},
 			player: {
-				enablePlayer: config.alphaTabSettings.player.enablePlayer,
+				enablePlayer: globalConfig.alphaTabSettings.player.enablePlayer,
 				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
-				scrollSpeed: config.alphaTabSettings.player.scrollSpeed,
-				scrollMode: config.alphaTabSettings.player.scrollMode,
-				scrollOffsetX: config.alphaTabSettings.player.scrollOffsetX,
-				scrollOffsetY: config.alphaTabSettings.player.scrollOffsetY,
-				enableCursor: config.alphaTabSettings.player.enableCursor,
-				enableAnimatedBeatCursor: config.alphaTabSettings.player.enableAnimatedBeatCursor,
+				scrollSpeed: globalConfig.alphaTabSettings.player.scrollSpeed,
+				scrollMode: globalConfig.alphaTabSettings.player.scrollMode,
+				scrollOffsetX: globalConfig.alphaTabSettings.player.scrollOffsetX,
+				scrollOffsetY: globalConfig.alphaTabSettings.player.scrollOffsetY,
+				enableCursor: globalConfig.alphaTabSettings.player.enableCursor,
+				enableAnimatedBeatCursor: globalConfig.alphaTabSettings.player.enableAnimatedBeatCursor,
 				soundFont: this.resources.soundFontUri,
 				scrollElement: scrollElement, // 使用确定的滚动元素
 				nativeBrowserSmoothScroll: false,
 			},
 			display: {
-				scale: config.alphaTabSettings.display.scale,
-				startBar: config.alphaTabSettings.display.startBar,
-				layoutMode: config.alphaTabSettings.display.layoutMode,
-				barsPerRow: config.alphaTabSettings.display.barsPerRow,
-				stretchForce: config.alphaTabSettings.display.stretchForce,
+				scale: globalConfig.alphaTabSettings.display.scale,
+				startBar: 1, // 总是从第一小节开始
+				layoutMode: globalConfig.alphaTabSettings.display.layoutMode,
+				barsPerRow: globalConfig.alphaTabSettings.display.barsPerRow,
+				stretchForce: globalConfig.alphaTabSettings.display.stretchForce,
 			},
 		};
 
@@ -361,13 +374,13 @@ export class PlayerController {
 		// 延迟应用滚动模式和光标设置，确保 DOM 完全就绪
 		setTimeout(() => {
 			if (this.api?.settings.player) {
-				const config = useConfigStore.getState().config;
-				this.api.settings.player.scrollMode = config.alphaTabSettings.player.scrollMode;
-				this.api.settings.player.enableCursor = config.alphaTabSettings.player.enableCursor;
+				const globalConfig = this.stores.globalConfig.getState();
+				this.api.settings.player.scrollMode = globalConfig.alphaTabSettings.player.scrollMode;
+				this.api.settings.player.enableCursor = globalConfig.alphaTabSettings.player.enableCursor;
 				this.api.updateSettings();
 				console.log('[PlayerController] Scroll mode applied:', {
-					scrollMode: config.alphaTabSettings.player.scrollMode,
-					enableCursor: config.alphaTabSettings.player.enableCursor
+					scrollMode: globalConfig.alphaTabSettings.player.scrollMode,
+					enableCursor: globalConfig.alphaTabSettings.player.enableCursor
 				});
 			}
 		}, 100);
@@ -709,7 +722,7 @@ export class PlayerController {
 
 		try {
 			await this.api.load(url);
-			useConfigStore.getState().updateScoreSource({ type: 'url', content: url });
+			this.stores.workspaceConfig.getState().setScoreSource({ type: 'url', content: url });
 			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
@@ -734,9 +747,9 @@ export class PlayerController {
 
 		try {
 			await this.api.load(new Uint8Array(arrayBuffer));
-			useConfigStore
+			this.stores.workspaceConfig
 				.getState()
-				.updateScoreSource({ type: 'file', content: fileName || 'local-file' });
+				.setScoreSource({ type: 'file', content: fileName || 'local-file' });
 			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
@@ -761,7 +774,7 @@ export class PlayerController {
 
 		try {
 			this.api.tex(tex);
-			useConfigStore.getState().updateScoreSource({ type: 'alphatex', content: tex });
+			this.stores.workspaceConfig.getState().setScoreSource({ type: 'alphatex', content: tex });
 			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
@@ -807,6 +820,20 @@ export class PlayerController {
 	}
 
 	// ========== Store Accessors ==========
+
+	/**
+	 * 获取全局配置存储实例（用于 React 组件）
+	 */
+	getGlobalConfigStore() {
+		return this.stores.globalConfig;
+	}
+
+	/**
+	 * 获取工作区配置存储实例（用于 React 组件）
+	 */
+	getWorkspaceConfigStore() {
+		return this.stores.workspaceConfig;
+	}
 
 	/**
 	 * 获取运行时状态存储实例（用于 React 组件）
