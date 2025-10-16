@@ -8,7 +8,6 @@ import { CountInToggle } from './CountInToggle';
 import { LoopToggle } from './LoopToggle';
 import { LayoutToggle } from './LayoutToggle';
 import { ZoomControl } from './ZoomControl';
-import { StaveProfileControl } from './StaveProfileControl';
 import { ScrollModeControl } from './ScrollModeControl';
 import { TracksToggle } from './TracksToggle';
 import { TracksModal } from './TracksModal';
@@ -85,9 +84,6 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 
 				{/* 缩放控制 */}
 				<ZoomControl controller={controller} />
-
-				{/* 谱表模式 */}
-				<StaveProfileControl controller={controller} />
 
 				{/* 滚动模式 */}
 				<ScrollModeControl controller={controller} />
