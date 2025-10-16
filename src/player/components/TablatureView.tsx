@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { PlayerController } from '../PlayerController';
 import { PlayBar } from './PlayBar';
+import { SettingsPanel } from './SettingsPanel';
 
 interface TablatureViewProps {
 	controller: PlayerController;
@@ -8,6 +9,7 @@ interface TablatureViewProps {
 
 export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const containerRef = useRef<HTMLDivElement>(null);
+	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 	
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
@@ -43,7 +45,17 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 			}}
 		>
 			{/* PlayBar - 播放控制栏 */}
-			<PlayBar controller={controller} />
+			<PlayBar 
+				controller={controller} 
+				onSettingsClick={() => setSettingsPanelOpen(true)} 
+			/>
+
+			{/* Settings Panel */}
+			<SettingsPanel
+				controller={controller}
+				isOpen={settingsPanelOpen}
+				onClose={() => setSettingsPanelOpen(false)}
+			/>
 
 			{/* Loading Indicator */}
 			{loading.isLoading && (

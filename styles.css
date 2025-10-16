@@ -1957,6 +1957,381 @@
 	box-shadow: 0 0 8px var(--interactive-accent-hover);
 }
 
+/* --- settings-panel.css --- */
+/* Settings Panel - 调试和配置面板样式 */
+
+.settings-panel {
+	position: fixed;
+	top: 0;
+	right: -400px; /* 初始隐藏在右侧 */
+	width: 400px;
+	height: 100vh;
+	background-color: var(--background-primary);
+	border-left: 1px solid var(--background-modifier-border);
+	box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: column;
+	z-index: 1000;
+	transition: right 0.3s ease;
+	overflow: hidden;
+}
+
+.settings-panel-open {
+	right: 0;
+}
+
+/* Header */
+.settings-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.settings-panel-header h3 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.settings-panel-close {
+	background: transparent;
+	border: none;
+	font-size: 20px;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 4px 8px;
+	border-radius: 4px;
+	transition: all 0.2s;
+}
+
+.settings-panel-close:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+/* Content */
+.settings-panel-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px;
+}
+
+/* Settings Group */
+.settings-group {
+	margin-bottom: 24px;
+}
+
+.settings-group-title {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-accent);
+	margin: 0 0 12px 0;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	cursor: pointer;
+	user-select: none;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.settings-group-title:hover {
+	color: var(--text-accent-hover);
+}
+
+.settings-group-icon {
+	font-size: 10px;
+	transition: transform 0.2s;
+	display: inline-block;
+}
+
+.settings-group-icon.collapsed {
+	transform: rotate(-90deg);
+}
+
+.settings-group-content {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+/* Settings Item */
+.settings-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 0;
+}
+
+.settings-item-label {
+	font-size: 13px;
+	color: var(--text-normal);
+	flex: 1;
+	min-width: 0;
+	cursor: pointer;
+}
+
+.settings-item-control {
+	flex-shrink: 0;
+	min-width: 120px;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+/* Select */
+.settings-select {
+	width: 100%;
+	padding: 4px 8px;
+	background-color: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.settings-select:hover {
+	border-color: var(--background-modifier-border-hover);
+}
+
+.settings-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* Number Input */
+.settings-number {
+	width: 80px;
+	padding: 4px 8px;
+	background-color: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	font-size: 12px;
+	text-align: right;
+	transition: all 0.2s;
+}
+
+.settings-number:hover {
+	border-color: var(--background-modifier-border-hover);
+}
+
+.settings-number:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+/* Range Slider */
+.settings-range-wrapper {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+}
+
+.settings-range {
+	flex: 1;
+	height: 4px;
+	background: var(--background-modifier-border);
+	border-radius: 2px;
+	outline: none;
+	-webkit-appearance: none;
+}
+
+.settings-range::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	background: var(--interactive-accent);
+	border-radius: 50%;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.settings-range::-webkit-slider-thumb:hover {
+	transform: scale(1.2);
+}
+
+.settings-range::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	background: var(--interactive-accent);
+	border: none;
+	border-radius: 50%;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.settings-range::-moz-range-thumb:hover {
+	transform: scale(1.2);
+}
+
+.settings-range-value {
+	font-size: 11px;
+	color: var(--text-muted);
+	min-width: 40px;
+	text-align: right;
+}
+
+/* Toggle */
+.settings-toggle {
+	position: relative;
+	display: inline-block;
+	width: 44px;
+	height: 24px;
+	cursor: pointer;
+}
+
+.settings-toggle input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.settings-toggle-slider {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--background-modifier-border);
+	border-radius: 24px;
+	transition: 0.3s;
+}
+
+.settings-toggle-slider:before {
+	position: absolute;
+	content: '';
+	height: 18px;
+	width: 18px;
+	left: 3px;
+	bottom: 3px;
+	background-color: white;
+	border-radius: 50%;
+	transition: 0.3s;
+}
+
+.settings-toggle input:checked + .settings-toggle-slider {
+	background-color: var(--interactive-accent);
+}
+
+.settings-toggle input:checked + .settings-toggle-slider:before {
+	transform: translateX(20px);
+}
+
+/* Button Group */
+.settings-button-group {
+	display: flex;
+	gap: 4px;
+}
+
+.settings-button {
+	padding: 4px 12px;
+	font-size: 11px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary-alt);
+	color: var(--text-muted);
+	border-radius: 4px;
+	cursor: pointer;
+	transition: all 0.2s;
+	white-space: nowrap;
+}
+
+.settings-button:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.settings-button-active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+/* Footer - Tools */
+.settings-panel-footer {
+	padding: 16px;
+	border-top: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.settings-panel-footer h4 {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--text-normal);
+	margin: 0 0 12px 0;
+}
+
+.settings-tools {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.settings-tool-button {
+	padding: 8px 12px;
+	background-color: var(--interactive-normal);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.settings-tool-button:hover {
+	background-color: var(--interactive-hover);
+	border-color: var(--interactive-accent);
+}
+
+.settings-tool-button:active {
+	transform: scale(0.98);
+}
+
+.settings-tool-button-danger {
+	background-color: var(--background-modifier-error);
+	border-color: var(--background-modifier-error-border);
+	color: var(--text-error);
+}
+
+.settings-tool-button-danger:hover {
+	background-color: var(--background-modifier-error-hover);
+	border-color: var(--background-modifier-error-border);
+}
+
+/* Scrollbar */
+.settings-panel-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+.settings-panel-content::-webkit-scrollbar-track {
+	background: var(--background-primary);
+}
+
+.settings-panel-content::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.settings-panel-content::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+/* Responsive - 窄屏时全屏显示 */
+@media (max-width: 768px) {
+	.settings-panel {
+		width: 100vw;
+		right: -100vw;
+	}
+}
+
 /* --- settingtab.css --- */
 .itabs-settings-tabs {
 	display: flex;

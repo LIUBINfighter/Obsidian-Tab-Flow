@@ -12,9 +12,11 @@ import { StaveProfileControl } from './StaveProfileControl';
 import { ScrollModeControl } from './ScrollModeControl';
 import { TracksToggle } from './TracksToggle';
 import { TracksModal } from './TracksModal';
+import { SettingsToggle } from './SettingsToggle';
 
 interface PlayBarProps {
 	controller: PlayerController;
+	onSettingsClick?: () => void;
 }
 
 /**
@@ -28,7 +30,7 @@ interface PlayBarProps {
  * - SpeedControl: 速度选择
  * - MetronomeToggle: 节拍器开关
  */
-export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
+export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick }) => {
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
 	
@@ -94,6 +96,14 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
 					controller={controller} 
 					onClick={() => setTracksModalOpen(true)} 
 				/>
+				
+				{/* 设置面板按钮 */}
+				{onSettingsClick && (
+					<SettingsToggle 
+						controller={controller} 
+						onClick={onSettingsClick} 
+					/>
+				)}
 
 				{/* 状态指示器（调试用） */}
 				{!scoreLoaded && (
