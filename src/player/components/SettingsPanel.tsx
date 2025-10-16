@@ -1,6 +1,6 @@
 /**
  * Settings Panel - 调试和配置面板
- * 
+ *
  * 参考 AlphaTab 官方 Playground 实现
  * 支持完整的 AlphaTab Settings 配置和插件扩展设置
  */
@@ -8,7 +8,11 @@
 import React, { createContext, useContext, useEffect, useId, useState } from 'react';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
-import { exportConfigToJSON, importConfigFromJSON, copyConfigToClipboard } from '../utils/settingsUtils';
+import {
+	exportConfigToJSON,
+	importConfigFromJSON,
+	copyConfigToClipboard,
+} from '../utils/settingsUtils';
 
 // ========== Context ==========
 
@@ -160,28 +164,39 @@ const factory = {
 				if (parts[0] === 'alphaTabSettings') {
 					// 更新 alphaTabSettings
 					const settingPath = parts.slice(1);
-					const currentSettings = context.controller.getGlobalConfigStore().getState().alphaTabSettings;
+					const currentSettings = context.controller
+						.getGlobalConfigStore()
+						.getState().alphaTabSettings;
 					const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
-					
+
 					let target: any = updatedSettings;
 					for (let i = 0; i < settingPath.length - 1; i++) {
 						target = target[settingPath[i]];
 					}
 					target[settingPath[settingPath.length - 1]] = value;
-					
-					context.controller.getGlobalConfigStore().getState().updateAlphaTabSettings(updatedSettings);
+
+					context.controller
+						.getGlobalConfigStore()
+						.getState()
+						.updateAlphaTabSettings(updatedSettings);
 				} else if (parts[0] === 'playerExtensions') {
 					// 更新 playerExtensions
 					const extensionKey = parts[1];
-					context.controller.getGlobalConfigStore().getState().updatePlayerExtensions({
-						[extensionKey]: value
-					});
+					context.controller
+						.getGlobalConfigStore()
+						.getState()
+						.updatePlayerExtensions({
+							[extensionKey]: value,
+						});
 				} else if (parts[0] === 'uiConfig') {
 					// 更新 uiConfig
 					const uiKey = parts[1];
-					context.controller.getGlobalConfigStore().getState().updateUIConfig({
-						[uiKey]: value
-					});
+					context.controller
+						.getGlobalConfigStore()
+						.getState()
+						.updateUIConfig({
+							[uiKey]: value,
+						});
 				}
 
 				context.onSettingsUpdated();
@@ -299,7 +314,9 @@ function buildSettingsGroups(): SettingsGroupSchema[] {
 					label: 'Stave Profile',
 					getValue(context: SettingsContextProps) {
 						const api = context.controller.getRuntimeStore().getState().alphaTabApi;
-						return api?.settings?.display?.staveProfile ?? alphaTab.StaveProfile.Default;
+						return (
+							api?.settings?.display?.staveProfile ?? alphaTab.StaveProfile.Default
+						);
 					},
 					setValue(context: SettingsContextProps, value: alphaTab.StaveProfile) {
 						context.controller.setStaveProfile(value);
@@ -343,18 +360,57 @@ function buildSettingsGroups(): SettingsGroupSchema[] {
 			title: 'Player ▸ Cursor & Scroll',
 			settings: [
 				factory.toggle('Show Cursor', 'player.enableCursor', noRerender),
-				factory.toggle('Animated Beat Cursor', 'player.enableAnimatedBeatCursor', noRerender),
-				factory.enumDropDown('Scroll Mode', 'player.scrollMode', alphaTab.ScrollMode, noRerender),
-				factory.numberInput('Scroll Speed (ms)', 'player.scrollSpeed', 0, undefined, 100, noRerender),
-				factory.numberInput('Scroll Offset X', 'player.scrollOffsetX', undefined, undefined, 10, noRerender),
-				factory.numberInput('Scroll Offset Y', 'player.scrollOffsetY', undefined, undefined, 10, noRerender),
+				factory.toggle(
+					'Animated Beat Cursor',
+					'player.enableAnimatedBeatCursor',
+					noRerender
+				),
+				factory.enumDropDown(
+					'Scroll Mode',
+					'player.scrollMode',
+					alphaTab.ScrollMode,
+					noRerender
+				),
+				factory.numberInput(
+					'Scroll Speed (ms)',
+					'player.scrollSpeed',
+					0,
+					undefined,
+					100,
+					noRerender
+				),
+				factory.numberInput(
+					'Scroll Offset X',
+					'player.scrollOffsetX',
+					undefined,
+					undefined,
+					10,
+					noRerender
+				),
+				factory.numberInput(
+					'Scroll Offset Y',
+					'player.scrollOffsetY',
+					undefined,
+					undefined,
+					10,
+					noRerender
+				),
 			],
 		},
 		{
 			title: 'Player ▸ Advanced',
 			settings: [
-				factory.enumDropDown('Player Mode', 'player.playerMode', alphaTab.PlayerMode, noRerender),
-				factory.toggle('Enable User Interaction', 'player.enableUserInteraction', noRerender),
+				factory.enumDropDown(
+					'Player Mode',
+					'player.playerMode',
+					alphaTab.PlayerMode,
+					noRerender
+				),
+				factory.toggle(
+					'Enable User Interaction',
+					'player.enableUserInteraction',
+					noRerender
+				),
 			],
 		},
 		{
@@ -393,7 +449,8 @@ const EnumDropDown: React.FC<EnumDropDownSchema & ControlProps> = ({
 			id={inputId}
 			className="settings-select"
 			value={currentValue ?? 0}
-			onChange={(e) => setValue(context, Number.parseInt(e.target.value))}>
+			onChange={(e) => setValue(context, Number.parseInt(e.target.value))}
+		>
 			{enumValues.map((v) => (
 				<option key={v.value} value={v.value}>
 					{v.label}
@@ -465,7 +522,11 @@ const NumberInput: React.FC<NumberInputSchema & ControlProps> = ({
 	);
 };
 
-const BooleanToggle: React.FC<BooleanToggleSchema & ControlProps> = ({ inputId, getValue, setValue }) => {
+const BooleanToggle: React.FC<BooleanToggleSchema & ControlProps> = ({
+	inputId,
+	getValue,
+	setValue,
+}) => {
 	const context = useContext(SettingsContext)!;
 	const value = getValue(context) ?? false;
 
@@ -496,17 +557,29 @@ const ButtonGroupButton: React.FC<ButtonGroupButtonSchema & ControlProps> = ({
 		<button
 			type="button"
 			className={`settings-button ${isActive ? 'settings-button-active' : ''}`}
-			onClick={() => setValue(context, value)}>
+			onClick={() => setValue(context, value)}
+		>
 			{label}
 		</button>
 	);
 };
 
-const ButtonGroup: React.FC<ButtonGroupSchema & ControlProps> = ({ inputId, buttons, getValue, setValue }) => {
+const ButtonGroup: React.FC<ButtonGroupSchema & ControlProps> = ({
+	inputId,
+	buttons,
+	getValue,
+	setValue,
+}) => {
 	return (
 		<div className="settings-button-group">
 			{buttons.map((b) => (
-				<ButtonGroupButton key={b.label} inputId={inputId} {...b} getValue={getValue} setValue={setValue} />
+				<ButtonGroupButton
+					key={b.label}
+					inputId={inputId}
+					{...b}
+					getValue={getValue}
+					setValue={setValue}
+				/>
 			))}
 		</div>
 	);
@@ -520,15 +593,50 @@ const Setting: React.FC<SettingSchema> = ({ label, control, getValue, setValue }
 	const renderControl = () => {
 		switch (control.type) {
 			case 'button-group':
-				return <ButtonGroup inputId={id} {...control} getValue={getValue} setValue={setValue} />;
+				return (
+					<ButtonGroup
+						inputId={id}
+						{...control}
+						getValue={getValue}
+						setValue={setValue}
+					/>
+				);
 			case 'enum-dropdown':
-				return <EnumDropDown inputId={id} {...control} getValue={getValue} setValue={setValue} />;
+				return (
+					<EnumDropDown
+						inputId={id}
+						{...control}
+						getValue={getValue}
+						setValue={setValue}
+					/>
+				);
 			case 'number-range':
-				return <NumberRange inputId={id} {...control} getValue={getValue} setValue={setValue} />;
+				return (
+					<NumberRange
+						inputId={id}
+						{...control}
+						getValue={getValue}
+						setValue={setValue}
+					/>
+				);
 			case 'number-input':
-				return <NumberInput inputId={id} {...control} getValue={getValue} setValue={setValue} />;
+				return (
+					<NumberInput
+						inputId={id}
+						{...control}
+						getValue={getValue}
+						setValue={setValue}
+					/>
+				);
 			case 'boolean-toggle':
-				return <BooleanToggle inputId={id} {...control} getValue={getValue} setValue={setValue} />;
+				return (
+					<BooleanToggle
+						inputId={id}
+						{...control}
+						getValue={getValue}
+						setValue={setValue}
+					/>
+				);
 			default:
 				return null;
 		}
@@ -592,8 +700,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 				onSettingsUpdated() {
 					setSettingsVersion((v) => v + 1);
 				},
-			}}>
-			<div className={`settings-panel ${isOpen ? 'settings-panel-open' : ''}`} data-version={settingsVersion}>
+			}}
+		>
+			<div
+				className={`settings-panel ${isOpen ? 'settings-panel-open' : ''}`}
+				data-version={settingsVersion}
+			>
 				{/* Header */}
 				<div className="settings-panel-header">
 					<h3>Settings & Debug</h3>
@@ -601,7 +713,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 						type="button"
 						className="settings-panel-close"
 						onClick={onClose}
-						aria-label="Close settings">
+						aria-label="Close settings"
+					>
 						✕
 					</button>
 				</div>
@@ -615,7 +728,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 
 				{/* Footer - Tools */}
 				<div className="settings-panel-footer">
-					<h4>Tools</h4>
 					<div className="settings-tools">
 						<button
 							type="button"
@@ -623,10 +735,17 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							onClick={() => {
 								if (api) {
 									console.log('[Settings] Current API Settings:', api.settings);
-									console.log('[Settings] Current Global Config:', controller.getGlobalConfigStore().getState());
-									console.log('[Settings] Current Workspace Config:', controller.getWorkspaceConfigStore().getState());
+									console.log(
+										'[Settings] Current Global Config:',
+										controller.getGlobalConfigStore().getState()
+									);
+									console.log(
+										'[Settings] Current Workspace Config:',
+										controller.getWorkspaceConfigStore().getState()
+									);
 								}
-							}}>
+							}}
+						>
 							📋 Log Current Settings
 						</button>
 						<button
@@ -636,7 +755,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								const globalConfig = controller.getGlobalConfigStore().getState();
 								// 临时转换为旧格式以兼容工具函数
 								const legacyConfig: any = {
-									scoreSource: controller.getWorkspaceConfigStore().getState().scoreSource,
+									scoreSource: controller.getWorkspaceConfigStore().getState()
+										.scoreSource,
 									alphaTabSettings: globalConfig.alphaTabSettings,
 									playerExtensions: globalConfig.playerExtensions,
 									uiConfig: globalConfig.uiConfig,
@@ -647,7 +767,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								} else {
 									alert('Failed to copy configuration');
 								}
-							}}>
+							}}
+						>
 							📄 Copy Config to Clipboard
 						</button>
 						<button
@@ -657,13 +778,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								const globalConfig = controller.getGlobalConfigStore().getState();
 								// 临时转换为旧格式以兼容工具函数
 								const legacyConfig: any = {
-									scoreSource: controller.getWorkspaceConfigStore().getState().scoreSource,
+									scoreSource: controller.getWorkspaceConfigStore().getState()
+										.scoreSource,
 									alphaTabSettings: globalConfig.alphaTabSettings,
 									playerExtensions: globalConfig.playerExtensions,
 									uiConfig: globalConfig.uiConfig,
 								};
 								exportConfigToJSON(legacyConfig);
-							}}>
+							}}
+						>
 							💾 Export Config as JSON
 						</button>
 						<button
@@ -691,20 +814,29 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 									alert('Configuration imported! Reloading...');
 									window.location.reload();
 								}
-							}}>
+							}}
+						>
 							📂 Import Config from JSON
 						</button>
 						<button
 							type="button"
 							className="settings-tool-button settings-tool-button-danger"
 							onClick={() => {
-								if (confirm('Reset all settings to defaults? This will reload the page.')) {
+								if (
+									confirm(
+										'Reset all settings to defaults? This will reload the page.'
+									)
+								) {
 									controller.getGlobalConfigStore().getState().resetToDefaults();
 									window.location.reload();
 								}
-							}}>
+							}}
+						>
 							🔄 Reset to Defaults
 						</button>
+						<h4></h4>
+						<h4>_</h4>
+						{/* 我也没办法，就这样先顶上吧 */}
 					</div>
 				</div>
 			</div>
