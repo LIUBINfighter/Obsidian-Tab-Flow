@@ -60,6 +60,7 @@
 		"@types/react-dom": "^19.2.2",
 		"dom-to-image-more": "^2.9.0",
 		"jszip": "^3.10.1",
+		"lucide-react": "^0.545.0",
 		"mime-types": "^3.0.1",
 		"monkey-around": "^3.0.0",
 		"react": "^19.2.0",

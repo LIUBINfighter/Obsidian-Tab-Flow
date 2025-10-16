@@ -1,4 +1,5 @@
 import React from 'react';
+import { Play, Pause, Square } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 
 interface PlayControlsProps {
@@ -38,36 +39,7 @@ export const PlayControls: React.FC<PlayControlsProps> = ({ controller, isPlayin
 				aria-label={isPlaying ? 'Pause' : 'Play'}
 				title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
 			>
-				{isPlaying ? (
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					>
-						<rect x="6" y="4" width="4" height="16" />
-						<rect x="14" y="4" width="4" height="16" />
-					</svg>
-				) : (
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="2"
-						strokeLinecap="round"
-						strokeLinejoin="round"
-					>
-						<polygon points="5 3 19 12 5 21 5 3" />
-					</svg>
-				)}
+				{isPlaying ? <Pause size={20} /> : <Play size={20} />}
 			</button>
 
 			{/* 停止按钮 */}
@@ -78,19 +50,7 @@ export const PlayControls: React.FC<PlayControlsProps> = ({ controller, isPlayin
 				aria-label="Stop"
 				title="Stop"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="20"
-					height="20"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				>
-					<rect x="5" y="5" width="14" height="14" />
-				</svg>
+				<Square size={20} />
 			</button>
 		</div>
 	);

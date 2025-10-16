@@ -233,10 +233,10 @@ export class MediaSyncService {
 			if (config.allowMediaControlScore) {
 				// 清除旧的 interval（防止重复）
 				this.stopPositionUpdates();
-				
+
 				// 启动位置更新循环（官方推荐 50ms）
 				this.startPositionUpdates();
-				
+
 				// 通知 AlphaTab 开始播放
 				this.api.play();
 			}
@@ -248,7 +248,7 @@ export class MediaSyncService {
 			if (config.allowMediaControlScore) {
 				// 停止位置更新
 				this.stopPositionUpdates();
-				
+
 				this.api.pause();
 			}
 		};
@@ -259,7 +259,7 @@ export class MediaSyncService {
 			if (config.allowMediaControlScore) {
 				// 停止位置更新
 				this.stopPositionUpdates();
-				
+
 				this.api.pause();
 			}
 		};
@@ -303,7 +303,7 @@ export class MediaSyncService {
 		this.eventCleanups.push(() => {
 			// 清理 interval
 			this.stopPositionUpdates();
-			
+
 			// 移除事件监听
 			element.removeEventListener('loadedmetadata', onLoadedMetadata);
 			element.removeEventListener('play', onPlay);
@@ -326,7 +326,7 @@ export class MediaSyncService {
 		}
 
 		const element = this.mediaElement;
-		
+
 		this.updateInterval = window.setInterval(() => {
 			if (!element || this.api.actualPlayerMode !== PlayerMode.EnabledExternalMedia) {
 				return;
@@ -407,7 +407,7 @@ export class MediaSyncService {
 	destroy(): void {
 		// 停止位置更新
 		this.stopPositionUpdates();
-		
+
 		this.unbind();
 	}
 }

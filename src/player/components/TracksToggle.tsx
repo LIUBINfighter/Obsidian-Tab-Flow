@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { Music } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 
 interface TracksToggleProps {
@@ -35,21 +36,7 @@ export const TracksToggle: React.FC<TracksToggleProps> = ({ controller, onClick 
 				aria-label="音轨管理"
 			>
 				{/* 音轨图标 */}
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="16"
-					height="16"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-				>
-					<path d="M9 18V5l12-2v13"></path>
-					<circle cx="6" cy="18" r="3"></circle>
-					<circle cx="18" cy="16" r="3"></circle>
-				</svg>
+				<Music size={16} />
 
 				{/* 显示当前音轨数 */}
 				{scoreLoaded && totalTracks > 0 && (

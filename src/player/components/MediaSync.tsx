@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
+import { Music, Film, Youtube } from 'lucide-react';
 import type { App, TFile } from 'obsidian';
 import type { PlayerController } from '../PlayerController';
 import { MediaType, type MediaState } from '../types/media-sync';
@@ -210,17 +211,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 						onClick={switchToSynth}
 						title="使用内置合成器"
 					>
-						<svg
-							className="svg-icon"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-						>
-							<path d="M9 18V5l12-2v13" />
-							<circle cx="6" cy="18" r="3" />
-							<circle cx="18" cy="16" r="3" />
-						</svg>
+						<Music size={16} />
 						<span>合成器</span>
 					</button>
 
@@ -230,17 +221,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 						disabled={!audioUrl}
 						title="加载音频文件"
 					>
-						<svg
-							className="svg-icon"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-						>
-							<path d="M9 18V5l12-2v13" />
-							<circle cx="6" cy="18" r="3" />
-							<circle cx="18" cy="16" r="3" />
-						</svg>
+						<Music size={16} />
 						<span>音频</span>
 					</button>
 
@@ -250,22 +231,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 						disabled={!videoUrl}
 						title="加载视频文件"
 					>
-						<svg
-							className="svg-icon"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-						>
-							<rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
-							<line x1="7" y1="2" x2="7" y2="22" />
-							<line x1="17" y1="2" x2="17" y2="22" />
-							<line x1="2" y1="12" x2="22" y2="12" />
-							<line x1="2" y1="7" x2="7" y2="7" />
-							<line x1="2" y1="17" x2="7" y2="17" />
-							<line x1="17" y1="17" x2="22" y2="17" />
-							<line x1="17" y1="7" x2="22" y2="7" />
-						</svg>
+						<Film size={16} />
 						<span>视频</span>
 					</button>
 
@@ -275,14 +241,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 						disabled={!extractYouTubeVideoId(youtubeInput)}
 						title="加载 YouTube 视频"
 					>
-						<svg
-							className="svg-icon"
-							viewBox="0 0 24 24"
-							fill="currentColor"
-							stroke="none"
-						>
-							<path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-						</svg>
+						<Youtube size={16} />
 						<span>YouTube</span>
 					</button>
 				</div>

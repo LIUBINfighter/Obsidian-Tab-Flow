@@ -11,6 +11,7 @@
 
 import type * as AlphaTab from '@coderline/alphatab';
 import React, { useState } from 'react';
+import { Mic, VolumeX, Volume2 } from 'lucide-react';
 import { StaffItem } from './StaffItem';
 
 /**
@@ -176,18 +177,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 						aria-label="Solo"
 						title="Solo - 独奏此音轨"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-						>
-							<path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-							<path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
-						</svg>
+						<Mic size={16} />
 					</button>
 
 					{/* Mute 按钮 */}
@@ -198,34 +188,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 						aria-label="Mute"
 						title="Mute - 静音此音轨"
 					>
-						{isMute ? (
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<path d="M11 5L6 9H2v6h4l5 4V5z"></path>
-								<line x1="23" y1="9" x2="17" y2="15"></line>
-								<line x1="17" y1="9" x2="23" y2="15"></line>
-							</svg>
-						) : (
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-							>
-								<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-								<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-							</svg>
-						)}
+						{isMute ? <VolumeX size={16} /> : <Volume2 size={16} />}
 					</button>
 				</div>
 			</div>
