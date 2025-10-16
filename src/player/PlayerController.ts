@@ -33,16 +33,22 @@ export class PlayerController {
 	private resources: PlayerControllerResources;
 	private pendingFileLoad: (() => Promise<void>) | null = null;
 	private eventHandlers: Map<string, any> = new Map();
+	private intersectionObserver: IntersectionObserver | null = null; // 容器可见性观察器
 
 	// Store 集合（由 ReactView 注入）
 	private stores: StoreCollection;
+
+	// 实例 ID（用于调试多实例问题）
+	private static instanceCounter = 0;
+	private instanceId: number;
 
 	constructor(plugin: Plugin, resources: PlayerControllerResources, stores: StoreCollection) {
 		this.plugin = plugin;
 		this.resources = resources;
 		this.stores = stores;
+		this.instanceId = ++PlayerController.instanceCounter;
 
-		console.log('[PlayerController] Initialized with stores:', {
+		console.log(`[PlayerController #${this.instanceId}] Initialized with stores:`, {
 			globalConfig: !!stores.globalConfig,
 			workspaceConfig: !!stores.workspaceConfig,
 			runtime: !!stores.runtime,
@@ -57,11 +63,9 @@ export class PlayerController {
 	 * 初始化配置中的资源路径
 	 */
 	private initializeResourcePaths(): void {
-		const globalConfig = this.stores.globalConfig.getState();
-		
-		// 检查是否需要更新资源路径（scriptFile 和 soundFont 不在 globalConfig 中）
-		// 这些路径会在创建 AlphaTab settings 时直接使用
-		console.log('[PlayerController] Resources initialized:', {
+		// 资源路径（worker、soundFont、font）在 createAlphaTabSettings 中直接使用
+		// 这里只记录日志
+		console.log(`[PlayerController #${this.instanceId}] Resources initialized:`, {
 			worker: this.resources.alphaTabWorkerUri,
 			soundFont: this.resources.soundFontUri,
 			font: this.resources.bravuraUri,
@@ -74,7 +78,7 @@ export class PlayerController {
 	 */
 	private getCurrentConfigHash(): string {
 		const globalConfig = this.stores.globalConfig.getState();
-		
+
 		// 只包含影响 AlphaTab API 的配置
 		const relevantConfig = {
 			alphaTabSettings: globalConfig.alphaTabSettings,
@@ -83,53 +87,76 @@ export class PlayerController {
 				masterVolume: globalConfig.playerExtensions.masterVolume,
 			},
 		};
-		
+
 		return JSON.stringify(relevantConfig);
 	}
 
 	/**
-	 * 初始化控制器
-	 * @param container alphaTab 渲染容器（.at-main）
-	 * @param scrollViewport 滚动容器（.at-viewport），可选，如果不提供则从 container 向上查找
+	 * 初始化 AlphaTab API 并执行懒加载配置
+	 * @param container - AlphaTab 渲染目标容器
+	 * @param viewport - 滚动视口容器（可选）
 	 */
-	init(container: HTMLElement, scrollViewport?: HTMLElement): void {
-		this.container = container;
-		this.scrollViewport = scrollViewport || null;
+	public async init(container: HTMLElement, viewport?: HTMLElement): Promise<void> {
+		console.log(`[PlayerController #${this.instanceId}] Init called`);
 
-		// 检查容器是否有有效的尺寸
-		const rect = container.getBoundingClientRect();
-		if (rect.width === 0 || rect.height === 0) {
-			console.warn(
-				'[PlayerController] Container has zero dimensions! Delaying API initialization...'
+		if (!container) {
+			console.error(
+				`[PlayerController #${this.instanceId}] Container not provided to init()`
 			);
-			// 延迟初始化，等待容器尺寸就绪
-			setTimeout(() => this.init(container, scrollViewport), 50);
+			this.stores.runtime
+				.getState()
+				.setError('api-init', 'Container element not provided');
 			return;
 		}
 
+		// 保存容器引用
+		this.container = container;
+		this.scrollViewport = viewport || null;
+
 		console.log(
-			'[PlayerController] Container ready, width:',
-			rect.width,
-			'height:',
-			rect.height
+			`[PlayerController #${this.instanceId}] Container stored, initializing API`
 		);
 
-		// 订阅配置变化
-		this.subscribeToConfig();
-
-		// 初始化 API
-		this.rebuildApi();
-	}
-
-	/**
+		try {
+			this.rebuildApi();
+			console.log(
+				`[PlayerController #${this.instanceId}] API initialization completed successfully`
+			);
+		} catch (error) {
+			console.error(
+				`[PlayerController #${this.instanceId}] API initialization failed:`,
+				error
+			);
+			this.stores.runtime
+				.getState()
+				.setError('api-init', error instanceof Error ? error.message : String(error));
+			throw error;
+		}
+	} /**
 	 * 销毁控制器
 	 */
 	destroy(): void {
+		console.log(`[PlayerController #${this.instanceId}] Destroying controller...`);
+
+		// 清理 IntersectionObserver
+		if (this.intersectionObserver) {
+			this.intersectionObserver.disconnect();
+			this.intersectionObserver = null;
+			console.log(`[PlayerController #${this.instanceId}] IntersectionObserver cleaned up`);
+		}
+
+		// 销毁 AlphaTab API
 		this.destroyApi();
+
+		// 取消订阅
 		this.unsubscribeGlobalConfig?.();
 		this.unsubscribeWorkspaceConfig?.();
+
+		// 清空引用
 		this.container = null;
 		this.scrollViewport = null;
+
+		console.log(`[PlayerController #${this.instanceId}] Controller destroyed`);
 	}
 
 	// ========== Config Subscription ==========
@@ -141,7 +168,9 @@ export class PlayerController {
 
 			// 仅当配置真正改变时重建
 			if (this.shouldRebuildApi(newConfigHash)) {
-				console.log('[PlayerController] Global config changed, rebuilding API');
+				console.log(
+					`[PlayerController #${this.instanceId}] Global config changed, rebuilding API`
+				);
 				this.rebuildApi();
 			}
 		});
@@ -162,10 +191,11 @@ export class PlayerController {
 
 	private async rebuildApi(): Promise<void> {
 		if (!this.container) {
-			console.warn('[PlayerController] No container, skipping rebuild');
+			console.warn(`[PlayerController #${this.instanceId}] No container, skipping rebuild`);
 			return;
 		}
 
+		console.log(`[PlayerController #${this.instanceId}] Rebuilding API...`);
 		this.stores.ui.getState().setLoading(true, 'Loading score...');
 		this.stores.runtime.getState().setApiReady(false);
 
@@ -177,6 +207,7 @@ export class PlayerController {
 			const settings = this.createAlphaTabSettings();
 
 			// 创建新 API（直接使用静态导入的 alphaTab 模块）
+			console.log(`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`);
 			this.api = new alphaTab.AlphaTabApi(this.container, settings);
 
 			// 绑定事件
@@ -188,13 +219,15 @@ export class PlayerController {
 			// 更新最后配置哈希
 			this.lastConfigHash = this.getCurrentConfigHash();
 
+			console.log(`[PlayerController #${this.instanceId}] API rebuilt successfully`);
+
 			// API 准备好后，检查是否有待加载的文件
 			if (this.pendingFileLoad) {
 				await this.pendingFileLoad();
 				this.pendingFileLoad = null;
 			}
 		} catch (error) {
-			console.error('[PlayerController] Failed to rebuild API:', error);
+			console.error(`[PlayerController #${this.instanceId}] Failed to rebuild API:`, error);
 			this.stores.runtime
 				.getState()
 				.setError('api-init', error instanceof Error ? error.message : String(error));
@@ -221,18 +254,18 @@ export class PlayerController {
 
 	private createAlphaTabSettings(): any {
 		const globalConfig = this.stores.globalConfig.getState();
-		
+
 		// 获取当前容器的计算样式用于颜色配置
 		const style = this.container ? window.getComputedStyle(this.container) : null;
 
 		// 确定滚动元素（按照 AlphaTab 官方推荐）
 		// 优先级：显式提供的 scrollViewport > 从 container 向上查找 > 默认值
 		let scrollElement: HTMLElement | string = 'html,body';
-		
+
 		if (this.scrollViewport) {
 			// 1. 使用显式提供的滚动视口
 			scrollElement = this.scrollViewport;
-			console.log('[PlayerController] Using provided scrollViewport');
+			console.log(`[PlayerController #${this.instanceId}] Using provided scrollViewport`);
 		} else if (this.container) {
 			// 2. 从 container 向上查找第一个可滚动的父元素
 			let parent = this.container.parentElement;
@@ -240,18 +273,23 @@ export class PlayerController {
 				const overflowY = window.getComputedStyle(parent).overflowY;
 				if (overflowY === 'auto' || overflowY === 'scroll') {
 					scrollElement = parent;
-					console.log('[PlayerController] Found scrollable parent:', parent.className);
+					console.log(
+						`[PlayerController #${this.instanceId}] Found scrollable parent:`,
+						parent.className
+					);
 					break;
 				}
 				parent = parent.parentElement;
 			}
-			
+
 			// 3. 如果没找到，尝试使用 Obsidian 的工作区容器
 			if (scrollElement === 'html,body') {
 				const workspaceLeaf = this.container.closest('.workspace-leaf-content');
 				if (workspaceLeaf) {
 					scrollElement = workspaceLeaf as HTMLElement;
-					console.log('[PlayerController] Using workspace-leaf-content');
+					console.log(
+						`[PlayerController #${this.instanceId}] Using workspace-leaf-content`
+					);
 				}
 			}
 		}
@@ -259,12 +297,12 @@ export class PlayerController {
 		const settings: any = {
 			core: {
 				file: null, // 总是 null，通过 API 方法加载
-				engine: globalConfig.alphaTabSettings.core.engine || 'html5',
+				engine: globalConfig.alphaTabSettings.core.engine || 'svg',
 				useWorkers: globalConfig.alphaTabSettings.core.useWorkers,
 				logLevel: globalConfig.alphaTabSettings.core.logLevel,
 				includeNoteBounds: globalConfig.alphaTabSettings.core.includeNoteBounds,
 				scriptFile: this.resources.alphaTabWorkerUri,
-				// 不设置 fontDirectory,由 smuflFontSources 控制
+				fontDirectory: '', // 必须设置为空字符串，使用 smuflFontSources
 			},
 			player: {
 				enablePlayer: globalConfig.alphaTabSettings.player.enablePlayer,
@@ -274,7 +312,8 @@ export class PlayerController {
 				scrollOffsetX: globalConfig.alphaTabSettings.player.scrollOffsetX,
 				scrollOffsetY: globalConfig.alphaTabSettings.player.scrollOffsetY,
 				enableCursor: globalConfig.alphaTabSettings.player.enableCursor,
-				enableAnimatedBeatCursor: globalConfig.alphaTabSettings.player.enableAnimatedBeatCursor,
+				enableAnimatedBeatCursor:
+					globalConfig.alphaTabSettings.player.enableAnimatedBeatCursor,
 				soundFont: this.resources.soundFontUri,
 				scrollElement: scrollElement, // 使用确定的滚动元素
 				nativeBrowserSmoothScroll: false,
@@ -289,7 +328,7 @@ export class PlayerController {
 		};
 
 		// 调试：输出布局和滚动相关配置
-		console.log('[PlayerController] AlphaTab settings configured:', {
+		console.log(`[PlayerController #${this.instanceId}] AlphaTab settings configured:`, {
 			layout: {
 				layoutMode: settings.display.layoutMode,
 				barsPerRow: settings.display.barsPerRow,
@@ -298,39 +337,93 @@ export class PlayerController {
 				containerWidth: this.container?.getBoundingClientRect().width,
 			},
 			scroll: {
-				scrollElement: typeof scrollElement === 'string' ? scrollElement : scrollElement.className,
+				scrollElement:
+					typeof scrollElement === 'string' ? scrollElement : scrollElement.className,
 				scrollMode: settings.player.scrollMode,
 				scrollSpeed: settings.player.scrollSpeed,
 				scrollOffsetX: settings.player.scrollOffsetX,
 				scrollOffsetY: settings.player.scrollOffsetY,
-			}
+			},
 		});
 
 		// 配置字体源 - 使用正确的字体格式枚举
 		// AlphaTab 的 FontFileFormat 枚举值：Woff2 = 0, Woff = 1, Ttf = 2
 		if (this.resources.bravuraUri) {
-			const FontFileFormat_Woff2 = 0; // alphaTab.rendering.glyphs.FontFileFormat.Woff2
+			// 使用 AlphaTab 内部的枚举值（向后兼容）
+			const FontFileFormat_Woff2 =
+				(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0;
 			settings.core.smuflFontSources = new Map([
 				[FontFileFormat_Woff2, this.resources.bravuraUri],
-			]);
-			console.log('[PlayerController] Font configured:', this.resources.bravuraUri);
+			]) as unknown as Map<number, string>;
+			console.log(
+				`[PlayerController #${this.instanceId}] Font configured:`,
+				this.resources.bravuraUri
+			);
 		}
 
-		// 添加颜色配置
+		// 添加颜色配置（防御性编程：确保所有颜色值都有效）
 		if (style) {
+			// 安全地读取 CSS 变量，确保 parseFloat 得到有效数字
+			const accentH = parseFloat(style.getPropertyValue('--accent-h')) || 0;
+			const accentS = parseFloat(style.getPropertyValue('--accent-s')) || 50;
+			const accentL = parseFloat(style.getPropertyValue('--accent-l')) || 50;
+
+			// 验证 HSL 值的有效性
+			const isValidHSL =
+				!isNaN(accentH) &&
+				!isNaN(accentS) &&
+				!isNaN(accentL) &&
+				accentH >= 0 &&
+				accentH <= 360 &&
+				accentS >= 0 &&
+				accentS <= 100 &&
+				accentL >= 0 &&
+				accentL <= 100;
+
+			let barNumberColor = '#000';
+			if (isValidHSL) {
+				try {
+					barNumberColor = '#' + convert.hsl.hex([accentH, accentS, accentL]);
+				} catch (error) {
+					console.warn(
+						`[PlayerController #${this.instanceId}] Failed to convert HSL to hex, using default:`,
+						error
+					);
+					barNumberColor = '#000';
+				}
+			} else {
+				console.warn(`[PlayerController #${this.instanceId}] Invalid HSL values:`, {
+					accentH,
+					accentS,
+					accentL,
+				});
+			}
+
 			settings.display.resources = {
 				mainGlyphColor: style.getPropertyValue('--color-base-100') || '#000',
 				secondaryGlyphColor: style.getPropertyValue('--color-base-60') || '#666',
 				staffLineColor: style.getPropertyValue('--color-base-40') || '#ccc',
 				barSeparatorColor: style.getPropertyValue('--color-base-40') || '#ccc',
-				barNumberColor:
-					'#' +
-					convert.hsl.hex([
-						parseFloat(style.getPropertyValue('--accent-h')) || 0,
-						parseFloat(style.getPropertyValue('--accent-s')) || 50,
-						parseFloat(style.getPropertyValue('--accent-l')) || 50,
-					]),
+				barNumberColor: barNumberColor,
 				scoreInfoColor: style.getPropertyValue('--color-base-100') || '#000',
+			};
+
+			console.log(
+				`[PlayerController #${this.instanceId}] Color resources configured:`,
+				settings.display.resources
+			);
+		} else {
+			// 如果无法获取样式（容器未完全挂载），提供完整的硬编码安全默认值
+			console.warn(
+				`[PlayerController #${this.instanceId}] Container style not available, using fallback colors`
+			);
+			settings.display.resources = {
+				mainGlyphColor: '#000',
+				secondaryGlyphColor: '#666',
+				staffLineColor: '#ccc',
+				barSeparatorColor: '#ccc',
+				barNumberColor: '#000',
+				scoreInfoColor: '#000',
 			};
 		}
 
@@ -339,7 +432,7 @@ export class PlayerController {
 
 	/**
 	 * 配置滚动容器（在乐谱加载后调用，用于验证和动态更新）
-	 * 
+	 *
 	 * 注意：scrollElement 已在 createAlphaTabSettings 中初始化，
 	 * 这个方法主要用于运行时验证和调试
 	 */
@@ -350,7 +443,7 @@ export class PlayerController {
 		}
 
 		const currentScrollElement = this.api.settings.player.scrollElement;
-		
+
 		// 验证滚动元素配置
 		if (typeof currentScrollElement === 'string') {
 			console.log('[PlayerController] Scroll element is CSS selector:', currentScrollElement);
@@ -361,13 +454,20 @@ export class PlayerController {
 				scrollHeight: currentScrollElement.scrollHeight,
 				clientHeight: currentScrollElement.clientHeight,
 				canScroll: currentScrollElement.scrollHeight > currentScrollElement.clientHeight,
-				overflowY: window.getComputedStyle(currentScrollElement).overflowY
+				overflowY: window.getComputedStyle(currentScrollElement).overflowY,
 			};
 			console.log('[PlayerController] Scroll element configured:', scrollInfo);
-			
+
 			// 警告：如果容器不可滚动
-			if (!scrollInfo.canScroll && scrollInfo.overflowY !== 'auto' && scrollInfo.overflowY !== 'scroll') {
-				console.warn('[PlayerController] Warning: Scroll element may not be scrollable!', scrollInfo);
+			if (
+				!scrollInfo.canScroll &&
+				scrollInfo.overflowY !== 'auto' &&
+				scrollInfo.overflowY !== 'scroll'
+			) {
+				console.warn(
+					'[PlayerController] Warning: Scroll element may not be scrollable!',
+					scrollInfo
+				);
 			}
 		}
 
@@ -375,12 +475,14 @@ export class PlayerController {
 		setTimeout(() => {
 			if (this.api?.settings.player) {
 				const globalConfig = this.stores.globalConfig.getState();
-				this.api.settings.player.scrollMode = globalConfig.alphaTabSettings.player.scrollMode;
-				this.api.settings.player.enableCursor = globalConfig.alphaTabSettings.player.enableCursor;
+				this.api.settings.player.scrollMode =
+					globalConfig.alphaTabSettings.player.scrollMode;
+				this.api.settings.player.enableCursor =
+					globalConfig.alphaTabSettings.player.enableCursor;
 				this.api.updateSettings();
 				console.log('[PlayerController] Scroll mode applied:', {
 					scrollMode: globalConfig.alphaTabSettings.player.scrollMode,
-					enableCursor: globalConfig.alphaTabSettings.player.enableCursor
+					enableCursor: globalConfig.alphaTabSettings.player.enableCursor,
 				});
 			}
 		}, 100);
@@ -425,21 +527,21 @@ export class PlayerController {
 		this.unbindApiEvents();
 
 		try {
-		// Score Loaded
-		const scoreLoadedHandler = () => {
-			this.stores.runtime.getState().setScoreLoaded(true);
-			this.stores.runtime.getState().setRenderState('idle');
+			// Score Loaded
+			const scoreLoadedHandler = () => {
+				this.stores.runtime.getState().setScoreLoaded(true);
+				this.stores.runtime.getState().setRenderState('idle');
 
-			// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
-			// 那才是考虑了速度等因素的实际播放时长
+				// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
+				// 那才是考虑了速度等因素的实际播放时长
 
-			// 延迟配置滚动容器，确保 DOM 就绪（参考 TabView）
-			setTimeout(() => {
-				this.configureScrollElement();
-			}, 100);
-		};
-		this.api.scoreLoaded.on(scoreLoadedHandler);
-		this.eventHandlers.set('scoreLoaded', scoreLoadedHandler);			// Render Started
+				// 延迟配置滚动容器，确保 DOM 就绪（参考 TabView）
+				setTimeout(() => {
+					this.configureScrollElement();
+				}, 100);
+			};
+			this.api.scoreLoaded.on(scoreLoadedHandler);
+			this.eventHandlers.set('scoreLoaded', scoreLoadedHandler); // Render Started
 			const renderStartedHandler = () => {
 				this.stores.runtime.getState().setRenderState('rendering');
 			};
@@ -479,21 +581,21 @@ export class PlayerController {
 			this.api.playerStateChanged.on(playerStateChangedHandler);
 			this.eventHandlers.set('playerStateChanged', playerStateChangedHandler);
 
-		// Player Position Changed
-		const playerPositionChangedHandler = (e: any) => {
-			this.stores.runtime.getState().setPosition(e.currentTime);
-			// 重要：使用 e.endTime 作为总时长，这是考虑了速度等因素的实际播放时长
-			if (e.endTime !== undefined) {
-				this.stores.runtime.getState().setDuration(e.endTime);
-			}
-			this.stores.runtime.getState().setCurrentBeat({
-				bar: e.currentBar,
-				beat: e.currentBeat,
-				tick: e.currentTick || 0,
-			});
-		};
-		this.api.playerPositionChanged.on(playerPositionChangedHandler);
-		this.eventHandlers.set('playerPositionChanged', playerPositionChangedHandler);			// Error
+			// Player Position Changed
+			const playerPositionChangedHandler = (e: any) => {
+				this.stores.runtime.getState().setPosition(e.currentTime);
+				// 重要：使用 e.endTime 作为总时长，这是考虑了速度等因素的实际播放时长
+				if (e.endTime !== undefined) {
+					this.stores.runtime.getState().setDuration(e.endTime);
+				}
+				this.stores.runtime.getState().setCurrentBeat({
+					bar: e.currentBar,
+					beat: e.currentBeat,
+					tick: e.currentTick || 0,
+				});
+			};
+			this.api.playerPositionChanged.on(playerPositionChangedHandler);
+			this.eventHandlers.set('playerPositionChanged', playerPositionChangedHandler); // Error
 			const errorHandler = (error: any) => {
 				console.error('[PlayerController] alphaTab error:', error);
 				this.stores.runtime.getState().setError('api-init', error.message || String(error));
@@ -664,17 +766,18 @@ export class PlayerController {
 		}
 
 		const scrollElement = this.api.settings.player.scrollElement;
-		const scrollElementInfo = typeof scrollElement === 'string' 
-			? scrollElement 
-			: {
-				tagName: scrollElement.tagName,
-				className: scrollElement.className,
-				scrollHeight: scrollElement.scrollHeight,
-				clientHeight: scrollElement.clientHeight,
-				scrollTop: scrollElement.scrollTop,
-				canScroll: scrollElement.scrollHeight > scrollElement.clientHeight,
-				computedOverflow: window.getComputedStyle(scrollElement).overflow
-			};
+		const scrollElementInfo =
+			typeof scrollElement === 'string'
+				? scrollElement
+				: {
+						tagName: scrollElement.tagName,
+						className: scrollElement.className,
+						scrollHeight: scrollElement.scrollHeight,
+						clientHeight: scrollElement.clientHeight,
+						scrollTop: scrollElement.scrollTop,
+						canScroll: scrollElement.scrollHeight > scrollElement.clientHeight,
+						computedOverflow: window.getComputedStyle(scrollElement).overflow,
+					};
 
 		console.log('[PlayerController] Scroll Configuration Debug:', {
 			scrollElement: scrollElementInfo,
@@ -683,7 +786,7 @@ export class PlayerController {
 			scrollOffsetX: this.api.settings.player.scrollOffsetX,
 			scrollOffsetY: this.api.settings.player.scrollOffsetY,
 			enableCursor: this.api.settings.player.enableCursor,
-			nativeBrowserSmoothScroll: this.api.settings.player.nativeBrowserSmoothScroll
+			nativeBrowserSmoothScroll: this.api.settings.player.nativeBrowserSmoothScroll,
 		});
 	}
 
@@ -716,6 +819,7 @@ export class PlayerController {
 			throw new Error('API not initialized');
 		}
 
+		console.log(`[PlayerController #${this.instanceId}] Loading score from URL:`, url);
 		this.stores.ui.getState().setLoading(true, 'Loading score...');
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();
@@ -725,7 +829,7 @@ export class PlayerController {
 			this.stores.workspaceConfig.getState().setScoreSource({ type: 'url', content: url });
 			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
-			console.error('[PlayerController] Failed to load score:', error);
+			console.error(`[PlayerController #${this.instanceId}] Failed to load score:`, error);
 			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
@@ -774,7 +878,9 @@ export class PlayerController {
 
 		try {
 			this.api.tex(tex);
-			this.stores.workspaceConfig.getState().setScoreSource({ type: 'alphatex', content: tex });
+			this.stores.workspaceConfig
+				.getState()
+				.setScoreSource({ type: 'alphatex', content: tex });
 			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);

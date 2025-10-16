@@ -27,11 +27,14 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	useEffect(() => {
 		if (!containerRef.current || !viewportRef.current) return;
 
-		// 初始化时传递两个容器：渲染容器和滚动容器
+		console.log('[TablatureView] Initializing controller...');
+		
+		// 直接初始化，IntersectionObserver 会处理可见性时序
 		controller.init(containerRef.current, viewportRef.current);
 
 		// 清理函数
 		return () => {
+			console.log('[TablatureView] Cleaning up controller...');
 			controller.destroy();
 		};
 	}, [controller]);

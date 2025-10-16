@@ -2538,7 +2538,7 @@ ul.tabflow-setting-description li {
 	overflow-x: hidden; /* 水平方向由 alphaTab 的 layoutMode 控制 */
 	position: relative;
 	min-height: 0; /* 重要：flex 子元素需要这个才能正确收缩和滚动 */
-	
+
 	/* 确保内容可以滚动 */
 	-webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
 }

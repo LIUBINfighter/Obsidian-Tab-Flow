@@ -1,6 +1,6 @@
 /**
  * Player Components
- * 
+ *
  * 音轨和五线谱管理组件
  */
 

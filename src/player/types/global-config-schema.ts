@@ -77,7 +77,7 @@ export function getDefaultGlobalConfig(): GlobalConfig {
 	return {
 		alphaTabSettings: {
 			core: {
-				engine: 'html5',
+				engine: 'svg',
 				useWorkers: true,
 				logLevel: alphaTab.LogLevel.Warning,
 				includeNoteBounds: false,

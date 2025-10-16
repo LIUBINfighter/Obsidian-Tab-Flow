@@ -7,16 +7,19 @@ import type { AlphaTabPlayerConfig } from '../types/config-schema';
 /**
  * 导出配置为 JSON 文件
  */
-export function exportConfigToJSON(config: AlphaTabPlayerConfig, filename = 'alphatab-config.json'): void {
+export function exportConfigToJSON(
+	config: AlphaTabPlayerConfig,
+	filename = 'alphatab-config.json'
+): void {
 	const json = JSON.stringify(config, null, 2);
 	const blob = new Blob([json], { type: 'application/json' });
 	const url = URL.createObjectURL(blob);
-	
+
 	const a = document.createElement('a');
 	a.href = url;
 	a.download = filename;
 	a.click();
-	
+
 	URL.revokeObjectURL(url);
 }
 
@@ -28,14 +31,14 @@ export function importConfigFromJSON(): Promise<AlphaTabPlayerConfig | null> {
 		const input = document.createElement('input');
 		input.type = 'file';
 		input.accept = '.json';
-		
+
 		input.onchange = async (e: Event) => {
 			const file = (e.target as HTMLInputElement).files?.[0];
 			if (!file) {
 				resolve(null);
 				return;
 			}
-			
+
 			try {
 				const text = await file.text();
 				const config = JSON.parse(text) as AlphaTabPlayerConfig;
@@ -45,7 +48,7 @@ export function importConfigFromJSON(): Promise<AlphaTabPlayerConfig | null> {
 				resolve(null);
 			}
 		};
-		
+
 		input.click();
 	});
 }
@@ -55,7 +58,7 @@ export function importConfigFromJSON(): Promise<AlphaTabPlayerConfig | null> {
  */
 export async function copyConfigToClipboard(config: AlphaTabPlayerConfig): Promise<boolean> {
 	const json = JSON.stringify(config, null, 2);
-	
+
 	try {
 		await navigator.clipboard.writeText(json);
 		return true;
@@ -72,22 +75,22 @@ export function formatSettingValue(value: any): string {
 	if (value === null || value === undefined) {
 		return 'N/A';
 	}
-	
+
 	if (typeof value === 'boolean') {
 		return value ? 'Enabled' : 'Disabled';
 	}
-	
+
 	if (typeof value === 'number') {
 		return value.toFixed(2);
 	}
-	
+
 	if (typeof value === 'string') {
 		return value;
 	}
-	
+
 	if (typeof value === 'object') {
 		return JSON.stringify(value);
 	}
-	
+
 	return String(value);
 }
