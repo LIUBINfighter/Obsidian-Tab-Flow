@@ -28,7 +28,7 @@ export const TracksToggle: React.FC<TracksToggleProps> = ({ controller, onClick 
 	return (
 		<div className="play-bar-group">
 			<button
-				className="play-bar-btn"
+				className={`play-bar-button tracks-toggle-button ${!scoreLoaded ? 'disabled' : ''}`}
 				onClick={onClick}
 				disabled={!scoreLoaded}
 				title={scoreLoaded ? `音轨管理 (${trackCount}/${totalTracks})` : '等待加载曲谱'}

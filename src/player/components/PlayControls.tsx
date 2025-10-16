@@ -32,7 +32,7 @@ export const PlayControls: React.FC<PlayControlsProps> = ({ controller, isPlayin
 		<div className="play-bar-controls">
 			{/* 播放/暂停按钮 */}
 			<button
-				className={`play-bar-btn play-pause-btn ${isPlaying ? 'playing' : ''}`}
+				className={`play-bar-button play-pause-btn ${isPlaying ? 'playing' : ''}`}
 				onClick={handlePlayPause}
 				disabled={!canPlay}
 				aria-label={isPlaying ? 'Pause' : 'Play'}
@@ -72,7 +72,7 @@ export const PlayControls: React.FC<PlayControlsProps> = ({ controller, isPlayin
 
 			{/* 停止按钮 */}
 			<button
-				className="play-bar-btn stop-btn"
+				className="play-bar-button stop-btn"
 				onClick={handleStop}
 				disabled={!canPlay}
 				aria-label="Stop"

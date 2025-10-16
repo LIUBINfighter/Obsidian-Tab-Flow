@@ -1561,58 +1561,97 @@
 }
 
 /* ============================================
-   播放控制按钮组
+   按钮样式 - 参考 clickable-icon 风格
    ============================================ */
-.play-bar-controls {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-
-.play-bar-btn {
+.tab-flow-play-bar .play-bar-button,
+.tab-flow-play-bar .play-bar-btn {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
-	padding: 0;
+	gap: 4px;
+	padding: 6px 8px;
 	border: none;
 	border-radius: var(--radius-s);
 	background: transparent;
 	color: var(--text-muted);
 	cursor: pointer;
 	transition: all 0.15s ease;
+	font-size: 13px;
+	line-height: 1;
+	min-height: 28px;
 }
 
-.play-bar-btn:hover:not(:disabled) {
+.tab-flow-play-bar .play-bar-button:hover:not(:disabled),
+.tab-flow-play-bar .play-bar-btn:hover:not(:disabled) {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
-.play-bar-btn:active:not(:disabled) {
+.tab-flow-play-bar .play-bar-button:active:not(:disabled),
+.tab-flow-play-bar .play-bar-btn:active:not(:disabled) {
 	background: var(--background-modifier-active-hover);
-	transform: scale(0.95);
+	transform: scale(0.98);
 }
 
-.play-bar-btn:disabled {
-	opacity: 0.3;
+.tab-flow-play-bar .play-bar-button:disabled,
+.tab-flow-play-bar .play-bar-btn:disabled {
+	opacity: 0.4;
 	cursor: not-allowed;
 }
 
-/* 播放/暂停按钮特殊样式 */
-.play-pause-btn.playing {
-	color: var(--interactive-accent);
+/* 激活状态 */
+.tab-flow-play-bar .play-bar-button.active,
+.tab-flow-play-bar .play-bar-btn.active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
 }
 
-.play-pause-btn.playing:hover:not(:disabled) {
-	color: var(--interactive-accent-hover);
+.tab-flow-play-bar .play-bar-button.active:hover:not(:disabled),
+.tab-flow-play-bar .play-bar-btn.active:hover:not(:disabled) {
+	background: var(--interactive-accent-hover);
 }
 
 /* SVG 图标样式 */
-.play-bar-btn svg {
-	width: 18px;
-	height: 18px;
+.tab-flow-play-bar .play-bar-button svg,
+.tab-flow-play-bar .play-bar-btn svg {
+	width: 16px;
+	height: 16px;
 	stroke-width: 2;
+	flex-shrink: 0;
+}
+
+/* 按钮文本 */
+.tab-flow-play-bar .play-bar-button-text {
+	font-size: 12px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+/* 音轨计数 */
+.tab-flow-play-bar .track-count {
+	font-size: 11px;
+	font-weight: 600;
+	background: var(--background-modifier-border);
+	padding: 1px 4px;
+	border-radius: var(--radius-xs);
+	min-width: 24px;
+	text-align: center;
+}
+
+/* ============================================
+   按钮组容器
+   ============================================ */
+.tab-flow-play-bar .play-bar-group {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.tab-flow-play-bar .play-bar-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
 }
 
 /* ============================================
@@ -1717,14 +1756,27 @@
 		padding: 0.4em;
 	}
 
-	.play-bar-btn {
-		width: 28px;
-		height: 28px;
+	.tab-flow-play-bar .play-bar-button,
+	.tab-flow-play-bar .play-bar-btn {
+		padding: 4px 6px;
+		min-height: 24px;
+		font-size: 12px;
 	}
 
-	.play-bar-btn svg {
-		width: 16px;
-		height: 16px;
+	.tab-flow-play-bar .play-bar-button svg,
+	.tab-flow-play-bar .play-bar-btn svg {
+		width: 14px;
+		height: 14px;
+	}
+
+	.tab-flow-play-bar .play-bar-button-text {
+		font-size: 11px;
+	}
+
+	.tab-flow-play-bar .track-count {
+		font-size: 10px;
+		padding: 1px 3px;
+		min-width: 20px;
 	}
 
 	.play-bar-time {
