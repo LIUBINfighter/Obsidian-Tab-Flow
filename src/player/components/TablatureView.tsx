@@ -16,6 +16,22 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 	const [tracksPanelOpen, setTracksPanelOpen] = useState(false);
 
+	// 打开 Settings 面板时，先关闭 Tracks 面板
+	const handleOpenSettings = () => {
+		if (tracksPanelOpen) {
+			setTracksPanelOpen(false);
+		}
+		setSettingsPanelOpen(true);
+	};
+
+	// 打开 Tracks 面板时，先关闭 Settings 面板
+	const handleOpenTracks = () => {
+		if (settingsPanelOpen) {
+			setSettingsPanelOpen(false);
+		}
+		setTracksPanelOpen(true);
+	};
+
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
 	const uiStore = controller.getUIStore();	// 订阅 runtime state
@@ -54,8 +70,8 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 			{/* PlayBar - 播放控制栏 */}
 			<PlayBar
 				controller={controller}
-				onSettingsClick={() => setSettingsPanelOpen(true)}
-				onTracksClick={() => setTracksPanelOpen(true)}
+				onSettingsClick={handleOpenSettings}
+				onTracksClick={handleOpenTracks}
 			/>
 
 			{/* Tracks Panel - 音轨管理侧边栏 */}
