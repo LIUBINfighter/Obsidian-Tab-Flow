@@ -16,20 +16,28 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 	const [tracksPanelOpen, setTracksPanelOpen] = useState(false);
 
-	// 打开 Settings 面板时，先关闭 Tracks 面板
-	const handleOpenSettings = () => {
-		if (tracksPanelOpen) {
-			setTracksPanelOpen(false);
-		}
-		setSettingsPanelOpen(true);
-	};
-
-	// 打开 Tracks 面板时，先关闭 Settings 面板
-	const handleOpenTracks = () => {
+	// 切换 Settings 面板：如果打开则关闭，如果关闭则打开（并关闭 Tracks 面板）
+	const handleToggleSettings = () => {
 		if (settingsPanelOpen) {
 			setSettingsPanelOpen(false);
+		} else {
+			if (tracksPanelOpen) {
+				setTracksPanelOpen(false);
+			}
+			setSettingsPanelOpen(true);
 		}
-		setTracksPanelOpen(true);
+	};
+
+	// 切换 Tracks 面板：如果打开则关闭，如果关闭则打开（并关闭 Settings 面板）
+	const handleToggleTracks = () => {
+		if (tracksPanelOpen) {
+			setTracksPanelOpen(false);
+		} else {
+			if (settingsPanelOpen) {
+				setSettingsPanelOpen(false);
+			}
+			setTracksPanelOpen(true);
+		}
 	};
 
 	// 使用 controller 的实例 store
@@ -70,8 +78,8 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 			{/* PlayBar - 播放控制栏 */}
 			<PlayBar
 				controller={controller}
-				onSettingsClick={handleOpenSettings}
-				onTracksClick={handleOpenTracks}
+				onSettingsClick={handleToggleSettings}
+				onTracksClick={handleToggleTracks}
 			/>
 			{/* Tracks Panel - 音轨管理侧边栏 */}
 			<TracksPanel
