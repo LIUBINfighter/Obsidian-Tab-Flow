@@ -13,6 +13,9 @@ import { MediaType, type MediaState } from '../types/media-sync';
 import { MediaSyncService } from '../services/MediaSyncService';
 import { MediaFileSuggestModal } from './MediaFileSuggestModal';
 import { SyncMode } from '../types/sync-mode';
+import { MediaSyncEditor } from './MediaSyncEditor';
+import type { SyncPointInfo } from '../types/sync-point';
+import { createDefaultSyncPointInfo } from '../types/sync-point';
 
 interface MediaSyncProps {
 	controller: PlayerController;
@@ -64,6 +67,15 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 
 	// 性能优化：更新间隔（官方推荐 50ms）
 	const [updateInterval, setUpdateInterval] = useState<number>(50);
+
+	// 同步点编辑器标签页管理
+	const [activeTab, setActiveTab] = useState<'basic' | 'editor'>('basic');
+
+	// 同步点信息
+	const [syncPointInfo, setSyncPointInfo] = useState<SyncPointInfo>(createDefaultSyncPointInfo());
+
+	// 当前播放时间
+	const [playbackTime, setPlaybackTime] = useState<number>(0);
 
 	// Refs	// 媒体服务
 	const mediaSyncService = useRef<MediaSyncService | null>(null);
@@ -285,131 +297,199 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 				</div>
 			</div>
 
-			{/* 内容区域 */}
-			<div className="media-sync-content">
-				{/* 合成器模式 - 无额外内容 */}
-				{mediaState.type === MediaType.Synth && (
-					<div className="media-sync-info">
-						<p>使用 AlphaTab 内置合成器播放</p>
-					</div>
-				)}
-
-				{/* Vault 文件选择按钮 */}
-				{(mediaState.type === MediaType.Synth ||
-					mediaState.type === MediaType.Audio ||
-					mediaState.type === MediaType.Video) && (
-					<div className="media-sync-input-group">
-						<label>从 Vault 中选择：</label>
-						<button className="media-sync-load-btn" onClick={openFileSelectModal}>
-							📁 选择媒体文件...
+			{/* 内容区域 - 标签页 */}
+			<div className="media-sync-tabs-wrapper">
+				{/* 标签页头 */}
+				<div className="media-sync-tabs-header">
+					<button
+						className={`media-sync-tab ${activeTab === 'basic' ? 'active' : ''}`}
+						onClick={() => setActiveTab('basic')}
+					>
+						基础设置
+					</button>
+					{mediaState.type !== MediaType.Synth && (
+						<button
+							className={`media-sync-tab ${activeTab === 'editor' ? 'active' : ''}`}
+							onClick={() => setActiveTab('editor')}
+						>
+							📍 同步编辑器
 						</button>
-					</div>
-				)}
+					)}
+				</div>
 
-				{/* 音频输入 */}
-				{(mediaState.type === MediaType.Synth || mediaState.type === MediaType.Audio) && (
-					<div className="media-sync-input-group">
-						<label>音频文件 URL：</label>
-						<div className="media-sync-input-row">
-							<input
-								type="text"
-								value={audioUrl}
-								onChange={(e) => setAudioUrl(e.target.value)}
-								placeholder="https://example.com/audio.mp3"
-								className="media-sync-input"
-							/>
-							<button
-								className="media-sync-load-btn"
-								onClick={switchToAudio}
-								disabled={!audioUrl}
-							>
-								加载
-							</button>
+				{/* 标签页内容 */}
+				<div className="media-sync-tabs-content">
+					{/* 基础设置标签页 */}
+					{activeTab === 'basic' && (
+						<div className="media-sync-content">
+							{/* 合成器模式 - 无额外内容 */}
+							{mediaState.type === MediaType.Synth && (
+								<div className="media-sync-info">
+									<p>使用 AlphaTab 内置合成器播放</p>
+								</div>
+							)}
+
+							{/* Vault 文件选择按钮 */}
+							{(mediaState.type === MediaType.Synth ||
+								mediaState.type === MediaType.Audio ||
+								mediaState.type === MediaType.Video) && (
+								<div className="media-sync-input-group">
+									<label>从 Vault 中选择：</label>
+									<button
+										className="media-sync-load-btn"
+										onClick={openFileSelectModal}
+									>
+										📁 选择媒体文件...
+									</button>
+								</div>
+							)}
+
+							{/* 音频输入 */}
+							{(mediaState.type === MediaType.Synth ||
+								mediaState.type === MediaType.Audio) && (
+								<div className="media-sync-input-group">
+									<label>音频文件 URL：</label>
+									<div className="media-sync-input-row">
+										<input
+											type="text"
+											value={audioUrl}
+											onChange={(e) => setAudioUrl(e.target.value)}
+											placeholder="https://example.com/audio.mp3"
+											className="media-sync-input"
+										/>
+										<button
+											className="media-sync-load-btn"
+											onClick={switchToAudio}
+											disabled={!audioUrl}
+										>
+											加载
+										</button>
+									</div>
+								</div>
+							)}
+
+							{/* 视频输入 */}
+							{(mediaState.type === MediaType.Synth ||
+								mediaState.type === MediaType.Video) && (
+								<div className="media-sync-input-group">
+									<label>视频文件 URL：</label>
+									<div className="media-sync-input-row">
+										<input
+											type="text"
+											value={videoUrl}
+											onChange={(e) => setVideoUrl(e.target.value)}
+											placeholder="https://example.com/video.mp4"
+											className="media-sync-input"
+										/>
+										<button
+											className="media-sync-load-btn"
+											onClick={switchToVideo}
+											disabled={!videoUrl}
+										>
+											加载
+										</button>
+									</div>
+								</div>
+							)}
+
+							{/* YouTube 输入 */}
+							{(mediaState.type === MediaType.Synth ||
+								mediaState.type === MediaType.YouTube) && (
+								<div className="media-sync-input-group">
+									<label>YouTube 视频 URL 或 ID：</label>
+									<div className="media-sync-input-row">
+										<input
+											type="text"
+											value={youtubeInput}
+											onChange={(e) => setYoutubeInput(e.target.value)}
+											placeholder="https://www.youtube.com/watch?v=... 或 dQw4w9WgXcQ"
+											className="media-sync-input"
+										/>
+										<button
+											className="media-sync-load-btn"
+											onClick={switchToYouTube}
+											disabled={!extractYouTubeVideoId(youtubeInput)}
+										>
+											加载
+										</button>
+									</div>
+								</div>
+							)}
+
+							{/* 音频播放器 */}
+							{mediaState.type === MediaType.Audio && (
+								<div className="media-sync-player">
+									<audio
+										ref={audioRef}
+										src={mediaState.url}
+										controls
+										style={{ width: '100%' }}
+										onTimeUpdate={(e) => {
+											setPlaybackTime(e.currentTarget.currentTime * 1000);
+										}}
+									/>
+								</div>
+							)}
+
+							{/* 视频播放器 */}
+							{mediaState.type === MediaType.Video && (
+								<div className="media-sync-player">
+									<video
+										ref={videoRef}
+										src={mediaState.url}
+										controls
+										style={{ width: '100%', maxHeight: '400px' }}
+										onTimeUpdate={(e) => {
+											setPlaybackTime(e.currentTarget.currentTime * 1000);
+										}}
+									/>
+								</div>
+							)}
+
+							{/* YouTube 播放器 */}
+							{mediaState.type === MediaType.YouTube && (
+								<div className="media-sync-player">
+									<iframe
+										src={mediaState.url}
+										style={{ width: '100%', height: '400px', border: 'none' }}
+										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+										allowFullScreen
+									/>
+								</div>
+							)}
 						</div>
-					</div>
-				)}
+					)}
 
-				{/* 视频输入 */}
-				{(mediaState.type === MediaType.Synth || mediaState.type === MediaType.Video) && (
-					<div className="media-sync-input-group">
-						<label>视频文件 URL：</label>
-						<div className="media-sync-input-row">
-							<input
-								type="text"
-								value={videoUrl}
-								onChange={(e) => setVideoUrl(e.target.value)}
-								placeholder="https://example.com/video.mp4"
-								className="media-sync-input"
+					{/* 同步编辑器标签页 */}
+					{activeTab === 'editor' && mediaState.type !== MediaType.Synth && (
+						<div
+							style={{
+								width: '100%',
+								height: '400px',
+								overflow: 'hidden',
+							}}
+						>
+							<MediaSyncEditor
+								syncPointInfo={syncPointInfo}
+								onSyncPointInfoChanged={(info) => {
+									setSyncPointInfo(info);
+								}}
+								playbackTime={playbackTime}
+								onPlaybackTimeChange={(time) => {
+									setPlaybackTime(time);
+									// 同步媒体播放位置
+									if (audioRef.current) {
+										audioRef.current.currentTime = time / 1000;
+									} else if (videoRef.current) {
+										videoRef.current.currentTime = time / 1000;
+									}
+								}}
+								width={800}
+								height={400}
 							/>
-							<button
-								className="media-sync-load-btn"
-								onClick={switchToVideo}
-								disabled={!videoUrl}
-							>
-								加载
-							</button>
 						</div>
-					</div>
-				)}
-
-				{/* YouTube 输入 */}
-				{(mediaState.type === MediaType.Synth || mediaState.type === MediaType.YouTube) && (
-					<div className="media-sync-input-group">
-						<label>YouTube 视频 URL 或 ID：</label>
-						<div className="media-sync-input-row">
-							<input
-								type="text"
-								value={youtubeInput}
-								onChange={(e) => setYoutubeInput(e.target.value)}
-								placeholder="https://www.youtube.com/watch?v=... 或 dQw4w9WgXcQ"
-								className="media-sync-input"
-							/>
-							<button
-								className="media-sync-load-btn"
-								onClick={switchToYouTube}
-								disabled={!extractYouTubeVideoId(youtubeInput)}
-							>
-								加载
-							</button>
-						</div>
-					</div>
-				)}
-
-				{/* 音频播放器 */}
-				{mediaState.type === MediaType.Audio && (
-					<div className="media-sync-player">
-						<audio
-							ref={audioRef}
-							src={mediaState.url}
-							controls
-							style={{ width: '100%' }}
-						/>
-					</div>
-				)}
-
-				{/* 视频播放器 */}
-				{mediaState.type === MediaType.Video && (
-					<div className="media-sync-player">
-						<video
-							ref={videoRef}
-							src={mediaState.url}
-							controls
-							style={{ width: '100%', maxHeight: '400px' }}
-						/>
-					</div>
-				)}
-
-				{/* YouTube 播放器 */}
-				{mediaState.type === MediaType.YouTube && (
-					<div className="media-sync-player">
-						<iframe
-							src={mediaState.url}
-							style={{ width: '100%', height: '400px', border: 'none' }}
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-							allowFullScreen
-						/>
-					</div>
-				)}
+					)}
+				</div>
 			</div>
 		</div>
 	);
