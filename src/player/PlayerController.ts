@@ -97,8 +97,6 @@ export class PlayerController {
 	 * @param viewport - 滚动视口容器（可选）
 	 */
 	public async init(container: HTMLElement, viewport?: HTMLElement): Promise<void> {
-		console.log(`[PlayerController #${this.instanceId}] Init called`);
-
 		if (!container) {
 			console.error(
 				`[PlayerController #${this.instanceId}] Container not provided to init()`
@@ -113,15 +111,8 @@ export class PlayerController {
 		this.container = container;
 		this.scrollViewport = viewport || null;
 
-		console.log(
-			`[PlayerController #${this.instanceId}] Container stored, initializing API`
-		);
-
 		try {
 			this.rebuildApi();
-			console.log(
-				`[PlayerController #${this.instanceId}] API initialization completed successfully`
-			);
 		} catch (error) {
 			console.error(
 				`[PlayerController #${this.instanceId}] API initialization failed:`,
