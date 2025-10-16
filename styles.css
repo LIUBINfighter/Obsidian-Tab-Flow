@@ -1324,6 +1324,198 @@
 	background-color: var(--background-modifier-active);
 }
 
+/* --- media-sync.css --- */
+/**
+ * MediaSync Panel Styles
+ * 外部媒体同步面板样式
+ */
+
+.media-sync-panel {
+	position: relative;
+	width: 100%;
+	background-color: var(--background-secondary);
+	border-top: 1px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	max-height: 60vh;
+	overflow: hidden;
+}
+
+/* 工具栏 */
+.media-sync-toolbar {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 8px 12px;
+	background-color: var(--background-primary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.media-sync-toolbar-left,
+.media-sync-toolbar-right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* 媒体类型按钮 */
+.media-sync-btn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+	font-size: 13px;
+	transition: all 0.2s ease;
+}
+
+.media-sync-btn:hover:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.media-sync-btn.active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.media-sync-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.media-sync-btn .svg-icon {
+	width: 16px;
+	height: 16px;
+}
+
+/* 状态文本 */
+.media-sync-status {
+	font-size: 12px;
+	color: var(--text-muted);
+	padding: 4px 8px;
+	background-color: var(--background-secondary);
+	border-radius: 4px;
+}
+
+/* 内容区域 */
+.media-sync-content {
+	flex: 1;
+	padding: 16px;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+/* 信息提示 */
+.media-sync-info {
+	text-align: center;
+	padding: 24px;
+	color: var(--text-muted);
+	font-size: 14px;
+}
+
+/* 输入组 */
+.media-sync-input-group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.media-sync-input-group label {
+	font-size: 13px;
+	font-weight: 500;
+	color: var(--text-normal);
+}
+
+.media-sync-input-row {
+	display: flex;
+	gap: 8px;
+}
+
+.media-sync-input {
+	flex: 1;
+	padding: 8px 12px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+}
+
+.media-sync-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.media-sync-load-btn {
+	padding: 8px 16px;
+	border-radius: 4px;
+	border: 1px solid var(--interactive-accent);
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 500;
+	transition: opacity 0.2s ease;
+}
+
+.media-sync-load-btn:hover:not(:disabled) {
+	opacity: 0.9;
+}
+
+.media-sync-load-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* 播放器容器 */
+.media-sync-player {
+	margin-top: 8px;
+	border-radius: 4px;
+	overflow: hidden;
+	background-color: var(--background-primary);
+}
+
+.media-sync-player audio,
+.media-sync-player video {
+	display: block;
+	width: 100%;
+}
+
+.media-sync-player iframe {
+	display: block;
+	width: 100%;
+	aspect-ratio: 16/9;
+	border: none;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+	.media-sync-toolbar {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.media-sync-toolbar-left,
+	.media-sync-toolbar-right {
+		justify-content: center;
+	}
+
+	.media-sync-btn {
+		flex: 1;
+		justify-content: center;
+	}
+}
+
 /* --- play.css --- */
 /* 播放栏自定义按钮样式 */
 .play-bar {

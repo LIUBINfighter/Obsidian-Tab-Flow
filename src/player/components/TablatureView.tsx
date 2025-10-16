@@ -3,6 +3,7 @@ import type { PlayerController } from '../PlayerController';
 import { PlayBar } from './PlayBar';
 import { SettingsPanel } from './SettingsPanel';
 import { TracksPanel } from './TracksPanel';
+import { MediaSync } from './MediaSync';
 
 interface TablatureViewProps {
 	controller: PlayerController;
@@ -15,6 +16,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 
 	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 	const [tracksPanelOpen, setTracksPanelOpen] = useState(false);
+	const [mediaSyncOpen, setMediaSyncOpen] = useState(false);
 
 	// 切换 Settings 面板：如果打开则关闭，如果关闭则打开（并关闭 Tracks 面板）
 	const handleToggleSettings = () => {
@@ -80,6 +82,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				controller={controller}
 				onSettingsClick={handleToggleSettings}
 				onTracksClick={handleToggleTracks}
+				onMediaSyncClick={() => setMediaSyncOpen(!mediaSyncOpen)}
 			/>
 			{/* Tracks Panel - 音轨管理侧边栏 */}
 			<TracksPanel
@@ -182,6 +185,8 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 					}}
 				/>
 			</div>
+			{/* MediaSync Panel - 底部媒体同步面板 */}
+			{mediaSyncOpen && <MediaSync controller={controller} isOpen={mediaSyncOpen} />}
 		</div>
 	);
 };

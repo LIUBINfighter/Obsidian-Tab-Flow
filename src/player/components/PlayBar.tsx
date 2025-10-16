@@ -17,6 +17,7 @@ interface PlayBarProps {
 	controller: PlayerController;
 	onSettingsClick?: () => void;
 	onTracksClick?: () => void;
+	onMediaSyncClick?: () => void;
 }
 
 /**
@@ -29,7 +30,12 @@ interface PlayBarProps {
  * - TimeDisplay: 时间显示
  * - MetronomeToggle: 节拍器开关
  */
-export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, onTracksClick }) => {
+export const PlayBar: React.FC<PlayBarProps> = ({
+	controller,
+	onSettingsClick,
+	onTracksClick,
+	onMediaSyncClick,
+}) => {
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
 
@@ -89,6 +95,31 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 
 				{/* 滚动模式 */}
 				<ScrollModeControl controller={controller} />
+
+				{/* MediaSync 按钮 */}
+				{onMediaSyncClick && (
+					<button
+						className="clickable-icon"
+						title="媒体同步"
+						onClick={onMediaSyncClick}
+						style={{ padding: '6px' }}
+					>
+						<svg
+							className="svg-icon lucide-film"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
+							<line x1="7" y1="2" x2="7" y2="22" />
+							<line x1="17" y1="2" x2="17" y2="22" />
+							<line x1="2" y1="12" x2="22" y2="12" />
+						</svg>
+					</button>
+				)}
 
 				{/* 导出按钮 */}
 				<button
