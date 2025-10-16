@@ -746,7 +746,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								}
 							}}
 						>
-							📋 Log Current Settings
+							Log Current Settings
 						</button>
 						<button
 							type="button"
@@ -769,9 +769,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								}
 							}}
 						>
-							📄 Copy Config to Clipboard
+							Copy Config to Clipboard
 						</button>
-						<button
+						{/* <button
 							type="button"
 							className="settings-tool-button"
 							onClick={() => {
@@ -787,7 +787,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								exportConfigToJSON(legacyConfig);
 							}}
 						>
-							💾 Export Config as JSON
+							Export Config as JSON
 						</button>
 						<button
 							type="button"
@@ -816,8 +816,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								}
 							}}
 						>
-							📂 Import Config from JSON
-						</button>
+							Import Config from JSON
+						</button> */}
 						<button
 							type="button"
 							className="settings-tool-button settings-tool-button-danger"
@@ -832,7 +832,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 								}
 							}}
 						>
-							🔄 Reset to Defaults
+							Reset to Defaults
 						</button>
 						<h4></h4>
 						<h4>_</h4>
