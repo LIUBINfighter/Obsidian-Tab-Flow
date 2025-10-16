@@ -1,0 +1,127 @@
+/* TablatureView 组件样式 - 参考 AlphaTab 官方推荐结构 */
+
+/* 外层容器：固定尺寸，不滚动 */
+.tablature-view {
+	width: 100%;
+	height: 100%;
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	background: var(--background-primary);
+}
+
+/* AlphaTab 滚动视口 - 对应官方文档的 .at-viewport */
+.tablature-view .alphatab-viewport {
+	width: 100%;
+	flex: 1;
+	overflow-y: auto; /* 允许垂直滚动 */
+	overflow-x: hidden; /* 水平方向由 alphaTab 的 layoutMode 控制 */
+	position: relative;
+	min-height: 0; /* 重要：flex 子元素需要这个才能正确收缩和滚动 */
+	
+	/* 确保内容可以滚动 */
+	-webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+}
+
+/* AlphaTab 渲染容器 - 对应官方文档的 .at-main */
+.tablature-view .alphatab-main {
+	width: 100%;
+	min-height: 100%; /* 确保至少占满视口 */
+	/* AlphaTab 会在这里添加渲染内容 */
+}
+
+/* 滚动条样式 */
+.tablature-view .alphatab-viewport::-webkit-scrollbar {
+	width: 12px;
+}
+
+.tablature-view .alphatab-viewport::-webkit-scrollbar-track {
+	background: var(--background-secondary);
+	border-radius: 6px;
+}
+
+.tablature-view .alphatab-viewport::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 6px;
+	transition: background 0.2s;
+}
+
+.tablature-view .alphatab-viewport::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+/* Loading 和 Error 覆盖层 */
+.tablature-view .loading-overlay,
+.tablature-view .error-overlay {
+	position: absolute;
+	z-index: 999;
+	pointer-events: auto; /* 覆盖层可以捕获点击 */
+}
+
+.tablature-view .loading-overlay {
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-primary);
+	z-index: 1000;
+}
+
+.tablature-view .loading-message {
+	margin-bottom: 10px;
+	color: var(--text-normal);
+	font-size: 0.95em;
+}
+
+.tablature-view .loading-progress {
+	width: 200px;
+	height: 4px;
+	background: var(--background-modifier-border);
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.tablature-view .loading-progress-bar {
+	height: 100%;
+	background: var(--interactive-accent);
+	transition: width 0.3s ease;
+}
+
+.tablature-view .error-overlay {
+	top: 20px;
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: 80%;
+	padding: 10px 20px;
+	background: var(--background-modifier-error);
+	border: 1px solid var(--background-modifier-error-border);
+	border-radius: 4px;
+}
+
+.tablature-view .error-message {
+	color: var(--text-error);
+}
+
+/* AlphaTab 内部样式覆盖（如果需要） */
+.tablature-view .alphatab-main > div {
+	/* AlphaTab 会在这里创建内容 */
+	min-width: 100%;
+}
+
+/* 确保 alphaTab 的光标可见 */
+.tablature-view .at-cursor-bar,
+.tablature-view .at-cursor-beat {
+	z-index: 10; /* 确保光标在内容之上 */
+}
+
+/* 打印时隐藏滚动条 */
+@media print {
+	.tablature-view .alphatab-viewport {
+		overflow: visible !important;
+	}
+}

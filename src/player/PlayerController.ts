@@ -27,6 +27,7 @@ export interface PlayerControllerResources {
 export class PlayerController {
 	private api: AlphaTabApi | null = null;
 	private container: HTMLElement | null = null;
+	private scrollViewport: HTMLElement | null = null; // 新增：滚动容器引用
 	private unsubscribeConfig: (() => void) | null = null;
 	private lastConfig: AlphaTabPlayerConfig | null = null;
 	private plugin: Plugin;
@@ -72,10 +73,12 @@ export class PlayerController {
 
 	/**
 	 * 初始化控制器
-	 * @param container alphaTab 渲染容器
+	 * @param container alphaTab 渲染容器（.at-main）
+	 * @param scrollViewport 滚动容器（.at-viewport），可选，如果不提供则从 container 向上查找
 	 */
-	init(container: HTMLElement): void {
+	init(container: HTMLElement, scrollViewport?: HTMLElement): void {
 		this.container = container;
+		this.scrollViewport = scrollViewport || null;
 
 		// 检查容器是否有有效的尺寸
 		const rect = container.getBoundingClientRect();
@@ -84,7 +87,7 @@ export class PlayerController {
 				'[PlayerController] Container has zero dimensions! Delaying API initialization...'
 			);
 			// 延迟初始化，等待容器尺寸就绪
-			setTimeout(() => this.init(container), 50);
+			setTimeout(() => this.init(container, scrollViewport), 50);
 			return;
 		}
 
@@ -110,6 +113,7 @@ export class PlayerController {
 		this.destroyApi();
 		this.unsubscribeConfig?.();
 		this.container = null;
+		this.scrollViewport = null;
 	}
 
 	// ========== Config Subscription ==========
@@ -208,6 +212,37 @@ export class PlayerController {
 		// 获取当前容器的计算样式用于颜色配置
 		const style = this.container ? window.getComputedStyle(this.container) : null;
 
+		// 确定滚动元素（按照 AlphaTab 官方推荐）
+		// 优先级：显式提供的 scrollViewport > 从 container 向上查找 > 默认值
+		let scrollElement: HTMLElement | string = 'html,body';
+		
+		if (this.scrollViewport) {
+			// 1. 使用显式提供的滚动视口
+			scrollElement = this.scrollViewport;
+			console.log('[PlayerController] Using provided scrollViewport');
+		} else if (this.container) {
+			// 2. 从 container 向上查找第一个可滚动的父元素
+			let parent = this.container.parentElement;
+			while (parent && parent !== document.body) {
+				const overflowY = window.getComputedStyle(parent).overflowY;
+				if (overflowY === 'auto' || overflowY === 'scroll') {
+					scrollElement = parent;
+					console.log('[PlayerController] Found scrollable parent:', parent.className);
+					break;
+				}
+				parent = parent.parentElement;
+			}
+			
+			// 3. 如果没找到，尝试使用 Obsidian 的工作区容器
+			if (scrollElement === 'html,body') {
+				const workspaceLeaf = this.container.closest('.workspace-leaf-content');
+				if (workspaceLeaf) {
+					scrollElement = workspaceLeaf as HTMLElement;
+					console.log('[PlayerController] Using workspace-leaf-content');
+				}
+			}
+		}
+
 		const settings: any = {
 			core: {
 				file: config.alphaTabSettings.core.file,
@@ -228,7 +263,7 @@ export class PlayerController {
 				enableCursor: config.alphaTabSettings.player.enableCursor,
 				enableAnimatedBeatCursor: config.alphaTabSettings.player.enableAnimatedBeatCursor,
 				soundFont: this.resources.soundFontUri,
-				scrollElement: 'html,body', // 先用默认值，在 renderFinished 后再设置
+				scrollElement: scrollElement, // 使用确定的滚动元素
 				nativeBrowserSmoothScroll: false,
 			},
 			display: {
@@ -240,13 +275,22 @@ export class PlayerController {
 			},
 		};
 
-		// 调试：输出布局相关配置
-		console.log('[PlayerController] Layout settings:', {
-			layoutMode: settings.display.layoutMode,
-			barsPerRow: settings.display.barsPerRow,
-			stretchForce: settings.display.stretchForce,
-			scale: settings.display.scale,
-			containerWidth: this.container?.getBoundingClientRect().width,
+		// 调试：输出布局和滚动相关配置
+		console.log('[PlayerController] AlphaTab settings configured:', {
+			layout: {
+				layoutMode: settings.display.layoutMode,
+				barsPerRow: settings.display.barsPerRow,
+				stretchForce: settings.display.stretchForce,
+				scale: settings.display.scale,
+				containerWidth: this.container?.getBoundingClientRect().width,
+			},
+			scroll: {
+				scrollElement: typeof scrollElement === 'string' ? scrollElement : scrollElement.className,
+				scrollMode: settings.player.scrollMode,
+				scrollSpeed: settings.player.scrollSpeed,
+				scrollOffsetX: settings.player.scrollOffsetX,
+				scrollOffsetY: settings.player.scrollOffsetY,
+			}
 		});
 
 		// 配置字体源 - 使用正确的字体格式枚举
@@ -281,56 +325,50 @@ export class PlayerController {
 	}
 
 	/**
-	 * 配置滚动容器（在渲染完成后调用）
-	 * 参考 TabView 的实现，使用延迟确保 DOM 就绪
+	 * 配置滚动容器（在乐谱加载后调用，用于验证和动态更新）
+	 * 
+	 * 注意：scrollElement 已在 createAlphaTabSettings 中初始化，
+	 * 这个方法主要用于运行时验证和调试
 	 */
 	private configureScrollElement(): void {
-		if (!this.api) return;
-
-		// 尝试多个选择器查找 Obsidian 的滚动容器
-		const selectors = [
-			'.workspace-leaf-content.mod-active',
-			'.view-content',
-			'.workspace-leaf-content',
-		];
-
-		let scrollElement: HTMLElement | null = null;
-		for (const selector of selectors) {
-			scrollElement = document.querySelector(selector) as HTMLElement;
-			if (scrollElement) {
-				break;
-			}
+		if (!this.api || !this.container) {
+			console.warn('[PlayerController] Cannot configure scroll: API or container not ready');
+			return;
 		}
 
-		// 如果在 selectors 中没找到，尝试从 container 向上查找
-		if (!scrollElement && this.container) {
-			const workspaceLeaf = this.container.closest('.workspace-leaf-content');
-			if (workspaceLeaf) {
-				scrollElement = workspaceLeaf as HTMLElement;
-			}
-		}
-
-		if (scrollElement) {
-			this.api.settings.player.scrollElement = scrollElement;
-			console.log('[PlayerController] Scroll container configured:', scrollElement.className);
+		const currentScrollElement = this.api.settings.player.scrollElement;
+		
+		// 验证滚动元素配置
+		if (typeof currentScrollElement === 'string') {
+			console.log('[PlayerController] Scroll element is CSS selector:', currentScrollElement);
 		} else {
-			this.api.settings.player.scrollElement = 'html,body';
-			console.log('[PlayerController] Using default scroll container: html,body');
+			const scrollInfo = {
+				element: currentScrollElement.tagName,
+				className: currentScrollElement.className,
+				scrollHeight: currentScrollElement.scrollHeight,
+				clientHeight: currentScrollElement.clientHeight,
+				canScroll: currentScrollElement.scrollHeight > currentScrollElement.clientHeight,
+				overflowY: window.getComputedStyle(currentScrollElement).overflowY
+			};
+			console.log('[PlayerController] Scroll element configured:', scrollInfo);
+			
+			// 警告：如果容器不可滚动
+			if (!scrollInfo.canScroll && scrollInfo.overflowY !== 'auto' && scrollInfo.overflowY !== 'scroll') {
+				console.warn('[PlayerController] Warning: Scroll element may not be scrollable!', scrollInfo);
+			}
 		}
 
-		this.api.updateSettings();
-
-		// 延迟应用滚动模式及光标设置（参考 TabView）
+		// 延迟应用滚动模式和光标设置，确保 DOM 完全就绪
 		setTimeout(() => {
 			if (this.api?.settings.player) {
 				const config = useConfigStore.getState().config;
 				this.api.settings.player.scrollMode = config.alphaTabSettings.player.scrollMode;
 				this.api.settings.player.enableCursor = config.alphaTabSettings.player.enableCursor;
 				this.api.updateSettings();
-				console.log(
-					'[PlayerController] Scroll mode applied:',
-					config.alphaTabSettings.player.scrollMode
-				);
+				console.log('[PlayerController] Scroll mode applied:', {
+					scrollMode: config.alphaTabSettings.player.scrollMode,
+					enableCursor: config.alphaTabSettings.player.enableCursor
+				});
 			}
 		}, 100);
 	}
@@ -601,6 +639,39 @@ export class PlayerController {
 				}
 			}, 100);
 		}
+	}
+
+	/**
+	 * 调试方法：打印滚动配置信息
+	 */
+	debugScrollConfig(): void {
+		if (!this.api) {
+			console.warn('[PlayerController] API not initialized');
+			return;
+		}
+
+		const scrollElement = this.api.settings.player.scrollElement;
+		const scrollElementInfo = typeof scrollElement === 'string' 
+			? scrollElement 
+			: {
+				tagName: scrollElement.tagName,
+				className: scrollElement.className,
+				scrollHeight: scrollElement.scrollHeight,
+				clientHeight: scrollElement.clientHeight,
+				scrollTop: scrollElement.scrollTop,
+				canScroll: scrollElement.scrollHeight > scrollElement.clientHeight,
+				computedOverflow: window.getComputedStyle(scrollElement).overflow
+			};
+
+		console.log('[PlayerController] Scroll Configuration Debug:', {
+			scrollElement: scrollElementInfo,
+			scrollMode: this.api.settings.player.scrollMode,
+			scrollSpeed: this.api.settings.player.scrollSpeed,
+			scrollOffsetX: this.api.settings.player.scrollOffsetX,
+			scrollOffsetY: this.api.settings.player.scrollOffsetY,
+			enableCursor: this.api.settings.player.enableCursor,
+			nativeBrowserSmoothScroll: this.api.settings.player.nativeBrowserSmoothScroll
+		});
 	}
 
 	// ========== Score Loading ==========

@@ -9,7 +9,10 @@ interface TablatureViewProps {
 }
 
 export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
+	// 两个 ref：viewport 是滚动容器，container 是 AlphaTab 渲染目标
+	const viewportRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
+	
 	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 	const [tracksPanelOpen, setTracksPanelOpen] = useState(false);
 
@@ -22,9 +25,10 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const loading = uiStore((s) => s.loading);
 
 	useEffect(() => {
-		if (!containerRef.current) return;
+		if (!containerRef.current || !viewportRef.current) return;
 
-		controller.init(containerRef.current);
+		// 初始化时传递两个容器：渲染容器和滚动容器
+		controller.init(containerRef.current, viewportRef.current);
 
 		// 清理函数
 		return () => {
@@ -39,7 +43,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				width: '100%',
 				height: '100%',
 				position: 'relative',
-				overflow: 'hidden',
+				overflow: 'hidden', // 外层容器不滚动，滚动由 alphatab-container 处理
 				display: 'flex',
 				flexDirection: 'column',
 			}}
@@ -132,17 +136,28 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				</div>
 			)}
 
-			{/* AlphaTab Container */}
+			{/* AlphaTab 滚动视口容器 - 参考官方文档的 .at-viewport */}
 			<div
-				ref={containerRef}
-				className="alphatab-container"
+				ref={viewportRef}
+				className="alphatab-viewport"
 				style={{
 					width: '100%',
 					flex: 1,
-					overflow: 'auto',
+					overflow: 'auto', // 滚动容器，必须可滚动
 					position: 'relative',
+					minHeight: 0, // flex 子元素需要这个才能正确收缩
 				}}
-			/>
+			>
+				{/* AlphaTab 渲染容器 - 参考官方文档的 .at-main */}
+				<div
+					ref={containerRef}
+					className="alphatab-main"
+					style={{
+						width: '100%',
+						minHeight: '100%', // 确保至少占满父容器
+					}}
+				/>
+			</div>
 		</div>
 	);
 };
