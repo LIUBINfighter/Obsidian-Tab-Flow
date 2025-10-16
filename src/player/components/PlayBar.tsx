@@ -53,6 +53,13 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 	return (
 		<>
 			<div className="tab-flow-play-bar">
+				{/* 设置面板按钮 */}
+				{onSettingsClick && (
+					<SettingsToggle controller={controller} onClick={onSettingsClick} />
+				)}
+				{/* 音轨管理按钮 */}
+				{onTracksClick && <TracksToggle controller={controller} onClick={onTracksClick} />}
+
 				{/* 播放控制 */}
 				<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
 
@@ -88,9 +95,6 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 				{/* 滚动模式 */}
 				<ScrollModeControl controller={controller} />
 
-				{/* 音轨管理按钮 */}
-				{onTracksClick && <TracksToggle controller={controller} onClick={onTracksClick} />}
-
 				{/* 导出按钮 */}
 				<button
 					className="clickable-icon"
@@ -113,11 +117,6 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 						<line x1="12" y1="15" x2="12" y2="3"></line>
 					</svg>
 				</button>
-
-				{/* 设置面板按钮 */}
-				{onSettingsClick && (
-					<SettingsToggle controller={controller} onClick={onSettingsClick} />
-				)}
 
 				{/* 状态指示器（调试用） */}
 				{!scoreLoaded && (
