@@ -23,9 +23,9 @@ interface PlayBarProps {
 
 /**
  * PlayBar - 播放控制栏 (模块化版本)
- * 
+ *
  * 设计参考 DebugBar: 圆角边框、flex-wrap 布局
- * 
+ *
  * 功能模块：
  * - PlayControls: 播放/暂停/停止
  * - TimeDisplay: 时间显示
@@ -47,7 +47,7 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 	const [metronomeEnabled, setMetronomeEnabled] = useState(false);
 	const [countInEnabled, setCountInEnabled] = useState(false);
 	const [tracksModalOpen, setTracksModalOpen] = useState(false);
-	const [exportModalOpen, setExportModalOpen] = useState(false);	// 判断按钮状态
+	const [exportModalOpen, setExportModalOpen] = useState(false); // 判断按钮状态
 	const isPlaying = playbackState === 'playing';
 	const canPlay = scoreLoaded;
 
@@ -119,7 +119,9 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 				</button>
 
 				{/* 设置面板按钮 */}
-				{onSettingsClick && <SettingsToggle controller={controller} onClick={onSettingsClick} />}
+				{onSettingsClick && (
+					<SettingsToggle controller={controller} onClick={onSettingsClick} />
+				)}
 
 				{/* 状态指示器（调试用） */}
 				{!scoreLoaded && (
@@ -131,11 +133,19 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 
 			{/* 音轨选择器模态框（保留作为备用，但通常不使用） */}
 			{tracksModalOpen && api && (
-				<TracksModal api={api} isOpen={tracksModalOpen} onClose={() => setTracksModalOpen(false)} />
+				<TracksModal
+					api={api}
+					isOpen={tracksModalOpen}
+					onClose={() => setTracksModalOpen(false)}
+				/>
 			)}
 
 			{/* 导出模态框 */}
-			<ExportModal controller={controller} isOpen={exportModalOpen} onClose={() => setExportModalOpen(false)} />
+			<ExportModal
+				controller={controller}
+				isOpen={exportModalOpen}
+				onClose={() => setExportModalOpen(false)}
+			/>
 		</>
 	);
 };

@@ -12,7 +12,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	// 两个 ref：viewport 是滚动容器，container 是 AlphaTab 渲染目标
 	const viewportRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
-	
+
 	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
 	const [tracksPanelOpen, setTracksPanelOpen] = useState(false);
 
@@ -34,9 +34,9 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
-	const uiStore = controller.getUIStore();	// 订阅 runtime state
+	const uiStore = controller.getUIStore(); // 订阅 runtime state
 	const error = runtimeStore((s) => s.error);
-	
+
 	// 订阅 UI state
 	const loading = uiStore((s) => s.loading);
 
@@ -44,7 +44,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 		if (!containerRef.current || !viewportRef.current) return;
 
 		console.log('[TablatureView] Initializing controller...');
-		
+
 		// 直接初始化，IntersectionObserver 会处理可见性时序
 		controller.init(containerRef.current, viewportRef.current);
 
@@ -56,7 +56,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	}, [controller]);
 
 	return (
-		<div 
+		<div
 			className="tablature-view"
 			style={{
 				width: '100%',
@@ -73,22 +73,21 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				onSettingsClick={handleOpenSettings}
 				onTracksClick={handleOpenTracks}
 			/>
-
 			{/* Tracks Panel - 音轨管理侧边栏 */}
 			<TracksPanel
 				controller={controller}
 				isOpen={tracksPanelOpen}
 				onClose={() => setTracksPanelOpen(false)}
 			/>
-
 			{/* Settings Panel - 设置侧边栏 */}
 			<SettingsPanel
 				controller={controller}
 				isOpen={settingsPanelOpen}
 				onClose={() => setSettingsPanelOpen(false)}
-			/>			{/* Loading Indicator */}
+			/>{' '}
+			{/* Loading Indicator */}
 			{loading.isLoading && (
-				<div 
+				<div
 					className="loading-overlay"
 					style={{
 						position: 'absolute',
@@ -108,7 +107,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 						{loading.message}
 					</div>
 					{loading.progress !== undefined && (
-						<div 
+						<div
 							className="loading-progress"
 							style={{
 								width: '200px',
@@ -120,7 +119,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 						>
 							<div
 								className="loading-progress-bar"
-								style={{ 
+								style={{
 									width: `${loading.progress}%`,
 									height: '100%',
 									backgroundColor: 'var(--interactive-accent)',
@@ -131,10 +130,9 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 					)}
 				</div>
 			)}
-
 			{/* Error Display */}
 			{error.type && error.message && (
-				<div 
+				<div
 					className="error-overlay"
 					style={{
 						position: 'absolute',
@@ -154,7 +152,6 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 					</div>
 				</div>
 			)}
-
 			{/* AlphaTab 滚动视口容器 - 参考官方文档的 .at-viewport */}
 			<div
 				ref={viewportRef}

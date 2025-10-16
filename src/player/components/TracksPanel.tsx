@@ -1,6 +1,6 @@
 /**
  * TracksPanel - 音轨管理侧边栏
- * 
+ *
  * 参考 SettingsPanel 设计，提供侧边栏形式的音轨管理界面
  * 用户可以实时查看修改后的效果，无需关闭面板
  */
@@ -25,7 +25,9 @@ export const TracksPanel: React.FC<TracksPanelProps> = ({ controller, isOpen, on
 	const [score, setScore] = useState<AlphaTab.model.Score | null>(null);
 
 	// 已选中的音轨
-	const [selectedTracks, setSelectedTracks] = useState<Map<number, AlphaTab.model.Track>>(new Map());
+	const [selectedTracks, setSelectedTracks] = useState<Map<number, AlphaTab.model.Track>>(
+		new Map()
+	);
 
 	// 监听事件
 	useEffect(() => {
@@ -106,21 +108,24 @@ export const TracksPanel: React.FC<TracksPanelProps> = ({ controller, isOpen, on
 						type="button"
 						className="tracks-panel-button tracks-panel-button-sm"
 						onClick={selectAllTracks}
-						title="Select all tracks">
+						title="Select all tracks"
+					>
 						All
 					</button>
 					<button
 						type="button"
 						className="tracks-panel-button tracks-panel-button-sm"
 						onClick={deselectAllTracks}
-						title="Clear selection (keep first)">
+						title="Clear selection (keep first)"
+					>
 						Clear
 					</button>
 					<button
 						type="button"
 						className="tracks-panel-close"
 						onClick={onClose}
-						aria-label="Close tracks panel">
+						aria-label="Close tracks panel"
+					>
 						✕
 					</button>
 				</div>

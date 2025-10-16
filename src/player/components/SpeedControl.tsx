@@ -12,7 +12,7 @@ interface SpeedControlProps {
  */
 export const SpeedControl: React.FC<SpeedControlProps> = ({ controller }) => {
 	const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-	
+
 	// 内部状态管理当前速度
 	const [currentSpeed, setCurrentSpeed] = useState(1.0);
 

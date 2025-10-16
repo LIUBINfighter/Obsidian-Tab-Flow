@@ -19,7 +19,7 @@ export const MetronomeToggle: React.FC<MetronomeToggleProps> = ({
 	const handleToggle = () => {
 		const newState = !enabled;
 		onToggle(newState);
-		
+
 		// 通过 controller 设置节拍器
 		controller.setMetronome(newState);
 	};

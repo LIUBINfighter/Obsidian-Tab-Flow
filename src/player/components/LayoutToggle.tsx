@@ -11,9 +11,7 @@ interface LayoutToggleProps {
  * 页面布局 <-> 横向滚动布局
  */
 export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
-	const [layoutMode, setLayoutMode] = useState<alphaTab.LayoutMode>(
-		alphaTab.LayoutMode.Page
-	);
+	const [layoutMode, setLayoutMode] = useState<alphaTab.LayoutMode>(alphaTab.LayoutMode.Page);
 
 	const handleToggle = () => {
 		const newMode =
@@ -33,9 +31,7 @@ export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
 				onClick={handleToggle}
 				aria-label="Toggle Layout Mode"
 				title={
-					layoutMode === alphaTab.LayoutMode.Page
-						? '切换到横向滚动'
-						: '切换到页面布局'
+					layoutMode === alphaTab.LayoutMode.Page ? '切换到横向滚动' : '切换到页面布局'
 				}
 			>
 				{layoutMode === alphaTab.LayoutMode.Page ? '📄 页面' : '↔️ 横向'}

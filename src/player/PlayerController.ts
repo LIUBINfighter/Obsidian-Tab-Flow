@@ -101,9 +101,7 @@ export class PlayerController {
 			console.error(
 				`[PlayerController #${this.instanceId}] Container not provided to init()`
 			);
-			this.stores.runtime
-				.getState()
-				.setError('api-init', 'Container element not provided');
+			this.stores.runtime.getState().setError('api-init', 'Container element not provided');
 			return;
 		}
 

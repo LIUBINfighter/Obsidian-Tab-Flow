@@ -11,11 +11,7 @@ interface PlayControlsProps {
  * PlayControls - 播放控制按钮组
  * 包含: 播放/暂停、停止
  */
-export const PlayControls: React.FC<PlayControlsProps> = ({
-	controller,
-	isPlaying,
-	canPlay,
-}) => {
+export const PlayControls: React.FC<PlayControlsProps> = ({ controller, isPlaying, canPlay }) => {
 	const handlePlayPause = () => {
 		if (!canPlay) {
 			console.warn('[PlayControls] Cannot play - score not loaded');

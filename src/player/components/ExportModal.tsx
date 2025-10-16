@@ -12,7 +12,7 @@ type ExportStatus = 'idle' | 'exporting' | 'success' | 'error';
 
 /**
  * ExportModal - 导出模态框
- * 
+ *
  * 支持导出格式：
  * - WAV: 高质量无损音频
  * - MP3: 压缩音频（通过 WAV 转换）
@@ -95,7 +95,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 				}
 
 				chunks.push(chunk.samples);
-				
+
 				// 更新进度（粗略估计）
 				const currentTime = chunks.reduce((sum, c) => sum + c.length, 0) / sampleRate / 2;
 				const totalTime = api.score?.masterBars.length || 1;
@@ -106,12 +106,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 		}
 
 		// 转换为 WAV 格式
-		const wav = convertSamplesToWavBlob(chunks, sampleRate);
-		
+		const wav = await convertSamplesToWavBlob(chunks, sampleRate);
+
 		// 下载文件
 		const fileName = getFileName('wav');
 		downloadBlob(wav, fileName);
-		
+
 		setProgress(100);
 	};
 
@@ -122,9 +122,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 	const exportMP3 = async () => {
 		// 先导出 WAV
 		await exportWAV();
-		
+
 		// 提示用户使用在线工具转换
-		alert('WAV 文件已导出。\n\n要转换为 MP3，您可以使用在线工具如：\n- https://cloudconvert.com/wav-to-mp3\n- https://convertio.co/wav-mp3/');
+		alert(
+			'WAV 文件已导出。\n\n要转换为 MP3，您可以使用在线工具如：\n- https://cloudconvert.com/wav-to-mp3\n- https://convertio.co/wav-mp3/'
+		);
 	};
 
 	/**
@@ -134,10 +136,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 		if (!api) throw new Error('API not ready');
 
 		setProgress(50);
-		
+
 		// 使用 AlphaTab 的 downloadMidi 方法
 		api.downloadMidi();
-		
+
 		setProgress(100);
 	};
 
@@ -151,28 +153,31 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 		const alphaTab = await import('@coderline/alphatab');
 		const exporter = new alphaTab.exporter.Gp7Exporter();
-		
+
 		setProgress(60);
-		
+
 		const data = exporter.export(api.score, api.settings);
-		
+
 		setProgress(80);
-		
+
 		// 创建下载 - 转换为标准 ArrayBuffer
 		const buffer = new Uint8Array(data).buffer;
 		const blob = new Blob([buffer], { type: 'application/octet-stream' });
 		const fileName = getFileName('gp');
 		downloadBlob(blob, fileName);
-		
+
 		setProgress(100);
 	};
 
 	/**
 	 * 将音频样本转换为 WAV Blob
 	 */
-	const convertSamplesToWavBlob = (chunks: Float32Array[], sampleRate: number): Blob => {
-		const alphaTab = require('@coderline/alphatab');
-		
+	const convertSamplesToWavBlob = async (
+		chunks: Float32Array[],
+		sampleRate: number
+	): Promise<Blob> => {
+		const alphaTab = await import('@coderline/alphatab');
+
 		const samples = chunks.reduce((p, c) => p + c.length, 0);
 		const wavHeaderSize = 44;
 		const fileSize = wavHeaderSize + samples * 4;
@@ -185,13 +190,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 		buffer.write(new Uint8Array([0x57, 0x41, 0x56, 0x45]), 0, 4); // "WAVE"
 
 		// format chunk
-		buffer.write(new Uint8Array([0x66, 0x6D, 0x74, 0x20]), 0, 4); // "fmt "
+		buffer.write(new Uint8Array([0x66, 0x6d, 0x74, 0x20]), 0, 4); // "fmt "
 		alphaTab.io.IOHelper.writeInt32LE(buffer, 16); // block size
 		alphaTab.io.IOHelper.writeInt16LE(buffer, 3); // audio format (IEEE float)
 		const channels = 2;
 		alphaTab.io.IOHelper.writeInt16LE(buffer, channels);
 		alphaTab.io.IOHelper.writeInt32LE(buffer, sampleRate);
-		alphaTab.io.IOHelper.writeInt32LE(buffer, Float32Array.BYTES_PER_ELEMENT * channels * sampleRate);
+		alphaTab.io.IOHelper.writeInt32LE(
+			buffer,
+			Float32Array.BYTES_PER_ELEMENT * channels * sampleRate
+		);
 		const bitsPerSample = Float32Array.BYTES_PER_ELEMENT * 8;
 		alphaTab.io.IOHelper.writeInt16LE(buffer, channels * Math.floor((bitsPerSample + 7) / 8));
 		alphaTab.io.IOHelper.writeInt16LE(buffer, bitsPerSample);
@@ -204,7 +212,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 			buffer.write(bytes, 0, bytes.length);
 		}
 
-		return new Blob([buffer.toArray()], { type: 'audio/wav' });
+		// Ensure we provide a standard Uint8Array backed by an ArrayBuffer
+		const out = Uint8Array.from(buffer.toArray() as unknown as Iterable<number>);
+		return new Blob([out], { type: 'audio/wav' });
 	};
 
 	/**
@@ -214,12 +224,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 		const score = api?.score;
 		const title = score?.title || 'Untitled';
 		const artist = score?.artist || '';
-		
+
 		let fileName = title;
 		if (artist) {
 			fileName += ` - ${artist}`;
 		}
-		
+
 		return `${fileName}.${extension}`;
 	};
 
@@ -254,7 +264,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 						onClick={onClose}
 						aria-label="关闭"
 					>
-						<svg className="svg-icon lucide-x" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+						<svg
+							className="svg-icon lucide-x"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+						>
 							<line x1="18" y1="6" x2="6" y2="18"></line>
 							<line x1="6" y1="6" x2="18" y2="18"></line>
 						</svg>
@@ -319,14 +334,18 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 										onChange={(e) => setMasterVolume(Number(e.target.value))}
 										disabled={status === 'exporting'}
 									/>
-									<span style={{ marginLeft: '10px' }}>{Math.round(masterVolume * 100)}%</span>
+									<span style={{ marginLeft: '10px' }}>
+										{Math.round(masterVolume * 100)}%
+									</span>
 								</div>
 							</div>
 
 							<div className="setting-item">
 								<div className="setting-item-info">
 									<div className="setting-item-name">节拍器音量</div>
-									<div className="setting-item-description">导出时包含节拍器声音</div>
+									<div className="setting-item-description">
+										导出时包含节拍器声音
+									</div>
 								</div>
 								<div className="setting-item-control">
 									<input
@@ -339,7 +358,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 										disabled={status === 'exporting'}
 									/>
 									<span style={{ marginLeft: '10px' }}>
-										{metronomeVolume === 0 ? '关闭' : `${Math.round(metronomeVolume * 100)}%`}
+										{metronomeVolume === 0
+											? '关闭'
+											: `${Math.round(metronomeVolume * 100)}%`}
 									</span>
 								</div>
 							</div>
@@ -372,7 +393,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 										}}
 									/>
 								</div>
-								<div style={{ marginTop: '5px', textAlign: 'center', fontSize: '0.9em' }}>
+								<div
+									style={{
+										marginTop: '5px',
+										textAlign: 'center',
+										fontSize: '0.9em',
+									}}
+								>
 									{Math.round(progress)}%
 								</div>
 							</div>

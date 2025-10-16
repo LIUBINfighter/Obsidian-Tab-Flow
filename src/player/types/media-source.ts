@@ -33,33 +33,33 @@ export enum MediaType {
  */
 export type MediaSource =
 	| {
-		type: MediaType.Synth;
-	}
+			type: MediaType.Synth;
+	  }
 	| {
-		type: MediaType.Audio;
-		/** 音频文件 URL */
-		url: string;
-		/** 音频文件 Blob */
-		blob?: Blob;
-		/** 音频文件原始字节 */
-		audioFile?: Uint8Array;
-	}
+			type: MediaType.Audio;
+			/** 音频文件 URL */
+			url: string;
+			/** 音频文件 Blob */
+			blob?: Blob;
+			/** 音频文件原始字节 */
+			audioFile?: Uint8Array;
+	  }
 	| {
-		type: MediaType.YouTube;
-		/** YouTube 视频 URL */
-		url: string;
-		/** 媒体偏移量（毫秒） */
-		offset: number;
-		/** 视频时长（毫秒，可选） */
-		duration?: number;
-	}
+			type: MediaType.YouTube;
+			/** YouTube 视频 URL */
+			url: string;
+			/** 媒体偏移量（毫秒） */
+			offset: number;
+			/** 视频时长（毫秒，可选） */
+			duration?: number;
+	  }
 	| {
-		type: MediaType.External;
-		/** 外部媒体元素 */
-		element: HTMLMediaElement;
-		/** 媒体偏移量（毫秒） */
-		offset?: number;
-	};
+			type: MediaType.External;
+			/** 外部媒体元素 */
+			element: HTMLMediaElement;
+			/** 媒体偏移量（毫秒） */
+			offset?: number;
+	  };
 
 /**
  * 类型守卫：判断是否为合成器模式

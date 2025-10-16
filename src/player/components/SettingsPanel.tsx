@@ -771,7 +771,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 						>
 							Copy Config to Clipboard
 						</button>
-						{/* <button
+						<button
 							type="button"
 							className="settings-tool-button"
 							onClick={() => {
@@ -817,7 +817,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							}}
 						>
 							Import Config from JSON
-						</button> */}
+						</button>
 						<button
 							type="button"
 							className="settings-tool-button settings-tool-button-danger"

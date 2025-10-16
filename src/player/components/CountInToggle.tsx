@@ -10,11 +10,7 @@ interface CountInToggleProps {
 /**
  * CountInToggle - 预备拍开关
  */
-export const CountInToggle: React.FC<CountInToggleProps> = ({
-	controller,
-	enabled,
-	onToggle,
-}) => {
+export const CountInToggle: React.FC<CountInToggleProps> = ({ controller, enabled, onToggle }) => {
 	const handleToggle = () => {
 		const newState = !enabled;
 		onToggle(newState);
