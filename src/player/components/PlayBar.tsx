@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import type { PlayerController } from '../PlayerController';
 import { PlayControls } from './PlayControls';
 import { TimeDisplay } from './TimeDisplay';
-import { SpeedControl } from './SpeedControl';
 import { MetronomeToggle } from './MetronomeToggle';
 import { CountInToggle } from './CountInToggle';
 import { LoopToggle } from './LoopToggle';
@@ -28,7 +27,6 @@ interface PlayBarProps {
  * 功能模块：
  * - PlayControls: 播放/暂停/停止
  * - TimeDisplay: 时间显示
- * - SpeedControl: 速度选择
  * - MetronomeToggle: 节拍器开关
  */
 export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, onTracksClick }) => {
@@ -65,9 +63,6 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onSettingsClick, o
 
 				{/* 时间显示 */}
 				<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
-
-				{/* 速度控制 */}
-				<SpeedControl controller={controller} />
 
 				{/* 节拍器开关 */}
 				<MetronomeToggle
