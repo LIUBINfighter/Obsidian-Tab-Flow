@@ -10,6 +10,8 @@ import { LayoutToggle } from './LayoutToggle';
 import { ZoomControl } from './ZoomControl';
 import { StaveProfileControl } from './StaveProfileControl';
 import { ScrollModeControl } from './ScrollModeControl';
+import { TracksToggle } from './TracksToggle';
+import { TracksModal } from './TracksModal';
 
 interface PlayBarProps {
 	controller: PlayerController;
@@ -35,61 +37,80 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
 	const positionMs = runtimeStore((s) => s.positionMs);
 	const durationMs = runtimeStore((s) => s.durationMs);
 	const scoreLoaded = runtimeStore((s) => s.scoreLoaded);
+	const api = runtimeStore((s) => s.alphaTabApi); // 从 store 获取 API
 
 	// 本地状态
 	const [metronomeEnabled, setMetronomeEnabled] = useState(false);
 	const [countInEnabled, setCountInEnabled] = useState(false);
+	const [tracksModalOpen, setTracksModalOpen] = useState(false);
 
 	// 判断按钮状态
 	const isPlaying = playbackState === 'playing';
 	const canPlay = scoreLoaded;
 
 	return (
-		<div className="tab-flow-play-bar">
-			{/* 播放控制 */}
-			<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
+		<>
+			<div className="tab-flow-play-bar">
+				{/* 播放控制 */}
+				<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
 
-			{/* 时间显示 */}
-			<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
+				{/* 时间显示 */}
+				<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
 
-			{/* 速度控制 */}
-			<SpeedControl controller={controller} />
+				{/* 速度控制 */}
+				<SpeedControl controller={controller} />
 
-			{/* 节拍器开关 */}
-			<MetronomeToggle
-				controller={controller}
-				enabled={metronomeEnabled}
-				onToggle={setMetronomeEnabled}
-			/>
+				{/* 节拍器开关 */}
+				<MetronomeToggle
+					controller={controller}
+					enabled={metronomeEnabled}
+					onToggle={setMetronomeEnabled}
+				/>
 
-			{/* 预备拍开关 */}
-			<CountInToggle
-				controller={controller}
-				enabled={countInEnabled}
-				onToggle={setCountInEnabled}
-			/>
+				{/* 预备拍开关 */}
+				<CountInToggle
+					controller={controller}
+					enabled={countInEnabled}
+					onToggle={setCountInEnabled}
+				/>
 
-			{/* 循环播放 */}
-			<LoopToggle controller={controller} />
+				{/* 循环播放 */}
+				<LoopToggle controller={controller} />
 
-			{/* 布局切换 */}
-			<LayoutToggle controller={controller} />
+				{/* 布局切换 */}
+				<LayoutToggle controller={controller} />
 
-			{/* 缩放控制 */}
-			<ZoomControl controller={controller} />
+				{/* 缩放控制 */}
+				<ZoomControl controller={controller} />
 
-			{/* 谱表模式 */}
-			<StaveProfileControl controller={controller} />
+				{/* 谱表模式 */}
+				<StaveProfileControl controller={controller} />
 
-			{/* 滚动模式 */}
-			<ScrollModeControl controller={controller} />
+				{/* 滚动模式 */}
+				<ScrollModeControl controller={controller} />
+				
+				{/* 音轨管理按钮 */}
+				<TracksToggle 
+					controller={controller} 
+					onClick={() => setTracksModalOpen(true)} 
+				/>
 
-			{/* 状态指示器（调试用） */}
-			{!scoreLoaded && (
-				<div className="play-bar-status">
-					<span className="status-text">等待加载曲谱...</span>
-				</div>
+				{/* 状态指示器（调试用） */}
+				{!scoreLoaded && (
+					<div className="play-bar-status">
+						<span className="status-text">等待加载曲谱...</span>
+					</div>
+				)}
+			</div>
+			
+			{/* 音轨选择器模态框 */}
+			{api && (
+				<TracksModal
+					api={api}
+					isOpen={tracksModalOpen}
+					onClose={() => setTracksModalOpen(false)}
+				/>
 			)}
-		</div>
+		</>
 	);
 };

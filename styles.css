@@ -2134,3 +2134,327 @@ ul.tabflow-setting-description li {
 
 /* reset styling intentionally uses existing setting-item styles to match other reset buttons */
 
+/* --- tracks.css --- */
+/**
+ * 音轨和五线谱组件样式
+ */
+
+/* ========== 音轨选择器模态框 ========== */
+
+.tabflow-tracks-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	display: none;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+
+	&.is-open {
+		display: flex;
+	}
+}
+
+.tabflow-tracks-panel {
+	background-color: var(--background-primary);
+	border-radius: 8px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+	max-width: 600px;
+	max-height: 80vh;
+	width: 90%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+/* ========== 头部 ========== */
+
+.tabflow-tracks-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.tabflow-tracks-title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.tabflow-tracks-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+/* ========== 音轨列表 ========== */
+
+.tabflow-tracks-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 12px;
+}
+
+.tabflow-tracks-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 20px;
+	color: var(--text-muted);
+
+	p {
+		margin: 0;
+	}
+}
+
+/* ========== 底部信息 ========== */
+
+.tabflow-tracks-footer {
+	padding: 12px 20px;
+	border-top: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.tabflow-tracks-info {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+/* ========== 音轨项 ========== */
+
+.tabflow-track-item {
+	background-color: var(--background-secondary);
+	border-radius: 6px;
+	padding: 12px;
+	margin-bottom: 12px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
+
+.tabflow-track-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+}
+
+.tabflow-track-info {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 1;
+	min-width: 0;
+}
+
+.tabflow-track-checkbox {
+	flex-shrink: 0;
+	cursor: pointer;
+}
+
+.tabflow-track-name {
+	flex: 1;
+	font-weight: 500;
+	color: var(--text-normal);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin: 0;
+}
+
+.tabflow-track-controls {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+}
+
+/* ========== 音轨设置项 ========== */
+
+.tabflow-track-setting {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-top: 1px solid var(--background-modifier-border);
+
+	&:first-of-type {
+		border-top: none;
+	}
+}
+
+.tabflow-setting-label {
+	font-size: 13px;
+	color: var(--text-muted);
+	flex-shrink: 0;
+	margin-right: 12px;
+}
+
+.tabflow-setting-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 1;
+	min-width: 0;
+}
+
+.tabflow-slider {
+	flex: 1;
+	min-width: 100px;
+}
+
+.tabflow-setting-value {
+	font-size: 12px;
+	color: var(--text-muted);
+	min-width: 40px;
+	text-align: right;
+}
+
+/* ========== 五线谱项 ========== */
+
+.tabflow-staff-item {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.tabflow-staff-header {
+	margin-bottom: 8px;
+}
+
+.tabflow-staff-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+.tabflow-staff-controls {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+/* ========== 按钮样式 ========== */
+
+.tabflow-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 6px 12px;
+	font-size: 13px;
+	font-weight: 500;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--interactive-normal);
+	color: var(--text-normal);
+	cursor: pointer;
+	transition: all 0.2s;
+
+	&:hover:not(:disabled) {
+		background-color: var(--interactive-hover);
+	}
+
+	&:active:not(:disabled) {
+		transform: scale(0.98);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&.is-active {
+		background-color: var(--interactive-accent);
+		color: var(--text-on-accent);
+		border-color: var(--interactive-accent);
+	}
+
+	&.is-muted {
+		background-color: var(--background-modifier-error);
+		color: var(--text-on-accent);
+		border-color: var(--background-modifier-error);
+	}
+}
+
+.tabflow-btn-sm {
+	padding: 4px 8px;
+	font-size: 12px;
+}
+
+.tabflow-btn-icon {
+	padding: 6px;
+
+	svg {
+		display: block;
+	}
+}
+
+.tabflow-btn-notation {
+	min-width: 40px;
+	padding: 6px 8px;
+}
+
+.tabflow-notation-icon {
+	font-size: 16px;
+	line-height: 1;
+}
+
+/* ========== 响应式设计 ========== */
+
+@media (max-width: 768px) {
+	.tabflow-tracks-panel {
+		max-width: 95%;
+		max-height: 90vh;
+	}
+
+	.tabflow-track-setting {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.tabflow-setting-label {
+		margin-bottom: 6px;
+	}
+
+	.tabflow-setting-control {
+		width: 100%;
+	}
+}
+
+/* ========== 音轨管理按钮（PlayBar 中） ========== */
+
+.track-count {
+	margin-left: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+}
+
+.play-bar-btn:hover .track-count {
+	color: var(--text-normal);
+}
+
+.play-bar-btn:disabled .track-count {
+	opacity: 0.5;
+}
+
+/* ========== 暗色主题优化 ========== */
+
+.theme-dark {
+	.tabflow-tracks-modal {
+		background-color: rgba(0, 0, 0, 0.7);
+	}
+
+	.tabflow-track-item {
+		background-color: var(--background-primary-alt);
+	}
+}
+
