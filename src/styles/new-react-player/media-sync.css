@@ -2,20 +2,38 @@
  * MediaSync Panel Styles
  * 外部媒体同步面板样式
  * 参考 PlayBar 的圆角边框设计
+ * 支持上下弹出动画
  */
 
 .media-sync-panel {
-	position: relative;
-	width: 100%;
+	position: fixed;
+	bottom: -500px; /* 初始位置在底部外 */
+	left: 50%;
+	transform: translateX(-50%);
+	width: 90%;
+	max-width: 1000px;
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	margin: 0.5em 0;
+	border-radius: var(--radius-s) var(--radius-s) 0 0; /* 只有上面圆角 */
 	display: flex;
 	flex-direction: column;
 	max-height: 60vh;
 	overflow: hidden;
 	flex-shrink: 0;
+	box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+	z-index: 999;
+	transition:
+		bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	pointer-events: none;
+	opacity: 0;
+}
+
+/* 打开状态 - 动画上升 */
+.media-sync-panel.media-sync-open {
+	bottom: 0;
+	pointer-events: auto;
+	opacity: 1;
 }
 
 /* 工具栏 */
@@ -131,6 +149,35 @@
 	padding: 4px 8px;
 	background: var(--background-secondary);
 	border-radius: var(--radius-s);
+}
+
+/* 关闭按钮 */
+.media-sync-close-btn {
+	background: transparent;
+	border: none;
+	font-size: 20px;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 4px 8px;
+	border-radius: var(--radius-s);
+	transition: all 0.2s ease;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+}
+
+.media-sync-close-btn:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.media-sync-close-btn:active {
+	background-color: var(--background-modifier-active-hover);
+	transform: scale(0.95);
 }
 
 /* 标签页容器 */
@@ -302,6 +349,15 @@
 
 /* 响应式 */
 @media (max-width: 768px) {
+	.media-sync-panel {
+		width: 100%;
+		max-width: 100%;
+		left: 0;
+		transform: none;
+		border-radius: var(--radius-s) var(--radius-s) 0 0;
+		max-height: 80vh;
+	}
+
 	.media-sync-toolbar {
 		flex-direction: column;
 		align-items: stretch;

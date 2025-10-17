@@ -21,6 +21,7 @@ interface MediaSyncProps {
 	controller: PlayerController;
 	app: App;
 	isOpen: boolean;
+	onClose?: () => void;
 }
 
 /**
@@ -55,7 +56,7 @@ function extractYouTubeVideoId(input: string): string | null {
 	return null;
 }
 
-export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen }) => {
+export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, onClose }) => {
 	const runtimeStore = controller.getRuntimeStore();
 	const api = runtimeStore((s) => s.alphaTabApi);
 
@@ -208,12 +209,8 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 		}
 	}, [mediaState]);
 
-	if (!isOpen) {
-		return null;
-	}
-
 	return (
-		<div className="media-sync-panel">
+		<div className={`media-sync-panel ${isOpen ? 'media-sync-open' : ''}`}>
 			{/* 工具栏 */}
 			<div className="media-sync-toolbar">
 				<div className="media-sync-toolbar-left">
@@ -283,7 +280,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 								<option value={16}>🚀 60fps (16ms)</option>
 								<option value={33}>⚡ 30fps (33ms)</option>
 								<option value={50}>✅ 20fps (50ms) 推荐</option>
-								<option value={100}>� 10fps (100ms) 省电</option>
+								<option value={100}>📱 10fps (100ms) 省电</option>
 							</select>
 						</>
 					)}
@@ -294,6 +291,18 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 						{mediaState.type === MediaType.Video && '当前: 视频同步'}
 						{mediaState.type === MediaType.YouTube && '当前: YouTube 同步'}
 					</span>
+
+					{/* 关闭按钮 */}
+					{onClose && (
+						<button
+							className="media-sync-close-btn"
+							onClick={onClose}
+							title="关闭媒体同步面板"
+							aria-label="Close media sync panel"
+						>
+							✕
+						</button>
+					)}
 				</div>
 			</div>
 
