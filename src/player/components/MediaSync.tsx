@@ -339,7 +339,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 										className="media-sync-load-btn"
 										onClick={openFileSelectModal}
 									>
-										📁 选择媒体文件...
+										选择媒体文件...
 									</button>
 								</div>
 							)}

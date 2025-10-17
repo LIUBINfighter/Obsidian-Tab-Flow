@@ -42,6 +42,20 @@ interface MarkerDragInfo {
 
 const dragLimit = 10;
 const dragThreshold = 5;
+/** 标记宽度占视窗宽度的比例（默认 2%） */
+const markerWidthRatio = 0.02;
+/** 标记最小宽度（像素） */
+const markerMinWidth = 20;
+/** 标记最大宽度（像素） */
+const markerMaxWidth = 80;
+
+/**
+ * 计算标记宽度
+ */
+function computeMarkerWidth(viewportWidth: number): number {
+	const calculatedWidth = viewportWidth * markerWidthRatio;
+	return Math.max(markerMinWidth, Math.min(markerMaxWidth, calculatedWidth));
+}
 
 /**
  * 计算时间位置转换到 X 坐标
@@ -104,8 +118,10 @@ function computeMarkerInlineStyle(
 	zoom: number,
 	leftPadding: number,
 	draggingMarker: SyncPointMarker | null,
-	draggingInfo: MarkerDragInfo | null
+	draggingInfo: MarkerDragInfo | null,
+	viewportWidth: number
 ): React.CSSProperties {
+	const markerWidth = computeMarkerWidth(viewportWidth);
 	let left = timePositionToX(pixelPerMilliseconds, marker.syncTime, zoom, leftPadding);
 
 	if (marker === draggingMarker && draggingInfo) {
@@ -113,11 +129,14 @@ function computeMarkerInlineStyle(
 		left += deltaX;
 	}
 
+	// 将标记中心对齐到同步点位置
+	left -= markerWidth / 2;
+
 	return {
 		left: `${left}px`,
 		position: 'absolute',
 		top: 0,
-		width: '30px',
+		width: `${markerWidth}px`,
 		height: '100%',
 		cursor: marker.syncBpm !== undefined ? 'grab' : 'default',
 	};
@@ -374,7 +393,8 @@ export const SyncPointMarkerPanel: React.FC<SyncPointMarkerPanelProps> = ({
 						zoom,
 						leftPadding,
 						draggingMarker,
-						draggingInfo
+						draggingInfo,
+						width
 					)}
 					onDoubleClick={(e) => onToggleMarker(marker, e)}
 					onMouseDown={(e) => startMarkerDrag(marker, e)}
