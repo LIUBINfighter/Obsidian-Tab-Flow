@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { PlayerController } from '../PlayerController';
 import { PlayBar } from './PlayBar';
 import { SettingsPanel } from './SettingsPanel';
@@ -14,41 +14,45 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 	const viewportRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
 
-	const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
-	const [tracksPanelOpen, setTracksPanelOpen] = useState(false);
-	const [mediaSyncOpen, setMediaSyncOpen] = useState(false);
-
-	// 切换 Settings 面板：如果打开则关闭，如果关闭则打开（并关闭 Tracks 面板）
-	const handleToggleSettings = () => {
-		if (settingsPanelOpen) {
-			setSettingsPanelOpen(false);
-		} else {
-			if (tracksPanelOpen) {
-				setTracksPanelOpen(false);
-			}
-			setSettingsPanelOpen(true);
-		}
-	};
-
-	// 切换 Tracks 面板：如果打开则关闭，如果关闭则打开（并关闭 Settings 面板）
-	const handleToggleTracks = () => {
-		if (tracksPanelOpen) {
-			setTracksPanelOpen(false);
-		} else {
-			if (settingsPanelOpen) {
-				setSettingsPanelOpen(false);
-			}
-			setTracksPanelOpen(true);
-		}
-	};
-
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
-	const uiStore = controller.getUIStore(); // 订阅 runtime state
-	const error = runtimeStore((s) => s.error);
+	const uiStore = controller.getUIStore();
 
 	// 订阅 UI state
+	const settingsPanelOpen = uiStore((s) => s.panels.settingsPanel);
+	const tracksPanelOpen = uiStore((s) => s.panels.tracksPanel);
+	const mediaSyncOpen = uiStore((s) => s.panels.mediaSyncPanel);
 	const loading = uiStore((s) => s.loading);
+	const error = runtimeStore((s) => s.error);
+
+	// 切换 Settings 面板
+	const handleToggleSettings = () => {
+		if (settingsPanelOpen) {
+			uiStore.getState().hidePanel('settingsPanel');
+		} else {
+			if (tracksPanelOpen) {
+				uiStore.getState().hidePanel('tracksPanel');
+			}
+			uiStore.getState().showPanel('settingsPanel');
+		}
+	};
+
+	// 切换 Tracks 面板
+	const handleToggleTracks = () => {
+		if (tracksPanelOpen) {
+			uiStore.getState().hidePanel('tracksPanel');
+		} else {
+			if (settingsPanelOpen) {
+				uiStore.getState().hidePanel('settingsPanel');
+			}
+			uiStore.getState().showPanel('tracksPanel');
+		}
+	};
+
+	// 切换 MediaSync 面板
+	const handleToggleMediaSync = () => {
+		uiStore.getState().togglePanel('mediaSyncPanel');
+	};
 
 	useEffect(() => {
 		if (!containerRef.current || !viewportRef.current) return;
@@ -82,19 +86,19 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				controller={controller}
 				onSettingsClick={handleToggleSettings}
 				onTracksClick={handleToggleTracks}
-				onMediaSyncClick={() => setMediaSyncOpen(!mediaSyncOpen)}
+				onMediaSyncClick={handleToggleMediaSync}
 			/>
 			{/* Tracks Panel - 音轨管理侧边栏 */}
 			<TracksPanel
 				controller={controller}
 				isOpen={tracksPanelOpen}
-				onClose={() => setTracksPanelOpen(false)}
+				onClose={() => uiStore.getState().hidePanel('tracksPanel')}
 			/>
 			{/* Settings Panel - 设置侧边栏 */}
 			<SettingsPanel
 				controller={controller}
 				isOpen={settingsPanelOpen}
-				onClose={() => setSettingsPanelOpen(false)}
+				onClose={() => uiStore.getState().hidePanel('settingsPanel')}
 			/>{' '}
 			{/* Loading Indicator */}
 			{loading.isLoading && (

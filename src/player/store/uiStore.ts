@@ -22,11 +22,12 @@ export interface ToastMessage {
 export interface UIStore {
 	// State
 	panels: {
-		tracksModal: boolean;
+		tracksPanel: boolean;
 		settingsPanel: boolean;
 		debugBar: boolean;
 		exportModal: boolean;
 		shareCardModal: boolean;
+		mediaSyncPanel: boolean;
 	};
 	loading: {
 		isLoading: boolean;
@@ -61,11 +62,12 @@ export function createUIStore(): UseBoundStore<StoreApi<UIStore>> {
 	return create<UIStore>((set, get) => ({
 		// Initial State
 		panels: {
-			tracksModal: false,
+			tracksPanel: false,
 			settingsPanel: false,
 			debugBar: false,
 			exportModal: false,
 			shareCardModal: false,
+			mediaSyncPanel: false,
 		},
 		loading: {
 			isLoading: false,
@@ -104,11 +106,12 @@ export function createUIStore(): UseBoundStore<StoreApi<UIStore>> {
 		hideAllPanels: () => {
 			set({
 				panels: {
-					tracksModal: false,
+					tracksPanel: false,
 					settingsPanel: false,
 					debugBar: false,
 					exportModal: false,
 					shareCardModal: false,
+					mediaSyncPanel: false,
 				},
 			});
 		},
@@ -154,11 +157,12 @@ export function createUIStore(): UseBoundStore<StoreApi<UIStore>> {
 		reset: () => {
 			set({
 				panels: {
-					tracksModal: false,
+					tracksPanel: false,
 					settingsPanel: false,
 					debugBar: false,
 					exportModal: false,
 					shareCardModal: false,
+					mediaSyncPanel: false,
 				},
 				loading: {
 					isLoading: false,

@@ -22,6 +22,10 @@ export const TracksToggle: React.FC<TracksToggleProps> = ({ controller, onClick 
 	const scoreLoaded = runtimeStore((s) => s.scoreLoaded);
 	const api = runtimeStore((s) => s.alphaTabApi);
 
+	// 从 UI store 获取面板打开状态
+	const uiStore = controller.getUIStore();
+	const isTracksOpen = uiStore((s) => s.panels.tracksPanel);
+
 	// 获取当前音轨数量
 	const trackCount = api?.tracks?.length ?? 0;
 	const totalTracks = api?.score?.tracks?.length ?? 0;
@@ -29,7 +33,7 @@ export const TracksToggle: React.FC<TracksToggleProps> = ({ controller, onClick 
 	return (
 		<div className="play-bar-group">
 			<button
-				className={`play-bar-button tracks-toggle-button ${!scoreLoaded ? 'disabled' : ''}`}
+				className={`play-bar-button tracks-toggle-button ${isTracksOpen ? 'active' : ''} ${!scoreLoaded ? 'disabled' : ''}`}
 				onClick={onClick}
 				disabled={!scoreLoaded}
 				title={scoreLoaded ? `音轨管理 (${trackCount}/${totalTracks})` : '等待加载曲谱'}
