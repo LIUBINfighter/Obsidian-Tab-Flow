@@ -169,9 +169,6 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 						</label>
 					</div>
 
-					{/* Spacer 推动控制按钮到右边 */}
-					<div className="tabflow-track-header-row-1-spacer" />
-
 					{/* Solo 和 Mute 控制 */}
 					<div className="tabflow-track-controls">
 						{/* Solo 按钮 */}

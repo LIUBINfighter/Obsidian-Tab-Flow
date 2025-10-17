@@ -121,14 +121,9 @@
 .tabflow-track-header-row-1 {
 	display: flex;
 	align-items: center;
-	justify-content: flex-start;
+	justify-content: space-between;
 	gap: 8px;
 	width: 100%;
-}
-
-.tabflow-track-header-row-1-spacer {
-	flex: 1;
-	min-width: 0;
 }
 
 .tabflow-track-header-row-2 {
@@ -144,7 +139,7 @@
 	align-items: center;
 	gap: 8px;
 	min-width: 0;
-	flex-shrink: 0;
+	flex: 1;
 }
 
 .tabflow-track-name {
@@ -152,8 +147,8 @@
 	font-weight: 500;
 	color: var(--text-normal);
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	overflow: visible;
+	flex: 1;
 	min-width: 0;
 }
 
