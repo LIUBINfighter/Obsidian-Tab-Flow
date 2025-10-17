@@ -11,7 +11,7 @@
 
 import type * as AlphaTab from '@coderline/alphatab';
 import React, { useState } from 'react';
-import { Mic, VolumeX, Volume2 } from 'lucide-react';
+import { Mic, VolumeX, Volume2, Eye, EyeOff } from 'lucide-react';
 import { StaffItem } from './StaffItem';
 
 /**
@@ -151,45 +151,58 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 		<div className="tabflow-track-item" data-track-index={track.index}>
 			{/* 音轨基本信息和控制 */}
 			<div className="tabflow-track-header">
-				<div className="tabflow-track-info">
-					<input
-						type="checkbox"
-						id={`tabflow-track-${track.index}`}
-						className="tabflow-track-checkbox"
-						checked={isSelected}
-						onChange={(e) => handleTrackSelect(e.target.checked)}
-					/>
-					<label
-						htmlFor={`tabflow-track-${track.index}`}
-						className="tabflow-track-name"
-						title={track.name}
-					>
-						{track.name}
-					</label>
+				{/* 第一行：音轨选择按钮、名称、Solo 和 Mute 控制 */}
+				<div className="tabflow-track-header-row-1">
+					{/* 音轨选择按钮和名称 */}
+					<div className="tabflow-track-info">
+						<button
+							type="button"
+							className={`tabflow-btn tabflow-btn-icon ${isSelected ? 'is-active' : ''}`}
+							onClick={() => handleTrackSelect(!isSelected)}
+							aria-label="Toggle track visibility"
+							title={isSelected ? '隐藏此音轨' : '显示此音轨'}
+						>
+							{isSelected ? <Eye size={16} /> : <EyeOff size={16} />}
+						</button>
+						<label className="tabflow-track-name" title={track.name}>
+							{track.name}
+						</label>
+					</div>
+
+					{/* Spacer 推动控制按钮到右边 */}
+					<div className="tabflow-track-header-row-1-spacer" />
+
+					{/* Solo 和 Mute 控制 */}
+					<div className="tabflow-track-controls">
+						{/* Solo 按钮 */}
+						<button
+							type="button"
+							className={`tabflow-btn tabflow-btn-icon ${isSolo ? 'is-active' : ''}`}
+							onClick={handleSoloToggle}
+							aria-label="Solo"
+							title="Solo - 独奏此音轨"
+						>
+							<Mic size={16} />
+						</button>
+
+						{/* Mute 按钮 */}
+						<button
+							type="button"
+							className={`tabflow-btn tabflow-btn-icon ${isMute ? 'is-muted' : ''}`}
+							onClick={handleMuteToggle}
+							aria-label="Mute"
+							title="Mute - 静音此音轨"
+						>
+							{isMute ? <VolumeX size={16} /> : <Volume2 size={16} />}
+						</button>
+					</div>
 				</div>
 
-				<div className="tabflow-track-controls">
-					{/* Solo 按钮 */}
-					<button
-						type="button"
-						className={`tabflow-btn tabflow-btn-icon ${isSolo ? 'is-active' : ''}`}
-						onClick={handleSoloToggle}
-						aria-label="Solo"
-						title="Solo - 独奏此音轨"
-					>
-						<Mic size={16} />
-					</button>
-
-					{/* Mute 按钮 */}
-					<button
-						type="button"
-						className={`tabflow-btn tabflow-btn-icon ${isMute ? 'is-muted' : ''}`}
-						onClick={handleMuteToggle}
-						aria-label="Mute"
-						title="Mute - 静音此音轨"
-					>
-						{isMute ? <VolumeX size={16} /> : <Volume2 size={16} />}
-					</button>
+				{/* 第二行：五线谱显示选项 */}
+				<div className="tabflow-track-header-row-2">
+					{track.staves.map((staff) => (
+						<StaffItem key={staff.index} api={api} staff={staff} isCompact={true} />
+					))}
 				</div>
 			</div>
 
@@ -264,11 +277,6 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 					</span>
 				</div>
 			</div>
-
-			{/* 五线谱显示选项 */}
-			{track.staves.map((staff) => (
-				<StaffItem key={staff.index} api={api} staff={staff} />
-			))}
 		</div>
 	);
 };

@@ -37,12 +37,15 @@ export interface StaffItemProps {
 
 	/** 五线谱数据 */
 	staff: AlphaTab.model.Staff;
+
+	/** 是否为紧凑模式（在 TrackHeader 中显示） */
+	isCompact?: boolean;
 }
 
 /**
  * 五线谱显示选项组件
  */
-export const StaffItem: React.FC<StaffItemProps> = ({ api, staff }) => {
+export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = false }) => {
 	// ========== 状态管理 ==========
 
 	const [staffOptions, _setStaffOptions] = useState<StaffOptions>({
@@ -127,6 +130,62 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff }) => {
 
 	// ========== 渲染 ==========
 
+	// 紧凑模式：直接渲染按钮组
+	if (isCompact) {
+		return (
+			<>
+				{/* 标准记谱法按钮 */}
+				<button
+					type="button"
+					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showStandardNotation ? 'is-active' : ''}`}
+					onClick={toggleStandardNotation}
+					disabled={staff.isPercussion}
+					aria-label="Standard Notation"
+					title="标准记谱法 - 五线谱"
+				>
+					<span className="tabflow-notation-icon">𝅘𝅥</span>
+				</button>
+
+				{/* 六线谱按钮 */}
+				<button
+					type="button"
+					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showTablature ? 'is-active' : ''}`}
+					onClick={toggleTablature}
+					disabled={staff.isPercussion}
+					aria-label="Guitar Tabs"
+					title="六线谱 - 吉他谱"
+				>
+					<span className="tabflow-notation-icon">TAB</span>
+				</button>
+
+				{/* 斜线记谱法按钮 */}
+				<button
+					type="button"
+					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showSlash ? 'is-active' : ''}`}
+					onClick={toggleSlash}
+					disabled={staff.isPercussion}
+					aria-label="Slash Notation"
+					title="斜线记谱法 - 节奏谱"
+				>
+					<span className="tabflow-notation-icon">𝄍</span>
+				</button>
+
+				{/* 简谱按钮 */}
+				<button
+					type="button"
+					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showNumbered ? 'is-active' : ''}`}
+					onClick={toggleNumbered}
+					disabled={staff.isPercussion}
+					aria-label="Numbered Notation"
+					title="简谱 - 数字谱"
+				>
+					<span className="tabflow-notation-icon">123</span>
+				</button>
+			</>
+		);
+	}
+
+	// 普通模式：保留原有结构
 	return (
 		<div className="tabflow-staff-item">
 			<div className="tabflow-staff-header">
@@ -161,7 +220,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff }) => {
 				{/* 斜线记谱法按钮 */}
 				<button
 					type="button"
-					className={`tabflow-btn tabflow-btn-notation ${staffOptions.showSlash ? 'is-active' : ''}`}
+					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showSlash ? 'is-active' : ''}`}
 					onClick={toggleSlash}
 					disabled={staff.isPercussion}
 					aria-label="Slash Notation"
@@ -173,7 +232,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff }) => {
 				{/* 简谱按钮 */}
 				<button
 					type="button"
-					className={`tabflow-btn tabflow-btn-notation ${staffOptions.showNumbered ? 'is-active' : ''}`}
+					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showNumbered ? 'is-active' : ''}`}
 					onClick={toggleNumbered}
 					disabled={staff.isPercussion}
 					aria-label="Numbered Notation"

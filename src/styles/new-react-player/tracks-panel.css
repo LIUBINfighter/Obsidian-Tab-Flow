@@ -113,21 +113,37 @@
 
 .tabflow-track-header {
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	flex-direction: column;
+	gap: 8px;
 	margin-bottom: 12px;
+}
+
+.tabflow-track-header-row-1 {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 8px;
+	width: 100%;
+}
+
+.tabflow-track-header-row-1-spacer {
+	flex: 1;
+	min-width: 0;
+}
+
+.tabflow-track-header-row-2 {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	justify-content: flex-start;
+	width: 100%;
 }
 
 .tabflow-track-info {
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	flex: 1;
 	min-width: 0;
-}
-
-.tabflow-track-checkbox {
-	cursor: pointer;
 	flex-shrink: 0;
 }
 
@@ -135,10 +151,10 @@
 	font-size: 14px;
 	font-weight: 500;
 	color: var(--text-normal);
-	cursor: pointer;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	min-width: 0;
 }
 
 .tabflow-track-controls {
@@ -167,6 +183,27 @@
 
 .tabflow-btn-icon {
 	padding: 6px;
+}
+
+.tabflow-btn-notation {
+	padding: 6px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+/* 紧凑模式下的谱表按钮 - 与 icon 按钮统一风格 */
+.tabflow-btn-icon.tabflow-btn-notation {
+	padding: 6px;
+	font-size: 11px;
+}
+
+.tabflow-notation-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	line-height: 1;
 }
 
 .tabflow-btn.is-active {
@@ -217,10 +254,12 @@
 	background: var(--background-modifier-border);
 	border-radius: 2px;
 	outline: none;
+	appearance: none;
 	-webkit-appearance: none;
 }
 
 .tabflow-slider::-webkit-slider-thumb {
+	appearance: none;
 	-webkit-appearance: none;
 	width: 14px;
 	height: 14px;
