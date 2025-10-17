@@ -1836,15 +1836,15 @@
 .tab-flow-play-bar .play-bar-control {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	padding: 6px 8px;
-	border-radius: var(--radius-s);
+	gap: 6px;
+	padding: 0;
+	border-radius: 0;
 	background: transparent;
-	transition: background 0.15s ease;
+	transition: none;
 }
 
 .tab-flow-play-bar .play-bar-control:hover {
-	background: var(--background-modifier-hover);
+	background: transparent;
 }
 
 .tab-flow-play-bar .play-bar-control-icon {
@@ -1856,10 +1856,10 @@
 }
 
 .tab-flow-play-bar .play-bar-control-select {
-	padding: 4px 6px;
-	border: none;
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
 	border-radius: var(--radius-s);
-	background: transparent;
+	background: var(--background-primary-alt);
 	color: var(--text-normal);
 	font-size: 12px;
 	cursor: pointer;
@@ -1870,12 +1870,13 @@
 }
 
 .tab-flow-play-bar .play-bar-control-select:hover {
-	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
 }
 
 .tab-flow-play-bar .play-bar-control-select:focus {
 	outline: none;
-	background: var(--background-modifier-active-hover);
+	border-color: var(--interactive-accent);
+	background: var(--background-primary-alt);
 }
 
 /* ============================================
