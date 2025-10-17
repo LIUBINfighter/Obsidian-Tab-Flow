@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Film, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 import { PlayControls } from './PlayControls';
 import { TimeDisplay } from './TimeDisplay';
@@ -10,8 +10,9 @@ import { LayoutToggle } from './LayoutToggle';
 import { ZoomControl } from './ZoomControl';
 import { ScrollModeControl } from './ScrollModeControl';
 import { TracksToggle } from './TracksToggle';
-import { TracksModal } from './TracksModal';
 import { SettingsToggle } from './SettingsToggle';
+import { MediaSyncToggle } from './MediaSyncToggle';
+import { TracksModal } from './TracksModal';
 import { ExportModal } from './ExportModal';
 
 interface PlayBarProps {
@@ -64,62 +65,44 @@ export const PlayBar: React.FC<PlayBarProps> = ({
 				)}
 				{/* 音轨管理按钮 */}
 				{onTracksClick && <TracksToggle controller={controller} onClick={onTracksClick} />}
-
+				{/* MediaSync 按钮 */}
+				{onMediaSyncClick && (
+					<MediaSyncToggle controller={controller} onClick={onMediaSyncClick} />
+				)}
+				{/* 导出按钮 */}
+				<button
+					className="play-bar-button"
+					title="导出乐谱"
+					onClick={() => setExportModalOpen(true)}
+					disabled={!scoreLoaded}
+				>
+					<Download size={16} />
+					<span className="play-bar-button-text">Export</span>
+				</button>{' '}
 				{/* 播放控制 */}
 				<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
-
 				{/* 时间显示 */}
 				<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
-
 				{/* 节拍器开关 */}
 				<MetronomeToggle
 					controller={controller}
 					enabled={metronomeEnabled}
 					onToggle={setMetronomeEnabled}
 				/>
-
 				{/* 预备拍开关 */}
 				<CountInToggle
 					controller={controller}
 					enabled={countInEnabled}
 					onToggle={setCountInEnabled}
 				/>
-
 				{/* 循环播放 */}
 				<LoopToggle controller={controller} />
-
 				{/* 布局切换 */}
 				<LayoutToggle controller={controller} />
-
 				{/* 缩放控制 */}
 				<ZoomControl controller={controller} />
-
 				{/* 滚动模式 */}
 				<ScrollModeControl controller={controller} />
-
-				{/* MediaSync 按钮 */}
-				{onMediaSyncClick && (
-					<button
-						className="clickable-icon"
-						title="媒体同步"
-						onClick={onMediaSyncClick}
-						style={{ padding: '6px' }}
-					>
-						<Film size={16} />
-					</button>
-				)}
-
-				{/* 导出按钮 */}
-				<button
-					className="clickable-icon"
-					title="导出乐谱"
-					onClick={() => setExportModalOpen(true)}
-					disabled={!scoreLoaded}
-					style={{ padding: '6px' }}
-				>
-					<Download size={16} />
-				</button>
-
 				{/* 状态指示器（调试用） */}
 				{!scoreLoaded && (
 					<div className="play-bar-status">
