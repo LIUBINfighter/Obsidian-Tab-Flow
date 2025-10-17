@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Repeat } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 
 interface LoopToggleProps {
@@ -18,15 +19,14 @@ export const LoopToggle: React.FC<LoopToggleProps> = ({ controller }) => {
 	};
 
 	return (
-		<div className="play-bar-loop">
-			<label className="loop-label">循环:</label>
-			<input
-				type="checkbox"
-				checked={enabled}
-				onChange={handleToggle}
-				aria-label="Loop Playback"
-				title="Toggle Loop"
-			/>
-		</div>
+		<button
+			className={`play-bar-button ${enabled ? 'active' : ''}`}
+			onClick={handleToggle}
+			aria-label="Loop Playback"
+			title="Toggle Loop"
+		>
+			<Repeat size={16} />
+			<span className="play-bar-button-text">循环</span>
+		</button>
 	);
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Scroll } from 'lucide-react';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
 
@@ -28,13 +29,14 @@ export const ScrollModeControl: React.FC<ScrollModeControlProps> = ({ controller
 	};
 
 	return (
-		<div className="play-bar-scroll">
-			<label className="scroll-label">滚动:</label>
+		<div className="play-bar-control">
+			<Scroll size={16} className="play-bar-control-icon" />
 			<select
-				className="scroll-select"
+				className="play-bar-control-select"
 				value={currentMode}
 				onChange={handleModeChange}
 				aria-label="Scroll Mode"
+				title="滚动模式"
 			>
 				{scrollModes.map(({ name, value }) => (
 					<option key={value} value={value}>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Music2 } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 
 interface MetronomeToggleProps {
@@ -25,15 +26,14 @@ export const MetronomeToggle: React.FC<MetronomeToggleProps> = ({
 	};
 
 	return (
-		<div className="play-bar-metronome">
-			<label className="metronome-label">节拍器:</label>
-			<input
-				type="checkbox"
-				checked={enabled}
-				onChange={handleToggle}
-				aria-label="Metronome"
-				title="Toggle Metronome"
-			/>
-		</div>
+		<button
+			className={`play-bar-button ${enabled ? 'active' : ''}`}
+			onClick={handleToggle}
+			aria-label="Metronome"
+			title="Toggle Metronome"
+		>
+			<Music2 size={16} />
+			<span className="play-bar-button-text">节拍器</span>
+		</button>
 	);
 };

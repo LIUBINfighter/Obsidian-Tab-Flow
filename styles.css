@@ -1831,6 +1831,54 @@
 }
 
 /* ============================================
+   控制器 - 图标 + 下拉菜单
+   ============================================ */
+.tab-flow-play-bar .play-bar-control {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 6px 8px;
+	border-radius: var(--radius-s);
+	background: transparent;
+	transition: background 0.15s ease;
+}
+
+.tab-flow-play-bar .play-bar-control:hover {
+	background: var(--background-modifier-hover);
+}
+
+.tab-flow-play-bar .play-bar-control-icon {
+	color: var(--text-muted);
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	stroke-width: 2;
+}
+
+.tab-flow-play-bar .play-bar-control-select {
+	padding: 4px 6px;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	font-weight: 500;
+	white-space: nowrap;
+	min-width: 80px;
+}
+
+.tab-flow-play-bar .play-bar-control-select:hover {
+	background: var(--background-modifier-hover);
+}
+
+.tab-flow-play-bar .play-bar-control-select:focus {
+	outline: none;
+	background: var(--background-modifier-active-hover);
+}
+
+/* ============================================
    时间显示
    ============================================ */
 .play-bar-time {
@@ -1856,61 +1904,6 @@
 
 .time-total {
 	color: var(--text-muted);
-}
-
-/* ============================================
-   速度控制
-   ============================================ */
-.play-bar-speed {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	margin-left: 0.5em;
-}
-
-.speed-label {
-	font-size: 13px;
-	color: var(--text-muted);
-}
-
-.speed-select {
-	padding: 2px 6px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: var(--radius-s);
-	background: var(--background-primary);
-	color: var(--text-normal);
-	font-size: 13px;
-	cursor: pointer;
-	transition: border-color 0.15s ease;
-}
-
-.speed-select:hover {
-	border-color: var(--interactive-accent);
-}
-
-.speed-select:focus {
-	outline: none;
-	border-color: var(--interactive-accent);
-	box-shadow: 0 0 0 2px rgba(var(--interactive-accent-rgb), 0.2);
-}
-
-/* ============================================
-   节拍器开关
-   ============================================ */
-.play-bar-metronome {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-	margin-left: 0.5em;
-}
-
-.metronome-label {
-	font-size: 13px;
-	color: var(--text-muted);
-}
-
-.play-bar-metronome input[type='checkbox'] {
-	cursor: pointer;
 }
 
 /* ============================================

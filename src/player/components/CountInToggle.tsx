@@ -1,4 +1,5 @@
 import React from 'react';
+import { Timer } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 
 interface CountInToggleProps {
@@ -18,15 +19,14 @@ export const CountInToggle: React.FC<CountInToggleProps> = ({ controller, enable
 	};
 
 	return (
-		<div className="play-bar-countin">
-			<label className="countin-label">预备拍:</label>
-			<input
-				type="checkbox"
-				checked={enabled}
-				onChange={handleToggle}
-				aria-label="Count In"
-				title="Toggle Count In"
-			/>
-		</div>
+		<button
+			className={`play-bar-button ${enabled ? 'active' : ''}`}
+			onClick={handleToggle}
+			aria-label="Count In"
+			title="Toggle Count In"
+		>
+			<Timer size={16} />
+			<span className="play-bar-button-text">预备拍</span>
+		</button>
 	);
 };

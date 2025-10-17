@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { PanelsTopLeft, Layout } from 'lucide-react';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
 
@@ -23,19 +24,17 @@ export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
 		controller.setLayoutMode(newMode);
 	};
 
+	const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
+
 	return (
-		<div className="play-bar-layout">
-			<label className="layout-label">布局:</label>
-			<button
-				className={`layout-btn ${layoutMode === alphaTab.LayoutMode.Horizontal ? 'horizontal' : 'page'}`}
-				onClick={handleToggle}
-				aria-label="Toggle Layout Mode"
-				title={
-					layoutMode === alphaTab.LayoutMode.Page ? '切换到横向滚动' : '切换到页面布局'
-				}
-			>
-				{layoutMode === alphaTab.LayoutMode.Page ? '页面' : '横向'}
-			</button>
-		</div>
+		<button
+			className="play-bar-button"
+			onClick={handleToggle}
+			aria-label="Toggle Layout Mode"
+			title={isHorizontal ? '切换到页面布局' : '切换到横向滚动'}
+		>
+			{isHorizontal ? <PanelsTopLeft size={16} /> : <Layout size={16} />}
+			<span className="play-bar-button-text">{isHorizontal ? '横向' : '页面'}</span>
+		</button>
 	);
 };

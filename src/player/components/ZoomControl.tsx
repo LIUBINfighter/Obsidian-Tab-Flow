@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ZoomIn } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 
 interface ZoomControlProps {
@@ -30,13 +31,14 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ controller }) => {
 	};
 
 	return (
-		<div className="play-bar-zoom">
-			<label className="zoom-label">缩放:</label>
+		<div className="play-bar-control">
+			<ZoomIn size={16} className="play-bar-control-icon" />
 			<select
-				className="zoom-select"
+				className="play-bar-control-select"
 				value={currentZoom}
 				onChange={handleZoomChange}
 				aria-label="Zoom Level"
+				title="缩放级别"
 			>
 				{zoomLevels.map(({ label, value }) => (
 					<option key={value} value={value}>
