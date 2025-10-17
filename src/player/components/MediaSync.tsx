@@ -312,7 +312,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 							className={`media-sync-tab ${activeTab === 'editor' ? 'active' : ''}`}
 							onClick={() => setActiveTab('editor')}
 						>
-							📍 同步编辑器
+							同步编辑器
 						</button>
 					)}
 				</div>
@@ -322,13 +322,6 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen })
 					{/* 基础设置标签页 */}
 					{activeTab === 'basic' && (
 						<div className="media-sync-content">
-							{/* 合成器模式 - 无额外内容 */}
-							{mediaState.type === MediaType.Synth && (
-								<div className="media-sync-info">
-									<p>使用 AlphaTab 内置合成器播放</p>
-								</div>
-							)}
-
 							{/* Vault 文件选择按钮 */}
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.Audio ||

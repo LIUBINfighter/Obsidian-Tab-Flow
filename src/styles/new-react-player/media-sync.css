@@ -144,38 +144,53 @@
 /* 标签页头 */
 .media-sync-tabs-header {
 	display: flex;
-	gap: 0;
-	background: var(--background-secondary);
+	gap: 0.5em;
+	background: transparent;
 	border-bottom: 1px solid var(--background-modifier-border);
-	padding: 0;
+	padding: 0.5em;
 	margin: 0;
 	flex-shrink: 0;
+	align-items: center;
+	user-select: none;
 }
 
 /* 单个标签页 */
 .media-sync-tab {
-	flex: 1;
-	padding: 10px 16px;
-	background: transparent;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 6px 8px;
 	border: none;
-	border-bottom: 2px solid transparent;
+	border-radius: var(--radius-s);
+	background: transparent;
 	color: var(--text-muted);
 	cursor: pointer;
-	font-size: 12px;
-	font-weight: 500;
 	transition: all 0.15s ease;
+	font-size: 12px;
+	line-height: 1;
+	min-height: 28px;
+	flex-shrink: 0;
 	white-space: nowrap;
 }
 
-.media-sync-tab:hover {
+.media-sync-tab:hover:not(:disabled) {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
 }
 
+.media-sync-tab:active:not(:disabled) {
+	background: var(--background-modifier-active-hover);
+	transform: scale(0.98);
+}
+
 .media-sync-tab.active {
-	background: var(--background-primary);
-	color: var(--interactive-accent);
-	border-bottom-color: var(--interactive-accent);
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.media-sync-tab.active:hover:not(:disabled) {
+	background: var(--interactive-accent-hover);
 }
 
 /* 标签页内容容器 */
