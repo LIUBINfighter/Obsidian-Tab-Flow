@@ -22,7 +22,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 监听滚动配置变更事件
 	scrollProxy.onConfigChange((event) => {
-		console.debug(`[DebugBar] 滚动配置变更: ${event.property} = ${event.newValue}`);
+		// console.debug(`[DebugBar] 滚动配置变更: ${event.property} = ${event.newValue}`);
 		new Notice(`滚动设置已更新: ${event.property}`);
 	});
 
@@ -212,7 +212,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 				},
 				app, // 传递 app
 				onExportStart: (type: string) => {
-					console.debug(`[Export] 开始导出: ${type}`);
+					// console.debug(`[Export] 开始导出: ${type}`);
 				},
 				onExportFinish: (type: string, success: boolean, msg?: string) => {
 					if (type === 'audio' && success && msg) {
@@ -222,9 +222,9 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 						new Notice('音频导出完成，已弹出播放器');
 					}
 					if (success) {
-						console.debug(`[Export] 导出${type}成功`);
+						// console.debug(`[Export] 导出${type}成功`);
 					} else {
-						console.debug(`[Export] 导出${type}失败: ${msg || '未知错误'}`);
+						// console.debug(`[Export] 导出${type}失败: ${msg || '未知错误'}`);
 					}
 				},
 			});

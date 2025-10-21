@@ -2,10 +2,25 @@
  * Internal dynamic wrapper for embedding Obsidian markdown editor.
  * NOTE: Relies on private APIs; we intentionally relax lint rules for dynamic access.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-non-null-assertion */
 import { App, Scope, TFile, WorkspaceLeaf } from 'obsidian';
 import { EditorSelection, Prec } from '@codemirror/state';
-import { EditorView, keymap, placeholder, ViewUpdate } from '@codemirror/view';
+import { EditorView, keymap, placeholder, ViewUpdate, ViewPlugin } from '@codemirror/view';
+import {
+	dotHighlightPlugin,
+	barHighlightPlugin,
+	bracketHighlightPlugin,
+	metaHighlightPlugin,
+	commentHighlightPlugin,
+	debugHighlightPlugin,
+	whitespaceHighlightPlugin,
+	surroundedHighlightPlugin,
+	durationHighlightPlugin,
+	effectHighlightPlugin,
+	tuningHighlightPlugin,
+	booleanHighlightPlugin,
+	// chordHighlightPlugin,
+} from './Highlight';
+import { alphaTex } from './alphaTexLanguage';
 import { around } from 'monkey-around';
 
 export interface MarkdownEditorProps {
@@ -20,6 +35,8 @@ export interface MarkdownEditorProps {
 	onBlur?: (editor: EmbeddableMarkdownEditor) => void;
 	onPaste?: (e: ClipboardEvent, editor: EmbeddableMarkdownEditor) => void;
 	onChange?: (update: ViewUpdate) => void;
+	// optional map of highlight plugin toggles passed from caller
+	highlightSettings?: Record<string, boolean>;
 }
 
 const defaultProperties: Required<Omit<MarkdownEditorProps, 'cursorLocation'>> & {
@@ -36,6 +53,7 @@ const defaultProperties: Required<Omit<MarkdownEditorProps, 'cursorLocation'>> &
 	onBlur: () => {},
 	onPaste: () => {},
 	onChange: () => {},
+	highlightSettings: {},
 };
 
 interface InternalMarkdownEditor extends Record<string, unknown> {
@@ -58,6 +76,22 @@ export class EmbeddableMarkdownEditor {
 	private scope: Scope;
 	private editor: InternalMarkdownEditor;
 
+	/**
+	 * Hard-coded configuration to control whether to set activeEditor.
+	 *
+	 * Pros of setting activeEditor:
+	 * - Allows the embedded editor to receive keyboard shortcuts and commands properly.
+	 * - Maintains compatibility with Obsidian's command system.
+	 *
+	 * Cons of setting activeEditor:
+	 * - May cause "Cannot read properties of undefined" errors if not handled properly.
+	 * - Potential conflicts with multiple editor instances.
+	 * - Can interfere with Obsidian's internal activeEditor management.
+	 *
+	 * Set to true to enable activeEditor management, false to disable.
+	 */
+	private static readonly USE_ACTIVE_EDITOR = true;
+
 	constructor(
 		app: App,
 		EditorClass: new (...args: any[]) => InternalMarkdownEditor,
@@ -78,16 +112,32 @@ export class EmbeddableMarkdownEditor {
 					if (this === (selfRef as any).editor) {
 						if (selfRef.options.placeholder)
 							extensions.push(placeholder(selfRef.options.placeholder));
+						// Disable browser spellcheck/auto-correct in the embedded editor
+						extensions.push(
+							EditorView.editorAttributes.of({
+								spellcheck: 'false',
+								autocorrect: 'off',
+								autocapitalize: 'off',
+							}) as any
+						);
 						extensions.push(
 							EditorView.domEventHandlers({
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
 								blur: () => {
 									app.keymap.popScope(selfRef.scope);
+									if (
+										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
+										(app.workspace as any).activeEditor === selfRef.editor
+									) {
+										(app.workspace as any).activeEditor = null;
+									}
 									selfRef.options.onBlur?.(selfRef);
 								},
 								focusin: () => {
 									app.keymap.pushScope(selfRef.scope);
-									(app.workspace as any).activeEditor = (selfRef as any).owner;
+									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
+										(app.workspace as any).activeEditor = selfRef.editor;
+									}
 								},
 							})
 						);
@@ -119,6 +169,118 @@ export class EmbeddableMarkdownEditor {
 							} as any;
 						}
 						extensions.push(Prec.highest(keymap.of(keyBindings as any)));
+						// Add highlight plugins extracted to separate module
+						// Resolve highlight settings: prefer explicit options, fallback to global plugin settings if available
+						const resolveSetting = (key: string, def = true) => {
+							try {
+								if (
+									selfRef.options.highlightSettings &&
+									key in selfRef.options.highlightSettings
+								) {
+									return !!selfRef.options.highlightSettings[key];
+								}
+								// fallback: some callers may expose settings on window for minimal changes
+								const globalSettings = (window as any).__tabflow_settings__ as
+									| Record<string, any>
+									| undefined;
+								if (
+									globalSettings &&
+									globalSettings.editorHighlights &&
+									key in globalSettings.editorHighlights
+								) {
+									return !!globalSettings.editorHighlights[key];
+								}
+							} catch {
+								// ignore
+							}
+							return def;
+						};
+
+						// (dot and bar highlight plugins are imported from ./Highlight.ts)
+						if (resolveSetting('dot', true)) extensions.push(dotHighlightPlugin());
+						if (resolveSetting('bar', true)) extensions.push(barHighlightPlugin());
+						// visible whitespace highlighter
+						if (resolveSetting('whitespace', true))
+							extensions.push(whitespaceHighlightPlugin());
+						// highlight sequences surrounded by whitespace
+						if (resolveSetting('surrounded', false))
+							extensions.push(surroundedHighlightPlugin());
+						// Ensure spellcheck/auto-correct attributes are applied to the actual contenteditable area
+						const disableSpellcheckPlugin = ViewPlugin.fromClass(
+							class {
+								private view: EditorView;
+								private observer?: MutationObserver;
+								constructor(view: EditorView) {
+									this.view = view;
+									this.applyAttrs();
+									// Observe DOM changes in case .cm-content is created later
+									try {
+										this.observer = new MutationObserver(() =>
+											this.applyAttrs()
+										);
+										this.observer.observe(this.view.dom, {
+											childList: true,
+											subtree: true,
+										});
+									} catch {
+										// ignore if MutationObserver not available in environment
+									}
+								}
+								private applyAttrs() {
+									const content = this.view.dom.querySelector(
+										'.cm-content'
+									) as HTMLElement | null;
+									if (content) {
+										content.setAttribute('spellcheck', 'false');
+										content.setAttribute('autocorrect', 'off');
+										content.setAttribute('autocapitalize', 'off');
+									}
+								}
+								update(update: ViewUpdate) {
+									// Re-apply on updates as well
+									this.applyAttrs();
+								}
+								destroy() {
+									this.observer?.disconnect();
+								}
+							}
+						);
+						extensions.push(disableSpellcheckPlugin);
+						// Keep editorAttributes as well for broader support
+						extensions.push(
+							EditorView.editorAttributes.of({
+								spellcheck: 'false',
+								autocorrect: 'off',
+								autocapitalize: 'off',
+							}) as any
+						);
+						if (resolveSetting('bracket', true))
+							extensions.push(bracketHighlightPlugin());
+						if (resolveSetting('meta', true)) extensions.push(metaHighlightPlugin());
+						if (resolveSetting('comment', true))
+							extensions.push(commentHighlightPlugin());
+						// Debugging visible-range lexer/highlighter
+						if (resolveSetting('debug', false)) extensions.push(debugHighlightPlugin());
+						// Inject AlphaTex language/highlighting
+						try {
+							const alphaExt = alphaTex();
+							if (Array.isArray(alphaExt)) extensions.push(...(alphaExt as any));
+							else extensions.push(alphaExt as any);
+						} catch {
+							// fail gracefully if alphaTex isn't available in runtime
+						}
+						// Add new highlight plugins for TextMate-inspired tokens
+						if (resolveSetting('duration', true))
+							extensions.push(durationHighlightPlugin());
+						if (resolveSetting('effect', true))
+							extensions.push(effectHighlightPlugin());
+						if (resolveSetting('tuning', true))
+							extensions.push(tuningHighlightPlugin());
+						if (resolveSetting('boolean', true))
+							extensions.push(booleanHighlightPlugin());
+						// chord highlighting is now handled by the repurposed tuningHighlightPlugin
+						// Update meta to use 'cm-metadata' (ensure meta present if enabled)
+						if (resolveSetting('meta', true)) extensions.push(metaHighlightPlugin());
 					}
 					return extensions;
 				},

@@ -18,8 +18,9 @@ const cssFiles = fs.readdirSync(stylesDir)
     .sort();
 
 // prepend comment indicating current npm script
-const lifecycle = process.env.npm_lifecycle_event || '';
-let merged = lifecycle ? `/* build: ${lifecycle} */\n` : '';
+// const lifecycle = process.env.npm_lifecycle_event || '';
+// let merged = lifecycle ? `/* build: ${lifecycle} */\n` : '';
+   let merged = "/* This file is auto generated, to edit this please refer to ./src/styles/*.css  */ \n";
 for (const file of cssFiles) {
     const filePath = path.join(stylesDir, file);
     merged += `/* --- ${file} --- */\n`;
