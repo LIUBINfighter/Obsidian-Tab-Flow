@@ -25,6 +25,14 @@ interface MediaSyncProps {
 }
 
 /**
+ * 仅允许安全音频 URL: http(s):// 或 file://
+ */
+function isValidAudioUrl(url: string): boolean {
+  // Accept HTTP(S) and local file URLs only
+  return /^(https?:\/\/|file:\/\/)/.test(url.trim());
+}
+
+/**
  * 提取 YouTube 视频 ID
  */
 function extractYouTubeVideoId(input: string): string | null {
@@ -355,7 +363,10 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 										<input
 											type="text"
 											value={audioUrl}
-											onChange={(e) => setAudioUrl(e.target.value)}
+											onChange={(e) => {
+												const val = e.target.value;
+												if (isValidAudioUrl(val)) setAudioUrl(val);
+											}}
 											placeholder="https://example.com/audio.mp3"
 											className="media-sync-input"
 										/>
