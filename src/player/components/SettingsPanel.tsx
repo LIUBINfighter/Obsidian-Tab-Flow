@@ -91,6 +91,10 @@ function updateApiSettings(
 
 // ========== Factory for Accessors ==========
 
+function isPollutingKey(key: string) {
+	return key === "__proto__" || key === "constructor";
+}
+
 const factory = {
 	// AlphaTab Settings 访问器
 	settingAccessors(setting: string, updateOptions?: UpdateSettingsOptions) {
@@ -102,9 +106,17 @@ const factory = {
 
 				let obj: any = api.settings;
 				for (let i = 0; i < parts.length - 1; i++) {
-					obj = obj[parts[i]];
+					const key = parts[i];
+					if (isPollutingKey(key)) {
+						return undefined;
+					}
+					obj = obj[key];
 				}
-				return obj[parts[parts.length - 1]];
+				const lastKey = parts[parts.length - 1];
+				if (isPollutingKey(lastKey)) {
+					return undefined;
+				}
+				return obj[lastKey];
 			},
 			setValue(context: SettingsContextProps, value: any) {
 				updateApiSettings(
@@ -112,12 +124,20 @@ const factory = {
 					(api) => {
 						let obj: any = api.settings;
 						for (let i = 0; i < parts.length - 1; i++) {
-							obj = obj[parts[i]];
+							const key = parts[i];
+							if (isPollutingKey(key)) {
+								return; // Prevent polluting property chain
+							}
+							obj = obj[key];
+						const lastKey = parts[parts.length - 1];
+						if (isPollutingKey(lastKey)) {
+							return; // Prevent polluting the final property
+						}
 						}
 						if (updateOptions?.prepareValue) {
 							value = updateOptions.prepareValue(value);
 						}
-						obj[parts[parts.length - 1]] = value;
+						obj[lastKey] = value;
 					},
 					updateOptions
 				);
