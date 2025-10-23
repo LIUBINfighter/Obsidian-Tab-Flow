@@ -25,11 +25,53 @@ interface MediaSyncProps {
 }
 
 /**
- * 仅允许安全音频 URL: http(s):// 或 file://
+ * 清理和验证媒体 URL，防止 XSS 攻击
+ * 只允许 http(s)://, file://, 和 blob: 协议
+ * 拒绝包含可疑字符的 URL
  */
-function isValidAudioUrl(url: string): boolean {
-	// Accept HTTP(S) and local file URLs only
-	return /^(https?:\/\/|file:\/\/)/.test(url.trim());
+function sanitizeMediaUrl(url: string): string | null {
+	if (!url) return null;
+
+	try {
+		const trimmed = url.trim();
+		const parsed = new URL(trimmed);
+
+		// 只允许 http, https, file 和 blob 协议 (blob 用于 Vault 文件)
+		const allowedProtocols = ['http:', 'https:', 'file:', 'blob:'];
+		if (!allowedProtocols.includes(parsed.protocol)) {
+			console.warn('[MediaSync] Blocked unsafe protocol:', parsed.protocol);
+			return null;
+		}
+
+		// 拒绝包含可疑字符的 URL (控制字符、换行符、尖括号等)
+		// eslint-disable-next-line no-control-regex
+		if (/[\u0000-\u001F\u007F<>]/.test(parsed.href)) {
+			console.warn('[MediaSync] Blocked URL with suspicious characters');
+			return null;
+		}
+
+		return parsed.href;
+	} catch (error) {
+		console.warn('[MediaSync] Invalid URL:', error);
+		return null;
+	}
+}
+
+/**
+ * 验证和清理 YouTube 嵌入 URL
+ * 只允许 youtube.com/embed/ 格式，防止注入攻击
+ */
+function sanitizeYouTubeEmbedUrl(videoId: string): string | null {
+	if (!videoId) return null;
+
+	// 验证视频 ID 格式（只允许字母、数字、下划线和短横线，固定 11 位）
+	if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+		console.warn('[MediaSync] Invalid YouTube video ID format');
+		return null;
+	}
+
+	// 构建安全的嵌入 URL
+	return `https://www.youtube.com/embed/${videoId}`;
 }
 
 /**
@@ -132,17 +174,24 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 				const blob = new Blob([arrayBuffer]);
 				const url = URL.createObjectURL(blob);
 
+				// 验证生成的 URL
+				const sanitized = sanitizeMediaUrl(url);
+				if (!sanitized) {
+					console.error('[MediaSync] Failed to create valid URL for file:', file.path);
+					return;
+				}
+
 				// 根据文件类型加载
 				const isAudio = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'].includes(
 					file.extension.toLowerCase()
 				);
 
 				if (isAudio) {
-					setAudioUrl(url);
-					setMediaState({ type: MediaType.Audio, url });
+					setAudioUrl(sanitized);
+					setMediaState({ type: MediaType.Audio, url: sanitized });
 				} else {
-					setVideoUrl(url);
-					setMediaState({ type: MediaType.Video, url });
+					setVideoUrl(sanitized);
+					setMediaState({ type: MediaType.Video, url: sanitized });
 				}
 			} catch (error) {
 				console.error('[MediaSync] Failed to load file:', error);
@@ -159,20 +208,34 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 	const switchToAudio = () => {
 		if (!audioUrl) return;
 
-		setMediaState({ type: MediaType.Audio, url: audioUrl });
+		const sanitized = sanitizeMediaUrl(audioUrl);
+		if (!sanitized) {
+			console.error('[MediaSync] Invalid audio URL');
+			return;
+		}
+
+		setMediaState({ type: MediaType.Audio, url: sanitized });
 	};
 
 	const switchToVideo = () => {
 		if (!videoUrl) return;
 
-		setMediaState({ type: MediaType.Video, url: videoUrl });
+		const sanitized = sanitizeMediaUrl(videoUrl);
+		if (!sanitized) {
+			console.error('[MediaSync] Invalid video URL');
+			return;
+		}
+
+		setMediaState({ type: MediaType.Video, url: sanitized });
 	};
 
 	const switchToYouTube = () => {
 		const videoId = extractYouTubeVideoId(youtubeInput);
 		if (!videoId) return;
 
-		const url = `https://www.youtube.com/embed/${videoId}`;
+		const url = sanitizeYouTubeEmbedUrl(videoId);
+		if (!url) return;
+
 		setMediaState({ type: MediaType.YouTube, videoId, url });
 	};
 
@@ -365,7 +428,8 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											value={audioUrl}
 											onChange={(e) => {
 												const val = e.target.value;
-												if (isValidAudioUrl(val)) setAudioUrl(val);
+												const sanitized = sanitizeMediaUrl(val);
+												if (sanitized) setAudioUrl(sanitized);
 											}}
 											placeholder="https://example.com/audio.mp3"
 											className="media-sync-input"
@@ -390,7 +454,11 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 										<input
 											type="text"
 											value={videoUrl}
-											onChange={(e) => setVideoUrl(e.target.value)}
+											onChange={(e) => {
+												const val = e.target.value;
+												const sanitized = sanitizeMediaUrl(val);
+												if (sanitized) setVideoUrl(sanitized);
+											}}
 											placeholder="https://example.com/video.mp4"
 											className="media-sync-input"
 										/>
