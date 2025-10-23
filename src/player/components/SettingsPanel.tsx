@@ -129,10 +129,10 @@ const factory = {
 								return; // Prevent polluting property chain
 							}
 							obj = obj[key];
-							const lastKey = parts[parts.length - 1];
-							if (isPollutingKey(lastKey)) {
-								return; // Prevent polluting the final property
-							}
+						}
+						const lastKey = parts[parts.length - 1];
+						if (isPollutingKey(lastKey)) {
+							return; // Prevent polluting the final property
 						}
 						if (updateOptions?.prepareValue) {
 							value = updateOptions.prepareValue(value);
