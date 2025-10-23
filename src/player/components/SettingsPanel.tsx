@@ -92,7 +92,7 @@ function updateApiSettings(
 // ========== Factory for Accessors ==========
 
 function isPollutingKey(key: string) {
-	return key === "__proto__" || key === "constructor";
+	return key === '__proto__' || key === 'constructor';
 }
 
 const factory = {
@@ -129,10 +129,10 @@ const factory = {
 								return; // Prevent polluting property chain
 							}
 							obj = obj[key];
-						const lastKey = parts[parts.length - 1];
-						if (isPollutingKey(lastKey)) {
-							return; // Prevent polluting the final property
-						}
+							const lastKey = parts[parts.length - 1];
+							if (isPollutingKey(lastKey)) {
+								return; // Prevent polluting the final property
+							}
 						}
 						if (updateOptions?.prepareValue) {
 							value = updateOptions.prepareValue(value);

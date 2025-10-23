@@ -28,8 +28,8 @@ interface MediaSyncProps {
  * 仅允许安全音频 URL: http(s):// 或 file://
  */
 function isValidAudioUrl(url: string): boolean {
-  // Accept HTTP(S) and local file URLs only
-  return /^(https?:\/\/|file:\/\/)/.test(url.trim());
+	// Accept HTTP(S) and local file URLs only
+	return /^(https?:\/\/|file:\/\/)/.test(url.trim());
 }
 
 /**
