@@ -13,6 +13,20 @@ export interface ScoreSource {
 	lastModified?: number; // 时间戳
 }
 
+// ========== Track Configuration ==========
+/**
+ * 音轨配置（与曲谱绑定）
+ * 保存用户对特定音轨的设置
+ */
+export interface TrackConfig {
+	trackIndex: number; // 音轨索引
+	isMute?: boolean; // 是否静音
+	isSolo?: boolean; // 是否独奏
+	volume?: number; // 音量 (0-16, AlphaTab 范围)
+	transposeAudio?: number; // 音频移调（半音）
+	transposeFull?: number; // 完全移调（半音，影响显示和播放）
+}
+
 // ========== Session-specific Player State ==========
 export interface SessionPlayerState {
 	// AB 循环（文件特定）
@@ -26,6 +40,9 @@ export interface SessionPlayerState {
 
 	// 当前小节位置（可选，用于恢复播放位置）
 	startBar?: number;
+
+	// ✅ 音轨配置（文件特定，持久化）
+	trackConfigs: TrackConfig[];
 }
 
 // ========== Complete Workspace Session Config ==========
@@ -44,6 +61,7 @@ export function getDefaultWorkspaceSessionConfig(): WorkspaceSessionConfig {
 		sessionPlayerState: {
 			loopRange: null,
 			isLooping: false,
+			trackConfigs: [], // ✅ 默认空数组
 		},
 	};
 }

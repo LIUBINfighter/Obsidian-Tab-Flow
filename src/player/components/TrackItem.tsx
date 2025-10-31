@@ -13,6 +13,7 @@ import type * as AlphaTab from '@coderline/alphatab';
 import React, { useState } from 'react';
 import { Mic, VolumeX, Volume2, Eye, EyeOff } from 'lucide-react';
 import { StaffItem } from './StaffItem';
+import type { PlayerController } from '../PlayerController';
 
 /**
  * 音轨控制项属性
@@ -29,6 +30,9 @@ export interface TrackItemProps {
 
 	/** 音轨选择变化回调（可选） */
 	onSelectionChange?: (track: AlphaTab.model.Track, selected: boolean) => void;
+
+	/** ✅ PlayerController 实例（用于访问配置） */
+	controller: PlayerController;
 }
 
 /**
@@ -39,23 +43,32 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 	track,
 	isSelected,
 	onSelectionChange,
+	controller,
 }) => {
+	// ========== 配置管理 ==========
+
+	// ✅ 获取 workspace config store
+	const workspaceConfig = controller.getWorkspaceConfigStore();
+
+	// ✅ 从配置中读取初始值
+	const savedConfig = workspaceConfig.getState().getTrackConfig(track.index);
+
 	// ========== 状态管理 ==========
 
-	// Mute 状态
-	const [isMute, setMute] = useState(track.playbackInfo.isMute);
+	// Mute 状态（优先使用保存的配置）
+	const [isMute, setMute] = useState(savedConfig?.isMute ?? track.playbackInfo.isMute);
 
-	// Solo 状态
-	const [isSolo, setSolo] = useState(track.playbackInfo.isSolo);
+	// Solo 状态（优先使用保存的配置）
+	const [isSolo, setSolo] = useState(savedConfig?.isSolo ?? track.playbackInfo.isSolo);
 
-	// 音量
-	const [volume, setVolume] = useState(track.playbackInfo.volume);
+	// 音量（优先使用保存的配置）
+	const [volume, setVolume] = useState(savedConfig?.volume ?? track.playbackInfo.volume);
 
-	// 音频移调（仅影响播放）
-	const [transposeAudio, setTransposeAudio] = useState<number>(0);
+	// 音频移调（仅影响播放）- 优先使用保存的配置
+	const [transposeAudio, setTransposeAudio] = useState<number>(savedConfig?.transposeAudio ?? 0);
 
-	// 完全移调（影响播放和显示）
-	const [transposeFull, setTransposeFull] = useState<number>(0);
+	// 完全移调（影响播放和显示）- 优先使用保存的配置
+	const [transposeFull, setTransposeFull] = useState<number>(savedConfig?.transposeFull ?? 0);
 
 	// ========== 事件处理 ==========
 
@@ -67,6 +80,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 		setMute(newMute);
 		track.playbackInfo.isMute = newMute;
 		api.changeTrackMute([track], newMute);
+
+		// ✅ 持久化到配置
+		workspaceConfig.getState().updateTrackConfig(track.index, {
+			trackIndex: track.index,
+			isMute: newMute,
+		});
 	};
 
 	/**
@@ -77,6 +96,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 		setSolo(newSolo);
 		track.playbackInfo.isSolo = newSolo;
 		api.changeTrackSolo([track], newSolo);
+
+		// ✅ 持久化到配置
+		workspaceConfig.getState().updateTrackConfig(track.index, {
+			trackIndex: track.index,
+			isSolo: newSolo,
+		});
 	};
 
 	/**
@@ -87,6 +112,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 		setVolume(newVolume);
 		// 计算相对音量变化
 		api.changeTrackVolume([track], newVolume / track.playbackInfo.volume);
+
+		// ✅ 持久化到配置
+		workspaceConfig.getState().updateTrackConfig(track.index, {
+			trackIndex: track.index,
+			volume: newVolume,
+		});
 	};
 
 	/**
@@ -125,6 +156,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 		const newTranspose = e.target.valueAsNumber;
 		setTransposeAudio(newTranspose);
 		api.changeTrackTranspositionPitch([track], newTranspose);
+
+		// ✅ 持久化到配置
+		workspaceConfig.getState().updateTrackConfig(track.index, {
+			trackIndex: track.index,
+			transposeAudio: newTranspose,
+		});
 	};
 
 	/**
@@ -143,6 +180,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 		api.updateSettings();
 		api.render();
+
+		// ✅ 持久化到配置
+		workspaceConfig.getState().updateTrackConfig(track.index, {
+			trackIndex: track.index,
+			transposeFull: newTranspose,
+		});
 	};
 
 	// ========== 渲染 ==========

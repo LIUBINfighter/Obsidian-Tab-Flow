@@ -145,6 +145,7 @@ export const TracksPanel: React.FC<TracksPanelProps> = ({ controller, isOpen, on
 							track={track}
 							isSelected={selectedTracks.has(track.index)}
 							onSelectionChange={handleTrackSelectionChange}
+							controller={controller}
 						/>
 					))
 				)}

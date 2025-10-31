@@ -8,7 +8,7 @@
 
 import { create } from 'zustand';
 import { storageAdapter } from './middleware/storageAdapter';
-import type { WorkspaceSessionConfig } from '../types/workspace-config-schema';
+import type { WorkspaceSessionConfig, TrackConfig } from '../types/workspace-config-schema';
 import { getDefaultWorkspaceSessionConfig } from '../types/workspace-config-schema';
 import type { ObsidianWorkspaceStorageAdapter } from '../storage/adapters/ObsidianWorkspaceStorageAdapter';
 
@@ -19,6 +19,12 @@ interface WorkspaceConfigState extends WorkspaceSessionConfig {
 	updatePlayerState: (state: Partial<WorkspaceSessionConfig['sessionPlayerState']>) => void;
 	setLoopRange: (range: { startBar: number; endBar: number } | null) => void;
 	toggleLooping: () => void;
+
+	// ✅ 音轨配置管理
+	updateTrackConfig: (trackIndex: number, config: Partial<TrackConfig>) => void;
+	getTrackConfig: (trackIndex: number) => TrackConfig | undefined;
+	resetTrackConfigs: () => void;
+
 	resetToDefaults: () => void;
 
 	// Storage adapter (injected)
@@ -83,6 +89,53 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 						sessionPlayerState: {
 							...prev.sessionPlayerState,
 							isLooping: !prev.sessionPlayerState.isLooping,
+						},
+					})),
+
+				// ✅ 更新音轨配置
+				updateTrackConfig: (trackIndex, config) =>
+					set((prev) => {
+						const existingConfigs = prev.sessionPlayerState.trackConfigs || [];
+						const existingIndex = existingConfigs.findIndex(
+							(tc) => tc.trackIndex === trackIndex
+						);
+
+						let newConfigs: TrackConfig[];
+						if (existingIndex >= 0) {
+							// 更新现有配置
+							newConfigs = [...existingConfigs];
+							newConfigs[existingIndex] = {
+								...newConfigs[existingIndex],
+								...config,
+								trackIndex, // 确保 trackIndex 始终存在
+							};
+						} else {
+							// 添加新配置
+							newConfigs = [...existingConfigs, { trackIndex, ...config }];
+						}
+
+						return {
+							sessionPlayerState: {
+								...prev.sessionPlayerState,
+								trackConfigs: newConfigs,
+							},
+						};
+					}),
+
+				// ✅ 获取音轨配置
+				getTrackConfig: (trackIndex) => {
+					const state = get();
+					return state.sessionPlayerState.trackConfigs?.find(
+						(tc) => tc.trackIndex === trackIndex
+					);
+				},
+
+				// ✅ 重置所有音轨配置
+				resetTrackConfigs: () =>
+					set((prev) => ({
+						sessionPlayerState: {
+							...prev.sessionPlayerState,
+							trackConfigs: [],
 						},
 					})),
 

@@ -547,9 +547,12 @@ export class PlayerController {
 
 		try {
 			// Score Loaded
-			const scoreLoadedHandler = () => {
+			const scoreLoadedHandler = (score: alphaTab.model.Score) => {
 				this.stores.runtime.getState().setScoreLoaded(true);
 				this.stores.runtime.getState().setRenderState('idle');
+
+				// ✅ 恢复音轨配置
+				this.restoreTrackConfigs(score);
 
 				// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
 				// 那才是考虑了速度等因素的实际播放时长
@@ -807,6 +810,76 @@ export class PlayerController {
 			enableCursor: this.api.settings.player.enableCursor,
 			nativeBrowserSmoothScroll: this.api.settings.player.nativeBrowserSmoothScroll,
 		});
+	}
+
+	/**
+	 * ✅ 恢复音轨配置
+	 * 在曲谱加载后调用，从 workspace 配置中恢复用户之前保存的音轨设置
+	 */
+	private restoreTrackConfigs(score: alphaTab.model.Score): void {
+		const workspaceConfig = this.stores.workspaceConfig.getState();
+		const savedConfigs = workspaceConfig.sessionPlayerState.trackConfigs || [];
+
+		if (savedConfigs.length === 0) {
+			console.log(`[PlayerController #${this.instanceId}] No saved track configs to restore`);
+			return;
+		}
+
+		console.log(
+			`[PlayerController #${this.instanceId}] Restoring track configs:`,
+			savedConfigs
+		);
+
+		for (const config of savedConfigs) {
+			const track = score.tracks.find((t) => t.index === config.trackIndex);
+			if (!track) {
+				console.warn(
+					`[PlayerController #${this.instanceId}] Track ${config.trackIndex} not found in score`
+				);
+				continue;
+			}
+
+			// 恢复 mute 状态
+			if (config.isMute !== undefined) {
+				track.playbackInfo.isMute = config.isMute;
+				this.api?.changeTrackMute([track], config.isMute);
+			}
+
+			// 恢复 solo 状态
+			if (config.isSolo !== undefined) {
+				track.playbackInfo.isSolo = config.isSolo;
+				this.api?.changeTrackSolo([track], config.isSolo);
+			}
+
+			// 恢复音量
+			if (config.volume !== undefined && track.playbackInfo.volume > 0) {
+				const volumeRatio = config.volume / track.playbackInfo.volume;
+				this.api?.changeTrackVolume([track], volumeRatio);
+			}
+
+			// 恢复音频移调
+			if (config.transposeAudio !== undefined) {
+				this.api?.changeTrackTranspositionPitch([track], config.transposeAudio);
+			}
+
+			// 恢复完全移调
+			if (config.transposeFull !== undefined && this.api) {
+				const pitches = this.api.settings.notation.transpositionPitches;
+				while (pitches.length < track.index + 1) {
+					pitches.push(0);
+				}
+				pitches[track.index] = config.transposeFull;
+			}
+		}
+
+		// 应用移调设置
+		if (this.api && savedConfigs.some((c) => c.transposeFull !== undefined)) {
+			this.api.updateSettings();
+			console.log(
+				`[PlayerController #${this.instanceId}] Applied transposition settings, triggering re-render`
+			);
+			// 注意：这里不需要调用 render()，因为 scoreLoaded 之后会自动渲染
+		}
 	}
 
 	// ========== Score Loading ==========
