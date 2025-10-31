@@ -15,7 +15,7 @@ import { MediaSyncToggle } from './MediaSyncToggle';
 import { TracksModal } from './TracksModal';
 import { ExportModal } from './ExportModal';
 
-interface PlayBarProps {
+interface DebugBarProps {
 	controller: PlayerController;
 	onSettingsClick?: () => void;
 	onTracksClick?: () => void;
@@ -23,7 +23,7 @@ interface PlayBarProps {
 }
 
 /**
- * PlayBar - 播放控制栏 (模块化版本)
+ * DebugBar - 播放控制栏 (模块化版本)
  *
  * 设计参考 DebugBar: 圆角边框、flex-wrap 布局
  *
@@ -32,7 +32,7 @@ interface PlayBarProps {
  * - TimeDisplay: 时间显示
  * - MetronomeToggle: 节拍器开关
  */
-export const PlayBar: React.FC<PlayBarProps> = ({
+export const DebugBar: React.FC<DebugBarProps> = ({
 	controller,
 	onSettingsClick,
 	onTracksClick,
