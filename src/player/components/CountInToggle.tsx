@@ -1,20 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Timer } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 
 interface CountInToggleProps {
 	controller: PlayerController;
-	enabled: boolean;
-	onToggle: (enabled: boolean) => void;
 }
 
 /**
  * CountInToggle - 预备拍开关
  */
-export const CountInToggle: React.FC<CountInToggleProps> = ({ controller, enabled, onToggle }) => {
+export const CountInToggle: React.FC<CountInToggleProps> = ({ controller }) => {
+	const globalConfig = controller.getGlobalConfigStore();
+
+	// 从 globalConfig 读取初始预备拍状态（countInBars > 0 表示启用）
+	const initialEnabled = globalConfig((s) => s.playerExtensions.countInBars > 0);
+	const [enabled, setEnabled] = useState(initialEnabled);
+
 	const handleToggle = () => {
 		const newState = !enabled;
-		onToggle(newState);
+		setEnabled(newState);
+
+		// 更新全局配置（持久化）
+		// 启用时设置为 1 个小节，禁用时设置为 0
+		globalConfig.getState().updatePlayerExtensions({
+			countInBars: newState ? 1 : 0,
+		});
+
 		controller.setCountIn(newState);
 	};
 

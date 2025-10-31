@@ -49,10 +49,10 @@ export const DebugBar: React.FC<DebugBarProps> = ({
 	const api = runtimeStore((s) => s.alphaTabApi); // 从 store 获取 API
 
 	// 本地状态
-	const [metronomeEnabled, setMetronomeEnabled] = useState(false);
-	const [countInEnabled, setCountInEnabled] = useState(false);
 	const [tracksModalOpen, setTracksModalOpen] = useState(false);
-	const [exportModalOpen, setExportModalOpen] = useState(false); // 判断按钮状态
+	const [exportModalOpen, setExportModalOpen] = useState(false);
+
+	// 判断按钮状态
 	const isPlaying = playbackState === 'playing';
 	const canPlay = scoreLoaded;
 
@@ -84,17 +84,9 @@ export const DebugBar: React.FC<DebugBarProps> = ({
 				{/* 时间显示 */}
 				<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
 				{/* 节拍器开关 */}
-				<MetronomeToggle
-					controller={controller}
-					enabled={metronomeEnabled}
-					onToggle={setMetronomeEnabled}
-				/>
+				<MetronomeToggle controller={controller} />
 				{/* 预备拍开关 */}
-				<CountInToggle
-					controller={controller}
-					enabled={countInEnabled}
-					onToggle={setCountInEnabled}
-				/>
+				<CountInToggle controller={controller} />
 				{/* 循环播放 */}
 				<LoopToggle controller={controller} />
 				{/* 布局切换 */}

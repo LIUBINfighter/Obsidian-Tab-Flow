@@ -89,7 +89,6 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				onTracksClick={handleToggleTracks}
 				onMediaSyncClick={handleToggleMediaSync}
 			/>
-
 			{/* Tracks Panel - 音轨管理侧边栏 */}
 			<TracksPanel
 				controller={controller}
@@ -191,10 +190,8 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 					}}
 				/>
 			</div>
-
 			{/* PlayBar - 用户界面播放控制栏（底部） */}
 			<PlayBar controller={controller} />
-
 			{/* MediaSync Panel - 底部媒体同步面板（浮动） */}
 			<MediaSync
 				controller={controller}

@@ -24,6 +24,7 @@ export interface GlobalAlphaTabSettings {
 		scrollOffsetY: number;
 		enableCursor: boolean;
 		enableAnimatedBeatCursor: boolean;
+		playbackSpeed: number; // 播放速度 (0.5 ~ 2.0)
 	};
 
 	display: {
@@ -31,6 +32,7 @@ export interface GlobalAlphaTabSettings {
 		layoutMode: alphaTab.LayoutMode;
 		barsPerRow: number;
 		stretchForce: number;
+		staveProfile: alphaTab.StaveProfile; // 谱表模式
 	};
 }
 
@@ -45,6 +47,9 @@ export interface GlobalPlayerExtensions {
 
 	// 自动滚动开关
 	autoScrollEnabled: boolean;
+
+	// 循环播放
+	isLooping: boolean;
 
 	// 音量控制
 	masterVolume: number; // 0.0 ~ 1.0
@@ -90,12 +95,14 @@ export function getDefaultGlobalConfig(): GlobalConfig {
 				scrollOffsetY: 0,
 				enableCursor: true,
 				enableAnimatedBeatCursor: true,
+				playbackSpeed: 1.0, // 默认播放速度
 			},
 			display: {
 				scale: 1.0,
 				layoutMode: alphaTab.LayoutMode.Page,
 				barsPerRow: -1,
 				stretchForce: 1.0,
+				staveProfile: alphaTab.StaveProfile.ScoreTab, // 默认五线谱+六线谱
 			},
 		},
 
@@ -104,6 +111,7 @@ export function getDefaultGlobalConfig(): GlobalConfig {
 			metronomeVolume: 0.5,
 			countInBars: 0,
 			autoScrollEnabled: true,
+			isLooping: false, // 默认不循环
 			masterVolume: 1.0,
 		},
 

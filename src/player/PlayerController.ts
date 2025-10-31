@@ -178,7 +178,11 @@ export class PlayerController {
 
 	// ========== API Lifecycle ==========
 
-	private async rebuildApi(): Promise<void> {
+	/**
+	 * 重建 AlphaTab API
+	 * 用于配置变更或手动刷新时重新初始化播放器
+	 */
+	public async rebuildApi(): Promise<void> {
 		if (!this.container) {
 			console.warn(`[PlayerController #${this.instanceId}] No container, skipping rebuild`);
 			return;

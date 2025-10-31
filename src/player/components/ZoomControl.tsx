@@ -11,6 +11,8 @@ interface ZoomControlProps {
  * 50% ~ 200% 缩放选择
  */
 export const ZoomControl: React.FC<ZoomControlProps> = ({ controller }) => {
+	const globalConfig = controller.getGlobalConfigStore();
+
 	const zoomLevels = [
 		{ label: '50%', value: 0.5 },
 		{ label: '75%', value: 0.75 },
@@ -20,12 +22,21 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ controller }) => {
 		{ label: '200%', value: 2.0 },
 	];
 
-	const [currentZoom, setCurrentZoom] = useState(1.0);
+	// 从 globalConfig 读取初始缩放值
+	const initialZoom = globalConfig((s) => s.alphaTabSettings.display.scale);
+	const [currentZoom, setCurrentZoom] = useState(initialZoom);
 
 	const handleZoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		const zoom = parseFloat(e.target.value);
 		if (!isNaN(zoom)) {
 			setCurrentZoom(zoom);
+
+			// 更新全局配置（持久化）
+			globalConfig.getState().updateAlphaTabSettings({
+				display: { ...globalConfig.getState().alphaTabSettings.display, scale: zoom },
+			});
+
+			// 同步到 API
 			controller.setZoom(zoom);
 		}
 	};

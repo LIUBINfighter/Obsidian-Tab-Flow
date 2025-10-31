@@ -12,7 +12,11 @@ interface LayoutToggleProps {
  * 页面布局 <-> 横向滚动布局
  */
 export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
-	const [layoutMode, setLayoutMode] = useState<alphaTab.LayoutMode>(alphaTab.LayoutMode.Page);
+	const globalConfig = controller.getGlobalConfigStore();
+
+	// 从 globalConfig 读取初始布局模式
+	const initialLayout = globalConfig((s) => s.alphaTabSettings.display.layoutMode);
+	const [layoutMode, setLayoutMode] = useState<alphaTab.LayoutMode>(initialLayout);
 
 	const handleToggle = () => {
 		const newMode =
@@ -21,6 +25,13 @@ export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
 				: alphaTab.LayoutMode.Page;
 
 		setLayoutMode(newMode);
+
+		// 更新全局配置（持久化）
+		globalConfig.getState().updateAlphaTabSettings({
+			display: { ...globalConfig.getState().alphaTabSettings.display, layoutMode: newMode },
+		});
+
+		// 同步到 API
 		controller.setLayoutMode(newMode);
 	};
 
