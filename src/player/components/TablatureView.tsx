@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import type { PlayerController } from '../PlayerController';
+import { PlayBar } from './PlayBar';
 import { DebugBar } from './DebugBar';
 import { SettingsPanel } from './SettingsPanel';
 import { TracksPanel } from './TracksPanel';
@@ -81,13 +82,14 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				flexDirection: 'column',
 			}}
 		>
-			{/* DebugBar - 播放控制栏 */}
+			{/* DebugBar - 调试/开发用完整控制栏（顶部） */}
 			<DebugBar
 				controller={controller}
 				onSettingsClick={handleToggleSettings}
 				onTracksClick={handleToggleTracks}
 				onMediaSyncClick={handleToggleMediaSync}
 			/>
+
 			{/* Tracks Panel - 音轨管理侧边栏 */}
 			<TracksPanel
 				controller={controller}
@@ -189,6 +191,10 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 					}}
 				/>
 			</div>
+
+			{/* PlayBar - 用户界面播放控制栏（底部） */}
+			<PlayBar controller={controller} />
+
 			{/* MediaSync Panel - 底部媒体同步面板（浮动） */}
 			<MediaSync
 				controller={controller}

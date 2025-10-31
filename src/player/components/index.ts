@@ -14,3 +14,5 @@ export { SettingsToggle } from './SettingsToggle';
 export { MediaSync } from './MediaSync';
 export { MediaSyncToggle } from './MediaSyncToggle';
 export { MediaFileSuggestModal } from './MediaFileSuggestModal';
+export { PlayBar } from './PlayBar';
+export { DebugBar } from './DebugBar';
