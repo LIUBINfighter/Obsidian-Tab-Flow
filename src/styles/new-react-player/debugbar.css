@@ -104,6 +104,13 @@
 	gap: 2px;
 }
 
+.tab-flow-play-bar .play-bar-button-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
 .tab-flow-play-bar .play-bar-controls {
 	display: flex;
 	align-items: center;
