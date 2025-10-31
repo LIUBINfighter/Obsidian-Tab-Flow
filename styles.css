@@ -3442,6 +3442,10 @@ ul.tabflow-setting-description li {
 	text-align: center;
 }
 
+/* ============================================
+   ProgressBar - 播放进度条样式
+   ============================================ */
+
 .progress-bar-container {
 	position: relative;
 	flex: 1;
@@ -3449,14 +3453,23 @@ ul.tabflow-setting-description li {
 	display: flex;
 	align-items: center;
 	cursor: pointer;
-	max-width: 600px; /* 硬编码进度条容器的最大宽度 */
-	width: 100%; /* 确保它占用可用空间但不超过最大宽度 */
+	/* 最大宽度现在由配置控制，移除硬编码 */
+	/* max-width: 600px; */
+	width: 100%;
+	transition: opacity 0.2s ease;
+}
+
+/* 禁用交互状态 */
+.progress-bar-container.disabled {
+	cursor: default;
+	opacity: 0.7;
 }
 
 .progress-bar {
 	position: relative;
 	width: 100%;
-	height: 4px;
+	/* 高度现在由配置控制 */
+	/* height: 4px; */
 	background-color: var(--background-modifier-border);
 	border-radius: 2px;
 	overflow: visible;
@@ -3485,9 +3498,15 @@ ul.tabflow-setting-description li {
 	border-radius: 50%;
 	box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
 	opacity: 0;
-	transition: opacity 0.2s ease;
+	transition: opacity 0.2s ease, transform 0.2s ease;
 	cursor: grab;
 	z-index: 10; /* 确保手柄在进度条上方 */
+}
+
+/* 禁用状态下隐藏手柄交互 */
+.progress-bar-container.disabled .progress-handle {
+	cursor: default;
+	display: none;
 }
 
 /* 拖动状态样式 */
@@ -3514,6 +3533,11 @@ ul.tabflow-setting-description li {
 	cursor: grabbing;
 	transform: translate(-50%, -50%) scale(1.2);
 	box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 容器拖动状态 */
+.progress-bar-container.dragging {
+	cursor: grabbing;
 }
 
 /* 为内容添加底部边距，避免被播放栏遮挡 */

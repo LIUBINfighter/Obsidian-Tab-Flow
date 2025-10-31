@@ -68,6 +68,28 @@ export interface UIConfig {
 
 	// 控制栏布局
 	controlBarLayout: 'horizontal' | 'vertical';
+
+	// ========== 进度条配置 ==========
+	progressBar: {
+		// 交互性配置
+		enableInteraction: boolean; // 是否允许点击/拖拽跳转（区分操作模式和观看模式）
+		enableDrag: boolean; // 是否允许拖拽（enableInteraction=true 时生效）
+		enableClick: boolean; // 是否允许点击跳转（enableInteraction=true 时生效）
+
+		// 尺寸配置
+		minWidth: number; // 最小宽度（像素）
+		maxWidth: number; // 最大宽度（像素，-1 表示无限制）
+		height: number; // 进度条高度（像素）
+
+		// 显示配置
+		showHandle: boolean; // 是否显示拖拽手柄
+		showTooltip: boolean; // 是否显示时间提示（悬停时）TODO: 待实现
+		showTimestamp: boolean; // 是否在进度条上显示时间戳 TODO: 待实现
+
+		// 行为配置
+		smoothSeek: boolean; // 跳转时是否平滑过渡 TODO: 待实现
+		updateInterval: number; // 进度更新间隔（毫秒）TODO: 待实现
+	};
 }
 
 // ========== Complete Global Config ==========
@@ -121,6 +143,28 @@ export function getDefaultGlobalConfig(): GlobalConfig {
 			defaultOpenPanels: [],
 			compactMode: false,
 			controlBarLayout: 'horizontal',
+
+			// 进度条默认配置
+			progressBar: {
+				// 交互性：默认启用所有交互功能
+				enableInteraction: true,
+				enableDrag: true,
+				enableClick: true,
+
+				// 尺寸：默认最小 100px，最大无限制，高度 4px
+				minWidth: 100,
+				maxWidth: -1, // -1 = 无限制
+				height: 4,
+
+				// 显示：默认显示手柄
+				showHandle: true,
+				showTooltip: false, // TODO: 待实现悬停时间提示
+				showTimestamp: false, // TODO: 待实现时间戳显示
+
+				// 行为：默认直接跳转
+				smoothSeek: false, // TODO: 待实现平滑跳转
+				updateInterval: 100, // TODO: 待实现节流更新
+			},
 		},
 	};
 }
