@@ -85,6 +85,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 			{/* DebugBar - 调试/开发用完整控制栏（顶部） */}
 			<DebugBar
 				controller={controller}
+				viewportRef={viewportRef}
 				onSettingsClick={handleToggleSettings}
 				onTracksClick={handleToggleTracks}
 				onMediaSyncClick={handleToggleMediaSync}

@@ -16,3 +16,11 @@ export { MediaSyncToggle } from './MediaSyncToggle';
 export { MediaFileSuggestModal } from './MediaFileSuggestModal';
 export { PlayBar } from './PlayBar';
 export { DebugBar } from './DebugBar';
+
+// 新增控制组件
+export { SpeedControl } from './SpeedControl';
+export { StaveProfileControl } from './StaveProfileControl';
+export { RefreshButton } from './RefreshButton';
+export { LocateCursorButton } from './LocateCursorButton';
+export { ScrollButtons } from './ScrollButtons';
+export { ProgressBar } from './ProgressBar';

@@ -14,9 +14,16 @@ import { SettingsToggle } from './SettingsToggle';
 import { MediaSyncToggle } from './MediaSyncToggle';
 import { TracksModal } from './TracksModal';
 import { ExportModal } from './ExportModal';
+import { SpeedControl } from './SpeedControl';
+import { StaveProfileControl } from './StaveProfileControl';
+import { RefreshButton } from './RefreshButton';
+import { LocateCursorButton } from './LocateCursorButton';
+import { ScrollButtons } from './ScrollButtons';
+import { ProgressBar } from './ProgressBar';
 
 interface DebugBarProps {
 	controller: PlayerController;
+	viewportRef?: React.RefObject<HTMLDivElement | null>;
 	onSettingsClick?: () => void;
 	onTracksClick?: () => void;
 	onMediaSyncClick?: () => void;
@@ -34,6 +41,7 @@ interface DebugBarProps {
  */
 export const DebugBar: React.FC<DebugBarProps> = ({
 	controller,
+	viewportRef,
 	onSettingsClick,
 	onTracksClick,
 	onMediaSyncClick,
@@ -83,18 +91,30 @@ export const DebugBar: React.FC<DebugBarProps> = ({
 				<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
 				{/* 时间显示 */}
 				<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
+				{/* 进度条 */}
+				<ProgressBar controller={controller} currentMs={positionMs} totalMs={durationMs} />
 				{/* 节拍器开关 */}
 				<MetronomeToggle controller={controller} />
 				{/* 预备拍开关 */}
 				<CountInToggle controller={controller} />
 				{/* 循环播放 */}
 				<LoopToggle controller={controller} />
+				{/* 播放速度 */}
+				<SpeedControl controller={controller} />
+				{/* 谱表显示模式 */}
+				<StaveProfileControl controller={controller} />
 				{/* 布局切换 */}
 				<LayoutToggle controller={controller} />
 				{/* 缩放控制 */}
 				<ZoomControl controller={controller} />
 				{/* 滚动模式 */}
 				<ScrollModeControl controller={controller} />
+				{/* 刷新按钮 */}
+				<RefreshButton controller={controller} />
+				{/* 定位光标 */}
+				<LocateCursorButton controller={controller} />
+				{/* 滚动按钮 */}
+				{viewportRef && <ScrollButtons viewportRef={viewportRef} />}
 				{/* 状态指示器（调试用） */}
 				{!scoreLoaded && (
 					<div className="play-bar-status">
