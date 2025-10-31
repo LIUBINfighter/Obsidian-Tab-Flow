@@ -18,10 +18,19 @@ export interface RuntimeStore extends SessionState {
 	// 额外的 API 实例引用（不在 SessionState 中）
 	alphaTabApi: any | null;
 
+	// 保存最后加载的乐谱数据，用于 API 重建后重新加载
+	lastLoadedScore: {
+		type: 'alphatex' | 'binary' | null;
+		data: string | Uint8Array | null;
+		fileName?: string;
+	};
+
 	// Actions
 	setApi: (api: any | null) => void;
 	setApiReady: (ready: boolean) => void;
 	setScoreLoaded: (loaded: boolean) => void;
+	setLastLoadedScore: (type: 'alphatex' | 'binary', data: string | Uint8Array, fileName?: string) => void;
+	clearLastLoadedScore: () => void;
 	setRenderState: (state: SessionState['renderState']) => void;
 	setPlaybackState: (state: SessionState['playbackState']) => void;
 	setPosition: (positionMs: number) => void;
@@ -45,6 +54,10 @@ export function createRuntimeStore(): UseBoundStore<StoreApi<RuntimeStore>> {
 	return create<RuntimeStore>((set) => ({
 		...getInitialSessionState(),
 		alphaTabApi: null,
+		lastLoadedScore: {
+			type: null,
+			data: null,
+		},
 
 		// Actions
 		setApi: (api) => {
@@ -60,6 +73,25 @@ export function createRuntimeStore(): UseBoundStore<StoreApi<RuntimeStore>> {
 
 		setScoreLoaded: (loaded) => {
 			set({ scoreLoaded: loaded });
+		},
+
+		setLastLoadedScore: (type, data, fileName) => {
+			set({
+				lastLoadedScore: {
+					type,
+					data,
+					fileName,
+				},
+			});
+		},
+
+		clearLastLoadedScore: () => {
+			set({
+				lastLoadedScore: {
+					type: null,
+					data: null,
+				},
+			});
 		},
 
 		setRenderState: (state) => {

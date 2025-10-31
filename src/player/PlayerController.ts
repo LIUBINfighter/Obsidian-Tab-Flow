@@ -218,6 +218,23 @@ export class PlayerController {
 			if (this.pendingFileLoad) {
 				await this.pendingFileLoad();
 				this.pendingFileLoad = null;
+			} else {
+				// 如果有之前加载的乐谱，重新加载
+				const lastScore = this.stores.runtime.getState().lastLoadedScore;
+				if (lastScore.type && lastScore.data) {
+					console.log(`[PlayerController #${this.instanceId}] Reloading last score after rebuild...`);
+					try {
+						if (lastScore.type === 'alphatex') {
+							this.api.tex(lastScore.data as string);
+						} else if (lastScore.type === 'binary') {
+							await this.api.load(lastScore.data as Uint8Array);
+						}
+						console.log(`[PlayerController #${this.instanceId}] Last score reloaded successfully`);
+					} catch (error) {
+						console.error(`[PlayerController #${this.instanceId}] Failed to reload last score:`, error);
+						this.stores.ui.getState().showToast('error', 'Failed to reload score after rebuild');
+					}
+				}
 			}
 		} catch (error) {
 			console.error(`[PlayerController #${this.instanceId}] Failed to rebuild API:`, error);
@@ -843,7 +860,12 @@ export class PlayerController {
 		this.stores.runtime.getState().clearError();
 
 		try {
-			await this.api.load(new Uint8Array(arrayBuffer));
+			const uint8Array = new Uint8Array(arrayBuffer);
+			await this.api.load(uint8Array);
+
+			// 保存乐谱数据用于 API 重建后重新加载
+			this.stores.runtime.getState().setLastLoadedScore('binary', uint8Array, fileName);
+
 			this.stores.workspaceConfig
 				.getState()
 				.setScoreSource({ type: 'file', content: fileName || 'local-file' });
@@ -871,6 +893,10 @@ export class PlayerController {
 
 		try {
 			this.api.tex(tex);
+
+			// 保存乐谱数据用于 API 重建后重新加载
+			this.stores.runtime.getState().setLastLoadedScore('alphatex', tex);
+
 			this.stores.workspaceConfig
 				.getState()
 				.setScoreSource({ type: 'alphatex', content: tex });
