@@ -222,17 +222,26 @@ export class PlayerController {
 				// 如果有之前加载的乐谱，重新加载
 				const lastScore = this.stores.runtime.getState().lastLoadedScore;
 				if (lastScore.type && lastScore.data) {
-					console.log(`[PlayerController #${this.instanceId}] Reloading last score after rebuild...`);
+					console.log(
+						`[PlayerController #${this.instanceId}] Reloading last score after rebuild...`
+					);
 					try {
 						if (lastScore.type === 'alphatex') {
 							this.api.tex(lastScore.data as string);
 						} else if (lastScore.type === 'binary') {
 							await this.api.load(lastScore.data as Uint8Array);
 						}
-						console.log(`[PlayerController #${this.instanceId}] Last score reloaded successfully`);
+						console.log(
+							`[PlayerController #${this.instanceId}] Last score reloaded successfully`
+						);
 					} catch (error) {
-						console.error(`[PlayerController #${this.instanceId}] Failed to reload last score:`, error);
-						this.stores.ui.getState().showToast('error', 'Failed to reload score after rebuild');
+						console.error(
+							`[PlayerController #${this.instanceId}] Failed to reload last score:`,
+							error
+						);
+						this.stores.ui
+							.getState()
+							.showToast('error', 'Failed to reload score after rebuild');
 					}
 				}
 			}

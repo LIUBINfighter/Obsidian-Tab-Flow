@@ -29,7 +29,11 @@ export interface RuntimeStore extends SessionState {
 	setApi: (api: any | null) => void;
 	setApiReady: (ready: boolean) => void;
 	setScoreLoaded: (loaded: boolean) => void;
-	setLastLoadedScore: (type: 'alphatex' | 'binary', data: string | Uint8Array, fileName?: string) => void;
+	setLastLoadedScore: (
+		type: 'alphatex' | 'binary',
+		data: string | Uint8Array,
+		fileName?: string
+	) => void;
 	clearLastLoadedScore: () => void;
 	setRenderState: (state: SessionState['renderState']) => void;
 	setPlaybackState: (state: SessionState['playbackState']) => void;
