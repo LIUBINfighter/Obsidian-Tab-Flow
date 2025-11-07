@@ -1,6 +1,8 @@
 import React from 'react';
 import type { PlayerController } from '../PlayerController';
 import { PlayControls } from './PlayControls';
+import { TimeDisplay } from './TimeDisplay';
+import { ProgressBar } from './ProgressBar';
 
 interface PlayBarProps {
 	controller: PlayerController;
@@ -30,6 +32,8 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
 	// 订阅播放状态
 	const playbackState = runtimeStore((s) => s.playbackState);
 	const scoreLoaded = runtimeStore((s) => s.scoreLoaded);
+	const positionMs = runtimeStore((s) => s.positionMs);
+	const durationMs = runtimeStore((s) => s.durationMs);
 
 	// 判断按钮状态
 	const isPlaying = playbackState === 'playing';
@@ -39,6 +43,17 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
 		<div className="tab-flow-play-bar">
 			{/* 播放控制组件 */}
 			<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
+
+			{/* 时间显示（可选） */}
+			<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
+
+			{/* 进度条（只读模式，不可交互） */}
+			<ProgressBar
+				controller={controller}
+				currentMs={positionMs}
+				totalMs={durationMs}
+				enableInteraction={false} // ❌ PlayBar 中禁用交互（只读）
+			/>
 
 			{/* 状态指示器（当乐谱未加载时显示） */}
 			{!scoreLoaded && (

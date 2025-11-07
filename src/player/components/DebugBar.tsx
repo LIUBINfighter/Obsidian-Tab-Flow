@@ -91,8 +91,13 @@ export const DebugBar: React.FC<DebugBarProps> = ({
 				<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
 				{/* 时间显示 */}
 				<TimeDisplay currentMs={positionMs} totalMs={durationMs} />
-				{/* 进度条 */}
-				<ProgressBar controller={controller} currentMs={positionMs} totalMs={durationMs} />
+				{/* 进度条（可交互） */}
+				<ProgressBar
+					controller={controller}
+					currentMs={positionMs}
+					totalMs={durationMs}
+					enableInteraction={true} // ✅ DebugBar 中启用交互
+				/>
 				{/* 节拍器开关 */}
 				<MetronomeToggle controller={controller} />
 				{/* 预备拍开关 */}

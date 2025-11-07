@@ -5,6 +5,13 @@ interface ProgressBarProps {
 	controller: PlayerController;
 	currentMs: number;
 	totalMs: number;
+	/**
+	 * 是否启用交互（可选）
+	 * - undefined: 使用全局配置
+	 * - true: 强制启用交互
+	 * - false: 强制禁用交互（只读模式）
+	 */
+	enableInteraction?: boolean;
 }
 
 /**
@@ -25,6 +32,7 @@ interface ProgressBarProps {
  * - 支持禁用交互（观看模式）
  * - 响应全局配置变化
  * - 修复：barRef 绑定到正确的元素，解决线性偏差问题
+ * - 新增：组件级 enableInteraction prop，可覆盖全局配置
  *
  * 🔜 待实现（TODO）：
  * - showTooltip: 悬停显示时间提示
@@ -32,16 +40,48 @@ interface ProgressBarProps {
  * - smoothSeek: 平滑跳转动画
  * - updateInterval: 进度更新节流
  *
- * 配置位置：
- * - 当前：使用 globalConfig.uiConfig.progressBar 的默认值
- * - TODO: 用户可在设置面板中修改（需要在 SettingsPanel 中添加 UI）
+ * 配置方式：
+ * 1. 全局配置（globalConfig.uiConfig.progressBar）
+ * 2. 组件级覆盖（props.enableInteraction）
+ *
+ * 使用示例：
+ * ```tsx
+ * // 可交互模式（DebugBar）
+ * <ProgressBar
+ *   controller={controller}
+ *   currentMs={positionMs}
+ *   totalMs={durationMs}
+ *   enableInteraction={true}
+ * />
+ *
+ * // 只读模式（PlayBar）
+ * <ProgressBar
+ *   controller={controller}
+ *   currentMs={positionMs}
+ *   totalMs={durationMs}
+ *   enableInteraction={false}
+ * />
+ *
+ * // 使用全局配置（默认）
+ * <ProgressBar
+ *   controller={controller}
+ *   currentMs={positionMs}
+ *   totalMs={durationMs}
+ * />
+ * ```
  *
  * 已知问题修复：
  * - ✅ 修复 barRef 绑定错误导致的拖拽偏差问题
  * - ✅ 清理样式文件，创建独立的 progress-bar.css
  * - ✅ 参考官方文档使用正确的 AlphaTab API
+ * - ✅ 修复进度条撑高 DebugBar 的问题
  */
-export const ProgressBar: React.FC<ProgressBarProps> = ({ controller, currentMs, totalMs }) => {
+export const ProgressBar: React.FC<ProgressBarProps> = ({
+	controller,
+	currentMs,
+	totalMs,
+	enableInteraction: enableInteractionProp,
+}) => {
 	// ========== Refs ==========
 	// 关键修复：barRef 绑定到内层 progress-bar，而非外层 container
 	const barRef = useRef<HTMLDivElement>(null);
@@ -55,9 +95,9 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ controller, currentMs,
 
 	// 解构配置
 	const {
-		enableInteraction,
-		enableDrag,
-		enableClick,
+		enableInteraction: enableInteractionConfig,
+		enableDrag: enableDragConfig,
+		enableClick: enableClickConfig,
 		minWidth,
 		maxWidth,
 		height,
@@ -67,6 +107,19 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ controller, currentMs,
 		// smoothSeek, // TODO: 待实现
 		// updateInterval, // TODO: 待实现
 	} = progressBarConfig;
+
+	// ========== 交互性控制 ==========
+	/**
+	 * 优先级：
+	 * 1. props.enableInteraction（组件级别覆盖）
+	 * 2. config.enableInteraction（全局配置）
+	 */
+	const enableInteraction =
+		enableInteractionProp !== undefined ? enableInteractionProp : enableInteractionConfig;
+
+	// 只有在交互启用时，才允许拖拽和点击
+	const enableDrag = enableInteraction && enableDragConfig;
+	const enableClick = enableInteraction && enableClickConfig;
 
 	// ========== 进度计算 ==========
 	// 计算进度百分比
