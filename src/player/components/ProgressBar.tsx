@@ -172,6 +172,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ controller, currentMs,
 	const containerStyle: React.CSSProperties = {
 		minWidth: minWidth > 0 ? `${minWidth}px` : undefined,
 		maxWidth: maxWidth > 0 ? `${maxWidth}px` : undefined,
+		// 固定高度，防止撑高 DebugBar（与 progress-handle 高度一致）
+		height: '12px',
 	};
 
 	// 进度条样式（控制高度）

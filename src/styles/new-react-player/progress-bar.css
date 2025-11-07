@@ -17,6 +17,9 @@
 	display: flex;
 	align-items: center;
 	/* min-width 和 max-width 由 React containerStyle 控制 */
+	/* 防止撑高父容器 - 固定高度为进度条高度 */
+	height: 12px; /* 与 progress-handle 高度一致，防止溢出 */
+	align-self: center;
 }
 
 /* 禁用状态 - 降低整体不透明度 */
@@ -31,7 +34,7 @@
 .progress-bar {
 	position: relative;
 	width: 100%;
-	/* height 由 React barStyle 控制 */
+	height: 4px; /* 默认高度，可被 React barStyle 覆盖 */
 	background-color: var(--background-modifier-border);
 	border-radius: 2px;
 	overflow: visible; /* 允许手柄超出边界 */
