@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAlphaTabEvent } from '../hooks';
 import { TrackItem } from './TrackItem';
+import type { PlayerController } from '../PlayerController';
 
 /**
  * 音轨选择器属性
@@ -19,6 +20,9 @@ import { TrackItem } from './TrackItem';
 export interface TracksModalProps {
 	/** AlphaTab API 实例 */
 	api: AlphaTab.AlphaTabApi;
+
+	/** PlayerController 实例 */
+	controller: PlayerController;
 
 	/** 是否打开 */
 	isOpen: boolean;
@@ -30,7 +34,7 @@ export interface TracksModalProps {
 /**
  * 音轨选择器模态框组件
  */
-export const TracksModal: React.FC<TracksModalProps> = ({ api, isOpen, onClose }) => {
+export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpen, onClose }) => {
 	// ========== 状态管理 ==========
 
 	// 当前曲谱
@@ -186,6 +190,7 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, isOpen, onClose }
 							<TrackItem
 								key={track.index}
 								api={api}
+								controller={controller}
 								track={track}
 								isSelected={selectedTracks.has(track.index)}
 								onSelectionChange={handleTrackSelectionChange}

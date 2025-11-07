@@ -127,16 +127,15 @@ export const DebugBar: React.FC<DebugBarProps> = ({
 					</div>
 				)}
 			</div>
-
 			{/* 音轨选择器模态框（保留作为备用，但通常不使用） */}
 			{tracksModalOpen && api && (
 				<TracksModal
 					api={api}
+					controller={controller}
 					isOpen={tracksModalOpen}
 					onClose={() => setTracksModalOpen(false)}
 				/>
-			)}
-
+			)}{' '}
 			{/* 导出模态框 */}
 			<ExportModal
 				controller={controller}
