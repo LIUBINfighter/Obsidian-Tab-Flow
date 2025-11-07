@@ -656,9 +656,26 @@ export class PlayerController {
 		this.api.playPause();
 	}
 
+	/**
+	 * 跳转到指定播放位置
+	 * @param positionMs - 目标位置（毫秒）
+	 *
+	 * 修复说明：
+	 * - 之前错误使用 tickPosition（MIDI tick 单位）
+	 * - 现在正确使用 timePosition（毫秒单位）
+	 * - 参考 AlphaTab 官方文档：https://www.alphatab.net/docs/reference/api/timeposition
+	 */
 	seek(positionMs: number): void {
 		if (!this.api) return;
-		this.api.tickPosition = positionMs;
+
+		// ✅ 修复：使用 timePosition（毫秒）而非 tickPosition
+		this.api.timePosition = positionMs;
+
+		// 调试日志（开发时可取消注释）
+		// console.log('[PlayerController] Seek to:', {
+		// 	positionMs,
+		// 	positionSec: (positionMs / 1000).toFixed(2) + 's',
+		// });
 	}
 
 	setPlaybackSpeed(speed: number): void {

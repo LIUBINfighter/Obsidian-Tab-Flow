@@ -1,0 +1,175 @@
+/**
+ * ProgressBar - 播放进度条样式
+ * 
+ * 设计原则：
+ * 1. 外层容器（progress-bar-container）仅负责 flex 布局和尺寸限制
+ * 2. 内层进度条（progress-bar）是实际的交互目标，接收点击和拖拽事件
+ * 3. 所有动态宽度/位置通过 React inline style 控制
+ * 4. 参考 AlphaTab 官方最佳实践和旧版 ProgressBar.ts 的正确结构
+ */
+
+/* ============================================
+   外层容器 - 布局和尺寸控制
+   ============================================ */
+.progress-bar-container {
+	position: relative;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	/* min-width 和 max-width 由 React containerStyle 控制 */
+}
+
+/* 禁用状态 - 降低整体不透明度 */
+.progress-bar-container.disabled {
+	opacity: 0.7;
+	pointer-events: none;
+}
+
+/* ============================================
+   进度条主体 - 交互目标
+   ============================================ */
+.progress-bar {
+	position: relative;
+	width: 100%;
+	/* height 由 React barStyle 控制 */
+	background-color: var(--background-modifier-border);
+	border-radius: 2px;
+	overflow: visible; /* 允许手柄超出边界 */
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+/* 悬停状态 */
+.progress-bar:hover {
+	background-color: var(--background-modifier-border-hover);
+}
+
+/* 拖拽中状态 */
+.progress-bar.dragging {
+	cursor: grabbing;
+	background-color: var(--background-modifier-border-focus);
+}
+
+/* 禁用状态下的进度条 */
+.progress-bar-container.disabled .progress-bar {
+	cursor: default;
+}
+
+/* ============================================
+   进度填充 - 显示当前进度
+   ============================================ */
+.progress-fill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	width: 0; /* 由 React 动态设置 */
+	background-color: var(--interactive-accent);
+	border-radius: 2px;
+	transition: width 0.1s linear; /* 平滑进度更新 */
+	pointer-events: none; /* 不干扰点击事件 */
+}
+
+/* ============================================
+   拖拽手柄 - 可视化拖拽点
+   ============================================ */
+.progress-handle {
+	position: absolute;
+	top: 50%;
+	transform: translate(-50%, -50%); /* 居中对齐 */
+	/* left 由 React 动态设置 */
+	width: 12px;
+	height: 12px;
+	background-color: var(--interactive-accent);
+	border-radius: 50%;
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+	opacity: 0; /* 默认隐藏 */
+	transition:
+		opacity 0.2s ease,
+		transform 0.2s ease;
+	cursor: grab;
+	z-index: 10;
+	pointer-events: none; /* 不干扰点击事件 */
+}
+
+/* 悬停时显示手柄 */
+.progress-bar:hover .progress-handle {
+	opacity: 1;
+}
+
+/* 拖拽中的手柄 */
+.progress-bar.dragging .progress-handle {
+	opacity: 1;
+	cursor: grabbing;
+	transform: translate(-50%, -50%) scale(1.2); /* 放大提供视觉反馈 */
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 禁用状态下隐藏手柄 */
+.progress-bar-container.disabled .progress-handle {
+	display: none;
+}
+
+/* ============================================
+   深色/浅色主题适配
+   ============================================ */
+.theme-dark .progress-bar {
+	background-color: var(--background-modifier-border);
+}
+
+.theme-dark .progress-fill {
+	background-color: var(--interactive-accent);
+}
+
+.theme-light .progress-bar {
+	background-color: var(--background-modifier-border);
+}
+
+.theme-light .progress-fill {
+	background-color: var(--interactive-accent);
+}
+
+/* ============================================
+   响应式设计 - 触摸设备优化
+   ============================================ */
+@media (hover: none) and (pointer: coarse) {
+	/* 触摸设备：增大手柄尺寸以便点击 */
+	.progress-handle {
+		width: 16px;
+		height: 16px;
+	}
+
+	/* 触摸设备：总是显示手柄 */
+	.progress-bar .progress-handle {
+		opacity: 0.8;
+	}
+
+	.progress-bar.dragging .progress-handle {
+		opacity: 1;
+	}
+}
+
+/* ============================================
+   加载/过渡状态
+   ============================================ */
+.progress-bar-container.loading .progress-fill {
+	animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+/* ============================================
+   聚焦状态 - 键盘导航
+   ============================================ */
+.progress-bar:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
