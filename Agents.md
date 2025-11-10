@@ -12,6 +12,7 @@
 2. About ci/cd/scripts, refer to package.json.
 3. To edit styles, do not edit styles.css. See `./src/styles`.
 4. Available docs: #context7 with `coderline/alphaTabWebsite` and `obsidian-develop-docs`. If encontered any question about API, please use #context7 to fetch latest document.
+5. Record every single bug-tracking/solution in document if necessary. Place `.md` in `./docs/dev`. Name it and add yaml(front-matter).
 
 ## Environment & tooling
 
