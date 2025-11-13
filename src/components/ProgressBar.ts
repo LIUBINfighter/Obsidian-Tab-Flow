@@ -88,7 +88,10 @@ export function createProgressBar(options: ProgressBarOptions): HTMLDivElement {
 	// });
 
 	// 提供外部主动更新方法
-	(progressContainer as any).updateProgress = updateProgress;
+	interface ProgressContainerElement extends HTMLDivElement {
+		updateProgress?: () => void;
+	}
+	(progressContainer as ProgressContainerElement).updateProgress = updateProgress;
 
 	// 初始化
 	updateProgress();

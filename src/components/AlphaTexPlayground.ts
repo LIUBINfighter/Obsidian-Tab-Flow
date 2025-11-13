@@ -10,6 +10,35 @@ interface EventBus {
 	subscribe(event: string, callback: (...args: unknown[]) => void): void;
 }
 
+// Extend Window interface for global settings
+declare global {
+	interface Window {
+		__tabflow_settings__?: unknown;
+		alphaTab?: {
+			LayoutMode?: {
+				Page?: number;
+				Horizontal?: number;
+			};
+		};
+		requestIdleCallback?: (
+			cb: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void
+		) => number;
+	}
+}
+
+// Type for alphaTab API settings with extended properties
+interface ExtendedDisplaySettings extends alphaTab.DisplaySettings {
+	staveProfile?: number;
+}
+
+interface ExtendedPlayerSettings extends alphaTab.PlayerSettings {
+	scrollMode?: string | alphaTab.ScrollMode;
+}
+
+interface ExtendedAlphaTabApi extends alphaTab.AlphaTabApi {
+	scrollToCursor?: () => void;
+}
+
 export interface AlphaTexPlaygroundOptions {
 	placeholder?: string;
 	debounceMs?: number;
@@ -158,8 +187,7 @@ export function createAlphaTexPlayground(
 		const editorContainer = editorWrap.createDiv({ cls: 'inmarkdown-editor-cm' });
 		// ensure global fallback for older code paths
 		try {
-			(window as any).__tabflow_settings__ =
-				(window as any).__tabflow_settings__ || plugin.settings;
+			window.__tabflow_settings__ = window.__tabflow_settings__ || plugin.settings;
 		} catch {
 			// ignore
 		}
@@ -321,13 +349,8 @@ export function createAlphaTexPlayground(
 	function scheduleRender() {
 		if (debounceTimer) window.clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
-			const win = window as unknown as {
-				requestIdleCallback?: (
-					cb: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void
-				) => number;
-			};
-			if (typeof win.requestIdleCallback === 'function')
-				win.requestIdleCallback(() => renderPreview());
+			if (typeof window.requestIdleCallback === 'function')
+				window.requestIdleCallback(() => renderPreview());
 			else renderPreview();
 		}, debounceMs);
 		onChange?.(currentValue);
@@ -425,7 +448,7 @@ export function createAlphaTexPlayground(
 		eventBus.subscribe('命令:设置谱表', (profile: number) => {
 			const api = mounted?.api;
 			if (api) {
-				(api.settings.display as any).staveProfile = profile;
+				(api.settings.display as ExtendedDisplaySettings).staveProfile = profile;
 				api.updateSettings();
 				api.render();
 			}
@@ -443,7 +466,7 @@ export function createAlphaTexPlayground(
 		eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
 			const api = mounted?.api;
 			if (api) {
-				(api.settings.player as any).scrollMode = mode;
+				(api.settings.player as ExtendedPlayerSettings).scrollMode = mode;
 				api.updateSettings();
 			}
 		});
@@ -467,7 +490,7 @@ export function createAlphaTexPlayground(
 
 		eventBus.subscribe('命令:滚动到光标', () => {
 			const api = mounted?.api;
-			if (api) (api as any).scrollToCursor?.();
+			if (api) (api as ExtendedAlphaTabApi).scrollToCursor?.();
 		});
 
 		eventBus.subscribe('命令:重新构造AlphaTabApi', () => {

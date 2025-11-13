@@ -215,7 +215,7 @@ export class ShareCardModal extends Modal {
 				// 找到乐谱根节点（.alphatex-score 或 captureEl 内部）
 				const scoreRoot = captureEl.querySelector('.alphatex-score') as HTMLElement | null;
 				if (scoreRoot) {
-					const result = await waitAlphaTabFullRender(api as any, scoreRoot, {
+					const result = await waitAlphaTabFullRender(api, scoreRoot, {
 						debug: false,
 						timeoutMs: 8000,
 						stableFrames: 3,
@@ -583,15 +583,15 @@ export class ShareCardModal extends Modal {
 					refreshDirtyIndicator();
 				},
 				onResolutionChange: (r: string) => {
-					this.stateManager?.updateField('resolution', r as any);
+					this.stateManager?.updateField('resolution', r as '1x' | '2x' | '3x');
 					refreshDirtyIndicator();
 				},
 				onFormatChange: (f: string) => {
-					this.stateManager?.updateField('format', f as any);
+					this.stateManager?.updateField('format', f as 'png' | 'jpg' | 'webp');
 					refreshDirtyIndicator();
 				},
 				onExportBgModeChange: (m: string) => {
-					this.exportBgMode = m as any;
+					this.exportBgMode = m as 'default' | 'auto' | 'custom';
 					this.stateManager?.updateField('exportBgMode', this.exportBgMode);
 					const st = this.stateManager?.getState();
 					if (st) st.working.exportBgMode = this.exportBgMode;
@@ -668,14 +668,14 @@ export class ShareCardModal extends Modal {
 					refreshDirtyIndicator();
 				},
 				onAuthorAlign: (v: string) => {
-					this.authorAlign = v as any;
-					this.stateManager?.updateField('authorAlign', v as any);
+					this.authorAlign = v as 'left' | 'center' | 'right';
+					this.stateManager?.updateField('authorAlign', v as 'left' | 'center' | 'right');
 					this.renderAuthorBlock();
 					refreshDirtyIndicator();
 				},
 				onAuthorPosition: (v: string) => {
-					this.authorPosition = v as any;
-					this.stateManager?.updateField('authorPosition', v as any);
+					this.authorPosition = v as 'top' | 'bottom';
+					this.stateManager?.updateField('authorPosition', v as 'top' | 'bottom');
 					this.renderAuthorBlock();
 					refreshDirtyIndicator();
 				},
@@ -968,7 +968,10 @@ export class ShareCardModal extends Modal {
 						try {
 							const blob = await this.generateImageBlob(resolution, fmt, mime);
 							// @ts-ignore
-							if (navigator.clipboard && (navigator.clipboard as any).write) {
+							interface ClipboardWithWrite extends Clipboard {
+								write?: (items: ClipboardItem[]) => Promise<void>;
+							}
+							if (navigator.clipboard && (navigator.clipboard as ClipboardWithWrite).write) {
 								const item = new ClipboardItem({ [blob.type]: blob });
 								// @ts-ignore
 								await navigator.clipboard.write([item]);

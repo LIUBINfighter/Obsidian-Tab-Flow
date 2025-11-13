@@ -18,7 +18,8 @@ export function handleTrackEvent(
 		console.warn('[handleTrackEvent] AlphaTabApi 未定义，事件被忽略:', payload);
 		return;
 	}
-	const value = payload.value as any; // 动态类型,运行时类型多样
+	// Type guard for value based on event type
+	const value = payload.value;
 	switch (payload.type) {
 		case 'solo':
 			api.changeTrackSolo([payload.track], !!value);
@@ -28,11 +29,13 @@ export function handleTrackEvent(
 			break;
 		case 'volume':
 			// value: 0-16, alphaTab 期望 0-1
-			api.changeTrackVolume([payload.track], Math.max(0, Math.min(1, value / 16)));
+			const volValue = typeof value === 'number' ? value : 0;
+			api.changeTrackVolume([payload.track], Math.max(0, Math.min(1, volValue / 16)));
 			break;
 		case 'transpose':
 			// value: -12 ~ 12
-			api.changeTrackTranspositionPitch([payload.track], value);
+			const transposeValue = typeof value === 'number' ? value : 0;
+			api.changeTrackTranspositionPitch([payload.track], transposeValue);
 			break;
 		case 'transposeAudio':
 			// 这里可扩展为音频移调逻辑

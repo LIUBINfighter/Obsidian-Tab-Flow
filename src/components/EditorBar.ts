@@ -1,11 +1,43 @@
 // PlayBar.ts - 底部固定播放栏组件
-import { App, setIcon } from 'obsidian';
+import { App, setIcon, Plugin } from 'obsidian';
 import { createProgressBar } from './ProgressBar';
 import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
 import { formatTime } from '../utils';
 import { t } from '../i18n';
+import type { TabFlowSettings } from '../settings/defaults';
+
+// Extend App interface for plugin access
+interface AppWithPlugins extends App {
+	plugins?: {
+		getPlugin?: (id: string) => Plugin | null;
+	};
+}
+
+// Type for TabFlowPlugin with settings
+interface TabFlowPluginLike extends Plugin {
+	settings?: TabFlowSettings;
+	runtimeUiOverride?: {
+		components?: Record<string, boolean>;
+		order?: string[] | string;
+	} | null;
+}
+
+// Type for alphaTab API settings with extended properties
+interface ExtendedDisplaySettings extends alphaTab.DisplaySettings {
+	staveProfile?: number;
+	layoutMode?: number;
+}
+
+interface ExtendedPlayerSettings extends alphaTab.PlayerSettings {
+	scrollMode?: string | alphaTab.ScrollMode;
+	enableCountIn?: boolean;
+}
+
+interface ExtendedAlphaTabApi extends alphaTab.AlphaTabApi {
+	scrollToCursor?: () => void;
+}
 
 export interface EditorBarOptions {
 	app: App;
@@ -121,13 +153,13 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	let runtimeOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = undefined;
-	let plugin: unknown = undefined;
+	let plugin: TabFlowPluginLike | null = null;
 	try {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
-		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-		visibility = (plugin as any)?.settings?.editorBar?.components;
-		runtimeOverride = (plugin as any)?.runtimeUiOverride;
+		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+		visibility = plugin?.settings?.editorBar?.components;
+		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
 	} catch {
 		// Ignore plugin access errors
 	}
@@ -173,7 +205,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			((Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0) ||
 				typeof runtimeOverride.order === 'string')
 				? runtimeOverride.order
-				: (plugin as any)?.settings?.editorBar?.order;
+				: plugin?.settings?.editorBar?.order;
 
 		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
 			order = rawOrder as string[];
@@ -282,7 +314,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 				const api = options.getApi?.();
 				if (api) {
 					countInOn = !countInOn;
-					(api.settings.player as any).enableCountIn = countInOn;
+					(api.settings.player as ExtendedPlayerSettings).enableCountIn = countInOn;
 					api.updateSettings();
 					updateCountInBtn();
 				} else {
@@ -338,7 +370,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			btn.onclick = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api as any).scrollToCursor?.();
+					(api as ExtendedAlphaTabApi).scrollToCursor?.();
 				} else {
 					eventBus?.publish('命令:滚动到光标');
 				}
@@ -358,7 +390,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 						layoutMode === alphaTab.LayoutMode.Page
 							? alphaTab.LayoutMode.Horizontal
 							: alphaTab.LayoutMode.Page;
-					(api.settings.display as any).layoutMode = layoutMode;
+					(api.settings.display as ExtendedDisplaySettings).layoutMode = layoutMode;
 					api.updateSettings();
 					api.render();
 					updateLayoutToggleBtn();
@@ -399,7 +431,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 					};
 					new ExportChooserModal({
 						app,
-						eventBus: eventBus as any,
+						eventBus: eventBus as { publish: (event: string, payload?: unknown) => void },
 						getFileName: getTitle,
 					}).open();
 				} catch (e) {
@@ -421,7 +453,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 				const api = options.getApi?.();
 				if (api) {
 					api.tickPosition = 0;
-					(api as any).scrollToCursor?.();
+					(api as ExtendedAlphaTabApi).scrollToCursor?.();
 				} else {
 					eventBus?.publish('命令:滚动到顶部');
 				}
@@ -445,7 +477,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 						const lastBar = masterBars[masterBars.length - 1];
 						const endTick = lastBar.start + lastBar.calculateDuration();
 						api.tickPosition = endTick;
-						(api as any).scrollToCursor?.();
+						(api as ExtendedAlphaTabApi).scrollToCursor?.();
 					}
 				} else {
 					eventBus?.publish('命令:滚动到底部');
@@ -557,7 +589,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.display as any).staveProfile = parseInt(select.value);
+					(api.settings.display as ExtendedDisplaySettings).staveProfile = parseInt(select.value);
 					api.updateSettings();
 					api.render();
 				} else {
@@ -621,8 +653,8 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			try {
 				const pluginId = 'tab-flow';
 				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
-				const localPlugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-				const currentMode = (localPlugin as any)?.settings?.scrollMode || 'continuous';
+				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+				const currentMode = localPlugin?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
 			} catch {
 				select.value = 'continuous';
@@ -630,7 +662,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.player as any).scrollMode = select.value;
+					(api.settings.player as ExtendedPlayerSettings).scrollMode = select.value;
 					api.updateSettings();
 				} else {
 					eventBus?.publish('命令:设置滚动模式', select.value);

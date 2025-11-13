@@ -6,6 +6,12 @@ import { convertSamplesToWavBlobUrl } from '../utils';
  * 包括：音频导出、MIDI导出、GP导出、PDF打印
  */
 
+// Extended API type for export methods
+interface ExtendedAlphaTabApi {
+	exportMidi?: () => Uint8Array;
+	renderTarget?: HTMLElement;
+}
+
 export interface ExportEventHandlersOptions {
 	api: alphaTab.AlphaTabApi;
 	getFileName?: () => string; // 可选：自定义文件名
@@ -56,9 +62,9 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			onExportStart?.('midi');
 			const fileName = (getFileName?.() || 'Untitled') + '.mid';
 			// 优先使用 exportMidi 以便自定义文件名
-			if (api && typeof (api as any).exportMidi === 'function') {
-				// @ts-ignore
-				const midiData = api.exportMidi();
+			const extendedApi = api as ExtendedAlphaTabApi;
+			if (api && typeof extendedApi.exportMidi === 'function') {
+				const midiData = extendedApi.exportMidi();
 				const a = document.createElement('a');
 				a.download = fileName;
 				a.href = URL.createObjectURL(new Blob([midiData], { type: 'audio/midi' }));
@@ -86,7 +92,15 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 		try {
 			onExportStart?.('gp');
 			if (!api.score) throw new Error('乐谱未加载');
-			const exporter = new (alphaTab as any).exporter.Gp7Exporter();
+			// AlphaTab exporter types are not fully exported
+			interface AlphaTabExporter {
+				exporter?: {
+					Gp7Exporter?: new () => {
+						export: (score: unknown, settings: unknown) => Uint8Array;
+					};
+				};
+			}
+			const exporter = new ((alphaTab as unknown as AlphaTabExporter).exporter?.Gp7Exporter)();
 			const data = exporter.export(api.score, api.settings);
 			const a = document.createElement('a');
 			a.download = (getFileName?.() || api.score.title || 'Untitled') + '.gp';
@@ -107,7 +121,8 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			onExportStart?.('pdf');
 			// 只打印乐谱区域
 			// 假设 api.renderTarget 是渲染的 DOM 元素
-			const el = (api as any).renderTarget || api.container;
+			const extendedApi = api as ExtendedAlphaTabApi;
+			const el = extendedApi.renderTarget || api.container;
 			if (!el) throw new Error('找不到乐谱渲染区域');
 			// 新建窗口打印
 			const win = window.open('', '_blank');

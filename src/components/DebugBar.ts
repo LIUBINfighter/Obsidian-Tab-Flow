@@ -4,6 +4,23 @@ import * as alphaTab from '@coderline/alphatab';
 import { ScrollConfigProxy } from '../services/ScrollConfigProxy';
 import { AudioExportModal } from './AudioExportModal';
 
+// Extend Window interface for alphaTab global
+declare global {
+	interface Window {
+		alphaTab?: {
+			LayoutMode?: {
+				Page?: number;
+				Horizontal?: number;
+			};
+		};
+	}
+}
+
+// Extend HTMLDivElement for audioStatus property
+interface DebugBarElement extends HTMLDivElement {
+	audioStatus?: HTMLSpanElement;
+}
+
 export interface DebugBarOptions {
 	app: App; // 新增
 	api: alphaTab.AlphaTabApi;
@@ -33,8 +50,8 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(layoutLabel);
 	const layoutSelect = document.createElement('select');
 	const layoutModes = [
-		{ name: '页面', value: (window as any).alphaTab?.LayoutMode?.Page ?? 0 },
-		{ name: '横向', value: (window as any).alphaTab?.LayoutMode?.Horizontal ?? 1 },
+		{ name: '页面', value: window.alphaTab?.LayoutMode?.Page ?? 0 },
+		{ name: '横向', value: window.alphaTab?.LayoutMode?.Horizontal ?? 1 },
 	];
 	layoutModes.forEach((item, idx) => {
 		const opt = document.createElement('option');
@@ -277,7 +294,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(audioStatus);
 
 	// 提供音频状态元素给外部更新
-	(debugBar as any).audioStatus = audioStatus;
+	(debugBar as DebugBarElement).audioStatus = audioStatus;
 
 	// 在现有控件后添加滚动控制区域
 	// 滚动控制分隔符

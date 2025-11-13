@@ -4,6 +4,23 @@ import { EventBus } from '../utils';
 import { TrackStateStore } from '../state/TrackStateStore';
 import { t } from '../i18n';
 
+// Extended playback info type for alphaTab tracks
+interface ExtendedPlaybackInfo {
+	isSolo?: boolean;
+	isMute?: boolean;
+	volume?: number;
+	transposeAudio?: number;
+}
+
+// Track patch type for applying updates
+interface TrackPatch {
+	solo?: boolean;
+	mute?: boolean;
+	volume?: number;
+	transpose?: number;
+	transposeAudio?: number;
+}
+
 export class TracksModal extends Modal {
 	private selectedTracks: Set<alphaTab.model.Track>;
 	private uiRefs = new Map<
@@ -121,7 +138,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						] || {};
-					const isSolo = current.solo ?? (track.playbackInfo as any).isSolo;
+					const isSolo = current.solo ?? (track.playbackInfo as ExtendedPlaybackInfo).isSolo;
 					btn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
 						isSolo ? t('tracks.unsolo') : t('tracks.solo')
 					);
@@ -133,7 +150,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						]?.solo ??
-						(track.playbackInfo as any).isSolo ??
+						(track.playbackInfo as ExtendedPlaybackInfo).isSolo ??
 						false;
 					const newSolo = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
@@ -155,7 +172,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						] || {};
-					const isMute = current.mute ?? (track.playbackInfo as any).isMute;
+					const isMute = current.mute ?? (track.playbackInfo as ExtendedPlaybackInfo).isMute;
 					btn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(
 						isMute ? t('tracks.unmute') : t('tracks.mute')
 					);
@@ -167,7 +184,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						]?.mute ??
-						(track.playbackInfo as any).isMute ??
+						(track.playbackInfo as ExtendedPlaybackInfo).isMute ??
 						false;
 					const newMute = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
@@ -194,7 +211,7 @@ export class TracksModal extends Modal {
 			const curVol =
 				typeof savedTrackSettings[String(track.index)]?.volume === 'number'
 					? savedTrackSettings[String(track.index)].volume
-					: (track.playbackInfo as any).volume;
+					: (track.playbackInfo as ExtendedPlaybackInfo).volume;
 			volSlider.value = String(curVol ?? 8);
 			const volValue = document.createElement('span');
 			volValue.textContent = volSlider.value;
@@ -391,7 +408,7 @@ export class TracksModal extends Modal {
 			}
 			// 每轨设置更新
 			const applyTrackPatch = (idx: number, patch: unknown) => {
-				const p = patch as any; // 类型转换
+				const p = patch as TrackPatch;
 				const ref = this.uiRefs.get(idx);
 				const s = entry.trackSettings?.[String(idx)] || {};
 				// 独奏

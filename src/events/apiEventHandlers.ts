@@ -47,11 +47,15 @@ export function registerApiEventHandlers(
 	// api.playerFinished.on(() => console.debug("[AlphaTab] Playback finished"));
 	api.midiEventsPlayed.on((evt) => {
 		// 低级 MIDI 事件，可选处理
-		// Disable no-explicit-any: AlphaTab MIDI event types are not exported
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		// AlphaTab MIDI event types are not exported, use type assertion
+		interface AlphaTabMidiEvent {
+			isMetronome?: boolean;
+			metronomeNumerator?: number;
+		}
 		evt.events.forEach((midi: unknown) => {
-			if ((midi as any).isMetronome) {
-				console.debug('[AlphaTab] Metronome tick:', (midi as any).metronomeNumerator);
+			const midiEvent = midi as AlphaTabMidiEvent;
+			if (midiEvent.isMetronome) {
+				console.debug('[AlphaTab] Metronome tick:', midiEvent.metronomeNumerator);
 			}
 		});
 	});

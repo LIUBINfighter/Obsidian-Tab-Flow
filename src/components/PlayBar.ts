@@ -1,11 +1,28 @@
 // PlayBar.ts - 底部固定播放栏组件
-import { App, setIcon } from 'obsidian';
+import { App, setIcon, Plugin } from 'obsidian';
 import { createProgressBar } from './ProgressBar';
 import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
 import { formatTime } from '../utils';
 import { t } from '../i18n';
+import type { TabFlowSettings } from '../settings/defaults';
+
+// Extend App interface for plugin access
+interface AppWithPlugins extends App {
+	plugins?: {
+		getPlugin?: (id: string) => Plugin | null;
+	};
+}
+
+// Type for TabFlowPlugin with settings
+interface TabFlowPluginLike extends Plugin {
+	settings?: TabFlowSettings;
+	runtimeUiOverride?: {
+		components?: Record<string, boolean>;
+		order?: string[] | string;
+	} | null;
+}
 
 export interface PlayBarOptions {
 	app: App;
@@ -119,13 +136,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let runtimeOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = undefined;
-	let plugin: unknown = undefined;
+	let plugin: TabFlowPluginLike | null = null;
 	try {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
-		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-		visibility = (plugin as any)?.settings?.playBar?.components;
-		runtimeOverride = (plugin as any)?.runtimeUiOverride;
+		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+		visibility = plugin?.settings?.playBar?.components;
+		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
 	} catch {
 		// Ignore plugin access errors
 	}
@@ -171,7 +188,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			((Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0) ||
 				typeof runtimeOverride.order === 'string')
 				? runtimeOverride.order
-				: (plugin as any)?.settings?.playBar?.order;
+				: plugin?.settings?.playBar?.order;
 
 		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
 			order = rawOrder as string[];
@@ -515,8 +532,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			try {
 				const pluginId = 'tab-flow';
 				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
-				const localPlugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-				const currentMode = (localPlugin as any)?.settings?.scrollMode || 'continuous';
+				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+				const currentMode = localPlugin?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
 			} catch {
 				select.value = 'continuous';
