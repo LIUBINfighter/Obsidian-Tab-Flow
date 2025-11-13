@@ -323,7 +323,7 @@ export class ShareCardModal extends Modal {
 		const presetBar = left.createDiv({ cls: 'share-card-preset-bar' });
 		const presetLabel = presetBar.createEl('label', { text: t('shareCard.preset') });
 		presetLabel.style.display = 'block';
-		const presetSelect = presetBar.createEl('select') as HTMLSelectElement;
+		const presetSelect = presetBar.createEl('select');
 		presetSelect.style.width = '100%';
 		const presetActionRow = left.createDiv({ cls: 'share-card-preset-actions' });
 		const btnPresetSave = presetActionRow.createEl('button', {
@@ -538,7 +538,7 @@ export class ShareCardModal extends Modal {
 		});
 
 		left.createEl('label', { text: t('shareCard.fileName') });
-		const titleInput = left.createEl('input', { attr: { type: 'text' } }) as HTMLInputElement;
+		const titleInput = left.createEl('input', { attr: { type: 'text' } });
 		titleInput.style.width = '100%';
 		// 默认使用当前文件名（如有）
 		const activeFile = this.app.workspace.getActiveFile();
@@ -881,7 +881,7 @@ export class ShareCardModal extends Modal {
 				const st = this.stateManager?.getState();
 				const working = st?.working;
 				const resolution = working ? Number(working.resolution.replace('x', '')) : 1;
-				const fmt = working ? working.format : (formatSelect.value as string);
+				const fmt = working ? working.format : formatSelect.value;
 				const mime =
 					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
 				try {
@@ -926,7 +926,7 @@ export class ShareCardModal extends Modal {
 				const st = this.stateManager?.getState();
 				const working = st?.working;
 				const resolution = working ? Number(working.resolution.replace('x', '')) : 1;
-				const fmt = working ? working.format : (formatSelect.value as string);
+				const fmt = working ? working.format : formatSelect.value;
 				const mime =
 					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
 				try {

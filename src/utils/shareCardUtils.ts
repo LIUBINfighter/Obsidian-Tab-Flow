@@ -75,7 +75,7 @@ export function computeExportBgColor(
 		if (exportBgMode === 'custom') {
 			return exportBgCustomColor || undefined;
 		} else if (exportBgMode === 'auto') {
-			const bgSource = (cardRoot || captureEl) as HTMLElement;
+			const bgSource = cardRoot || captureEl;
 			if (bgSource) {
 				const cs = getComputedStyle(bgSource);
 				const computedBg = cs && cs.backgroundColor ? cs.backgroundColor : undefined;

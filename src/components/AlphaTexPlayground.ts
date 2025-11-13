@@ -111,7 +111,7 @@ export function createAlphaTexPlayground(
 			} else {
 				if (ch === '"' || ch === "'") {
 					inStr = true;
-					quote = ch as '"' | "'";
+					quote = ch;
 					i++;
 					continue;
 				}
@@ -293,7 +293,7 @@ export function createAlphaTexPlayground(
 		if (readOnly) {
 			// 简单只读（利用 CodeMirror DOM 属性）
 			editorContainer.addClass('read-only');
-			const cmEl = editorContainer.querySelector('.cm-content') as HTMLElement | null;
+			const cmEl = editorContainer.querySelector('.cm-content');
 			if (cmEl) cmEl.setAttr('contenteditable', 'false');
 		}
 	}

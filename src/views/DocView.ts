@@ -59,7 +59,7 @@ export class DocView extends ItemView {
 	private scrollToContentAfterRender(layout?: Element | null): void {
 		// 如果没有传入layout参数，尝试从DOM中查找
 		if (!layout) {
-			layout = this.contentEl.querySelector('.tabflow-doc-layout') as Element | null;
+			layout = this.contentEl.querySelector('.tabflow-doc-layout');
 			if (!layout) return;
 		}
 
@@ -70,7 +70,7 @@ export class DocView extends ItemView {
 			if (!layout) return;
 			const contentElement = layout.querySelector(
 				'.tabflow-doc-markdown'
-			) as HTMLElement | null;
+			);
 			if (contentElement) {
 				this.performScroll(contentElement);
 			}
@@ -80,7 +80,7 @@ export class DocView extends ItemView {
 	/**
 	 * 执行滚动操作，包含降级处理
 	 */
-	private performScroll(contentElement: HTMLElement | null): void {
+	private performScroll(contentElement: Element | null): void {
 		if (!contentElement) return;
 
 		try {
@@ -322,7 +322,7 @@ export class DocView extends ItemView {
 					});
 				});
 				next.addEventListener('keypress', (e) => {
-					if ((e as KeyboardEvent).key === 'Enter') {
+					if (e.key === 'Enter') {
 						this.activeId = nextPanel.id;
 						this.render().then(() => {
 							this.scrollToContentAfterRender();

@@ -30,7 +30,7 @@ export function parseInlineInit(source: string): { opts: AlphaTexInitOptions; bo
 		}
 		if (ch === '"' || ch === "'") {
 			inString = true;
-			quote = ch as '"' | "'";
+			quote = ch;
 			i++;
 			continue;
 		}

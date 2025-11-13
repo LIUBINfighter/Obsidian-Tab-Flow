@@ -32,7 +32,7 @@ export class ExportChooserModal extends Modal {
 			attr: { style: 'display:flex; align-items:center; gap:8px; margin-bottom:8px;' },
 		});
 		nameWrap.createEl('label', { text: '文件名:' });
-		const nameInput = nameWrap.createEl('input', { type: 'text' }) as HTMLInputElement;
+		const nameInput = nameWrap.createEl('input', { type: 'text' });
 		nameInput.style.width = '260px';
 		const defaultName = (this.getFileName?.() || 'Untitled').trim();
 		nameInput.value = defaultName;

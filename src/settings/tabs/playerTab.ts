@@ -261,7 +261,7 @@ export async function renderPlayerTab(
 				await Promise.resolve(update());
 				const newCard = cardsWrap.querySelector(
 					`.tabflow-card[data-key="${rowKey}"]`
-				) as HTMLElement | null;
+				);
 				if (!newCard) return;
 				const newRect = newCard.getBoundingClientRect();
 				const delta = newRect.top - oldRect.top;

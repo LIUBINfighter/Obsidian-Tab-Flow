@@ -229,7 +229,7 @@ export class EmbeddableMarkdownEditor {
 								private applyAttrs() {
 									const content = this.view.dom.querySelector(
 										'.cm-content'
-									) as HTMLElement | null;
+									);
 									if (content) {
 										content.setAttribute('spellcheck', 'false');
 										content.setAttribute('autocorrect', 'off');
