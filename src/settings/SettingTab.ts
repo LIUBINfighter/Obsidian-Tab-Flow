@@ -20,13 +20,22 @@ export class SettingTab extends PluginSettingTab {
 			this.app.workspace.on('tabflow:open-plugin-settings-player', async () => {
 				try {
 					// 打开设置面板并定位到本插件设置页
-					// @ts-ignore
-					(this.app as any).setting?.open?.();
-					if ((this.app as any).setting?.openTabById) {
-						(this.app as any).setting.openTabById(this.plugin.manifest.id);
+					interface AppWithSetting {
+						setting?: {
+							open?: () => void;
+							openTabById?: (id: string) => void;
+						};
+					}
+					interface SettingTabWithForce {
+						_forceActiveInnerTab?: string;
+					}
+					(this.app as unknown as AppWithSetting).setting?.open?.();
+					const setting = (this.app as unknown as AppWithSetting).setting;
+					if (setting?.openTabById) {
+						setting.openTabById(this.plugin.manifest.id);
 					}
 					// 标记强制激活 player 子页签
-					(this as any)._forceActiveInnerTab = 'player';
+					(this as unknown as SettingTabWithForce)._forceActiveInnerTab = 'player';
 					try {
 						await this.display();
 					} catch {

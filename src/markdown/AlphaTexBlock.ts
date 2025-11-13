@@ -540,7 +540,10 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '滚动到光标');
 					btn.onclick = () => {
 						try {
-							(api as any).scrollToCursor?.();
+							interface AlphaTabApiWithScrollToCursor {
+								scrollToCursor?: () => void;
+							}
+							(api as unknown as AlphaTabApiWithScrollToCursor).scrollToCursor?.();
 						} catch {
 							// Ignore scroll to cursor errors
 						}
@@ -640,13 +643,24 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '回到底部');
 					btn.onclick = () => {
 						try {
-							const score: unknown = (api as any).score;
-							const masterBars = (score as any)?.masterBars || [];
+							interface AlphaTabApiWithScore {
+								score?: {
+									masterBars?: Array<{
+										start?: number;
+										calculateDuration?: () => number;
+									}>;
+								};
+								tickPosition?: number;
+								scrollToCursor?: () => void;
+							}
+							const apiWithScore = api as unknown as AlphaTabApiWithScore;
+							const score = apiWithScore.score;
+							const masterBars = score?.masterBars || [];
 							if (!masterBars.length) return;
 							const last = masterBars[masterBars.length - 1];
-							const endTick = last.start + last.calculateDuration();
-							(api as any).tickPosition = endTick;
-							(api as any).scrollToCursor?.();
+							const endTick = (last.start ?? 0) + (last.calculateDuration?.() ?? 0);
+							apiWithScore.tickPosition = endTick;
+							apiWithScore.scrollToCursor?.();
 						} catch {
 							// Ignore scroll to end errors
 						}

@@ -211,7 +211,7 @@ export async function renderPlayerTab(
 
 			new Setting(right)
 				.addToggle((t) => {
-					const current = !!(comp as any)[key];
+					const current = !!(comp as Record<string, boolean>)[key];
 					t.setValue(m.disabled ? false : current).onChange(async (v) => {
 						plugin.settings.playBar = plugin.settings.playBar || {
 							components: {} as PlayBarComponentVisibility,

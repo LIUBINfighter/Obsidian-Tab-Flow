@@ -137,7 +137,10 @@ export async function renderEditorTab(
 						// Update UI values
 						fontText.setValue(parsed.num);
 						fontDropdown.setValue(parsed.unit);
-						(sFont as any).__unitValue = parsed.unit;
+						interface SettingWithUnit {
+							__unitValue?: string;
+						}
+						(sFont as unknown as SettingWithUnit).__unitValue = parsed.unit;
 						new Notice(
 							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
 						);
@@ -178,7 +181,10 @@ export async function renderEditorTab(
 			}
 			text.setValue(gapDefault.num).onChange((numStr) => {
 				void (async () => {
-					const unit = (sGap as any).__unitValue || gapDefault.unit;
+					interface SettingWithUnit {
+						__unitValue?: string;
+					}
+					const unit = (sGap as unknown as SettingWithUnit).__unitValue || gapDefault.unit;
 					const composed = `${numStr}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 					if (!valid) {
@@ -202,8 +208,12 @@ export async function renderEditorTab(
 				unitsGap.forEach((u) => dd.addOption(u, u));
 				dd.setValue(gapDefault.unit).onChange((unit) => {
 					void (async () => {
-						(sGap as any).__unitValue = unit;
-						const num = (sGap as any).value || gapDefault.num;
+						interface SettingWithUnit {
+							__unitValue?: string;
+							value?: string;
+						}
+						(sGap as unknown as SettingWithUnit).__unitValue = unit;
+						const num = (sGap as unknown as SettingWithUnit).value || gapDefault.num;
 						const composed = `${num}${unit}`;
 						const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 						if (!valid) {
@@ -237,7 +247,10 @@ export async function renderEditorTab(
 						// Update UI values
 						gapText.setValue(parsed.num);
 						gapDropdown.setValue(parsed.unit);
-						(sGap as any).__unitValue = parsed.unit;
+						interface SettingWithUnit {
+							__unitValue?: string;
+						}
+						(sGap as unknown as SettingWithUnit).__unitValue = parsed.unit;
 						new Notice(
 							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
 						);
@@ -780,10 +793,10 @@ export async function renderEditorTab(
 
 	const renderCards = () => {
 		cardsWrap.empty();
-		const order = getOrder().filter((k) => meta.some((m) => m.key === (k as any)));
-		const comp = plugin.settings.editorBar?.components || ({} as any);
+		const order = getOrder().filter((k) => meta.some((m) => m.key === k));
+		const comp = plugin.settings.editorBar?.components || ({} as EditorBarComponentVisibility);
 		order.forEach((key) => {
-			const m = meta.find((x) => x.key === (key as any));
+			const m = meta.find((x) => x.key === key);
 			if (!m) return;
 			const card = cardsWrap.createDiv({
 				cls: 'tabflow-card',
@@ -830,14 +843,15 @@ export async function renderEditorTab(
 
 			new Setting(right)
 				.addToggle((t) => {
-					const current = !!(comp as any)[key];
+					const current = !!(comp as unknown as Record<string, boolean>)[key];
 					t.setValue(m.disabled ? false : current).onChange(async (v) => {
 						plugin.settings.editorBar = plugin.settings.editorBar || {
-							components: {} as any,
+							components: {} as EditorBarComponentVisibility,
 						};
-						(plugin.settings.editorBar as any).components =
-							plugin.settings.editorBar?.components || {};
-						(plugin.settings.editorBar as any).components[key] = m.disabled ? false : v;
+						if (!plugin.settings.editorBar.components) {
+							plugin.settings.editorBar.components = {} as EditorBarComponentVisibility;
+						}
+						(plugin.settings.editorBar.components as unknown as Record<string, boolean>)[key] = m.disabled ? false : v;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(
@@ -847,10 +861,14 @@ export async function renderEditorTab(
 							// Ignore workspace trigger errors
 						}
 					});
-					if (m.disabled)
-						(t as any).toggleEl
-							.querySelector('input')
+					interface ToggleSetting {
+						toggleEl?: HTMLElement;
+					}
+					if (m.disabled) {
+						(t as unknown as ToggleSetting).toggleEl
+							?.querySelector('input')
 							?.setAttribute('disabled', 'true');
+					}
 				})
 				.setClass('tabflow-no-border');
 
@@ -898,9 +916,9 @@ export async function renderEditorTab(
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
 						plugin.settings.editorBar = plugin.settings.editorBar || {
-							components: {} as any,
+							components: {} as EditorBarComponentVisibility,
 						};
-						(plugin.settings.editorBar as any).order = cur;
+						plugin.settings.editorBar.order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -921,9 +939,9 @@ export async function renderEditorTab(
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
 						plugin.settings.editorBar = plugin.settings.editorBar || {
-							components: {} as any,
+							components: {} as EditorBarComponentVisibility,
 						};
-						(plugin.settings.editorBar as any).order = cur;
+						plugin.settings.editorBar.order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -997,9 +1015,9 @@ export async function renderEditorTab(
 						cur.splice(insertIndex, 0, moved);
 					}
 					plugin.settings.editorBar = plugin.settings.editorBar || {
-						components: {} as any,
+						components: {} as EditorBarComponentVisibility,
 					};
-					(plugin.settings.editorBar as any).order = cur;
+					plugin.settings.editorBar.order = cur;
 					await plugin.saveSettings();
 					renderCards();
 					try {

@@ -609,31 +609,43 @@ export class TabView extends FileView {
 		}
 
 		// Listen for scroll mode changes triggered by settings UI or playbar
-		this.registerEvent(
-			(this.app.workspace as any).on('tabflow:scroll-mode-changed', (newMode: string) => {
-				try {
-					// console.debug(`[TabView] 滚动模式变更: ${newMode}`);
-					this.configureScrollElement();
-				} catch (e) {
-					console.warn('[TabView] Failed to apply scroll mode change:', e);
-				}
-			})
-		);
+		interface WorkspaceWithOnScrollMode {
+			on?: (event: string, callback: (newMode: string) => void) => () => void;
+		}
+		const workspaceOn2 = (this.app.workspace as unknown as WorkspaceWithOnScrollMode).on;
+		if (workspaceOn2) {
+			this.registerEvent(
+				workspaceOn2('tabflow:scroll-mode-changed', (newMode: string) => {
+					try {
+						// console.debug(`[TabView] 滚动模式变更: ${newMode}`);
+						this.configureScrollElement();
+					} catch (e) {
+						console.warn('[TabView] Failed to apply scroll mode change:', e);
+					}
+				})
+			);
+		}
 
 		// 监听设置变化，实时响应 Debug Bar 挂载/卸载
 		this.settingsChangeHandler = () => {
 			this._renderDebugBarIfEnabled();
 		};
 		// Listen for debugbar toggle events from SettingTab
-		this.registerEvent(
-			(this.app.workspace as any).on('tabflow:debugbar-toggle', (_visible: boolean) => {
-				try {
-					this._renderDebugBarIfEnabled();
-				} catch (e) {
-					console.warn('[TabView] Failed to apply debugbar toggle:', e);
-				}
-			})
-		);
+		interface WorkspaceWithOnDebugbar {
+			on?: (event: string, callback: (_visible: boolean) => void) => () => void;
+		}
+		const workspaceOn3 = (this.app.workspace as unknown as WorkspaceWithOnDebugbar).on;
+		if (workspaceOn3) {
+			this.registerEvent(
+				workspaceOn3('tabflow:debugbar-toggle', (_visible: boolean) => {
+					try {
+						this._renderDebugBarIfEnabled();
+					} catch (e) {
+						console.warn('[TabView] Failed to apply debugbar toggle:', e);
+					}
+				})
+			);
+		}
 		// Debugbar 可见性通过 settingsChangeHandler 响应，这里监听通用的 layout-change 以重新评估
 		this.registerEvent(this.app.workspace.on('layout-change', this.settingsChangeHandler));
 

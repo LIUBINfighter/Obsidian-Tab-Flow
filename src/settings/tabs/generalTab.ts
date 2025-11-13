@@ -157,7 +157,10 @@ export async function renderGeneralTab(
 	});
 	openDirBtn.onclick = () => {
 		try {
-			const basePath = (app.vault.adapter as any).getBasePath?.();
+			interface VaultAdapterWithBasePath {
+				getBasePath?: () => string;
+			}
+			const basePath = (app.vault.adapter as unknown as VaultAdapterWithBasePath).getBasePath?.();
 			if (!basePath) {
 				new Notice(t('assetManagement.desktopOnly'));
 				return;

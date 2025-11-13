@@ -23,10 +23,15 @@ export async function renderAboutTab(
 					new Notice(t('settings.about.openingDoc'));
 					// 优先通过已注册的命令触发
 					try {
-						const execFn =
-							(app as any).commands && (app as any).commands.executeCommandById;
+						interface AppWithCommands {
+							commands?: {
+								executeCommandById?: (id: string) => unknown;
+							};
+						}
+						const appWithCommands = app as unknown as AppWithCommands;
+						const execFn = appWithCommands.commands?.executeCommandById;
 						if (typeof execFn === 'function') {
-							const res = execFn.call((app as any).commands, 'open-tabflow-doc-view');
+							const res = execFn('open-tabflow-doc-view');
 							if (!res) {
 								const leaf = app.workspace.getLeaf(true);
 								await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
@@ -46,16 +51,22 @@ export async function renderAboutTab(
 
 					// 尝试关闭设置面板以便文档视图可见
 					try {
-						if (
-							(app as any).setting &&
-							typeof (app as any).setting.close === 'function'
-						) {
-							(app as any).setting.close();
+						interface AppWithSetting {
+							setting?: {
+								close?: () => void;
+							};
+							workspace?: {
+								detachLeavesOfType?: (type: string) => void;
+							};
+						}
+						const appWithSetting = app as unknown as AppWithSetting;
+						if (appWithSetting.setting && typeof appWithSetting.setting.close === 'function') {
+							appWithSetting.setting.close();
 						} else if (
-							(app as any).workspace &&
-							typeof (app as any).workspace.detachLeavesOfType === 'function'
+							appWithSetting.workspace &&
+							typeof appWithSetting.workspace.detachLeavesOfType === 'function'
 						) {
-							(app as any).workspace.detachLeavesOfType('settings');
+							appWithSetting.workspace.detachLeavesOfType('settings');
 						}
 					} catch (closeErr) {
 						console.warn('[SettingTab.about] failed to close settings view', closeErr);
