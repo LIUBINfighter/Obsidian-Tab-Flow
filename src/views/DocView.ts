@@ -68,9 +68,7 @@ export class DocView extends ItemView {
 		// 简单的延迟滚动，立即执行
 		setTimeout(() => {
 			if (!layout) return;
-			const contentElement = layout.querySelector(
-				'.tabflow-doc-markdown'
-			);
+			const contentElement = layout.querySelector('.tabflow-doc-markdown');
 			if (contentElement) {
 				this.performScroll(contentElement);
 			}

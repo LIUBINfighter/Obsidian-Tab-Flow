@@ -227,9 +227,7 @@ export class EmbeddableMarkdownEditor {
 									}
 								}
 								private applyAttrs() {
-									const content = this.view.dom.querySelector(
-										'.cm-content'
-									);
+									const content = this.view.dom.querySelector('.cm-content');
 									if (content) {
 										content.setAttribute('spellcheck', 'false');
 										content.setAttribute('autocorrect', 'off');

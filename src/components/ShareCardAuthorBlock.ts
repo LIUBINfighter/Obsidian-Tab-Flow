@@ -85,16 +85,20 @@ export function createAuthorBlock(parent: any, initial: any, callbacks: any) {
 		'change',
 		() => callbacks.onShowAvatar && callbacks.onShowAvatar(authorAvatarCb.checked)
 	);
-	avatarInput.addEventListener('change', async () => {
-		const f = avatarInput.files?.[0];
-		if (!f) return;
-		const arr = await f.arrayBuffer();
-		const blob = new Blob([arr], { type: f.type });
-		const reader = new FileReader();
-		reader.onload = () =>
-			callbacks.onAvatarChange && callbacks.onAvatarChange(String(reader.result));
-		reader.readAsDataURL(blob);
-	});
+	avatarInput.addEventListener(
+		'change',
+		() =>
+			void (async () => {
+				const f = avatarInput.files?.[0];
+				if (!f) return;
+				const arr = await f.arrayBuffer();
+				const blob = new Blob([arr], { type: f.type });
+				const reader = new FileReader();
+				reader.onload = () =>
+					callbacks.onAvatarChange && callbacks.onAvatarChange(String(reader.result));
+				reader.readAsDataURL(blob);
+			})()
+	);
 	authorAlignSelect.addEventListener(
 		'change',
 		() => callbacks.onAuthorAlign && callbacks.onAuthorAlign(authorAlignSelect.value)

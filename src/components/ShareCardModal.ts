@@ -439,56 +439,68 @@ export class ShareCardModal extends Modal {
 			refreshDirtyIndicator();
 		});
 
-		btnPresetSave.addEventListener('click', async () => {
-			this.stateManager?.commit('manual');
-			rebuildPresetOptions();
-			new Notice(t('shareCard.notice.presetSaved'));
-		});
+		btnPresetSave.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					this.stateManager?.commit('manual');
+					rebuildPresetOptions();
+					new Notice(t('shareCard.notice.presetSaved'));
+				})()
+		);
 
-		btnPresetSaveAs.addEventListener('click', async () => {
-			const name = window.prompt(
-				t('shareCard.prompt.newPresetName'),
-				t('shareCard.prompt.newPresetDefault')
-			);
-			if (!name) return;
-			// 收集当前 working 值
-			const st = this.stateManager?.getState();
-			if (!st) return;
-			const created = this.presetService!.create({
-				name,
-				cardWidth: st.working.cardWidth,
-				resolution: st.working.resolution,
-				format: st.working.format,
-				disableLazy: st.working.disableLazy,
-				exportBgMode: st.working.exportBgMode,
-				exportBgCustomColor: normalizeColorToHex(st.working.exportBgCustomColor),
-				showAuthor: st.working.showAuthor,
-				authorName: st.working.authorName,
-				authorRemark: st.working.authorRemark,
-				showAvatar: st.working.showAvatar,
-				avatarSource: st.working.avatarSource,
-				authorPosition: st.working.authorPosition,
-				authorBg: st.working.authorBg,
-				authorTextColor: st.working.authorTextColor,
-				authorFontSize: st.working.authorFontSize,
-				authorAlign: st.working.authorAlign,
-				isDefault: undefined,
-			});
-			await this.plugin.saveSettings();
-			this.stateManager?.switchPreset(created.id);
-			rebuildPresetOptions();
-			presetSelect.value = created.id;
-			this.currentPresetId = created.id;
-			new Notice(t('shareCard.notice.presetCreated'));
-		});
+		btnPresetSaveAs.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					const name = window.prompt(
+						t('shareCard.prompt.newPresetName'),
+						t('shareCard.prompt.newPresetDefault')
+					);
+					if (!name) return;
+					// 收集当前 working 值
+					const st = this.stateManager?.getState();
+					if (!st) return;
+					const created = this.presetService!.create({
+						name,
+						cardWidth: st.working.cardWidth,
+						resolution: st.working.resolution,
+						format: st.working.format,
+						disableLazy: st.working.disableLazy,
+						exportBgMode: st.working.exportBgMode,
+						exportBgCustomColor: normalizeColorToHex(st.working.exportBgCustomColor),
+						showAuthor: st.working.showAuthor,
+						authorName: st.working.authorName,
+						authorRemark: st.working.authorRemark,
+						showAvatar: st.working.showAvatar,
+						avatarSource: st.working.avatarSource,
+						authorPosition: st.working.authorPosition,
+						authorBg: st.working.authorBg,
+						authorTextColor: st.working.authorTextColor,
+						authorFontSize: st.working.authorFontSize,
+						authorAlign: st.working.authorAlign,
+						isDefault: undefined,
+					});
+					await this.plugin.saveSettings();
+					this.stateManager?.switchPreset(created.id);
+					rebuildPresetOptions();
+					presetSelect.value = created.id;
+					this.currentPresetId = created.id;
+					new Notice(t('shareCard.notice.presetCreated'));
+				})()
+		);
 
-		btnPresetSetDefault.addEventListener('click', async () => {
-			if (!this.currentPresetId) return;
-			this.presetService!.setDefault(this.currentPresetId);
-			await this.plugin.saveSettings();
-			rebuildPresetOptions();
-			new Notice(t('shareCard.notice.presetSetDefault'));
-		});
+		btnPresetSetDefault.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					if (!this.currentPresetId) return;
+					this.presetService!.setDefault(this.currentPresetId);
+					await this.plugin.saveSettings();
+					rebuildPresetOptions();
+					new Notice(t('shareCard.notice.presetSetDefault'));
+				})()
+		);
 
 		btnPresetReset.addEventListener('click', () => {
 			this.stateManager?.resetWorking();
@@ -867,88 +879,113 @@ export class ShareCardModal extends Modal {
 		});
 
 		// Export handler (捕获完整 .inmarkdown-preview 内容)
-		exportBtn.addEventListener('click', async () => {
-			// 导出前强制保存当前工作副本
-			try {
-				this.stateManager?.commit('manual');
-			} catch {
-				/* ignore */
-			}
-			await withExportLock(async () => {
-				exportBtn.setAttribute('disabled', 'true');
-				copyBtn.setAttribute('disabled', 'true');
-				const title = titleInput.value || 'alphatex-card';
-				const st = this.stateManager?.getState();
-				const working = st?.working;
-				const resolution = working ? Number(working.resolution.replace('x', '')) : 1;
-				const fmt = working ? working.format : formatSelect.value;
-				const mime =
-					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
-				try {
-					const blob = await this.generateImageBlob(resolution, fmt, mime);
-					if (Platform.isMobile) {
-						const filename = `${title.replace(/\s+/g, '_')}.${fmt}`;
-						const filePath =
-							await this.app.fileManager.getAvailablePathForAttachment(filename);
-						await this.app.vault.createBinary(filePath, await blob.arrayBuffer());
-						new Notice(t('shareCard.notice.savedTo', { path: filePath }));
-					} else {
-						const url = URL.createObjectURL(blob);
-						const a = document.createElement('a');
-						a.href = url;
-						a.download = `${title.replace(/\s+/g, '_')}.${fmt}`;
-						document.body.appendChild(a);
-						a.click();
-						a.remove();
-						URL.revokeObjectURL(url);
+		exportBtn.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					// 导出前强制保存当前工作副本
+					try {
+						this.stateManager?.commit('manual');
+					} catch {
+						/* ignore */
 					}
-				} catch (e) {
-					console.error('[ShareCardModal] 导出失败', e);
-					new Notice(t('shareCard.notice.exportFailed'));
-				} finally {
-					exportBtn.removeAttribute('disabled');
-					copyBtn.removeAttribute('disabled');
-				}
-			});
-		});
+					await withExportLock(async () => {
+						exportBtn.setAttribute('disabled', 'true');
+						copyBtn.setAttribute('disabled', 'true');
+						const title = titleInput.value || 'alphatex-card';
+						const st = this.stateManager?.getState();
+						const working = st?.working;
+						const resolution = working
+							? Number(working.resolution.replace('x', ''))
+							: 1;
+						const fmt = working ? working.format : formatSelect.value;
+						const mime =
+							fmt === 'png'
+								? 'image/png'
+								: fmt === 'jpg'
+									? 'image/jpeg'
+									: 'image/webp';
+						try {
+							const blob = await this.generateImageBlob(resolution, fmt, mime);
+							if (Platform.isMobile) {
+								const filename = `${title.replace(/\s+/g, '_')}.${fmt}`;
+								const filePath =
+									await this.app.fileManager.getAvailablePathForAttachment(
+										filename
+									);
+								await this.app.vault.createBinary(
+									filePath,
+									await blob.arrayBuffer()
+								);
+								new Notice(t('shareCard.notice.savedTo', { path: filePath }));
+							} else {
+								const url = URL.createObjectURL(blob);
+								const a = document.createElement('a');
+								a.href = url;
+								a.download = `${title.replace(/\s+/g, '_')}.${fmt}`;
+								document.body.appendChild(a);
+								a.click();
+								a.remove();
+								URL.revokeObjectURL(url);
+							}
+						} catch (e) {
+							console.error('[ShareCardModal] 导出失败', e);
+							new Notice(t('shareCard.notice.exportFailed'));
+						} finally {
+							exportBtn.removeAttribute('disabled');
+							copyBtn.removeAttribute('disabled');
+						}
+					});
+				})()
+		);
 
 		// Copy handler
-		copyBtn.addEventListener('click', async () => {
-			// 复制前强制保存当前工作副本
-			try {
-				this.stateManager?.commit('manual');
-			} catch {
-				/* ignore */
-			}
-			await withExportLock(async () => {
-				exportBtn.setAttribute('disabled', 'true');
-				copyBtn.setAttribute('disabled', 'true');
-				const st = this.stateManager?.getState();
-				const working = st?.working;
-				const resolution = working ? Number(working.resolution.replace('x', '')) : 1;
-				const fmt = working ? working.format : formatSelect.value;
-				const mime =
-					fmt === 'png' ? 'image/png' : fmt === 'jpg' ? 'image/jpeg' : 'image/webp';
-				try {
-					const blob = await this.generateImageBlob(resolution, fmt, mime);
-					// @ts-ignore
-					if (navigator.clipboard && (navigator.clipboard as any).write) {
-						const item = new ClipboardItem({ [blob.type]: blob });
-						// @ts-ignore
-						await navigator.clipboard.write([item]);
-						new Notice(t('shareCard.notice.copiedToClipboard'));
-					} else {
-						new Notice(t('shareCard.notice.clipboardNotSupported'));
+		copyBtn.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					// 复制前强制保存当前工作副本
+					try {
+						this.stateManager?.commit('manual');
+					} catch {
+						/* ignore */
 					}
-				} catch (e) {
-					console.error('[ShareCardModal] 复制失败', e);
-					new Notice(t('shareCard.notice.copyFailed'));
-				} finally {
-					exportBtn.removeAttribute('disabled');
-					copyBtn.removeAttribute('disabled');
-				}
-			});
-		});
+					await withExportLock(async () => {
+						exportBtn.setAttribute('disabled', 'true');
+						copyBtn.setAttribute('disabled', 'true');
+						const st = this.stateManager?.getState();
+						const working = st?.working;
+						const resolution = working
+							? Number(working.resolution.replace('x', ''))
+							: 1;
+						const fmt = working ? working.format : formatSelect.value;
+						const mime =
+							fmt === 'png'
+								? 'image/png'
+								: fmt === 'jpg'
+									? 'image/jpeg'
+									: 'image/webp';
+						try {
+							const blob = await this.generateImageBlob(resolution, fmt, mime);
+							// @ts-ignore
+							if (navigator.clipboard && (navigator.clipboard as any).write) {
+								const item = new ClipboardItem({ [blob.type]: blob });
+								// @ts-ignore
+								await navigator.clipboard.write([item]);
+								new Notice(t('shareCard.notice.copiedToClipboard'));
+							} else {
+								new Notice(t('shareCard.notice.clipboardNotSupported'));
+							}
+						} catch (e) {
+							console.error('[ShareCardModal] 复制失败', e);
+							new Notice(t('shareCard.notice.copyFailed'));
+						} finally {
+							exportBtn.removeAttribute('disabled');
+							copyBtn.removeAttribute('disabled');
+						}
+					});
+				})()
+		);
 
 		// 脏标记刷新助手，仅更新当前选中项的 * 状态
 		const refreshDirtyIndicator = () => {

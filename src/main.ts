@@ -455,21 +455,29 @@ export default class TabFlowPlugin extends Plugin {
 						const btn = holder.createEl('button', {
 							text: t('common.download', undefined, '下载资源'),
 						});
-						btn.addEventListener('click', async () => {
-							btn.setAttr('disabled', 'true');
-							btn.setText(t('common.downloading', undefined, '下载中...'));
-							const ok = await this.downloadAssets();
-							btn.removeAttribute('disabled');
-							btn.setText(
-								ok
-									? t(
-											'common.downloadComplete',
-											undefined,
-											'下载完成，请刷新预览'
-										)
-									: t('common.downloadFailed', undefined, '下载失败，重试')
-							);
-						});
+						btn.addEventListener(
+							'click',
+							() =>
+								void (async () => {
+									btn.setAttr('disabled', 'true');
+									btn.setText(t('common.downloading', undefined, '下载中...'));
+									const ok = await this.downloadAssets();
+									btn.removeAttribute('disabled');
+									btn.setText(
+										ok
+											? t(
+													'common.downloadComplete',
+													undefined,
+													'下载完成，请刷新预览'
+												)
+											: t(
+													'common.downloadFailed',
+													undefined,
+													'下载失败，重试'
+												)
+									);
+								})()
+						);
 						return;
 					}
 

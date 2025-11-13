@@ -86,25 +86,27 @@ export async function renderEditorTab(
 			.addDropdown((dd) => {
 				fontDropdown = dd;
 				unitsFont.forEach((u) => dd.addOption(u, u));
-				dd.setValue(fontDefault.unit).onChange(async (unit) => {
-					// store unit on setting instance for access from text handler
-					(sFont as any).__unitValue = unit;
-					const num = (sFont as any).value || fontDefault.num;
-					const composed = `${num}${unit}`;
-					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
-					if (!valid) {
-						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
-						fontText.inputEl.classList.add('tabflow-invalid-input');
-						return;
-					}
-					fontText.inputEl.classList.remove('tabflow-invalid-input');
-					plugin.settings.editorFontSize = composed;
-					await plugin.saveSettings();
-					document.documentElement.style.setProperty(
-						'--alphatex-editor-font-size',
-						composed
-					);
-					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+				dd.setValue(fontDefault.unit).onChange((unit) => {
+					void (async () => {
+						// store unit on setting instance for access from text handler
+						(sFont as any).__unitValue = unit;
+						const num = (sFont as any).value || fontDefault.num;
+						const composed = `${num}${unit}`;
+						const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
+						if (!valid) {
+							// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+							fontText.inputEl.classList.add('tabflow-invalid-input');
+							return;
+						}
+						fontText.inputEl.classList.remove('tabflow-invalid-input');
+						plugin.settings.editorFontSize = composed;
+						await plugin.saveSettings();
+						document.documentElement.style.setProperty(
+							'--alphatex-editor-font-size',
+							composed
+						);
+						// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+					})();
 				});
 			})
 			.addButton((btn) => {
@@ -158,32 +160,10 @@ export async function renderEditorTab(
 			} catch (e) {
 				// console.debug('set input attributes failed', e);
 			}
-			text.setValue(gapDefault.num).onChange(async (numStr) => {
-				const unit = (sGap as any).__unitValue || gapDefault.unit;
-				const composed = `${numStr}${unit}`;
-				const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
-				if (!valid) {
-					// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
-					gapText.inputEl.classList.add('tabflow-invalid-input');
-					return;
-				}
-				gapText.inputEl.classList.remove('tabflow-invalid-input');
-				plugin.settings.editorBottomGap = composed;
-				await plugin.saveSettings();
-				document.documentElement.style.setProperty(
-					'--alphatex-editor-bottom-gap',
-					composed
-				);
-				// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
-			});
-		})
-			.addDropdown((dd) => {
-				gapDropdown = dd;
-				unitsGap.forEach((u) => dd.addOption(u, u));
-				dd.setValue(gapDefault.unit).onChange(async (unit) => {
-					(sGap as any).__unitValue = unit;
-					const num = (sGap as any).value || gapDefault.num;
-					const composed = `${num}${unit}`;
+			text.setValue(gapDefault.num).onChange((numStr) => {
+				void (async () => {
+					const unit = (sGap as any).__unitValue || gapDefault.unit;
+					const composed = `${numStr}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 					if (!valid) {
 						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
@@ -193,11 +173,34 @@ export async function renderEditorTab(
 					gapText.inputEl.classList.remove('tabflow-invalid-input');
 					plugin.settings.editorBottomGap = composed;
 					await plugin.saveSettings();
-					document.documentElement.style.setProperty(
-						'--alphatex-editor-bottom-gap',
-						composed
-					);
+					document.documentElement.style.setProperty('--alphatex-editor-font-size', composed);
 					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+				})();
+			});
+		})
+			.addDropdown((dd) => {
+				gapDropdown = dd;
+				unitsGap.forEach((u) => dd.addOption(u, u));
+				dd.setValue(gapDefault.unit).onChange((unit) => {
+					void (async () => {
+						(sGap as any).__unitValue = unit;
+						const num = (sGap as any).value || gapDefault.num;
+						const composed = `${num}${unit}`;
+						const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
+						if (!valid) {
+							// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+							gapText.inputEl.classList.add('tabflow-invalid-input');
+							return;
+						}
+						gapText.inputEl.classList.remove('tabflow-invalid-input');
+						plugin.settings.editorBottomGap = composed;
+						await plugin.saveSettings();
+						document.documentElement.style.setProperty(
+							'--alphatex-editor-bottom-gap',
+							composed
+						);
+						// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+					})();
 				});
 			})
 			.addButton((btn) => {
@@ -856,9 +859,7 @@ export async function renderEditorTab(
 				const oldRect = card.getBoundingClientRect();
 				const scrollContainer = getScrollContainer(card);
 				await Promise.resolve(update());
-				const newCard = cardsWrap.querySelector(
-					`.tabflow-card[data-key="${rowKey}"]`
-				);
+				const newCard = cardsWrap.querySelector(`.tabflow-card[data-key="${rowKey}"]`);
 				if (!newCard) return;
 				const newRect = newCard.getBoundingClientRect();
 				const delta = newRect.top - oldRect.top;
@@ -957,34 +958,36 @@ export async function renderEditorTab(
 			});
 			card.addEventListener('dragleave', () => clearDndHighlights());
 			card.addEventListener('dragend', () => clearDndHighlights());
-			card.addEventListener('drop', async () => {
-				const isInsertAfter = card.classList.contains('insert-after');
-				const isSwap = card.classList.contains('swap-target');
-				clearDndHighlights();
-				if (!draggingKey || draggingKey === key) return;
-				const list = getOrder();
-				const from = list.indexOf(String(draggingKey));
-				const to = list.indexOf(String(key));
-				if (from < 0 || to < 0) return;
-				const cur = list.slice();
-				if (isSwap) {
-					[cur[from], cur[to]] = [cur[to], cur[from]];
-				} else {
-					let insertIndex = to + (isInsertAfter ? 1 : 0);
-					const [moved] = cur.splice(from, 1);
-					if (from < insertIndex) insertIndex -= 1;
-					cur.splice(insertIndex, 0, moved);
-				}
-				plugin.settings.editorBar = plugin.settings.editorBar || { components: {} as any };
-				(plugin.settings.editorBar as any).order = cur;
-				await plugin.saveSettings();
-				renderCards();
-				try {
-					/* @ts-ignore */ app.workspace.trigger('tabflow:editorbar-components-changed');
-				} catch {
-					// Ignore workspace trigger errors
-				}
-				draggingKey = null;
+			card.addEventListener('drop', () => {
+				void (async () => {
+					const isInsertAfter = card.classList.contains('insert-after');
+					const isSwap = card.classList.contains('swap-target');
+					clearDndHighlights();
+					if (!draggingKey || draggingKey === key) return;
+					const list = getOrder();
+					const from = list.indexOf(String(draggingKey));
+					const to = list.indexOf(String(key));
+					if (from < 0 || to < 0) return;
+					const cur = list.slice();
+					if (isSwap) {
+						[cur[from], cur[to]] = [cur[to], cur[from]];
+					} else {
+						let insertIndex = to + (isInsertAfter ? 1 : 0);
+						const [moved] = cur.splice(from, 1);
+						if (from < insertIndex) insertIndex -= 1;
+						cur.splice(insertIndex, 0, moved);
+					}
+					plugin.settings.editorBar = plugin.settings.editorBar || { components: {} as any };
+					(plugin.settings.editorBar as any).order = cur;
+					await plugin.saveSettings();
+					renderCards();
+					try {
+						/* @ts-ignore */ app.workspace.trigger('tabflow:editorbar-components-changed');
+					} catch {
+						// Ignore workspace trigger errors
+					}
+					draggingKey = null;
+				})();
 			});
 		});
 	};

@@ -102,32 +102,36 @@ export function mountAlphaTexBlock(
 		btn.appendChild(icon);
 		btn.setAttribute('aria-label', '复制错误与原文');
 		btn.title = '复制错误与原文';
-		btn.addEventListener('click', async () => {
-			const mergedText = [
-				'---- AlphaTex Source ----',
-				source,
-				'',
-				'---- Errors ----',
-				...errorMessages.map((e) => `- ${e}`),
-				'',
-			].join('\n');
-			try {
-				await navigator.clipboard.writeText(mergedText);
-				try {
-					setIcon(icon, 'check');
-					btn.classList.add('is-success');
-					setTimeout(() => {
-						setIcon(icon, 'copy');
-						btn.classList.remove('is-success');
-					}, 1200);
-				} catch {
-					// Ignore icon update errors
-				}
-			} catch {
-				// Clipboard API fallback failed, no further fallback available
-				// Modern browsers should support navigator.clipboard
-			}
-		});
+		btn.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					const mergedText = [
+						'---- AlphaTex Source ----',
+						source,
+						'',
+						'---- Errors ----',
+						...errorMessages.map((e) => `- ${e}`),
+						'',
+					].join('\n');
+					try {
+						await navigator.clipboard.writeText(mergedText);
+						try {
+							setIcon(icon, 'check');
+							btn.classList.add('is-success');
+							setTimeout(() => {
+								setIcon(icon, 'copy');
+								btn.classList.remove('is-success');
+							}, 1200);
+						} catch {
+							// Ignore icon update errors
+						}
+					} catch {
+						// Clipboard API fallback failed, no further fallback available
+						// Modern browsers should support navigator.clipboard
+					}
+				})()
+		);
 		// place button at the top of messages
 		messagesEl.appendChild(btn);
 	};

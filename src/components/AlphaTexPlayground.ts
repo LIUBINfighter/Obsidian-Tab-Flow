@@ -184,27 +184,31 @@ export function createAlphaTexPlayground(
 		setIcon(iCopy, 'copy');
 		btnCopy.appendChild(iCopy);
 		btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
-		btnCopy.addEventListener('click', async () => {
-			try {
-				if (embedded) await navigator.clipboard.writeText(embedded.value);
-			} catch {
-				// Clipboard API fallback failed, no further fallback available
-				// Modern browsers should support navigator.clipboard
-			}
-			// feedback: turn into green check briefly
-			try {
-				setIcon(iCopy, 'check');
-				btnCopy.classList.add('is-success');
-				btnCopy.setAttr('aria-label', t('playground.copied'));
-				setTimeout(() => {
-					setIcon(iCopy, 'copy');
-					btnCopy.classList.remove('is-success');
-					btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
-				}, 1200);
-			} catch {
-				// Ignore UI feedback errors
-			}
-		});
+		btnCopy.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					try {
+						if (embedded) await navigator.clipboard.writeText(embedded.value);
+					} catch {
+						// Clipboard API fallback failed, no further fallback available
+						// Modern browsers should support navigator.clipboard
+					}
+					// feedback: turn into green check briefly
+					try {
+						setIcon(iCopy, 'check');
+						btnCopy.classList.add('is-success');
+						btnCopy.setAttr('aria-label', t('playground.copied'));
+						setTimeout(() => {
+							setIcon(iCopy, 'copy');
+							btnCopy.classList.remove('is-success');
+							btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
+						}, 1200);
+					} catch {
+						// Ignore UI feedback errors
+					}
+				})()
+		);
 
 		const btnReset = toolbar.createEl('button', {
 			attr: { type: 'button' },
@@ -232,36 +236,40 @@ export function createAlphaTexPlayground(
 		setIcon(iNew, 'file-plus');
 		btnNewNote.appendChild(iNew);
 		btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
-		btnNewNote.addEventListener('click', async () => {
-			try {
-				const now = new Date();
-				const pad = (n: number) => String(n).padStart(2, '0');
-				const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-				const folder = 'Alphatex Playground';
-				const baseName = `Playground-${stamp}.md`;
-				const filePath = normalizePath(`${folder}/${baseName}`);
-				// ensure folder
-				try {
-					if (!(await plugin.app.vault.adapter.exists(folder)))
-						await plugin.app.vault.createFolder(folder);
-				} catch {
-					// Ignore folder creation errors
-				}
-				const rawValue = embedded ? embedded.value : currentValue;
-				const escapedValue = rawValue.replace(/\\/g, '\\\\').replace(/`/g, '\\`'); // Escape backslash, then backtick
-				const content = `\`\`\`alphatex\n${escapedValue}\n\`\`\``;
-				// vault.create() 已经返回 Promise<TFile>，不需要类型转换
-				const file = await plugin.app.vault.create(filePath, content);
-				// 使用类型守卫确保是 TFile 实例
-				if (!(file instanceof TFile)) {
-					throw new Error('创建的文件不是有效的 TFile 实例');
-				}
-				const leaf = plugin.app.workspace.getLeaf(true);
-				await leaf.openFile(file);
-			} catch (e) {
-				console.warn('[Playground] 创建笔记失败', e);
-			}
-		});
+		btnNewNote.addEventListener(
+			'click',
+			() =>
+				void (async () => {
+					try {
+						const now = new Date();
+						const pad = (n: number) => String(n).padStart(2, '0');
+						const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+						const folder = 'Alphatex Playground';
+						const baseName = `Playground-${stamp}.md`;
+						const filePath = normalizePath(`${folder}/${baseName}`);
+						// ensure folder
+						try {
+							if (!(await plugin.app.vault.adapter.exists(folder)))
+								await plugin.app.vault.createFolder(folder);
+						} catch {
+							// Ignore folder creation errors
+						}
+						const rawValue = embedded ? embedded.value : currentValue;
+						const escapedValue = rawValue.replace(/\\/g, '\\\\').replace(/`/g, '\\`'); // Escape backslash, then backtick
+						const content = `\`\`\`alphatex\n${escapedValue}\n\`\`\``;
+						// vault.create() 已经返回 Promise<TFile>，不需要类型转换
+						const file = await plugin.app.vault.create(filePath, content);
+						// 使用类型守卫确保是 TFile 实例
+						if (!(file instanceof TFile)) {
+							throw new Error('创建的文件不是有效的 TFile 实例');
+						}
+						const leaf = plugin.app.workspace.getLeaf(true);
+						await leaf.openFile(file);
+					} catch (e) {
+						console.warn('[Playground] 创建笔记失败', e);
+					}
+				})()
+		);
 
 		// Format init JSON button (使用顶层 formatInitHeader)
 		const btnFormat = toolbar.createEl('button', {
@@ -347,23 +355,29 @@ export function createAlphaTexPlayground(
 			const holder = previewWrap.createDiv({ cls: 'alphatex-block' });
 			holder.createEl('div', { text: t('playground.resourcesMissing') });
 			const btn = holder.createEl('button', { text: t('playground.downloadResources') });
-			btn.addEventListener('click', async () => {
-				btn.setAttr('disabled', 'true');
-				btn.setText(t('playground.downloading'));
-				try {
-					interface Downloader {
-						downloadAssets?: () => Promise<boolean>;
-					}
-					const ok = await (plugin as unknown as Downloader).downloadAssets?.();
-					btn.removeAttribute('disabled');
-					btn.setText(
-						ok ? t('playground.downloadCompleted') : t('playground.downloadFailed')
-					);
-				} catch (e) {
-					btn.removeAttribute('disabled');
-					btn.setText(t('playground.downloadFailed'));
-				}
-			});
+			btn.addEventListener(
+				'click',
+				() =>
+					void (async () => {
+						btn.setAttr('disabled', 'true');
+						btn.setText(t('playground.downloading'));
+						try {
+							interface Downloader {
+								downloadAssets?: () => Promise<boolean>;
+							}
+							const ok = await (plugin as unknown as Downloader).downloadAssets?.();
+							btn.removeAttribute('disabled');
+							btn.setText(
+								ok
+									? t('playground.downloadCompleted')
+									: t('playground.downloadFailed')
+							);
+						} catch (e) {
+							btn.removeAttribute('disabled');
+							btn.setText(t('playground.downloadFailed'));
+						}
+					})()
+			);
 			return;
 		}
 

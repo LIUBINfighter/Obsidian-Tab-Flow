@@ -259,9 +259,7 @@ export async function renderPlayerTab(
 				const oldRect = card.getBoundingClientRect();
 				const scrollContainer = getScrollContainer(card);
 				await Promise.resolve(update());
-				const newCard = cardsWrap.querySelector(
-					`.tabflow-card[data-key="${rowKey}"]`
-				);
+				const newCard = cardsWrap.querySelector(`.tabflow-card[data-key="${rowKey}"]`);
 				if (!newCard) return;
 				const newRect = newCard.getBoundingClientRect();
 				const delta = newRect.top - oldRect.top;
@@ -360,34 +358,36 @@ export async function renderPlayerTab(
 			});
 			card.addEventListener('dragleave', () => clearDndHighlights());
 			card.addEventListener('dragend', () => clearDndHighlights());
-			card.addEventListener('drop', async () => {
-				const isInsertAfter = card.classList.contains('insert-after');
-				const isSwap = card.classList.contains('swap-target');
-				clearDndHighlights();
-				if (!draggingKey || draggingKey === key) return;
-				const list = getOrder();
-				const from = list.indexOf(String(draggingKey));
-				const to = list.indexOf(String(key));
-				if (from < 0 || to < 0) return;
-				const cur = list.slice();
-				if (isSwap) {
-					[cur[from], cur[to]] = [cur[to], cur[from]];
-				} else {
-					let insertIndex = to + (isInsertAfter ? 1 : 0);
-					const [moved] = cur.splice(from, 1);
-					if (from < insertIndex) insertIndex -= 1;
-					cur.splice(insertIndex, 0, moved);
-				}
-				plugin.settings.playBar = plugin.settings.playBar || { components: {} as any };
-				(plugin.settings.playBar as any).order = cur;
-				await plugin.saveSettings();
-				renderCards();
-				try {
-					/* @ts-ignore */ app.workspace.trigger('tabflow:playbar-components-changed');
-				} catch {
-					// Ignore workspace trigger errors
-				}
-				draggingKey = null;
+			card.addEventListener('drop', () => {
+				void (async () => {
+					const isInsertAfter = card.classList.contains('insert-after');
+					const isSwap = card.classList.contains('swap-target');
+					clearDndHighlights();
+					if (!draggingKey || draggingKey === key) return;
+					const list = getOrder();
+					const from = list.indexOf(String(draggingKey));
+					const to = list.indexOf(String(key));
+					if (from < 0 || to < 0) return;
+					const cur = list.slice();
+					if (isSwap) {
+						[cur[from], cur[to]] = [cur[to], cur[from]];
+					} else {
+						let insertIndex = to + (isInsertAfter ? 1 : 0);
+						const [moved] = cur.splice(from, 1);
+						if (from < insertIndex) insertIndex -= 1;
+						cur.splice(insertIndex, 0, moved);
+					}
+					plugin.settings.playBar = plugin.settings.playBar || { components: {} as any };
+					(plugin.settings.playBar as any).order = cur;
+					await plugin.saveSettings();
+					renderCards();
+					try {
+						/* @ts-ignore */ app.workspace.trigger('tabflow:playbar-components-changed');
+					} catch {
+						// Ignore workspace trigger errors
+					}
+					draggingKey = null;
+				})();
 			});
 		});
 	};

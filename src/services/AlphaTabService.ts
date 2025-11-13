@@ -150,95 +150,107 @@ export class AlphaTabService {
 		// 音频导出事件
 		this.eventBus.subscribe(
 			'命令:导出音频',
-			async (
+			(
 				payload?: {
 					fileName?: string;
 				} & Partial<alphaTab.synth.AudioExportOptions>
 			) => {
-				try {
-					const options = payload || {};
-					const wavUrl = await this.exportAudioToWav(options);
-					this.eventBus.publish('状态:音频导出完成', wavUrl);
-				} catch (e) {
-					this.eventBus.publish('状态:音频导出失败', e);
-				}
+				void (async () => {
+					try {
+						const options = payload || {};
+						const wavUrl = await this.exportAudioToWav(options);
+						this.eventBus.publish('状态:音频导出完成', wavUrl);
+					} catch (e) {
+						this.eventBus.publish('状态:音频导出失败', e);
+					}
+				})();
 			}
 		);
 		// 新增：导出 MIDI / PDF / GP 事件
-		this.eventBus.subscribe('命令:导出MIDI', async (payload?: { fileName?: string }) => {
-			try {
-				// 动态注册并执行
-				const { registerExportEventHandlers } = await import('../events/exportEvents');
-				const handlers = registerExportEventHandlers({
-					api: this.api,
-					getFileName: () => {
-						const p = (payload?.fileName || '').trim();
-						if (p) return p;
-						const t = this.api?.score?.title;
-						return (t && String(t).trim()) || 'Untitled';
-					},
-					app: this.app,
-				});
-				handlers.exportMidi();
-			} catch (e) {
-				console.warn('[AlphaTabService] 导出MIDI失败:', e);
-			}
+		this.eventBus.subscribe('命令:导出MIDI', (payload?: { fileName?: string }) => {
+			void (async () => {
+				try {
+					// 动态注册并执行
+					const { registerExportEventHandlers } = await import('../events/exportEvents');
+					const handlers = registerExportEventHandlers({
+						api: this.api,
+						getFileName: () => {
+							const p = (payload?.fileName || '').trim();
+							if (p) return p;
+							const t = this.api?.score?.title;
+							return (t && String(t).trim()) || 'Untitled';
+						},
+						app: this.app,
+					});
+					handlers.exportMidi();
+				} catch (e) {
+					console.warn('[AlphaTabService] 导出MIDI失败:', e);
+				}
+			})();
 		});
-		this.eventBus.subscribe('命令:导出PDF', async (payload?: { fileName?: string }) => {
-			try {
-				const { registerExportEventHandlers } = await import('../events/exportEvents');
-				const handlers = registerExportEventHandlers({
-					api: this.api,
-					getFileName: () => {
-						const p = (payload?.fileName || '').trim();
-						if (p) return p;
-						const t = this.api?.score?.title;
-						return (t && String(t).trim()) || 'Untitled';
-					},
-					app: this.app,
-				});
-				handlers.exportPdf();
-			} catch (e) {
-				console.warn('[AlphaTabService] 导出PDF失败:', e);
-			}
+		this.eventBus.subscribe('命令:导出PDF', (payload?: { fileName?: string }) => {
+			void (async () => {
+				try {
+					const { registerExportEventHandlers } = await import('../events/exportEvents');
+					const handlers = registerExportEventHandlers({
+						api: this.api,
+						getFileName: () => {
+							const p = (payload?.fileName || '').trim();
+							if (p) return p;
+							const t = this.api?.score?.title;
+							return (t && String(t).trim()) || 'Untitled';
+						},
+						app: this.app,
+					});
+					handlers.exportPdf();
+				} catch (e) {
+					console.warn('[AlphaTabService] 导出PDF失败:', e);
+				}
+			})();
 		});
-		this.eventBus.subscribe('命令:导出GP', async (payload?: { fileName?: string }) => {
-			try {
-				const { registerExportEventHandlers } = await import('../events/exportEvents');
-				const handlers = registerExportEventHandlers({
-					api: this.api,
-					getFileName: () => {
-						const p = (payload?.fileName || '').trim();
-						if (p) return p;
-						const t = this.api?.score?.title;
-						return (t && String(t).trim()) || 'Untitled';
-					},
-					app: this.app,
-				});
-				handlers.exportGp();
-			} catch (e) {
-				console.warn('[AlphaTabService] 导出GP失败:', e);
-			}
+		this.eventBus.subscribe('命令:导出GP', (payload?: { fileName?: string }) => {
+			void (async () => {
+				try {
+					const { registerExportEventHandlers } = await import('../events/exportEvents');
+					const handlers = registerExportEventHandlers({
+						api: this.api,
+						getFileName: () => {
+							const p = (payload?.fileName || '').trim();
+							if (p) return p;
+							const t = this.api?.score?.title;
+							return (t && String(t).trim()) || 'Untitled';
+						},
+						app: this.app,
+					});
+					handlers.exportGp();
+				} catch (e) {
+					console.warn('[AlphaTabService] 导出GP失败:', e);
+				}
+			})();
 		});
 		// 命令：加载乐谱（传入 Uint8Array 或 ArrayBuffer）
-		this.eventBus.subscribe('命令:加载乐谱', async (data: Uint8Array | ArrayBuffer) => {
-			try {
-				const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-				await this.loadScore(bytes);
-				this.eventBus.publish('状态:乐谱已加载');
-			} catch (e) {
-				this.eventBus.publish('状态:加载失败', e);
-			}
+		this.eventBus.subscribe('命令:加载乐谱', (data: Uint8Array | ArrayBuffer) => {
+			void (async () => {
+				try {
+					const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+					await this.loadScore(bytes);
+					this.eventBus.publish('状态:乐谱已加载');
+				} catch (e) {
+					this.eventBus.publish('状态:加载失败', e);
+				}
+			})();
 		});
 
 		// 命令：加载 AlphaTex 乐谱（传入文本内容）
-		this.eventBus.subscribe('命令:加载AlphaTex乐谱', async (textContent: string) => {
-			try {
-				await this.loadAlphaTexScore(textContent);
-				this.eventBus.publish('状态:乐谱已加载');
-			} catch (e) {
-				this.eventBus.publish('状态:加载失败', e);
-			}
+		this.eventBus.subscribe('命令:加载AlphaTex乐谱', (textContent: string) => {
+			void (async () => {
+				try {
+					await this.loadAlphaTexScore(textContent);
+					this.eventBus.publish('状态:乐谱已加载');
+				} catch (e) {
+					this.eventBus.publish('状态:加载失败', e);
+				}
+			})();
 		});
 		// 命令：重新构造 AlphaTabApi
 		this.eventBus.subscribe('命令:重建AlphaTabApi', () => {

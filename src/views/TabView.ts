@@ -537,12 +537,14 @@ export class TabView extends FileView {
 		}
 
 		// 订阅刷新播放器命令：对当前文件执行完整重载
-		this.eventBus.subscribe('命令:刷新播放器', async () => {
-			if (this.currentFile) {
-				await this.reloadFile();
-			} else if (this._api) {
-				this._api.render();
-			}
+		this.eventBus.subscribe('命令:刷新播放器', () => {
+			void (async () => {
+				if (this.currentFile) {
+					await this.reloadFile();
+				} else if (this._api) {
+					this._api.render();
+				}
+			})();
 		});
 
 		// 设置变化时重新挂载 PlayBar（组件可见性变更）
@@ -607,22 +609,24 @@ export class TabView extends FileView {
 		});
 
 		// 订阅加载乐谱：由视图读取文件并下发数据给 AlphaTabService
-		this.eventBus.subscribe('命令:加载当前文件', async () => {
-			if (!this.currentFile) return;
-			try {
-				if (
-					this.currentFile.extension &&
-					['alphatab', 'alphatex'].includes(this.currentFile.extension.toLowerCase())
-				) {
-					const textContent = await this.app.vault.read(this.currentFile);
-					this.eventBus.publish('命令:加载AlphaTex乐谱', textContent);
-				} else {
-					const inputFile = await this.app.vault.readBinary(this.currentFile);
-					this.eventBus.publish('命令:加载乐谱', new Uint8Array(inputFile));
+		this.eventBus.subscribe('命令:加载当前文件', () => {
+			void (async () => {
+				if (!this.currentFile) return;
+				try {
+					if (
+						this.currentFile.extension &&
+						['alphatab', 'alphatex'].includes(this.currentFile.extension.toLowerCase())
+					) {
+						const textContent = await this.app.vault.read(this.currentFile);
+						this.eventBus.publish('命令:加载AlphaTex乐谱', textContent);
+					} else {
+						const inputFile = await this.app.vault.readBinary(this.currentFile);
+						this.eventBus.publish('命令:加载乐谱', new Uint8Array(inputFile));
+					}
+				} catch (e) {
+					console.warn('[TabView] 加载当前文件失败:', e);
 				}
-			} catch (e) {
-				console.warn('[TabView] 加载当前文件失败:', e);
-			}
+			})();
 		});
 
 		// 订阅重建 API：触发服务层重建
