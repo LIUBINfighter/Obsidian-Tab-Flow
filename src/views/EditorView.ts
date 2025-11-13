@@ -104,6 +104,11 @@ export class EditorView extends FileView {
 		super(leaf);
 		this.container = this.contentEl;
 		this.eventBus = new EventBus();
+		this.registerEvent(
+			this.app.workspace.on('tabflow:editorbar-components-changed', () => {
+				this._remountEditorBar();
+			})
+		);
 
 		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
