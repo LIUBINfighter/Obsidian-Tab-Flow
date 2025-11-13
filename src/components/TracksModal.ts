@@ -138,7 +138,8 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						] || {};
-					const isSolo = current.solo ?? (track.playbackInfo as ExtendedPlaybackInfo).isSolo;
+					const isSolo =
+						current.solo ?? (track.playbackInfo as ExtendedPlaybackInfo).isSolo;
 					btn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
 						isSolo ? t('tracks.unsolo') : t('tracks.solo')
 					);
@@ -172,7 +173,8 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						] || {};
-					const isMute = current.mute ?? (track.playbackInfo as ExtendedPlaybackInfo).isMute;
+					const isMute =
+						current.mute ?? (track.playbackInfo as ExtendedPlaybackInfo).isMute;
 					btn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(
 						isMute ? t('tracks.unmute') : t('tracks.mute')
 					);

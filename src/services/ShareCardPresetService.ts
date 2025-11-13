@@ -252,26 +252,24 @@ export class ShareCardPresetService {
 	}
 
 	/** 从 modal 收集当前值生成一个预设对象（不含 id 等） */
-	collectFromModal(
-		modal: {
-			__shareCardCurrentResolution?: '1x' | '2x' | '3x';
-			__shareCardCurrentFormat?: 'png' | 'jpg' | 'webp';
-			__shareCardDisableLazy?: boolean;
-			cardRoot?: HTMLElement | null;
-			exportBgMode?: 'default' | 'auto' | 'custom';
-			exportBgCustomColor?: string;
-			showAuthor?: boolean;
-			authorName?: string;
-			authorRemark?: string;
-			showAvatar?: boolean;
-			avatarDataUrl?: string | null;
-			authorPosition?: 'top' | 'bottom';
-			authorBg?: string;
-			authorTextColor?: string;
-			authorFontSize?: number;
-			authorAlign?: 'left' | 'center' | 'right';
-		}
-	): Omit<ShareCardPresetV1, 'id' | 'version' | 'createdAt' | 'updatedAt'> {
+	collectFromModal(modal: {
+		__shareCardCurrentResolution?: '1x' | '2x' | '3x';
+		__shareCardCurrentFormat?: 'png' | 'jpg' | 'webp';
+		__shareCardDisableLazy?: boolean;
+		cardRoot?: HTMLElement | null;
+		exportBgMode?: 'default' | 'auto' | 'custom';
+		exportBgCustomColor?: string;
+		showAuthor?: boolean;
+		authorName?: string;
+		authorRemark?: string;
+		showAvatar?: boolean;
+		avatarDataUrl?: string | null;
+		authorPosition?: 'top' | 'bottom';
+		authorBg?: string;
+		authorTextColor?: string;
+		authorFontSize?: number;
+		authorAlign?: 'left' | 'center' | 'right';
+	}): Omit<ShareCardPresetV1, 'id' | 'version' | 'createdAt' | 'updatedAt'> {
 		return {
 			name: '未命名',
 			cardWidth: Number(modal?.cardRoot?.style?.width?.replace('px', '')) || 800,

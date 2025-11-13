@@ -140,7 +140,9 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	try {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
-		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
+			pluginId
+		) as TabFlowPluginLike | null;
 		visibility = plugin?.settings?.playBar?.components as Record<string, boolean> | undefined;
 		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
 	} catch {
@@ -532,7 +534,9 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			try {
 				const pluginId = 'tab-flow';
 				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
-				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
+					pluginId
+				) as TabFlowPluginLike | null;
 				const currentMode = localPlugin?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
 			} catch {

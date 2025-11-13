@@ -48,7 +48,9 @@ export function mountAlphaTexBlock(
 			__disableLazyLoading?: boolean;
 		};
 	}
-	const disableLazyLoading = (defaults as unknown as DefaultsWithAlphaTabOptions)?.alphaTabOptions?.__disableLazyLoading === true;
+	const disableLazyLoading =
+		(defaults as unknown as DefaultsWithAlphaTabOptions)?.alphaTabOptions
+			?.__disableLazyLoading === true;
 
 	// extract optional UI override from init
 
@@ -257,7 +259,13 @@ export function mountAlphaTexBlock(
 				smuflFontSources: (resources.bravuraUri
 					? new Map([
 							[
-								(alphaTab as unknown as { rendering?: { glyphs?: { FontFileFormat?: { Woff2?: number } } } }).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+								(
+									alphaTab as unknown as {
+										rendering?: {
+											glyphs?: { FontFileFormat?: { Woff2?: number } };
+										};
+									}
+								).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 								resources.bravuraUri,
 							],
 						])
@@ -329,7 +337,8 @@ export function mountAlphaTexBlock(
 			interface PlayerSettingsWithScrollElement {
 				scrollElement?: HTMLElement;
 			}
-			(api.settings.player as unknown as PlayerSettingsWithScrollElement).scrollElement = wrapper as unknown as HTMLElement;
+			(api.settings.player as unknown as PlayerSettingsWithScrollElement).scrollElement =
+				wrapper as unknown as HTMLElement;
 			api.updateSettings();
 		} catch {
 			// Ignore scroll element setup errors
@@ -370,7 +379,8 @@ export function mountAlphaTexBlock(
 						};
 					};
 				}
-				const Importer = (alphaTab as unknown as AlphaTabWithImporter).importer?.AlphaTexImporter;
+				const Importer = (alphaTab as unknown as AlphaTabWithImporter).importer
+					?.AlphaTexImporter;
 				if (Importer) {
 					const imp = new Importer();
 					if (imp.logErrors !== undefined) imp.logErrors = true;
@@ -565,7 +575,8 @@ export function mountAlphaTexBlock(
 						};
 					}
 					const isHorizontal =
-						(api!.settings?.display as unknown as DisplaySettingsWithLayoutMode)?.layoutMode ===
+						(api!.settings?.display as unknown as DisplaySettingsWithLayoutMode)
+							?.layoutMode ===
 						(alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode?.Horizontal;
 					setIcon(icon, isHorizontal ? 'lucide-panels-top-left' : 'lucide-layout');
 					btn.appendChild(icon);
@@ -581,7 +592,8 @@ export function mountAlphaTexBlock(
 									Page?: number;
 								};
 							}
-							const displaySettings = api!.settings?.display as unknown as DisplaySettingsWithLayoutMode;
+							const displaySettings = api!.settings
+								?.display as unknown as DisplaySettingsWithLayoutMode;
 							const alphaTabLayout = alphaTab as unknown as AlphaTabWithLayoutMode;
 							const current = displaySettings?.layoutMode;
 							const next =
@@ -595,13 +607,17 @@ export function mountAlphaTexBlock(
 							api!.render();
 							setIcon(
 								icon,
-								next === (alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode?.Horizontal
+								next ===
+									(alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode
+										?.Horizontal
 									? 'lucide-panels-top-left'
 									: 'lucide-layout'
 							);
 							btn.setAttribute(
 								'aria-label',
-								next === (alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode?.Horizontal
+								next ===
+									(alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode
+										?.Horizontal
 									? '布局: 横向'
 									: '布局: 页面'
 							);

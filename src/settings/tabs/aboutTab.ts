@@ -60,7 +60,10 @@ export async function renderAboutTab(
 							};
 						}
 						const appWithSetting = app as unknown as AppWithSetting;
-						if (appWithSetting.setting && typeof appWithSetting.setting.close === 'function') {
+						if (
+							appWithSetting.setting &&
+							typeof appWithSetting.setting.close === 'function'
+						) {
 							appWithSetting.setting.close();
 						} else if (
 							appWithSetting.workspace &&

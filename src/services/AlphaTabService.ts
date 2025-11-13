@@ -42,7 +42,13 @@ export class AlphaTabService {
 				smuflFontSources: (resources.bravuraUri
 					? new Map([
 							[
-								(alphaTab as unknown as { rendering?: { glyphs?: { FontFileFormat?: { Woff2?: number } } } }).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+								(
+									alphaTab as unknown as {
+										rendering?: {
+											glyphs?: { FontFileFormat?: { Woff2?: number } };
+										};
+									}
+								).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 								resources.bravuraUri,
 							],
 						])
@@ -319,7 +325,8 @@ export class AlphaTabService {
 						};
 					};
 				}
-				const Importer = (alphaTab as unknown as AlphaTabImporter).importer?.AlphaTexImporter;
+				const Importer = (alphaTab as unknown as AlphaTabImporter).importer
+					?.AlphaTexImporter;
 				if (Importer) {
 					const importer = new Importer();
 					importer.initFromString(textContent, this.api.settings);
@@ -373,7 +380,13 @@ export class AlphaTabService {
 					smuflFontSources: (this.resources.bravuraUri
 						? new Map([
 								[
-									(alphaTab as unknown as { rendering?: { glyphs?: { FontFileFormat?: { Woff2?: number } } } }).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+									(
+										alphaTab as unknown as {
+											rendering?: {
+												glyphs?: { FontFileFormat?: { Woff2?: number } };
+											};
+										}
+									).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 									this.resources.bravuraUri,
 								],
 							])

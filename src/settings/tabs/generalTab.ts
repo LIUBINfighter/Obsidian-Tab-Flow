@@ -160,7 +160,9 @@ export async function renderGeneralTab(
 			interface VaultAdapterWithBasePath {
 				getBasePath?: () => string;
 			}
-			const basePath = (app.vault.adapter as unknown as VaultAdapterWithBasePath).getBasePath?.();
+			const basePath = (
+				app.vault.adapter as unknown as VaultAdapterWithBasePath
+			).getBasePath?.();
 			if (!basePath) {
 				new Notice(t('assetManagement.desktopOnly'));
 				return;

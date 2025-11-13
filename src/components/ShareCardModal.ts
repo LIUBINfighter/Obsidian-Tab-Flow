@@ -971,7 +971,10 @@ export class ShareCardModal extends Modal {
 							interface ClipboardWithWrite extends Clipboard {
 								write?: (items: ClipboardItem[]) => Promise<void>;
 							}
-							if (navigator.clipboard && (navigator.clipboard as ClipboardWithWrite).write) {
+							if (
+								navigator.clipboard &&
+								(navigator.clipboard as ClipboardWithWrite).write
+							) {
 								const item = new ClipboardItem({ [blob.type]: blob });
 								// @ts-ignore
 								await navigator.clipboard.write([item]);

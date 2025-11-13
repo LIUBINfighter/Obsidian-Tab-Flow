@@ -64,8 +64,14 @@ export async function renderEditorTab(
 					interface TextComponentWithInput {
 						inputEl?: HTMLInputElement;
 					}
-					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('type', 'number');
-					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('step', '0.01');
+					(text as unknown as TextComponentWithInput).inputEl?.setAttribute(
+						'type',
+						'number'
+					);
+					(text as unknown as TextComponentWithInput).inputEl?.setAttribute(
+						'step',
+						'0.01'
+					);
 					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('min', '0');
 				} catch (e) {
 					// console.debug('set input attributes failed', e);
@@ -74,7 +80,8 @@ export async function renderEditorTab(
 					interface SettingWithUnit {
 						__unitValue?: string;
 					}
-					const unit = (sFont as unknown as SettingWithUnit).__unitValue || fontDefault.unit;
+					const unit =
+						(sFont as unknown as SettingWithUnit).__unitValue || fontDefault.unit;
 					const composed = `${numStr}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
 					if (!valid) {
@@ -184,7 +191,8 @@ export async function renderEditorTab(
 					interface SettingWithUnit {
 						__unitValue?: string;
 					}
-					const unit = (sGap as unknown as SettingWithUnit).__unitValue || gapDefault.unit;
+					const unit =
+						(sGap as unknown as SettingWithUnit).__unitValue || gapDefault.unit;
 					const composed = `${numStr}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 					if (!valid) {
@@ -849,9 +857,15 @@ export async function renderEditorTab(
 							components: {} as EditorBarComponentVisibility,
 						};
 						if (!plugin.settings.editorBar.components) {
-							plugin.settings.editorBar.components = {} as EditorBarComponentVisibility;
+							plugin.settings.editorBar.components =
+								{} as EditorBarComponentVisibility;
 						}
-						(plugin.settings.editorBar.components as unknown as Record<string, boolean>)[key] = m.disabled ? false : v;
+						(
+							plugin.settings.editorBar.components as unknown as Record<
+								string,
+								boolean
+							>
+						)[key] = m.disabled ? false : v;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(

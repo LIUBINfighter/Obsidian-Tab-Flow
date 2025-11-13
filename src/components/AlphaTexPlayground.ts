@@ -463,7 +463,8 @@ export function createAlphaTexPlayground(
 		eventBus.subscribe('命令:设置滚动模式', (mode: string | alphaTab.ScrollMode) => {
 			const api = mounted?.api;
 			if (api) {
-				(api.settings.player as ExtendedPlayerSettings).scrollMode = mode as alphaTab.ScrollMode;
+				(api.settings.player as ExtendedPlayerSettings).scrollMode =
+					mode as alphaTab.ScrollMode;
 				api.updateSettings();
 			}
 		});

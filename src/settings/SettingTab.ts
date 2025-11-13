@@ -60,7 +60,9 @@ export class SettingTab extends PluginSettingTab {
 					}
 					(this.app as unknown as AppWithSetting).setting?.open?.();
 					if ((this.app as unknown as AppWithSetting).setting?.openTabById) {
-						(this.app as unknown as AppWithSetting).setting?.openTabById?.(this.plugin.manifest.id);
+						(this.app as unknown as AppWithSetting).setting?.openTabById?.(
+							this.plugin.manifest.id
+						);
 					}
 					// 标记强制激活 editor 子页签
 					interface SettingTabWithForce {
@@ -91,7 +93,9 @@ export class SettingTab extends PluginSettingTab {
 					}
 					(this.app as unknown as AppWithSetting).setting?.open?.();
 					if ((this.app as unknown as AppWithSetting).setting?.openTabById) {
-						(this.app as unknown as AppWithSetting).setting?.openTabById?.(this.plugin.manifest.id);
+						(this.app as unknown as AppWithSetting).setting?.openTabById?.(
+							this.plugin.manifest.id
+						);
 					}
 					// 标记强制激活 about 子页签
 					interface SettingTabWithForce {

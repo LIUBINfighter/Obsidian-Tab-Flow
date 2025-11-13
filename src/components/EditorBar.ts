@@ -157,7 +157,9 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	try {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
-		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
+			pluginId
+		) as TabFlowPluginLike | null;
 		visibility = plugin?.settings?.editorBar?.components as Record<string, boolean> | undefined;
 		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
 	} catch {
@@ -592,7 +594,9 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.display as ExtendedDisplaySettings).staveProfile = parseInt(select.value);
+					(api.settings.display as ExtendedDisplaySettings).staveProfile = parseInt(
+						select.value
+					);
 					api.updateSettings();
 					api.render();
 				} else {
@@ -656,7 +660,9 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			try {
 				const pluginId = 'tab-flow';
 				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
-				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
+				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
+					pluginId
+				) as TabFlowPluginLike | null;
 				const currentMode = localPlugin?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
 			} catch {
@@ -665,7 +671,8 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.player as ExtendedPlayerSettings).scrollMode = select.value as unknown as alphaTab.ScrollMode;
+					(api.settings.player as ExtendedPlayerSettings).scrollMode =
+						select.value as unknown as alphaTab.ScrollMode;
 					api.updateSettings();
 				} else {
 					eventBus?.publish('命令:设置滚动模式', select.value);

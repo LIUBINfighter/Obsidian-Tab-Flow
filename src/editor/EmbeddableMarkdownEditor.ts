@@ -116,7 +116,8 @@ export class EmbeddableMarkdownEditor {
 					interface EmbeddableMarkdownEditorWithEditor {
 						editor?: InternalMarkdownEditor;
 					}
-					const editorRef = (selfRef as unknown as EmbeddableMarkdownEditorWithEditor).editor;
+					const editorRef = (selfRef as unknown as EmbeddableMarkdownEditorWithEditor)
+						.editor;
 					// Only apply extensions if editor is already set and matches
 					// During initial construction, editorRef will be undefined, so we apply to all instances
 					// After editor is set, we only apply to the matching instance
@@ -141,9 +142,12 @@ export class EmbeddableMarkdownEditor {
 									}
 									if (
 										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
-										(app.workspace as unknown as WorkspaceWithActiveEditor).activeEditor === selfRef.editor
+										(app.workspace as unknown as WorkspaceWithActiveEditor)
+											.activeEditor === selfRef.editor
 									) {
-										(app.workspace as unknown as WorkspaceWithActiveEditor).activeEditor = null;
+										(
+											app.workspace as unknown as WorkspaceWithActiveEditor
+										).activeEditor = null;
 									}
 									selfRef.options.onBlur?.(selfRef);
 								},
@@ -153,7 +157,9 @@ export class EmbeddableMarkdownEditor {
 										activeEditor?: unknown;
 									}
 									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
-										(app.workspace as unknown as WorkspaceWithActiveEditor).activeEditor = selfRef.editor;
+										(
+											app.workspace as unknown as WorkspaceWithActiveEditor
+										).activeEditor = selfRef.editor;
 									}
 								},
 							})
@@ -202,7 +208,8 @@ export class EmbeddableMarkdownEditor {
 										editorHighlights?: Record<string, boolean>;
 									};
 								}
-								const globalSettings = (window as unknown as WindowWithSettings).__tabflow_settings__;
+								const globalSettings = (window as unknown as WindowWithSettings)
+									.__tabflow_settings__;
 								if (
 									globalSettings &&
 									globalSettings.editorHighlights &&
@@ -323,7 +330,11 @@ export class EmbeddableMarkdownEditor {
 							interface OldMethod {
 								call?: (thisArg: unknown, ...args: unknown[]) => void;
 							}
-							(oldMethod as unknown as OldMethod).call?.(app.workspace, leaf, ...args);
+							(oldMethod as unknown as OldMethod).call?.(
+								app.workspace,
+								leaf,
+								...args
+							);
 						}
 					},
 			})
@@ -348,7 +359,11 @@ export class EmbeddableMarkdownEditor {
 				}
 				const hasView = !!(update as unknown as UpdateWithView)?.view;
 				const root = (update as unknown as UpdateWithView)?.view?.root;
-				const rootOk = !!root && root instanceof HTMLElement && typeof (root as unknown as { getSelection?: () => unknown }).getSelection === 'function';
+				const rootOk =
+					!!root &&
+					root instanceof HTMLElement &&
+					typeof (root as unknown as { getSelection?: () => unknown }).getSelection ===
+						'function';
 				const inDom = !!this.editorEl?.isConnected;
 				interface SelfWithEditor {
 					editor?: {
@@ -356,7 +371,9 @@ export class EmbeddableMarkdownEditor {
 					};
 					_loaded?: boolean;
 				}
-				const stillLoaded = !!(this as unknown as SelfWithEditor).editor?.activeCM || !!(this as unknown as SelfWithEditor)._loaded;
+				const stillLoaded =
+					!!(this as unknown as SelfWithEditor).editor?.activeCM ||
+					!!(this as unknown as SelfWithEditor)._loaded;
 				if (!hasView || !rootOk || !inDom || !stillLoaded) return;
 				originalOnUpdate?.(update, changed);
 				if (changed) this.options.onChange?.(update);
@@ -442,9 +459,7 @@ function resolveEditorPrototype(app: App): unknown {
 	const widget = widgetEditorView as unknown as WidgetEditorView;
 	widget.editable = true;
 	widget.showEditor?.();
-	const MarkdownEditor = Object.getPrototypeOf(
-		Object.getPrototypeOf(widget.editMode!)
-	);
+	const MarkdownEditor = Object.getPrototypeOf(Object.getPrototypeOf(widget.editMode!));
 	widget.unload?.();
 	return MarkdownEditor.constructor;
 }
@@ -455,5 +470,10 @@ export function createEmbeddableMarkdownEditor(
 	options: Partial<MarkdownEditorProps> = {}
 ): EmbeddableMarkdownEditor {
 	const EditorClass = resolveEditorPrototype(app);
-	return new EmbeddableMarkdownEditor(app, EditorClass as new (...args: unknown[]) => InternalMarkdownEditor, container, options);
+	return new EmbeddableMarkdownEditor(
+		app,
+		EditorClass as new (...args: unknown[]) => InternalMarkdownEditor,
+		container,
+		options
+	);
 }
