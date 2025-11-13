@@ -9,7 +9,7 @@ import { EventBus, isMessy, formatTime, setupHorizontalScroll } from '../utils';
 import { AlphaTabService } from '../services/AlphaTabService';
 import { ExternalMediaService } from '../services/ExternalMediaService';
 import { createPlayBar } from '../components/PlayBar';
-// import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 旧的基于 localStorage 的服务，现替换为 TrackStateStore
+import { TracksModal } from '../components/TracksModal';
 import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
 import { t } from 'i18n';
@@ -148,6 +148,7 @@ export class TabView extends FileView {
 		this.plugin = plugin;
 		this.resources = resources;
 		this.eventBus = eventBus ?? new EventBus();
+		this.eventBus.subscribe('UI:showTracksModal', this.showTracksModal);
 		// 从插件实例获取 TrackStateStore
 		interface PluginWithTrackStateStore {
 			trackStateStore?: TrackStateStore;
@@ -781,4 +782,30 @@ export class TabView extends FileView {
 			console.warn('[TabView] 滚动到底部失败:', error);
 		}
 	}
+
+	private showTracksModal = () => {
+		if (!this._api) {
+			new Notice(t('tracks.selectTracks'));
+			return;
+		}
+		const tracks = this._api.score?.tracks ?? [];
+		if (!tracks.length) {
+			new Notice(t('tracks.selectTracks'));
+			return;
+		}
+		if (!this.trackStateStore) {
+			new Notice('Track state store unavailable');
+			return;
+		}
+		const filePath = this.currentFile?.path ?? '';
+		const modal = new TracksModal(
+			this.app,
+			tracks,
+			filePath,
+			this._api,
+			this.eventBus,
+			this.trackStateStore
+		);
+		modal.open();
+	};
 }
