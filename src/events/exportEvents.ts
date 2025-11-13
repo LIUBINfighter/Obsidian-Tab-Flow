@@ -62,12 +62,12 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			onExportStart?.('midi');
 			const fileName = (getFileName?.() || 'Untitled') + '.mid';
 			// 优先使用 exportMidi 以便自定义文件名
-			const extendedApi = api as ExtendedAlphaTabApi;
-			if (api && typeof extendedApi.exportMidi === 'function') {
-				const midiData = extendedApi.exportMidi();
-				const a = document.createElement('a');
-				a.download = fileName;
-				a.href = URL.createObjectURL(new Blob([midiData], { type: 'audio/midi' }));
+		const extendedApi = api as ExtendedAlphaTabApi;
+		if (api && typeof extendedApi.exportMidi === 'function') {
+			const midiData = extendedApi.exportMidi();
+			const a = document.createElement('a');
+			a.download = fileName;
+			a.href = URL.createObjectURL(new Blob([midiData.buffer as ArrayBuffer], { type: 'audio/midi' }));
 				document.body.appendChild(a);
 				a.click();
 				document.body.removeChild(a);
@@ -104,11 +104,11 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			if (!exporterModule?.Gp7Exporter) {
 				throw new Error('Gp7Exporter 不可用');
 			}
-			const exporter = new exporterModule.Gp7Exporter();
-			const data = exporter.export(api.score, api.settings);
-			const a = document.createElement('a');
-			a.download = (getFileName?.() || api.score.title || 'Untitled') + '.gp';
-			a.href = URL.createObjectURL(new Blob([data]));
+		const exporter = new exporterModule.Gp7Exporter();
+		const data = exporter.export(api.score, api.settings);
+		const a = document.createElement('a');
+		a.download = (getFileName?.() || api.score.title || 'Untitled') + '.gp';
+		a.href = URL.createObjectURL(new Blob([data.buffer as ArrayBuffer]));
 			document.body.appendChild(a);
 			a.click();
 			document.body.removeChild(a);
