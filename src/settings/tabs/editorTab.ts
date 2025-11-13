@@ -1,9 +1,12 @@
-import { App, Notice, Setting } from 'obsidian';
+import { App, Notice, Setting, TextComponent, DropdownComponent } from 'obsidian';
 import { setIcon } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
 import { DEFAULT_SETTINGS, EditorBarComponentVisibility } from '../defaults';
-import { createEmbeddableMarkdownEditor } from '../../editor/EmbeddableMarkdownEditor';
+import {
+	createEmbeddableMarkdownEditor,
+	type EmbeddableMarkdownEditor,
+} from '../../editor/EmbeddableMarkdownEditor';
 
 export async function renderEditorTab(
 	tabContents: HTMLElement,
@@ -50,8 +53,8 @@ export async function renderEditorTab(
 				)
 			);
 
-		let fontText: any;
-		let fontDropdown: any;
+		let fontText: TextComponent;
+		let fontDropdown: DropdownComponent;
 
 		sFont
 			.addText((text) => {
@@ -148,8 +151,8 @@ export async function renderEditorTab(
 				)
 			);
 
-		let gapText: any;
-		let gapDropdown: any;
+		let gapText: TextComponent;
+		let gapDropdown: DropdownComponent;
 
 		sGap.addText((text) => {
 			gapText = text;
@@ -469,7 +472,7 @@ export async function renderEditorTab(
 .
 `;
 
-		let currentEditorHandle: any = null;
+		let currentEditorHandle: EmbeddableMarkdownEditor | null = null;
 
 		const renderPreview = () => {
 			if (currentEditorHandle) {

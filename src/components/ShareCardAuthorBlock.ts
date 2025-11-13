@@ -1,4 +1,34 @@
-export function createAuthorBlock(parent: any, initial: any, callbacks: any) {
+interface AuthorBlockInitial {
+	t: (key: string) => string;
+	showAuthor?: boolean;
+	authorName?: string;
+	authorRemark?: string;
+	showAvatar?: boolean;
+	authorAlign?: string;
+	authorPosition?: string;
+	authorBg?: string;
+	authorTextColor?: string;
+	authorFontSize?: number;
+}
+
+interface AuthorBlockCallbacks {
+	onShowAuthor?: (value: boolean) => void;
+	onAuthorName?: (value: string) => void;
+	onAuthorRemark?: (value: string) => void;
+	onShowAvatar?: (value: boolean) => void;
+	onAvatarChange?: (data: string) => void;
+	onAuthorAlign?: (value: string) => void;
+	onAuthorPosition?: (value: string) => void;
+	onAuthorBg?: (value: string) => void;
+	onAuthorColor?: (value: string) => void;
+	onAuthorFontSize?: (value: number) => void;
+}
+
+export function createAuthorBlock(
+	parent: HTMLElement,
+	initial: AuthorBlockInitial,
+	callbacks: AuthorBlockCallbacks
+) {
 	const authorSection = parent.createDiv({ cls: 'share-card-form-grid' });
 	authorSection.createEl('div', { text: initial.t('shareCard.showAuthor'), cls: 'sc-label' });
 	const authorShowCb = authorSection.createEl('input', {
@@ -134,7 +164,7 @@ export function createAuthorBlock(parent: any, initial: any, callbacks: any) {
 		authorBgInput,
 		authorColorInput,
 		authorFontInput,
-		setValues(values: any) {
+		setValues(values: Partial<AuthorBlockInitial>) {
 			authorShowCb.checked = !!values.showAuthor;
 			authorNameInput.value = values.authorName || '';
 			authorRemarkInput.value = values.authorRemark || '';

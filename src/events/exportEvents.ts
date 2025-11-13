@@ -42,8 +42,9 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			}
 			const blobUrl = convertSamplesToWavBlobUrl(chunks, options.sampleRate);
 			onExportFinish?.('audio', true, blobUrl);
-		} catch (e: any) {
-			onExportFinish?.('audio', false, e?.message || String(e));
+		} catch (e: unknown) {
+			const message = e instanceof Error ? e.message : String(e);
+			onExportFinish?.('audio', false, message);
 		}
 	}
 
@@ -74,8 +75,9 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 				}
 			}
 			onExportFinish?.('midi', true);
-		} catch (e: any) {
-			onExportFinish?.('midi', false, e?.message || String(e));
+		} catch (e: unknown) {
+			const message = e instanceof Error ? e.message : String(e);
+			onExportFinish?.('midi', false, message);
 		}
 	}
 
@@ -93,8 +95,9 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			a.click();
 			document.body.removeChild(a);
 			onExportFinish?.('gp', true);
-		} catch (e: any) {
-			onExportFinish?.('gp', false, e?.message || String(e));
+		} catch (e: unknown) {
+			const message = e instanceof Error ? e.message : String(e);
+			onExportFinish?.('gp', false, message);
 		}
 	}
 
@@ -135,8 +138,9 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			win.focus();
 			win.print();
 			onExportFinish?.('pdf', true);
-		} catch (e: any) {
-			onExportFinish?.('pdf', false, e?.message || String(e));
+		} catch (e: unknown) {
+			const message = e instanceof Error ? e.message : String(e);
+			onExportFinish?.('pdf', false, message);
 		}
 	}
 

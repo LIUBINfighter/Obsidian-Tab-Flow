@@ -1,8 +1,9 @@
 import { FileView, TFile, WorkspaceLeaf } from 'obsidian';
 import {
 	createEmbeddableMarkdownEditor,
-	EmbeddableMarkdownEditor,
+	type EmbeddableMarkdownEditor,
 } from '../editor/EmbeddableMarkdownEditor';
+import type { ProgressBarElement } from '../components/ProgressBar.types';
 import {
 	createAlphaTexPlayground,
 	AlphaTexPlaygroundHandle,
@@ -486,7 +487,7 @@ export class EditorView extends FileView {
 				// 编辑器视图可能不需要音频集成，暂时留空
 			},
 			getApi: () => this.playground?.getApi() || null,
-			onProgressBarCreated: (progressBar: any) => {
+			onProgressBarCreated: (progressBar: ProgressBarElement) => {
 				this.progressBar = progressBar;
 				// 推迟设置事件监听器，直到 API 可用
 				const setupProgressUpdate = () => {

@@ -199,17 +199,18 @@ export async function waitAlphaTabFullRender(
 			partialCount: partialIds.size,
 			elapsedMs: elapsed,
 		};
-	} catch (e: any) {
+	} catch (e: unknown) {
 		cleanup();
 		const elapsed = performance.now() - start;
 		if (aborted) return { success: false, elapsedMs: elapsed, reason: 'aborted' };
+		const reason = e instanceof Error ? e.message : 'unknown-error';
 		return {
 			success: false,
 			totalHeight,
 			totalWidth,
 			partialCount: partialIds.size,
 			elapsedMs: elapsed,
-			reason: e?.message || 'unknown-error',
+			reason,
 		};
 	}
 }

@@ -119,13 +119,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let runtimeOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = undefined;
-	let plugin: any = undefined;
+	let plugin: unknown = undefined;
 	try {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
 		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-		visibility = plugin?.settings?.playBar?.components;
-		runtimeOverride = plugin?.runtimeUiOverride;
+		visibility = (plugin as any)?.settings?.playBar?.components;
+		runtimeOverride = (plugin as any)?.runtimeUiOverride;
 	} catch {
 		// Ignore plugin access errors
 	}
@@ -171,7 +171,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			((Array.isArray(runtimeOverride.order) && runtimeOverride.order.length > 0) ||
 				typeof runtimeOverride.order === 'string')
 				? runtimeOverride.order
-				: plugin?.settings?.playBar?.order;
+				: (plugin as any)?.settings?.playBar?.order;
 
 		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
 			order = rawOrder as string[];
@@ -515,8 +515,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			try {
 				const pluginId = 'tab-flow';
 				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
-				const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-				const currentMode = plugin?.settings?.scrollMode || 'continuous';
+				const localPlugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+				const currentMode = (localPlugin as any)?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
 			} catch {
 				select.value = 'continuous';

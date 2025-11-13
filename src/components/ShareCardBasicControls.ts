@@ -1,6 +1,29 @@
 import { normalizeColorToHex } from '../utils/shareCardUtils';
 
-export function createBasicControls(parent: any, initial: any, callbacks: any) {
+interface BasicControlsInitial {
+	t: (key: string) => string;
+	cardWidth?: number;
+	resolution?: string;
+	format?: string;
+	exportBgMode?: string;
+	exportBgCustomColor?: string;
+	disableLazy?: boolean;
+}
+
+interface BasicControlsCallbacks {
+	onWidthChange?: (value: number) => void;
+	onResolutionChange?: (value: string) => void;
+	onFormatChange?: (value: string) => void;
+	onExportBgModeChange?: (value: string) => void;
+	onCustomColorChange?: (value: string) => void;
+	onLazyChange?: (value: boolean) => void;
+}
+
+export function createBasicControls(
+	parent: HTMLElement,
+	initial: BasicControlsInitial,
+	callbacks: BasicControlsCallbacks
+) {
 	const basicCard = parent.createDiv({ cls: 'share-card-basic-grid' });
 	// 宽度
 	basicCard.createEl('div', { text: initial.t('shareCard.cardWidth'), cls: 'sc-label' });
@@ -97,7 +120,7 @@ export function createBasicControls(parent: any, initial: any, callbacks: any) {
 		customColorLabel,
 		customColorInput,
 		lazyCb,
-		setValues(values: any) {
+		setValues(values: Partial<BasicControlsInitial>) {
 			if (values.cardWidth !== undefined) widthInput.value = String(values.cardWidth);
 			if (values.resolution) resSelect.value = values.resolution;
 			if (values.format) formatSelect.value = values.format;
