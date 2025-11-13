@@ -98,7 +98,7 @@ export class EmbeddableMarkdownEditor {
 		container: HTMLElement,
 		options: Partial<MarkdownEditorProps>
 	) {
-		this.options = { ...defaultProperties, ...options } as any;
+		this.options = { ...defaultProperties, ...options };
 		this.initialValue = this.options.value || '';
 		this.scope = new Scope(app.scope);
 		this.scope.register(['Mod'], 'Enter', () => true);
@@ -110,10 +110,17 @@ export class EmbeddableMarkdownEditor {
 			buildLocalExtensions: (originalMethod: (this: InternalMarkdownEditor) => unknown[]) =>
 				function (this: InternalMarkdownEditor) {
 					const extensions = originalMethod.call(this) || [];
+					// Note: selfRef.editor is set after EditorClass instantiation, so we check if this instance
+					// matches the one that will be assigned to selfRef.editor by comparing after assignment
+					// For now, we'll apply extensions to all instances and rely on the editor being set correctly
 					interface EmbeddableMarkdownEditorWithEditor {
-						editor?: unknown;
+						editor?: InternalMarkdownEditor;
 					}
-					if (this === (selfRef as unknown as EmbeddableMarkdownEditorWithEditor).editor) {
+					const editorRef = (selfRef as unknown as EmbeddableMarkdownEditorWithEditor).editor;
+					// Only apply extensions if editor is already set and matches
+					// During initial construction, editorRef will be undefined, so we apply to all instances
+					// After editor is set, we only apply to the matching instance
+					if (editorRef === undefined || this === editorRef) {
 						if (selfRef.options.placeholder)
 							extensions.push(placeholder(selfRef.options.placeholder));
 						// Disable browser spellcheck/auto-correct in the embedded editor
@@ -122,7 +129,7 @@ export class EmbeddableMarkdownEditor {
 								spellcheck: 'false',
 								autocorrect: 'off',
 								autocapitalize: 'off',
-							}) as any
+							})
 						);
 						extensions.push(
 							EditorView.domEventHandlers({
@@ -263,7 +270,7 @@ export class EmbeddableMarkdownEditor {
 								spellcheck: 'false',
 								autocorrect: 'off',
 								autocapitalize: 'off',
-							}) as any
+							})
 						);
 						if (resolveSetting('bracket', true))
 							extensions.push(bracketHighlightPlugin());
@@ -302,14 +309,22 @@ export class EmbeddableMarkdownEditor {
 			onMarkdownScroll: () => {},
 			getMode: () => 'source',
 		}) as InternalMarkdownEditor;
-		(this.editor as any).register?.(uninstaller);
+		interface EditorWithRegister {
+			register?: (cb: unknown) => void;
+		}
+		(this.editor as unknown as EditorWithRegister).register?.(uninstaller);
 		this.set(this.initialValue, false);
-		(this.editor as any).register?.(
+		(this.editor as unknown as EditorWithRegister).register?.(
 			around(app.workspace, {
 				setActiveLeaf:
 					(oldMethod: unknown) =>
 					(leaf: WorkspaceLeaf, ...args: unknown[]) => {
-						if (!this.activeCM?.hasFocus) (oldMethod as any).call(app.workspace, leaf, ...args);
+						if (!this.activeCM?.hasFocus) {
+							interface OldMethod {
+								call?: (thisArg: unknown, ...args: unknown[]) => void;
+							}
+							(oldMethod as unknown as OldMethod).call?.(app.workspace, leaf, ...args);
+						}
 					},
 			})
 		);
@@ -326,11 +341,22 @@ export class EmbeddableMarkdownEditor {
 		this.editor.onUpdate = (update: ViewUpdate, changed: boolean) => {
 			try {
 				// 保护：在视图未就绪或已卸载时不调用后续逻辑，避免 selection 相关错误
-				const hasView = !!(update as any)?.view;
-				const root = (update as any)?.view?.root;
-				const rootOk = !!root && typeof root.getSelection === 'function';
+				interface UpdateWithView {
+					view?: {
+						root?: HTMLElement;
+					};
+				}
+				const hasView = !!(update as unknown as UpdateWithView)?.view;
+				const root = (update as unknown as UpdateWithView)?.view?.root;
+				const rootOk = !!root && root instanceof HTMLElement && typeof (root as unknown as { getSelection?: () => unknown }).getSelection === 'function';
 				const inDom = !!this.editorEl?.isConnected;
-				const stillLoaded = !!(this as any).editor?.activeCM || !!(this as any)._loaded;
+				interface SelfWithEditor {
+					editor?: {
+						activeCM?: unknown;
+					};
+					_loaded?: boolean;
+				}
+				const stillLoaded = !!(this as unknown as SelfWithEditor).editor?.activeCM || !!(this as unknown as SelfWithEditor)._loaded;
 				if (!hasView || !rootOk || !inDom || !stillLoaded) return;
 				originalOnUpdate?.(update, changed);
 				if (changed) this.options.onChange?.(update);
@@ -369,8 +395,14 @@ export class EmbeddableMarkdownEditor {
 	}
 	destroy(): void {
 		if (this.loaded && typeof this.editor.unload === 'function') this.editor.unload();
-		(this.appInstance.keymap as any).popScope(this.scope);
-		(this.appInstance.workspace as any).activeEditor = null;
+		interface KeymapWithPopScope {
+			popScope?: (scope: Scope) => void;
+		}
+		(this.appInstance.keymap as unknown as KeymapWithPopScope).popScope?.(this.scope);
+		interface WorkspaceWithActiveEditor {
+			activeEditor?: unknown;
+		}
+		(this.appInstance.workspace as unknown as WorkspaceWithActiveEditor).activeEditor = null;
 		this.containerEl.empty();
 		this.editor.destroy?.();
 	}
@@ -399,12 +431,21 @@ function resolveEditorPrototype(app: App): unknown {
 		null as unknown as TFile,
 		''
 	);
-	(widgetEditorView as any).editable = true;
-	(widgetEditorView as any).showEditor();
+	interface WidgetEditorView {
+		editable?: boolean;
+		showEditor?: () => void;
+		editMode?: {
+			constructor?: unknown;
+		};
+		unload?: () => void;
+	}
+	const widget = widgetEditorView as unknown as WidgetEditorView;
+	widget.editable = true;
+	widget.showEditor?.();
 	const MarkdownEditor = Object.getPrototypeOf(
-		Object.getPrototypeOf((widgetEditorView as any).editMode!)
+		Object.getPrototypeOf(widget.editMode!)
 	);
-	(widgetEditorView as any).unload();
+	widget.unload?.();
 	return MarkdownEditor.constructor;
 }
 
@@ -414,5 +455,5 @@ export function createEmbeddableMarkdownEditor(
 	options: Partial<MarkdownEditorProps> = {}
 ): EmbeddableMarkdownEditor {
 	const EditorClass = resolveEditorPrototype(app);
-	return new EmbeddableMarkdownEditor(app, EditorClass as any, container, options);
+	return new EmbeddableMarkdownEditor(app, EditorClass as new (...args: unknown[]) => InternalMarkdownEditor, container, options);
 }
