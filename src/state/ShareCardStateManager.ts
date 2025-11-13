@@ -2,6 +2,11 @@ import type TabFlowPlugin from '../main';
 import ShareCardPresetService from '../services/ShareCardPresetService';
 import type { ShareCardPresetV1 } from '../settings/defaults';
 
+interface ShareCardOptions {
+	autosaveDelayMs?: number;
+	autosaveDefaultPreset?: boolean;
+}
+
 // 核心字段（去掉元数据）
 export interface ShareCardCorePreset {
 	name: string;
@@ -52,7 +57,7 @@ export class ShareCardStateManager {
 		const active =
 			this.presetService.get(activeId) || this.presetService.get(defaultId) || all[0];
 		const core = this.strip(active);
-		const options: any = (this.plugin.settings as any).shareCardOptions || {};
+		const options: ShareCardOptions = (this.plugin.settings as any).shareCardOptions || {};
 		this.autosaveDelay = options.autosaveDelayMs || 800;
 		const autosaveEnabled =
 			all.length === 1 ||
@@ -162,7 +167,7 @@ export class ShareCardStateManager {
 		s.suppressDirty = false;
 		const all = this.presetService.list();
 		const defaultId = this.plugin.settings.shareCardDefaultPresetId;
-		const options: any = (this.plugin.settings as any).shareCardOptions || {};
+		const options: ShareCardOptions = (this.plugin.settings as any).shareCardOptions || {};
 		s.autosaveEnabled =
 			all.length === 1 || (id === defaultId && options.autosaveDefaultPreset !== false);
 		this.plugin.settings.shareCardLastUsedPresetId = id;

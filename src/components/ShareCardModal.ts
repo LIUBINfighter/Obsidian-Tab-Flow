@@ -253,7 +253,7 @@ export class ShareCardModal extends Modal {
 			mime
 		);
 
-		const options: any = {
+		const options: Parameters<typeof domtoimage.toBlob>[1] = {
 			width,
 			height,
 			style: {
