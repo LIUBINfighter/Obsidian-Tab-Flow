@@ -28,13 +28,13 @@ export function createBasicControls(
 	const basicCard = parent.createDiv({ cls: 'share-card-basic-grid' });
 	// 宽度
 	basicCard.createEl('div', { text: initial.t('shareCard.cardWidth'), cls: 'sc-label' });
-	const widthInput = basicCard.createEl('input') as HTMLInputElement;
+	const widthInput = basicCard.createEl('input');
 	widthInput.type = 'number';
 	widthInput.value = String(initial.cardWidth || 800);
 
 	// 分辨率
 	basicCard.createEl('div', { text: initial.t('shareCard.resolution'), cls: 'sc-label' });
-	const resSelect = basicCard.createEl('select') as HTMLSelectElement;
+	const resSelect = basicCard.createEl('select');
 	['1x', '2x', '3x'].forEach((r) => {
 		const opt = resSelect.createEl('option', { text: r });
 		opt.value = r;
@@ -43,7 +43,7 @@ export function createBasicControls(
 
 	// 格式
 	basicCard.createEl('div', { text: initial.t('shareCard.format'), cls: 'sc-label' });
-	const formatSelect = basicCard.createEl('select') as HTMLSelectElement;
+	const formatSelect = basicCard.createEl('select');
 	[
 		['png', 'png'],
 		['jpg', 'jpg'],
@@ -56,7 +56,7 @@ export function createBasicControls(
 
 	// 导出背景模式
 	basicCard.createEl('div', { text: initial.t('shareCard.exportBg.label'), cls: 'sc-label' });
-	const bgModeSelect = basicCard.createEl('select') as HTMLSelectElement;
+	const bgModeSelect = basicCard.createEl('select');
 	[
 		[initial.t('shareCard.exportBg.options.default'), 'default'],
 		[initial.t('shareCard.exportBg.options.auto'), 'auto'],
@@ -71,7 +71,7 @@ export function createBasicControls(
 		text: initial.t('shareCard.customColor'),
 		cls: 'sc-label',
 	});
-	const customColorInput = basicCard.createEl('input') as HTMLInputElement;
+	const customColorInput = basicCard.createEl('input');
 	customColorInput.type = 'color';
 	customColorInput.value = normalizeColorToHex(initial.exportBgCustomColor || '#ffffff');
 	toggleHidden(customColorLabel, initial.exportBgMode !== 'custom');
@@ -82,7 +82,7 @@ export function createBasicControls(
 	const lazyWrapInner = basicCard.createDiv({ cls: 'share-card-field-checkbox' });
 	const lazyCb = lazyWrapInner.createEl('input', {
 		attr: { type: 'checkbox' },
-	}) as HTMLInputElement;
+	});
 	lazyWrapInner.createEl('label', { text: initial.t('shareCard.disableLazy') });
 	lazyCb.checked = !!initial.disableLazy;
 

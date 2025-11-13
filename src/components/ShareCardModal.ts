@@ -204,7 +204,7 @@ export class ShareCardModal extends Modal {
 			const api = this.playgroundHandle?.getApi?.();
 			if (api) {
 				// 找到乐谱根节点（.alphatex-score 或 captureEl 内部）
-				const scoreRoot = captureEl.querySelector('.alphatex-score') as HTMLElement | null;
+				const scoreRoot = captureEl.querySelector('.alphatex-score');
 				if (scoreRoot) {
 					const result = await waitAlphaTabFullRender(api, scoreRoot, {
 						debug: false,

@@ -210,7 +210,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 				: plugin?.settings?.editorBar?.order;
 
 		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
-			order = rawOrder as string[];
+			order = rawOrder;
 		} else if (typeof rawOrder === 'string' && rawOrder.trim().length > 0) {
 			// 解析数字序列，例如 "2,1,3" -> 映射到默认键序列的索引
 			const indices = rawOrder
@@ -511,9 +511,9 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 						app.commands.executeCommandById('app:open-settings');
 						setTimeout(() => {
 							try {
-								const search = document.querySelector(
+								const search: HTMLInputElement | null = document.querySelector(
 									'input.setting-search-input'
-								) as HTMLInputElement | null;
+								);
 								if (search) {
 									search.value = 'Tab Flow';
 									const ev = new Event('input', { bubbles: true });

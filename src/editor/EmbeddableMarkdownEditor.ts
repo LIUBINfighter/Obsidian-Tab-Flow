@@ -315,7 +315,7 @@ export class EmbeddableMarkdownEditor {
 			app,
 			onMarkdownScroll: () => {},
 			getMode: () => 'source',
-		}) as InternalMarkdownEditor;
+		});
 		interface EditorWithRegister {
 			register?: (cb: unknown) => void;
 		}
@@ -330,7 +330,7 @@ export class EmbeddableMarkdownEditor {
 							interface OldMethod {
 								call?: (thisArg: unknown, ...args: unknown[]) => void;
 							}
-							(oldMethod as unknown as OldMethod).call?.(
+							(oldMethod as OldMethod).call?.(
 								app.workspace,
 								leaf,
 								...args
@@ -456,7 +456,7 @@ function resolveEditorPrototype(app: App): unknown {
 		};
 		unload?: () => void;
 	}
-	const widget = widgetEditorView as unknown as WidgetEditorView;
+	const widget = widgetEditorView as WidgetEditorView;
 	widget.editable = true;
 	widget.showEditor?.();
 	const MarkdownEditor = Object.getPrototypeOf(Object.getPrototypeOf(widget.editMode!));

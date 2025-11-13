@@ -201,7 +201,7 @@ export class DocView extends ItemView {
 							try {
 								const search = document.querySelector(
 									'input.setting-search-input'
-								) as HTMLInputElement | null;
+								);
 								if (search) {
 									search.value = 'Tab Flow';
 									const ev = new Event('input', { bubbles: true });
@@ -297,7 +297,7 @@ export class DocView extends ItemView {
 					});
 				});
 				prev.addEventListener('keypress', (e) => {
-					if ((e as KeyboardEvent).key === 'Enter') {
+					if ((e).key === 'Enter') {
 						this.activeId = prevPanel.id;
 						this.render().then(() => {
 							this.scrollToContentAfterRender();

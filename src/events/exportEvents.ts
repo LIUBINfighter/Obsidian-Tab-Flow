@@ -128,7 +128,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			// 只打印乐谱区域
 			// 假设 api.renderTarget 是渲染的 DOM 元素
 			const extendedApi = api as ExtendedAlphaTabApi;
-			const el = extendedApi.renderTarget || (api.container as unknown as HTMLElement);
+			const el = extendedApi.renderTarget || api.container;
 			if (!el) throw new Error('找不到乐谱渲染区域');
 			// 新建窗口打印
 			const win = window.open('', '_blank');

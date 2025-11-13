@@ -33,32 +33,32 @@ export function createAuthorBlock(
 	authorSection.createEl('div', { text: initial.t('shareCard.showAuthor'), cls: 'sc-label' });
 	const authorShowCb = authorSection.createEl('input', {
 		attr: { type: 'checkbox' },
-	}) as HTMLInputElement;
+	});
 	authorShowCb.checked = !!initial.showAuthor;
 
 	authorSection.createEl('div', { text: initial.t('shareCard.authorName'), cls: 'sc-label' });
-	const authorNameInput = authorSection.createEl('input') as HTMLInputElement;
+	const authorNameInput = authorSection.createEl('input');
 	authorNameInput.type = 'text';
 	authorNameInput.value = initial.authorName || '';
 
 	authorSection.createEl('div', { text: initial.t('shareCard.authorRemark'), cls: 'sc-label' });
-	const authorRemarkInput = authorSection.createEl('input') as HTMLInputElement;
+	const authorRemarkInput = authorSection.createEl('input');
 	authorRemarkInput.type = 'text';
 	authorRemarkInput.value = initial.authorRemark || '';
 
 	authorSection.createEl('div', { text: initial.t('shareCard.showAvatar'), cls: 'sc-label' });
 	const authorAvatarCb = authorSection.createEl('input', {
 		attr: { type: 'checkbox' },
-	}) as HTMLInputElement;
+	});
 	authorAvatarCb.checked = !!initial.showAvatar;
 
 	authorSection.createEl('div', { text: initial.t('shareCard.avatarUpload'), cls: 'sc-label' });
-	const avatarInput = authorSection.createEl('input') as HTMLInputElement;
+	const avatarInput = authorSection.createEl('input');
 	avatarInput.type = 'file';
 	avatarInput.accept = 'image/*';
 
 	authorSection.createEl('div', { text: initial.t('shareCard.authorAlign'), cls: 'sc-label' });
-	const authorAlignSelect = authorSection.createEl('select') as HTMLSelectElement;
+	const authorAlignSelect = authorSection.createEl('select');
 	[
 		[initial.t('shareCard.align.left'), 'left'],
 		[initial.t('shareCard.align.center'), 'center'],
@@ -70,7 +70,7 @@ export function createAuthorBlock(
 	authorAlignSelect.value = initial.authorAlign || 'left';
 
 	authorSection.createEl('div', { text: initial.t('shareCard.authorPosition'), cls: 'sc-label' });
-	const authorPosSelect = authorSection.createEl('select') as HTMLSelectElement;
+	const authorPosSelect = authorSection.createEl('select');
 	[
 		[initial.t('shareCard.position.top'), 'top'],
 		[initial.t('shareCard.position.bottom'), 'bottom'],
@@ -81,7 +81,7 @@ export function createAuthorBlock(
 	authorPosSelect.value = initial.authorPosition || 'bottom';
 
 	authorSection.createEl('div', { text: initial.t('shareCard.authorBg'), cls: 'sc-label' });
-	const authorBgInput = authorSection.createEl('input') as HTMLInputElement;
+	const authorBgInput = authorSection.createEl('input');
 	authorBgInput.type = 'color';
 	authorBgInput.value = initial.authorBg || '#ffffff';
 
@@ -89,12 +89,12 @@ export function createAuthorBlock(
 		text: initial.t('shareCard.authorTextColor'),
 		cls: 'sc-label',
 	});
-	const authorColorInput = authorSection.createEl('input') as HTMLInputElement;
+	const authorColorInput = authorSection.createEl('input');
 	authorColorInput.type = 'color';
 	authorColorInput.value = initial.authorTextColor || '#000000';
 
 	authorSection.createEl('div', { text: initial.t('shareCard.authorFontSize'), cls: 'sc-label' });
-	const authorFontInput = authorSection.createEl('input') as HTMLInputElement;
+	const authorFontInput = authorSection.createEl('input');
 	authorFontInput.type = 'number';
 	authorFontInput.value = String(initial.authorFontSize || 13);
 
