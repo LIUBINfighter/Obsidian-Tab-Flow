@@ -376,8 +376,7 @@ export function createAlphaTexPlayground(
 		}
 
 		// 动态加载渲染函数
-		// eslint-disable-next-line @typescript-eslint/no-var-requires
-		const { mountAlphaTexBlock } = require('../markdown/AlphaTexBlock');
+		const { mountAlphaTexBlock } = await import('../markdown/AlphaTexBlock');
 		try {
 			mounted = mountAlphaTexBlock(previewWrap, currentValue, resources, {
 				scale: 1,

@@ -439,8 +439,7 @@ export default class TabFlowPlugin extends Plugin {
 			// 注册 Markdown 代码块处理器: alphatex
 			try {
 				// 动态引入以避免在测试环境下的循环依赖
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
-				const { mountAlphaTexBlock } = require('./markdown/AlphaTexBlock');
+				const { mountAlphaTexBlock } = await import('./markdown/AlphaTexBlock');
 				this.registerMarkdownCodeBlockProcessor('alphatex', async (source, el, ctx) => {
 					// 资源缺失：在块内提示并提供下载按钮
 					if (!this.resources.bravuraUri || !this.resources.alphaTabWorkerUri) {

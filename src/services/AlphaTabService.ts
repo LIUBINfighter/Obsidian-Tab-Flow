@@ -165,11 +165,10 @@ export class AlphaTabService {
 			}
 		);
 		// 新增：导出 MIDI / PDF / GP 事件
-		this.eventBus.subscribe('命令:导出MIDI', (payload?: { fileName?: string }) => {
+		this.eventBus.subscribe('命令:导出MIDI', async (payload?: { fileName?: string }) => {
 			try {
 				// 动态注册并执行
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
-				const { registerExportEventHandlers } = require('../events/exportEvents');
+				const { registerExportEventHandlers } = await import('../events/exportEvents');
 				const handlers = registerExportEventHandlers({
 					api: this.api,
 					getFileName: () => {
@@ -185,10 +184,9 @@ export class AlphaTabService {
 				console.warn('[AlphaTabService] 导出MIDI失败:', e);
 			}
 		});
-		this.eventBus.subscribe('命令:导出PDF', (payload?: { fileName?: string }) => {
+		this.eventBus.subscribe('命令:导出PDF', async (payload?: { fileName?: string }) => {
 			try {
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
-				const { registerExportEventHandlers } = require('../events/exportEvents');
+				const { registerExportEventHandlers } = await import('../events/exportEvents');
 				const handlers = registerExportEventHandlers({
 					api: this.api,
 					getFileName: () => {
@@ -204,10 +202,9 @@ export class AlphaTabService {
 				console.warn('[AlphaTabService] 导出PDF失败:', e);
 			}
 		});
-		this.eventBus.subscribe('命令:导出GP', (payload?: { fileName?: string }) => {
+		this.eventBus.subscribe('命令:导出GP', async (payload?: { fileName?: string }) => {
 			try {
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
-				const { registerExportEventHandlers } = require('../events/exportEvents');
+				const { registerExportEventHandlers } = await import('../events/exportEvents');
 				const handlers = registerExportEventHandlers({
 					api: this.api,
 					getFileName: () => {

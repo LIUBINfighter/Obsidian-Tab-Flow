@@ -9,7 +9,11 @@ import { t } from '../i18n';
 
 export interface PlayBarOptions {
 	app: App;
-	eventBus: { publish: (event: string, payload?: unknown) => void };
+	eventBus: {
+		publish: (event: string, payload?: unknown) => void;
+		subscribe?: (event: string, handler: (p?: any) => void) => void;
+		unsubscribe?: (event: string, handler: (p?: any) => void) => void;
+	};
 	initialPlaying?: boolean;
 	getCurrentTime?: () => number; // 获取当前播放时间（毫秒）
 	getDuration?: () => number; // 获取总时长（毫秒）
@@ -378,10 +382,9 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			setIcon(icon, 'lucide-download');
 			exportChooserBtn.appendChild(icon);
 			exportChooserBtn.setAttribute('aria-label', t('export.export'));
-			exportChooserBtn.onclick = () => {
+			exportChooserBtn.onclick = async () => {
 				try {
-					// eslint-disable-next-line @typescript-eslint/no-var-requires
-					const { ExportChooserModal } = require('./ExportChooserModal');
+					const { ExportChooserModal } = await import('./ExportChooserModal');
 					const getTitle = () => {
 						try {
 							return (
@@ -393,7 +396,11 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 							return 'Untitled';
 						}
 					};
-					new ExportChooserModal({ app, eventBus, getFileName: getTitle }).open();
+					new ExportChooserModal({
+						app,
+						eventBus: eventBus as Required<typeof eventBus>,
+						getFileName: getTitle,
+					}).open();
 				} catch (e) {
 					console.error('[PlayBar] 打开导出选择器失败:', e);
 				}

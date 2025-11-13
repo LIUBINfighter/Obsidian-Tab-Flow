@@ -43,13 +43,12 @@ export class ExportChooserModal extends Modal {
 
 		// 音频导出（触发事件，由服务层导出并在状态回调时呼出音频播放器）
 		const audioBtn = row.createEl('button', { text: '导出音频(WAV)', cls: 'mod-cta' });
-		audioBtn.onclick = () => {
+		audioBtn.onclick = async () => {
 			try {
 				const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
-				const onOk = (url?: string) => {
+				const onOk = async (url?: string) => {
 					try {
-						// eslint-disable-next-line @typescript-eslint/no-var-requires
-						const { AudioExportModal } = require('./AudioExportModal');
+						const { AudioExportModal } = await import('./AudioExportModal');
 						const fileName = chosenName + '.wav';
 						new AudioExportModal(this.app, url || '', fileName).open();
 						new Notice('音频导出完成，已弹出播放器');

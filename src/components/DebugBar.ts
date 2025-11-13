@@ -196,11 +196,10 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 动态加载导出事件注册器
 	let exportHandlers: any = null;
-	function ensureExportHandlers() {
+	async function ensureExportHandlers() {
 		if (!exportHandlers) {
-			// 动态 require，避免循环依赖
-			// eslint-disable-next-line @typescript-eslint/no-var-requires
-			const { registerExportEventHandlers } = require('../events/exportEvents');
+			// 动态 import，避免循环依赖
+			const { registerExportEventHandlers } = await import('../events/exportEvents');
 			exportHandlers = registerExportEventHandlers({
 				api,
 				getFileName: () => {
@@ -235,32 +234,32 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	// 音频导出按钮
 	const audioBtn = document.createElement('button');
 	audioBtn.innerText = '导出音频';
-	audioBtn.onclick = () => {
-		ensureExportHandlers().exportAudio();
+	audioBtn.onclick = async () => {
+		(await ensureExportHandlers()).exportAudio();
 	};
 	debugBar.appendChild(audioBtn);
 
 	// MIDI 导出按钮
 	const midiBtn = document.createElement('button');
 	midiBtn.innerText = '导出MIDI';
-	midiBtn.onclick = () => {
-		ensureExportHandlers().exportMidi();
+	midiBtn.onclick = async () => {
+		(await ensureExportHandlers()).exportMidi();
 	};
 	debugBar.appendChild(midiBtn);
 
 	// GP 导出按钮
 	const gpBtn = document.createElement('button');
 	gpBtn.innerText = '导出GP';
-	gpBtn.onclick = () => {
-		ensureExportHandlers().exportGp();
+	gpBtn.onclick = async () => {
+		(await ensureExportHandlers()).exportGp();
 	};
 	debugBar.appendChild(gpBtn);
 
 	// PDF 打印按钮
 	const pdfBtn = document.createElement('button');
 	pdfBtn.innerText = '打印PDF';
-	pdfBtn.onclick = () => {
-		ensureExportHandlers().exportPdf();
+	pdfBtn.onclick = async () => {
+		(await ensureExportHandlers()).exportPdf();
 	};
 	debugBar.appendChild(pdfBtn);
 
