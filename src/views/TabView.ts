@@ -149,6 +149,13 @@ export class TabView extends FileView {
 		this.resources = resources;
 		this.eventBus = eventBus ?? new EventBus();
 		this.eventBus.subscribe('UI:showTracksModal', this.showTracksModal);
+		this.registerEvent(
+			this.app.workspace.on('tabflow:playbar-components-changed', () => {
+				if (this._api) {
+					this._mountPlayBarInternal();
+				}
+			})
+		);
 		// 从插件实例获取 TrackStateStore
 		interface PluginWithTrackStateStore {
 			trackStateStore?: TrackStateStore;
