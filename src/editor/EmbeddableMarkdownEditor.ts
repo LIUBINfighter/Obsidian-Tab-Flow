@@ -94,7 +94,7 @@ export class EmbeddableMarkdownEditor {
 
 	constructor(
 		app: App,
-		EditorClass: new (...args: any[]) => InternalMarkdownEditor,
+		EditorClass: new (...args: unknown[]) => InternalMarkdownEditor,
 		container: HTMLElement,
 		options: Partial<MarkdownEditorProps>
 	) {

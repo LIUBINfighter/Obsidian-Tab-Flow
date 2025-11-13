@@ -82,10 +82,10 @@ export async function waitAlphaTabFullRender(
 	};
 
 	const listeners: ListenerContainer[] = [];
-	const add = (target: any, evt: string, cb: (...args: any[]) => void) => {
+	const add = (target: unknown, evt: string, cb: (...args: unknown[]) => void) => {
 		try {
-			target?.[evt]?.on?.(cb);
-			listeners.push({ detach: () => target?.[evt]?.off?.(cb) });
+			(target as any)?.[evt]?.on?.(cb);
+			listeners.push({ detach: () => (target as any)?.[evt]?.off?.(cb) });
 		} catch {
 			// ignore
 		}
@@ -99,32 +99,32 @@ export async function waitAlphaTabFullRender(
 		layoutFinished = false;
 	});
 
-	add(renderer, 'partialLayoutFinished', (r: any) => {
+	add(renderer, 'partialLayoutFinished', (r: unknown) => {
 		abortIf();
-		partialIds.add(r.id);
+		partialIds.add((r as any).id);
 		// proactively request rendering when lazy loading active
 		try {
-			renderer.renderResult?.(r.id);
+			(renderer as any).renderResult?.((r as any).id);
 		} catch {
 			/* ignore */
 		}
 	});
 
-	add(renderer, 'partialRenderFinished', (r: any) => {
+	add(renderer, 'partialRenderFinished', (r: unknown) => {
 		abortIf();
-		renderedPartials.add(r.id);
+		renderedPartials.add((r as any).id);
 	});
 
-	add(renderer, 'renderFinished', (r: any) => {
+	add(renderer, 'renderFinished', (r: unknown) => {
 		abortIf();
 		layoutFinished = true;
-		totalWidth = r.totalWidth;
-		totalHeight = r.totalHeight;
+		totalWidth = (r as any).totalWidth;
+		totalHeight = (r as any).totalHeight;
 		debug &&
 			console.debug(
 				'[AlphaTabWait] renderFinished layout complete',
-				r.totalWidth,
-				r.totalHeight
+				(r as any).totalWidth,
+				(r as any).totalHeight
 			);
 	});
 
@@ -227,17 +227,21 @@ export async function withExportLock<T>(fn: () => Promise<T>): Promise<T> {
 			/* ignore */
 		}
 	}
-	let release: ((...args: any[]) => void) | null = null as any;
-	exportLock = new Promise<void>((res: () => void) => {
-		release = res as (...a: any[]) => void;
+	type ReleaseFunction = () => void;
+	let release: ReleaseFunction | null = null;
+	exportLock = new Promise<void>((res) => {
+		release = res as ReleaseFunction;
 	});
+	const callRelease = () => {
+		if (release) (release as ReleaseFunction)();
+	};
 	try {
 		const result = await fn();
-		if (typeof release === 'function') (release as any)();
+		callRelease();
 		exportLock = null;
 		return result;
 	} catch (e) {
-		if (typeof release === 'function') (release as any)();
+		callRelease();
 		exportLock = null;
 		throw e;
 	}
