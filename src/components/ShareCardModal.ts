@@ -13,6 +13,7 @@ import ShareCardPresetService from '../services/ShareCardPresetService';
 import ShareCardStateManager from '../state/ShareCardStateManager';
 import { createShareCardPreview } from './ShareCardPreview';
 import { setCssProps, toggleHidden } from '../utils/styleUtils';
+import { showConfirmDialog, showPromptDialog } from '../utils/dialogs';
 
 export class ShareCardModal extends Modal {
 	private plugin: TabFlowPlugin;
@@ -363,63 +364,64 @@ export class ShareCardModal extends Modal {
 		rebuildPresetOptions();
 
 		presetSelect.addEventListener('change', () => {
-			const targetId = presetSelect.value;
-			const st = this.stateManager?.getState();
-			if (st?.dirty && !st.autosaveEnabled) {
-				// 三选弹窗：保存/放弃/取消
-				const choice = window.confirm(t('shareCard.confirmPresetDirty'));
-				if (!choice) {
-					// 二次确认：放弃或取消
-					const discard = window.confirm(t('shareCard.confirmPresetDiscard'));
-					if (!discard) {
-						// 取消切换，恢复下拉值
-						presetSelect.value = this.currentPresetId || targetId;
-						return;
+			void (async () => {
+				const targetId = presetSelect.value;
+				const st = this.stateManager?.getState();
+				if (st?.dirty && !st.autosaveEnabled) {
+					const saveConfirmed = await showConfirmDialog(this.app, {
+						message: t('shareCard.confirmPresetDirty'),
+					});
+					if (!saveConfirmed) {
+						const discardConfirmed = await showConfirmDialog(this.app, {
+							message: t('shareCard.confirmPresetDiscard'),
+						});
+						if (!discardConfirmed) {
+							presetSelect.value = this.currentPresetId || targetId;
+							return;
+						}
+					} else {
+						this.stateManager?.commit('switch');
 					}
-					// 放弃 -> 不保存直接切换
-				} else {
-					// 保存并切换
-					this.stateManager?.commit('switch');
 				}
-			}
-			this.currentPresetId = targetId;
-			this.stateManager?.switchPreset(this.currentPresetId);
-			const st2 = this.stateManager?.getState();
-			if (st2) {
-				widthInput.value = String(st2.working.cardWidth);
-				resSelect.value = st2.working.resolution;
-				formatSelect.value = st2.working.format;
-				bgModeSelect.value = st2.working.exportBgMode;
-				updateCustomColorVisibility(st2.working.exportBgMode);
-				const norm = normalizeColorToHex(st2.working.exportBgCustomColor);
-				customColorInput.value = norm;
-				authorShowCb.checked = st2.working.showAuthor;
-				authorNameInput.value = st2.working.authorName;
-				authorRemarkInput.value = st2.working.authorRemark;
-				authorAvatarCb.checked = st2.working.showAvatar;
-				authorPosSelect.value = st2.working.authorPosition;
-				authorBgInput.value = st2.working.authorBg || '#ffffff';
-				authorColorInput.value = st2.working.authorTextColor || '#000000';
-				authorFontInput.value = String(st2.working.authorFontSize);
-				authorAlignSelect.value = st2.working.authorAlign || 'left';
-				lazyCb.checked = st2.working.disableLazy;
-				this.exportBgMode = st2.working.exportBgMode;
-				this.exportBgCustomColor = norm;
-				this.showAuthor = st2.working.showAuthor;
-				this.authorName = st2.working.authorName;
-				this.authorRemark = st2.working.authorRemark;
-				this.showAvatar = st2.working.showAvatar;
-				this.avatarDataUrl = st2.working.avatarSource?.data || null;
-				this.authorPosition = st2.working.authorPosition;
-				this.authorBg = st2.working.authorBg;
-				this.authorTextColor = st2.working.authorTextColor;
-				this.authorFontSize = st2.working.authorFontSize;
-				this.authorAlign = st2.working.authorAlign;
-				this.__shareCardDisableLazy = st2.working.disableLazy;
-				if (this.cardRoot) this.setCardWidth(st2.working.cardWidth);
-				this.renderAuthorBlock();
-			}
-			refreshDirtyIndicator();
+				this.currentPresetId = targetId;
+				this.stateManager?.switchPreset(this.currentPresetId);
+				const st2 = this.stateManager?.getState();
+				if (st2) {
+					widthInput.value = String(st2.working.cardWidth);
+					resSelect.value = st2.working.resolution;
+					formatSelect.value = st2.working.format;
+					bgModeSelect.value = st2.working.exportBgMode;
+					updateCustomColorVisibility(st2.working.exportBgMode);
+					const norm = normalizeColorToHex(st2.working.exportBgCustomColor);
+					customColorInput.value = norm;
+					authorShowCb.checked = st2.working.showAuthor;
+					authorNameInput.value = st2.working.authorName;
+					authorRemarkInput.value = st2.working.authorRemark;
+					authorAvatarCb.checked = st2.working.showAvatar;
+					authorPosSelect.value = st2.working.authorPosition;
+					authorBgInput.value = st2.working.authorBg || '#ffffff';
+					authorColorInput.value = st2.working.authorTextColor || '#000000';
+					authorFontInput.value = String(st2.working.authorFontSize);
+					authorAlignSelect.value = st2.working.authorAlign || 'left';
+					lazyCb.checked = st2.working.disableLazy;
+					this.exportBgMode = st2.working.exportBgMode;
+					this.exportBgCustomColor = norm;
+					this.showAuthor = st2.working.showAuthor;
+					this.authorName = st2.working.authorName;
+					this.authorRemark = st2.working.authorRemark;
+					this.showAvatar = st2.working.showAvatar;
+					this.avatarDataUrl = st2.working.avatarSource?.data || null;
+					this.authorPosition = st2.working.authorPosition;
+					this.authorBg = st2.working.authorBg;
+					this.authorTextColor = st2.working.authorTextColor;
+					this.authorFontSize = st2.working.authorFontSize;
+					this.authorAlign = st2.working.authorAlign;
+					this.__shareCardDisableLazy = st2.working.disableLazy;
+					if (this.cardRoot) this.setCardWidth(st2.working.cardWidth);
+					this.renderAuthorBlock();
+				}
+				refreshDirtyIndicator();
+			})();
 		});
 
 		btnPresetSave.addEventListener(
@@ -436,10 +438,10 @@ export class ShareCardModal extends Modal {
 			'click',
 			() =>
 				void (async () => {
-					const name = window.prompt(
-						t('shareCard.prompt.newPresetName'),
-						t('shareCard.prompt.newPresetDefault')
-					);
+					const name = await showPromptDialog(this.app, {
+						message: t('shareCard.prompt.newPresetName'),
+						initialValue: t('shareCard.prompt.newPresetDefault'),
+					});
 					if (!name) return;
 					// 收集当前 working 值
 					const st = this.stateManager?.getState();

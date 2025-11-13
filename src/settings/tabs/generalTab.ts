@@ -7,6 +7,7 @@ import { t } from '../../i18n';
 import path from 'path';
 // @ts-ignore
 import { shell } from 'electron';
+import { showConfirmDialog } from '../../utils/dialogs';
 
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
 	const pluginId = plugin.manifest.id;
@@ -184,9 +185,14 @@ export async function renderGeneralTab(
 	};
 
 	restartBtn.onclick = () => {
-		if (confirm(t('assetManagement.confirmRestart'))) {
-			// @ts-ignore
-			app.commands.executeCommandById('app:reload');
-		}
+		void (async () => {
+			const confirmed = await showConfirmDialog(app, {
+				message: t('assetManagement.confirmRestart'),
+			});
+			if (confirmed) {
+				// @ts-ignore
+				app.commands.executeCommandById('app:reload');
+			}
+		})();
 	};
 }
