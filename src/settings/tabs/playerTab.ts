@@ -382,7 +382,9 @@ export async function renderPlayerTab(
 					await plugin.saveSettings();
 					renderCards();
 					try {
-						/* @ts-ignore */ app.workspace.trigger('tabflow:playbar-components-changed');
+						/* @ts-ignore */ app.workspace.trigger(
+							'tabflow:playbar-components-changed'
+						);
 					} catch {
 						// Ignore workspace trigger errors
 					}

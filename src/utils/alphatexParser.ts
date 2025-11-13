@@ -75,6 +75,7 @@ export function toScrollMode(value: number | string | undefined): number | undef
 	if (value == null) return undefined;
 	if (typeof value === 'number') return value;
 	const key = String(value).toLowerCase();
+	// Disable no-explicit-any: AlphaTab ScrollMode enum requires dynamic access
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const ScrollMode: any = (alphaTab as any).ScrollMode || {};
 	const mapping: Record<string, number | undefined> = {

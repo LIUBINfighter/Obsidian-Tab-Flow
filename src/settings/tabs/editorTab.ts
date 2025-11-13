@@ -173,7 +173,10 @@ export async function renderEditorTab(
 					gapText.inputEl.classList.remove('tabflow-invalid-input');
 					plugin.settings.editorBottomGap = composed;
 					await plugin.saveSettings();
-					document.documentElement.style.setProperty('--alphatex-editor-font-size', composed);
+					document.documentElement.style.setProperty(
+						'--alphatex-editor-font-size',
+						composed
+					);
 					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
 				})();
 			});
@@ -977,12 +980,16 @@ export async function renderEditorTab(
 						if (from < insertIndex) insertIndex -= 1;
 						cur.splice(insertIndex, 0, moved);
 					}
-					plugin.settings.editorBar = plugin.settings.editorBar || { components: {} as any };
+					plugin.settings.editorBar = plugin.settings.editorBar || {
+						components: {} as any,
+					};
 					(plugin.settings.editorBar as any).order = cur;
 					await plugin.saveSettings();
 					renderCards();
 					try {
-						/* @ts-ignore */ app.workspace.trigger('tabflow:editorbar-components-changed');
+						/* @ts-ignore */ app.workspace.trigger(
+							'tabflow:editorbar-components-changed'
+						);
 					} catch {
 						// Ignore workspace trigger errors
 					}

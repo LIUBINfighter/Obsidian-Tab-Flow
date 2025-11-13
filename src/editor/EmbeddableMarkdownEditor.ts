@@ -103,6 +103,7 @@ export class EmbeddableMarkdownEditor {
 		this.scope = new Scope(app.scope);
 		this.scope.register(['Mod'], 'Enter', () => true);
 
+		// Disable no-this-alias: Need stable reference for monkey-patching hooks
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const selfRef = this; // capture instance for function-based hooks
 		const uninstaller = around(EditorClass.prototype, {

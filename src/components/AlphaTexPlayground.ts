@@ -381,7 +381,7 @@ export function createAlphaTexPlayground(
 			return;
 		}
 
-		// 动态加载渲染函数
+		// Dynamically import to avoid circular dependency and reduce initial bundle size
 		const { mountAlphaTexBlock } = await import('../markdown/AlphaTexBlock');
 		try {
 			mounted = mountAlphaTexBlock(previewWrap, currentValue, resources, {

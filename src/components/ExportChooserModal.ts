@@ -48,6 +48,7 @@ export class ExportChooserModal extends Modal {
 				const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
 				const onOk = async (url?: string) => {
 					try {
+						// Lazy load audio player modal to reduce initial bundle size
 						const { AudioExportModal } = await import('./AudioExportModal');
 						const fileName = chosenName + '.wav';
 						new AudioExportModal(this.app, url || '', fileName).open();

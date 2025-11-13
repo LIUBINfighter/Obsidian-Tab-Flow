@@ -236,6 +236,7 @@ export function mountAlphaTexBlock(
 
 	const heavyInit = () => {
 		if (destroyed) return;
+		// Initialize AlphaTab API with configuration
 		api = new alphaTab.AlphaTabApi(scoreEl, {
 			core: {
 				scriptFile: resources.alphaTabWorkerUri || '',

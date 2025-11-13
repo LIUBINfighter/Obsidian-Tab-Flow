@@ -170,7 +170,7 @@ export class AlphaTabService {
 		this.eventBus.subscribe('命令:导出MIDI', (payload?: { fileName?: string }) => {
 			void (async () => {
 				try {
-					// 动态注册并执行
+					// Dynamically import to avoid circular dependency with events module
 					const { registerExportEventHandlers } = await import('../events/exportEvents');
 					const handlers = registerExportEventHandlers({
 						api: this.api,
@@ -191,6 +191,7 @@ export class AlphaTabService {
 		this.eventBus.subscribe('命令:导出PDF', (payload?: { fileName?: string }) => {
 			void (async () => {
 				try {
+					// Dynamically import to avoid circular dependency with events module
 					const { registerExportEventHandlers } = await import('../events/exportEvents');
 					const handlers = registerExportEventHandlers({
 						api: this.api,
@@ -211,6 +212,7 @@ export class AlphaTabService {
 		this.eventBus.subscribe('命令:导出GP', (payload?: { fileName?: string }) => {
 			void (async () => {
 				try {
+					// Dynamically import to avoid circular dependency with events module
 					const { registerExportEventHandlers } = await import('../events/exportEvents');
 					const handlers = registerExportEventHandlers({
 						api: this.api,

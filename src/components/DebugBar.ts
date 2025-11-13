@@ -198,7 +198,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	let exportHandlers: any = null;
 	async function ensureExportHandlers() {
 		if (!exportHandlers) {
-			// 动态 import，避免循环依赖
+			// Dynamically import to avoid circular dependency with events module
 			const { registerExportEventHandlers } = await import('../events/exportEvents');
 			exportHandlers = registerExportEventHandlers({
 				api,

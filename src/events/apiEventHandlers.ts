@@ -47,6 +47,7 @@ export function registerApiEventHandlers(
 	// api.playerFinished.on(() => console.debug("[AlphaTab] Playback finished"));
 	api.midiEventsPlayed.on((evt) => {
 		// 低级 MIDI 事件，可选处理
+		// Disable no-explicit-any: AlphaTab MIDI event types are not exported
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		evt.events.forEach((midi: any) => {
 			if (midi.isMetronome) {

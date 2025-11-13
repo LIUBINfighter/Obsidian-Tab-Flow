@@ -324,6 +324,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			exportChooserBtn.setAttribute('aria-label', t('export.export'));
 			exportChooserBtn.onclick = async () => {
 				try {
+					// Lazy load modal to reduce initial bundle size
 					const { ExportChooserModal } = await import('./ExportChooserModal');
 					const getTitle = () => {
 						try {
