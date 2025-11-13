@@ -188,16 +188,8 @@ export function createAlphaTexPlayground(
 			try {
 				if (embedded) await navigator.clipboard.writeText(embedded.value);
 			} catch {
-				try {
-					const ta = document.createElement('textarea');
-					ta.value = embedded ? embedded.value : currentValue;
-					document.body.appendChild(ta);
-					ta.select();
-					document.execCommand('copy');
-					ta.remove();
-				} catch {
-					// Ignore clipboard fallback errors
-				}
+				// Clipboard API fallback failed, no further fallback available
+				// Modern browsers should support navigator.clipboard
 			}
 			// feedback: turn into green check briefly
 			try {

@@ -124,26 +124,8 @@ export function mountAlphaTexBlock(
 					// Ignore icon update errors
 				}
 			} catch {
-				try {
-					const ta = document.createElement('textarea');
-					ta.value = mergedText;
-					document.body.appendChild(ta);
-					ta.select();
-					document.execCommand('copy');
-					ta.remove();
-					try {
-						setIcon(icon, 'check');
-						btn.classList.add('is-success');
-						setTimeout(() => {
-							setIcon(icon, 'copy');
-							btn.classList.remove('is-success');
-						}, 1200);
-					} catch {
-						// Ignore icon update errors
-					}
-				} catch {
-					// Ignore clipboard fallback errors
-				}
+				// Clipboard API fallback failed, no further fallback available
+				// Modern browsers should support navigator.clipboard
 			}
 		});
 		// place button at the top of messages
