@@ -1,5 +1,5 @@
 // <-- ./src/views/TabView.ts -->
-import { FileView, TFile, WorkspaceLeaf, Plugin, Notice, ViewStateResult } from 'obsidian';
+import { FileView, TFile, WorkspaceLeaf, Plugin, Notice, ViewStateResult, type EventRef } from 'obsidian';
 
 export const VIEW_TYPE_TAB = 'tab-view';
 
@@ -151,7 +151,7 @@ export class TabView extends FileView {
 		this.eventBus.subscribe('UI:showTracksModal', this.showTracksModal);
 		// 宽化 workspace.on 类型以支持自定义事件
 		type WorkspaceWithAnyEvents = {
-			on: (name: string, callback: (...args: unknown[]) => any, ctx?: any) => any;
+			on: (name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => EventRef;
 		};
 		const ws = this.app.workspace as unknown as WorkspaceWithAnyEvents;
 		this.registerEvent(

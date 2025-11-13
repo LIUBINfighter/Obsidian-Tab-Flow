@@ -1,4 +1,4 @@
-import { FileView, TFile, WorkspaceLeaf } from 'obsidian';
+import { FileView, TFile, WorkspaceLeaf, type EventRef } from 'obsidian';
 import {
 	createEmbeddableMarkdownEditor,
 	type EmbeddableMarkdownEditor,
@@ -106,7 +106,7 @@ export class EditorView extends FileView {
 		this.eventBus = new EventBus();
 		// 宽化 workspace.on 类型以订阅自定义事件
 		type WorkspaceWithAnyEvents = {
-			on: (name: string, callback: (...args: unknown[]) => any, ctx?: any) => any;
+			on: (name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => EventRef;
 		};
 		const ws = this.app.workspace as unknown as WorkspaceWithAnyEvents;
 		this.registerEvent(
