@@ -133,7 +133,10 @@ export class EmbeddableMarkdownEditor {
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
 								blur: () => {
 									app.keymap.popScope(selfRef.scope);
-									const activeEditor = Reflect.get(app.workspace, 'activeEditor') as unknown;
+									const activeEditor = Reflect.get(
+										app.workspace,
+										'activeEditor'
+									) as unknown;
 									if (
 										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
 										activeEditor === selfRef.editor
@@ -145,7 +148,11 @@ export class EmbeddableMarkdownEditor {
 								focusin: () => {
 									app.keymap.pushScope(selfRef.scope);
 									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
-										Reflect.set(app.workspace, 'activeEditor', selfRef.editor ?? null);
+										Reflect.set(
+											app.workspace,
+											'activeEditor',
+											selfRef.editor ?? null
+										);
 									}
 								},
 							})

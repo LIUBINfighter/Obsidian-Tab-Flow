@@ -7,22 +7,25 @@ export function registerApiEventHandlers(
 ): void {
 	// 更新音频状态显示
 	const updateAudioStatus = () => {
+		const STATUS_CLASSES = ['is-error', 'is-success', 'is-warning'] as const;
+		const applyStatus = (text: string, cls: (typeof STATUS_CLASSES)[number]) => {
+			audioStatus.innerText = text;
+			STATUS_CLASSES.forEach((name) => audioStatus.classList.remove(name));
+			audioStatus.classList.add(cls);
+		};
+
 		if (!api) {
-			audioStatus.innerText = '音频：API未初始化';
-			audioStatus.style.color = 'red';
+			applyStatus('音频：API未初始化', 'is-error');
 			return;
 		}
 		if (!api.player) {
-			audioStatus.innerText = '音频：播放器未初始化';
-			audioStatus.style.color = 'red';
+			applyStatus('音频：播放器未初始化', 'is-error');
 			return;
 		}
 		if (isAudioLoaded()) {
-			audioStatus.innerText = '音频：已加载';
-			audioStatus.style.color = 'green';
+			applyStatus('音频：已加载', 'is-success');
 		} else {
-			audioStatus.innerText = '音频：加载中...';
-			audioStatus.style.color = 'orange';
+			applyStatus('音频：加载中...', 'is-warning');
 		}
 	};
 

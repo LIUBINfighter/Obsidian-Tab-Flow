@@ -15,6 +15,11 @@ import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
 import { TrackStateStore } from './state/TrackStateStore';
 
+type SettingManager = {
+	activeTab?: { id?: string };
+	openTabById?: (id: string) => void;
+};
+
 // AssetStatus moved to src/types/assets.ts
 
 export default class TabFlowPlugin extends Plugin {
@@ -670,10 +675,7 @@ export default class TabFlowPlugin extends Plugin {
 	private refreshLanguageDependentUI(): void {
 		try {
 			// 刷新设置面板（如果打开的话）
-			const settingInstance = Reflect.get(this.app, 'setting') as {
-				activeTab?: { id?: string };
-				openTabById?: (id: string) => void;
-			} | undefined;
+			const settingInstance = Reflect.get(this.app, 'setting') as SettingManager | undefined;
 			const settingTabs = settingInstance?.activeTab;
 			if (settingTabs && settingTabs.id === 'tabflow') {
 				// 重新渲染设置标签页

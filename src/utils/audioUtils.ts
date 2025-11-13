@@ -1,5 +1,18 @@
 import * as alphaTab from '@coderline/alphatab';
 
+type AlphaTabIONamespace = {
+	ByteBuffer?: {
+		withCapacity: (size: number) => {
+			write: (data: Uint8Array, offset: number, length: number) => void;
+			toArray: () => Uint8Array;
+		};
+	};
+	IOHelper?: {
+		writeInt32LE: (buffer: unknown, value: number) => void;
+		writeInt16LE: (buffer: unknown, value: number) => void;
+	};
+};
+
 /**
  * Convert Float32Array chunks to a WAV blob URL. Uses alphaTab.io.ByteBuffer/IOHelper when available
  * to avoid reimplementing endianness helpers; falls back to a pure-JS implementation otherwise.
@@ -13,18 +26,7 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
 		// try using alphaTab ByteBuffer if present for compatibility
 		// @ts-ignore
 		// AlphaTab internal IO API types (not exported)
-		const ioNamespace = Reflect.get(alphaTab, 'io') as {
-			ByteBuffer?: {
-				withCapacity: (size: number) => {
-					write: (data: Uint8Array, offset: number, length: number) => void;
-					toArray: () => Uint8Array;
-				};
-			};
-			IOHelper?: {
-				writeInt32LE: (buffer: unknown, value: number) => void;
-				writeInt16LE: (buffer: unknown, value: number) => void;
-			};
-		} | undefined;
+		const ioNamespace = Reflect.get(alphaTab, 'io') as AlphaTabIONamespace | undefined;
 		if (ioNamespace?.ByteBuffer && ioNamespace.IOHelper) {
 			const buffer = ioNamespace.ByteBuffer.withCapacity(fileSize);
 			// RIFF

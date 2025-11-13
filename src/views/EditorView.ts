@@ -498,7 +498,9 @@ export class EditorView extends FileView {
 			},
 			getDuration: () => {
 				const api = this.playground?.getApi();
-				const score = api?.score as { durationMillis?: number; duration?: number } | undefined;
+				const score = api?.score as
+					| { durationMillis?: number; duration?: number }
+					| undefined;
 				if (!score) return 0;
 				return (
 					(typeof score.durationMillis === 'number' ? score.durationMillis : undefined) ??

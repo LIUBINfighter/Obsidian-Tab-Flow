@@ -24,8 +24,8 @@ export class SettingTab extends PluginSettingTab {
 
 		if (!this._eventBound) {
 			const workspaceOn = (this.app.workspace as { on?: unknown }).on as
-				((name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => unknown) |
-				undefined;
+				| ((name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => unknown)
+				| undefined;
 			if (typeof workspaceOn === 'function') {
 				const playerRef = workspaceOn.call(
 					this.app.workspace,

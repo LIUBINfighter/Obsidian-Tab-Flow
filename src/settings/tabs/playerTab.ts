@@ -40,7 +40,7 @@ export async function renderPlayerTab(
 		});
 
 	const cardsWrap = tabContents.createDiv({
-		attr: { style: 'display:flex; flex-direction:column; gap:8px;' },
+		cls: 'tabflow-card-list',
 	});
 	const meta: Array<{
 		key: keyof PlayBarComponentVisibility;
@@ -241,9 +241,7 @@ export async function renderPlayerTab(
 						}
 					});
 					if (m.disabled) {
-						toggle.toggleEl
-							?.querySelector('input')
-							?.setAttribute('disabled', 'true');
+						toggle.toggleEl?.querySelector('input')?.setAttribute('disabled', 'true');
 					}
 				})
 				.setClass('tabflow-no-border');

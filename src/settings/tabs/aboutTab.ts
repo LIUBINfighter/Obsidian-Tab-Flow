@@ -2,6 +2,18 @@ import { App, Notice, Setting } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
 
+type CommandManager = {
+	executeCommandById?: (id: string) => unknown;
+};
+
+type SettingManager = {
+	close?: () => void;
+};
+
+type WorkspaceExtra = {
+	detachLeavesOfType?: (type: string) => void;
+};
+
 export function renderAboutTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
@@ -23,9 +35,7 @@ export function renderAboutTab(
 					new Notice(t('settings.about.openingDoc'));
 					// 优先通过已注册的命令触发
 					try {
-						const commands = Reflect.get(app, 'commands') as {
-							executeCommandById?: (id: string) => unknown;
-						} | undefined;
+						const commands = Reflect.get(app, 'commands') as CommandManager | undefined;
 						const execFn = commands?.executeCommandById;
 						if (typeof execFn === 'function') {
 							const res = execFn('open-tabflow-doc-view');
@@ -48,15 +58,15 @@ export function renderAboutTab(
 
 					// 尝试关闭设置面板以便文档视图可见
 					try {
-						const settingManager = Reflect.get(app, 'setting') as {
-							close?: () => void;
-						} | undefined;
+						const settingManager = Reflect.get(app, 'setting') as
+							| SettingManager
+							| undefined;
 						if (typeof settingManager?.close === 'function') {
 							settingManager.close();
 						} else {
-							const workspaceExtra = Reflect.get(app, 'workspace') as {
-								detachLeavesOfType?: (type: string) => void;
-							} | undefined;
+							const workspaceExtra = Reflect.get(app, 'workspace') as
+								| WorkspaceExtra
+								| undefined;
 							if (typeof workspaceExtra?.detachLeavesOfType === 'function') {
 								workspaceExtra.detachLeavesOfType('settings');
 							}

@@ -1,6 +1,12 @@
 import * as alphaTab from '@coderline/alphatab';
 import { convertSamplesToWavBlobUrl } from '../utils';
 
+type GpExporterModule = {
+	Gp7Exporter?: new () => {
+		export: (score: unknown, settings: unknown) => Uint8Array;
+	};
+};
+
 /**
  * 导出相关事件注册与处理
  * 包括：音频导出、MIDI导出、GP导出、PDF打印
@@ -95,11 +101,9 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			onExportStart?.('gp');
 			if (!api.score) throw new Error('乐谱未加载');
 			// AlphaTab exporter types are not fully exported
-			const exporterModule = Reflect.get(alphaTab, 'exporter') as {
-				Gp7Exporter?: new () => {
-					export: (score: unknown, settings: unknown) => Uint8Array;
-				};
-			} | undefined;
+			const exporterModule = Reflect.get(alphaTab, 'exporter') as
+				| GpExporterModule
+				| undefined;
 			if (!exporterModule?.Gp7Exporter) {
 				throw new Error('Gp7Exporter 不可用');
 			}

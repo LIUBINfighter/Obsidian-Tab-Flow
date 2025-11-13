@@ -13,8 +13,7 @@ export function setupHorizontalScroll(element: HTMLElement, api: alphaTab.AlphaT
 
 		// 根据 alphaTab 的布局模式判断是否需要横向滚动
 		const isHorizontalLayout =
-			api.settings?.display?.layoutMode ===
-			alphaTab.LayoutMode?.Horizontal;
+			api.settings?.display?.layoutMode === alphaTab.LayoutMode?.Horizontal;
 		if (!isHorizontalLayout) return;
 
 		const target = element;

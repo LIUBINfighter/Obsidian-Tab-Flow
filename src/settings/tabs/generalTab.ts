@@ -10,6 +10,10 @@ import { shell } from 'electron';
 import { showConfirmDialog } from '../../utils/dialogs';
 import { toggleHidden } from '../../utils/styleUtils';
 
+type CommandManager = {
+	executeCommandById?: (id: string) => void;
+};
+
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
 	const pluginId = plugin.manifest.id;
 	const assetsDir = vaultPath(app.vault.configDir, 'plugins', pluginId, 'assets');
@@ -155,7 +159,8 @@ export async function renderGeneralTab(
 	openDirBtn.onclick = () => {
 		try {
 			const adapter = app.vault.adapter as { getBasePath?: () => string };
-			const basePath = typeof adapter.getBasePath === 'function' ? adapter.getBasePath() : undefined;
+			const basePath =
+				typeof adapter.getBasePath === 'function' ? adapter.getBasePath() : undefined;
 			if (!basePath) {
 				new Notice(t('assetManagement.desktopOnly'));
 				return;
@@ -182,9 +187,7 @@ export async function renderGeneralTab(
 				message: t('assetManagement.confirmRestart'),
 			});
 			if (confirmed) {
-				const commands = Reflect.get(app, 'commands') as {
-					executeCommandById?: (id: string) => void;
-				} | undefined;
+				const commands = Reflect.get(app, 'commands') as CommandManager | undefined;
 				commands?.executeCommandById?.('app:reload');
 			}
 		})();

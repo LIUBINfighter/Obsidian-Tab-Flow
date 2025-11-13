@@ -881,6 +881,18 @@
 	font-size: 0.9em;
 }
 
+.debug-bar .audio-status.is-error {
+	color: var(--text-error, #e74c3c);
+}
+
+.debug-bar .audio-status.is-success {
+	color: var(--text-success, #2ecc71);
+}
+
+.debug-bar .audio-status.is-warning {
+	color: var(--text-warning, #e67e22);
+}
+
 .debug-bar .scroll-separator {
 	margin: 0 0.5em;
 }
@@ -1701,6 +1713,12 @@
 	background: var(--background-secondary-alt);
 }
 
+.tabflow-card-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
 /* Clickable icon style to replace buttons for order controls */
 .tabflow-card .icon-clickable {
 	display: inline-flex;
@@ -1819,6 +1837,42 @@ ul.tabflow-setting-description li {
 .tabflow-highlight-grid .setting-item .setting-item-description {
 	margin-top: 4px;
 	font-size: 0.85em;
+}
+
+.tabflow-highlight-section {
+	margin-top: 12px;
+}
+
+.tabflow-highlight-section__summary {
+	cursor: pointer;
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--text-accent);
+}
+
+.tabflow-highlight-preview {
+	display: inline-flex;
+	gap: 6px;
+	flex-wrap: wrap;
+	align-items: center;
+	padding: 4px 6px;
+	border-radius: 4px;
+	background: var(--background-secondary);
+	font-family: var(--font-monospace);
+	font-size: 0.9em;
+}
+
+.tabflow-highlight-preview-container {
+	margin-bottom: 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px;
+}
+
+.tabflow-highlight-preview-editor {
+	height: 200px;
+	overflow: auto;
+	border-radius: 4px;
 }
 
 /* reset styling intentionally uses existing setting-item styles to match other reset buttons */

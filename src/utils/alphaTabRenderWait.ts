@@ -3,6 +3,12 @@
 
 import type * as alphaTab from '@coderline/alphatab';
 
+interface AlphaTabRenderer {
+	on?: (event: string, callback: (...args: unknown[]) => void) => void;
+	off?: (event: string, callback: (...args: unknown[]) => void) => void;
+	renderResult?: (id: number | string) => void;
+}
+
 export interface WaitRenderOptions {
 	/** Milliseconds to wait overall before giving up (fallback to best-effort). */
 	timeoutMs?: number;
@@ -64,11 +70,7 @@ export async function waitAlphaTabFullRender(
 
 	const start = performance.now();
 	if (!api) return { success: false, elapsedMs: 0, reason: 'api-null' };
-	const renderer = Reflect.get(api, 'renderer') as {
-		on?: (event: string, callback: (...args: unknown[]) => void) => void;
-		off?: (event: string, callback: (...args: unknown[]) => void) => void;
-		renderResult?: (id: number | string) => void;
-	} | undefined;
+	const renderer = Reflect.get(api, 'renderer') as AlphaTabRenderer | undefined;
 	if (!renderer) return { success: false, elapsedMs: 0, reason: 'renderer-missing' };
 
 	let partialIds: Set<number | string> = new Set();
