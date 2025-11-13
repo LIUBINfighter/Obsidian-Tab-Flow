@@ -588,6 +588,12 @@ export class TabView extends FileView {
 			console.warn('[TabView] 监听 scoreLoaded 失败:', e);
 		}
 
+		if (!this.unsubscribeTrackStore) {
+			this.unsubscribeTrackStore = this.trackStateStore.on((ev) =>
+				this.handleTrackStateChange(ev)
+			);
+		}
+
 		this._mountPlayBarInternal();
 
 		return Promise.resolve();
@@ -646,6 +652,11 @@ export class TabView extends FileView {
 			}
 		} catch (e) {
 			console.warn('[TabView] 清理外部音频资源失败:', e);
+		}
+
+		if (this.unsubscribeTrackStore) {
+			this.unsubscribeTrackStore();
+			this.unsubscribeTrackStore = undefined;
 		}
 
 		return Promise.resolve();
