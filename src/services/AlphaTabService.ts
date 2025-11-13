@@ -301,17 +301,21 @@ export class AlphaTabService {
 		try {
 			// 使用 AlphaTab 的 tex 方法加载 AlphaTex 内容
 			interface ExtendedAlphaTabApi {
-				tex?: (text: string) => Promise<void>;
+				tex?: (text: string) => void | Promise<void>;
 			}
-			const extendedApi = this.api as ExtendedAlphaTabApi;
+			const extendedApi = this.api as unknown as ExtendedAlphaTabApi;
 			if (typeof extendedApi.tex === 'function') {
-				await extendedApi.tex(textContent);
+				const result = extendedApi.tex(textContent);
+				if (result instanceof Promise) {
+					await result;
+				}
 			} else {
 				// 备用方案：使用 AlphaTexImporter
 				interface AlphaTabImporter {
 					importer?: {
 						AlphaTexImporter?: new () => {
-							import: (text: string) => unknown;
+							initFromString: (text: string, settings: unknown) => void;
+							readScore: () => unknown;
 						};
 					};
 				}
@@ -320,7 +324,7 @@ export class AlphaTabService {
 					const importer = new Importer();
 					importer.initFromString(textContent, this.api.settings);
 					const score = importer.readScore();
-					this.api.renderScore(score);
+					this.api.renderScore(score as alphaTab.model.Score);
 				} else {
 					throw new Error('AlphaTexImporter not available');
 				}

@@ -257,6 +257,19 @@ export class ShareCardPresetService {
 			__shareCardCurrentResolution?: '1x' | '2x' | '3x';
 			__shareCardCurrentFormat?: 'png' | 'jpg' | 'webp';
 			__shareCardDisableLazy?: boolean;
+			cardRoot?: HTMLElement | null;
+			exportBgMode?: 'default' | 'auto' | 'custom';
+			exportBgCustomColor?: string;
+			showAuthor?: boolean;
+			authorName?: string;
+			authorRemark?: string;
+			showAvatar?: boolean;
+			avatarDataUrl?: string | null;
+			authorPosition?: 'top' | 'bottom';
+			authorBg?: string;
+			authorTextColor?: string;
+			authorFontSize?: number;
+			authorAlign?: 'left' | 'center' | 'right';
 		}
 	): Omit<ShareCardPresetV1, 'id' | 'version' | 'createdAt' | 'updatedAt'> {
 		return {
@@ -265,16 +278,16 @@ export class ShareCardPresetService {
 			resolution: modal.__shareCardCurrentResolution || '2x',
 			format: modal.__shareCardCurrentFormat || 'png',
 			disableLazy: !!modal.__shareCardDisableLazy,
-			exportBgMode: modal.exportBgMode,
-			exportBgCustomColor: this.normalizeColorToHex(modal.exportBgCustomColor),
-			showAuthor: modal.showAuthor,
-			authorName: modal.authorName,
-			authorRemark: modal.authorRemark,
-			showAvatar: modal.showAvatar,
+			exportBgMode: modal.exportBgMode || 'default',
+			exportBgCustomColor: this.normalizeColorToHex(modal.exportBgCustomColor || '#ffffff'),
+			showAuthor: modal.showAuthor ?? false,
+			authorName: modal.authorName || '',
+			authorRemark: modal.authorRemark || '',
+			showAvatar: modal.showAvatar ?? true,
 			avatarSource: modal.avatarDataUrl
 				? { type: 'data-url', data: modal.avatarDataUrl }
 				: null,
-			authorPosition: modal.authorPosition,
+			authorPosition: modal.authorPosition || 'bottom',
 			authorBg: modal.authorBg || '#ffffff',
 			authorTextColor: modal.authorTextColor || '#000000',
 			authorFontSize: modal.authorFontSize || 13,
