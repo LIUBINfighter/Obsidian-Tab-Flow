@@ -1,4 +1,5 @@
 import { normalizeColorToHex } from '../utils/shareCardUtils';
+import { toggleHidden } from '../utils/styleUtils';
 
 interface BasicControlsInitial {
 	t: (key: string) => string;
@@ -73,7 +74,8 @@ export function createBasicControls(
 	const customColorInput = basicCard.createEl('input') as HTMLInputElement;
 	customColorInput.type = 'color';
 	customColorInput.value = normalizeColorToHex(initial.exportBgCustomColor || '#ffffff');
-	customColorInput.style.display = initial.exportBgMode === 'custom' ? '' : 'none';
+	toggleHidden(customColorLabel, initial.exportBgMode !== 'custom');
+	toggleHidden(customColorInput, initial.exportBgMode !== 'custom');
 
 	// 禁用懒加载
 	basicCard.createEl('div', { text: initial.t('shareCard.disableLazyLabel'), cls: 'sc-label' });
@@ -81,8 +83,7 @@ export function createBasicControls(
 	const lazyCb = lazyWrapInner.createEl('input', {
 		attr: { type: 'checkbox' },
 	}) as HTMLInputElement;
-	const lazyLabel = lazyWrapInner.createEl('label', { text: initial.t('shareCard.disableLazy') });
-	lazyLabel.style.marginLeft = '4px';
+	lazyWrapInner.createEl('label', { text: initial.t('shareCard.disableLazy') });
 	lazyCb.checked = !!initial.disableLazy;
 
 	// Attach events
@@ -129,7 +130,10 @@ export function createBasicControls(
 				values.exportBgCustomColor || customColorInput.value
 			);
 			lazyCb.checked = !!values.disableLazy;
-			customColorInput.style.display = values.exportBgMode === 'custom' ? '' : 'none';
+			if (values.exportBgMode) {
+				toggleHidden(customColorLabel, values.exportBgMode !== 'custom');
+				toggleHidden(customColorInput, values.exportBgMode !== 'custom');
+			}
 		},
 	};
 }

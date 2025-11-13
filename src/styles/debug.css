@@ -19,6 +19,10 @@
 	margin-left: 1em;
 }
 
+.debug-bar .control-label--tight {
+	margin-left: 0.5em;
+}
+
 .debug-bar .audio-status {
 	margin-left: 1em;
 	font-size: 0.9em;

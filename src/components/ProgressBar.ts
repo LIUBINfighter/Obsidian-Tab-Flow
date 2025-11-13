@@ -1,6 +1,8 @@
 // ProgressBar.ts - 进度条组件，独立于 PlayBar
 // 用于音频/乐谱播放进度显示与拖动
 
+import { setCssProps } from '../utils/styleUtils';
+
 export interface ProgressBarOptions {
 	getCurrentTime: () => number;
 	getDuration: () => number;
@@ -44,14 +46,12 @@ export function createProgressBar(options: ProgressBarOptions): HTMLDivElement {
 		if (duration > 0) {
 			const progress = (currentTime / duration) * 100;
 			// 动态样式：根据播放进度实时更新进度条宽度和手柄位置
-			// 这是必要的动态计算，不能移到CSS中
-			progressFill.style.width = `${progress}%`;
-			progressHandle.style.left = `${progress}%`;
+			setCssProps(progressFill, { width: `${progress}%` });
+			setCssProps(progressHandle, { left: `${progress}%` });
 		} else {
 			// 动态样式：重置进度条到初始状态
-			// 这是必要的动态计算，不能移到CSS中
-			progressFill.style.width = '0%';
-			progressHandle.style.left = '0%';
+			setCssProps(progressFill, { width: '0%' });
+			setCssProps(progressHandle, { left: '0%' });
 		}
 	}
 

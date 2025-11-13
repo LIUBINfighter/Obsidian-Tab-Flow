@@ -12,6 +12,7 @@ import {
 import ShareCardPresetService from '../services/ShareCardPresetService';
 import ShareCardStateManager from '../state/ShareCardStateManager';
 import { createShareCardPreview } from './ShareCardPreview';
+import { setCssProps, toggleHidden } from '../utils/styleUtils';
 
 export class ShareCardModal extends Modal {
 	private plugin: TabFlowPlugin;
@@ -63,7 +64,7 @@ export class ShareCardModal extends Modal {
 	// 供服务调用：应用尺寸宽度
 	public __applyShareCardDimension = (w: number) => {
 		if (this.cardRoot) {
-			this.cardRoot.style.width = w + 'px';
+			this.setCardWidth(w);
 			try {
 				this.playgroundHandle?.refresh();
 			} catch {
@@ -89,7 +90,9 @@ export class ShareCardModal extends Modal {
 
 	private applyPanTransform() {
 		if (this.panWrapper) {
-			this.panWrapper.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.zoomScale})`;
+			setCssProps(this.panWrapper, {
+				'--share-card-pan-transform': `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.zoomScale})`,
+			});
 		}
 	}
 
@@ -123,56 +126,43 @@ export class ShareCardModal extends Modal {
 		// create container
 		this.authorContainer = document.createElement('div');
 		this.authorContainer.className = 'share-card-author-container';
-		this.authorContainer.style.display = 'flex';
-		this.authorContainer.style.alignItems = 'center';
-		this.authorContainer.style.gap = '8px';
-		this.authorContainer.style.padding = '8px';
-		// ensure author block is on top of playground content and stretches horizontally
-		this.authorContainer.style.position = 'relative';
-		this.authorContainer.style.zIndex = '10';
-		this.authorContainer.style.width = '100%';
-		if (this.authorBg) this.authorContainer.style.background = this.authorBg;
-		if (this.authorTextColor) this.authorContainer.style.color = this.authorTextColor;
-		this.authorContainer.style.fontSize = `${this.authorFontSize}px`;
-		// alignment
-		if (this.authorAlign === 'center') {
-			this.authorContainer.style.justifyContent = 'center';
-		} else if (this.authorAlign === 'right') {
-			this.authorContainer.style.justifyContent = 'flex-end';
-		} else {
-			this.authorContainer.style.justifyContent = 'flex-start';
-		}
+		const justifyValue =
+			this.authorAlign === 'center'
+				? 'center'
+				: this.authorAlign === 'right'
+					? 'flex-end'
+					: 'flex-start';
+		setCssProps(this.authorContainer, {
+			'--share-card-author-background': this.authorBg || null,
+			'--share-card-author-text-color': this.authorTextColor || null,
+			'--share-card-author-font-size': `${this.authorFontSize}px`,
+			'--share-card-author-justify': justifyValue,
+			'--share-card-author-remark-font-size': `${Math.max(10, this.authorFontSize - 2)}px`,
+			'--share-card-author-remark-opacity': '0.8',
+		});
 
 		if (this.showAvatar && this.avatarDataUrl) {
 			const avatarEl = document.createElement('div');
 			avatarEl.className = 'share-card-author-avatar';
-			avatarEl.style.width = '40px';
-			avatarEl.style.height = '40px';
-			avatarEl.style.backgroundImage = `url(${this.avatarDataUrl})`;
-			avatarEl.style.backgroundSize = 'cover';
-			avatarEl.style.backgroundPosition = 'center';
-			avatarEl.style.borderRadius = '6px';
+			setCssProps(avatarEl, {
+				'--share-card-author-avatar-image': `url(${this.avatarDataUrl})`,
+			});
 			this.authorContainer.appendChild(avatarEl);
 		}
 
 		const textWrap = document.createElement('div');
-		textWrap.style.display = 'flex';
-		textWrap.style.flexDirection = 'column';
-		textWrap.style.lineHeight = '1.1';
+		textWrap.className = 'share-card-author-text';
 
 		if (this.authorName) {
 			const nameEl = document.createElement('div');
 			nameEl.className = 'share-card-author-name';
 			nameEl.textContent = this.authorName;
-			nameEl.style.fontWeight = '600';
 			textWrap.appendChild(nameEl);
 		}
 		if (this.authorRemark) {
 			const remarkEl = document.createElement('div');
 			remarkEl.className = 'share-card-author-remark';
 			remarkEl.textContent = this.authorRemark;
-			remarkEl.style.opacity = '0.8';
-			remarkEl.style.fontSize = `${Math.max(10, this.authorFontSize - 2)}px`;
 			textWrap.appendChild(remarkEl);
 		}
 
@@ -290,6 +280,12 @@ export class ShareCardModal extends Modal {
 		this.applyPanTransform();
 	}
 
+	private setCardWidth(width: number) {
+		if (this.cardRoot) {
+			setCssProps(this.cardRoot, { '--share-card-width': `${width}px` });
+		}
+	}
+
 	constructor(plugin: TabFlowPlugin) {
 		super(plugin.app);
 		this.plugin = plugin;
@@ -321,10 +317,8 @@ export class ShareCardModal extends Modal {
 		const runtime = this.stateManager.init();
 		this.currentPresetId = runtime.activePresetId;
 		const presetBar = left.createDiv({ cls: 'share-card-preset-bar' });
-		const presetLabel = presetBar.createEl('label', { text: t('shareCard.preset') });
-		presetLabel.style.display = 'block';
+		presetBar.createEl('label', { text: t('shareCard.preset') });
 		const presetSelect = presetBar.createEl('select');
-		presetSelect.style.width = '100%';
 		const presetActionRow = left.createDiv({ cls: 'share-card-preset-actions' });
 		const btnPresetSave = presetActionRow.createEl('button', {
 			text: t('shareCard.presetSave'),
@@ -396,18 +390,7 @@ export class ShareCardModal extends Modal {
 				resSelect.value = st2.working.resolution;
 				formatSelect.value = st2.working.format;
 				bgModeSelect.value = st2.working.exportBgMode;
-				if (st2.working.exportBgMode === 'auto') {
-					customColorLabel.textContent = t('shareCard.fallbackColor') || 'Fallback Color';
-					customColorLabel.style.display = '';
-					customColorInput.style.display = '';
-				} else if (st2.working.exportBgMode === 'custom') {
-					customColorLabel.textContent = t('shareCard.customColor');
-					customColorLabel.style.display = '';
-					customColorInput.style.display = '';
-				} else {
-					customColorLabel.style.display = 'none';
-					customColorInput.style.display = 'none';
-				}
+				updateCustomColorVisibility(st2.working.exportBgMode);
 				const norm = normalizeColorToHex(st2.working.exportBgCustomColor);
 				customColorInput.value = norm;
 				authorShowCb.checked = st2.working.showAuthor;
@@ -433,7 +416,7 @@ export class ShareCardModal extends Modal {
 				this.authorFontSize = st2.working.authorFontSize;
 				this.authorAlign = st2.working.authorAlign;
 				this.__shareCardDisableLazy = st2.working.disableLazy;
-				if (this.cardRoot) this.cardRoot.style.width = st2.working.cardWidth + 'px';
+				if (this.cardRoot) this.setCardWidth(st2.working.cardWidth);
 				this.renderAuthorBlock();
 			}
 			refreshDirtyIndicator();
@@ -510,18 +493,7 @@ export class ShareCardModal extends Modal {
 				resSelect.value = st.working.resolution;
 				formatSelect.value = st.working.format;
 				bgModeSelect.value = st.working.exportBgMode;
-				if (st.working.exportBgMode === 'auto') {
-					customColorLabel.textContent = t('shareCard.fallbackColor') || 'Fallback Color';
-					customColorLabel.style.display = '';
-					customColorInput.style.display = '';
-				} else if (st.working.exportBgMode === 'custom') {
-					customColorLabel.textContent = t('shareCard.customColor');
-					customColorLabel.style.display = '';
-					customColorInput.style.display = '';
-				} else {
-					customColorLabel.style.display = 'none';
-					customColorInput.style.display = 'none';
-				}
+				updateCustomColorVisibility(st.working.exportBgMode);
 				customColorInput.value = normalizeColorToHex(st.working.exportBgCustomColor);
 				authorShowCb.checked = st.working.showAuthor;
 				authorNameInput.value = st.working.authorName;
@@ -533,7 +505,7 @@ export class ShareCardModal extends Modal {
 				authorFontInput.value = String(st.working.authorFontSize);
 				authorAlignSelect.value = st.working.authorAlign || 'left';
 				lazyCb.checked = st.working.disableLazy;
-				if (this.cardRoot) this.cardRoot.style.width = st.working.cardWidth + 'px';
+				if (this.cardRoot) this.setCardWidth(st.working.cardWidth);
 				this.showAuthor = st.working.showAuthor;
 				this.authorName = st.working.authorName;
 				this.authorRemark = st.working.authorRemark;
@@ -551,7 +523,6 @@ export class ShareCardModal extends Modal {
 
 		left.createEl('label', { text: t('shareCard.fileName') });
 		const titleInput = left.createEl('input', { attr: { type: 'text' } });
-		titleInput.style.width = '100%';
 		// 默认使用当前文件名（如有）
 		const activeFile = this.app.workspace.getActiveFile();
 		titleInput.value = activeFile ? activeFile.basename : 'alphatex-card';
@@ -573,7 +544,7 @@ export class ShareCardModal extends Modal {
 			{
 				onWidthChange: (w: number) => {
 					this.stateManager?.updateField('cardWidth', w);
-					if (this.cardRoot) this.cardRoot.style.width = w + 'px';
+					if (this.cardRoot) this.setCardWidth(w);
 					try {
 						this.playgroundHandle?.refresh();
 					} catch (_) {
@@ -595,6 +566,7 @@ export class ShareCardModal extends Modal {
 					this.stateManager?.updateField('exportBgMode', this.exportBgMode);
 					const st = this.stateManager?.getState();
 					if (st) st.working.exportBgMode = this.exportBgMode;
+					updateCustomColorVisibility(this.exportBgMode);
 					refreshDirtyIndicator();
 				},
 				onCustomColorChange: (hex: string) => {
@@ -617,6 +589,21 @@ export class ShareCardModal extends Modal {
 		const customColorLabel = basic.customColorLabel;
 		const customColorInput = basic.customColorInput;
 		const lazyCb = basic.lazyCb;
+
+		const updateCustomColorVisibility = (mode: 'default' | 'auto' | 'custom') => {
+			if (mode === 'auto') {
+				customColorLabel.textContent = t('shareCard.fallbackColor') || 'Fallback Color';
+				toggleHidden(customColorLabel, false);
+				toggleHidden(customColorInput, false);
+			} else if (mode === 'custom') {
+				customColorLabel.textContent = t('shareCard.customColor');
+				toggleHidden(customColorLabel, false);
+				toggleHidden(customColorInput, false);
+			} else {
+				toggleHidden(customColorLabel, true);
+				toggleHidden(customColorInput, true);
+			}
+		};
 
 		// 作者信息部分（抽离）
 		const author = (await import('./ShareCardAuthorBlock')).createAuthorBlock(
@@ -867,7 +854,7 @@ export class ShareCardModal extends Modal {
 		// Update preview width when width input changes
 		widthInput.addEventListener('change', () => {
 			const w = Number(widthInput.value) || 800;
-			if (this.cardRoot) this.cardRoot.style.width = w + 'px';
+			if (this.cardRoot) this.setCardWidth(w);
 			this.stateManager?.updateField('cardWidth', w);
 			try {
 				this.playgroundHandle?.refresh();
@@ -1019,14 +1006,7 @@ export class ShareCardModal extends Modal {
 		resSelect.value = runtime.working.resolution;
 		formatSelect.value = runtime.working.format;
 		bgModeSelect.value = runtime.working.exportBgMode;
-		if (runtime.working.exportBgMode === 'custom') {
-			customColorLabel.textContent = t('shareCard.customColor');
-			customColorLabel.style.display = '';
-			customColorInput.style.display = '';
-		} else {
-			customColorLabel.style.display = 'none';
-			customColorInput.style.display = 'none';
-		}
+		updateCustomColorVisibility(runtime.working.exportBgMode);
 		const initHex = normalizeColorToHex(runtime.working.exportBgCustomColor);
 		customColorInput.value = initHex;
 		this.exportBgMode = runtime.working.exportBgMode;
@@ -1051,7 +1031,7 @@ export class ShareCardModal extends Modal {
 		this.authorFontSize = runtime.working.authorFontSize;
 		this.authorAlign = runtime.working.authorAlign;
 		this.__shareCardDisableLazy = runtime.working.disableLazy;
-		if (this.cardRoot) this.cardRoot.style.width = runtime.working.cardWidth + 'px';
+		if (this.cardRoot) this.setCardWidth(runtime.working.cardWidth);
 		this.renderAuthorBlock();
 	}
 
