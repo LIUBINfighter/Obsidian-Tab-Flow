@@ -7,6 +7,9 @@ export interface AlphaTexInitOptions {
 	// display
 	scale?: number; // 0.5 - 2.0
 	layoutMode?: number | string; // optional, numeric enum preferred
+	alphaTabOptions?: Record<string, unknown> & {
+		__disableLazyLoading?: boolean;
+	};
 	// player
 	speed?: number; // 0.5 - 2.0
 	metronome?: boolean;
@@ -21,6 +24,10 @@ export interface AlphaTexInitOptions {
 		override: { components?: Record<string, boolean>; order?: string[] | string } | null
 	) => void;
 	clearUiOverride?: () => void;
+	ui?: {
+		components?: Record<string, boolean>;
+		order?: string[] | string;
+	};
 }
 
 export interface AlphaTexMountHandle {
@@ -43,26 +50,11 @@ export function mountAlphaTexBlock(
 
 	// 自定义扩展：外层可通过 defaults 传入 alphaTabOptions.__disableLazyLoading
 	// 我们不在类型上正式暴露此字段，保持局部影响。
-	interface DefaultsWithAlphaTabOptions {
-		alphaTabOptions?: {
-			__disableLazyLoading?: boolean;
-		};
-	}
-	const disableLazyLoading =
-		(defaults as unknown as DefaultsWithAlphaTabOptions)?.alphaTabOptions
-			?.__disableLazyLoading === true;
+	const disableLazyLoading = defaults?.alphaTabOptions?.__disableLazyLoading === true;
 
 	// extract optional UI override from init
 
-	interface OptsWithUI {
-		ui?: {
-			components?: Record<string, boolean>;
-			order?: string[] | string;
-		};
-	}
-	const uiOverride:
-		| { components?: Record<string, boolean>; order?: string[] | string }
-		| undefined = (opts as unknown as OptsWithUI)?.ui;
+	const uiOverride = opts?.ui;
 	try {
 		if (uiOverride && defaults?.setUiOverride) defaults.setUiOverride(uiOverride);
 	} catch {
@@ -256,11 +248,11 @@ export function mountAlphaTexBlock(
 		api = new alphaTab.AlphaTabApi(scoreEl, {
 			core: {
 				scriptFile: resources.alphaTabWorkerUri || '',
-				smuflFontSources: (resources.bravuraUri
-					? new Map([
+				smuflFontSources: resources.bravuraUri
+					? new Map<number, string>([
 							[
 								(
-									alphaTab as unknown as {
+									alphaTab as {
 										rendering?: {
 											glyphs?: { FontFileFormat?: { Woff2?: number } };
 										};
@@ -269,7 +261,7 @@ export function mountAlphaTexBlock(
 								resources.bravuraUri,
 							],
 						])
-					: new Map()) as unknown as Map<number, string>,
+					: new Map<number, string>(),
 				fontDirectory: '',
 				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
 				// @ts-ignore
@@ -314,12 +306,12 @@ export function mountAlphaTexBlock(
 			}
 		};
 		try {
-			interface AlphaTabApiWithError {
+			type AlphaTabApiWithError = alphaTab.AlphaTabApi & {
 				error?: {
 					on?: (callback: (e: unknown) => void) => void;
 				};
-			}
-			(api as unknown as AlphaTabApiWithError).error?.on?.(onApiError);
+			};
+			(api as AlphaTabApiWithError).error?.on?.(onApiError);
 		} catch {
 			// Ignore error event subscription errors
 		}
@@ -334,11 +326,11 @@ export function mountAlphaTexBlock(
 
 		// scope scroll container to this wrapper only
 		try {
-			interface PlayerSettingsWithScrollElement {
+			type PlayerSettingsWithScrollElement = alphaTab.PlayerSettings & {
 				scrollElement?: HTMLElement;
-			}
-			(api.settings.player as unknown as PlayerSettingsWithScrollElement).scrollElement =
-				wrapper;
+			};
+			const playerSettings = api.settings.player as PlayerSettingsWithScrollElement;
+			playerSettings.scrollElement = wrapper;
 			api.updateSettings();
 		} catch {
 			// Ignore scroll element setup errors
@@ -360,15 +352,15 @@ export function mountAlphaTexBlock(
 			errorMessages = [];
 			errorIndex.clear();
 			try {
-				interface AlphaTabApiWithTex {
+				type AlphaTabApiWithTex = alphaTab.AlphaTabApi & {
 					tex?: (text: string) => void | Promise<void>;
-				}
-				const apiWithTex = api as unknown as AlphaTabApiWithTex;
+				};
+				const apiWithTex = api as AlphaTabApiWithTex;
 				if (typeof apiWithTex.tex === 'function') {
 					apiWithTex.tex(body);
 					return;
 				}
-				interface AlphaTabWithImporter {
+				type AlphaTabWithImporter = {
 					importer?: {
 						AlphaTexImporter?: new () => {
 							logErrors?: boolean;
@@ -378,9 +370,8 @@ export function mountAlphaTexBlock(
 							_errors?: unknown[];
 						};
 					};
-				}
-				const Importer = (alphaTab as unknown as AlphaTabWithImporter).importer
-					?.AlphaTexImporter;
+				};
+				const Importer = (alphaTab as AlphaTabWithImporter).importer?.AlphaTexImporter;
 				if (Importer) {
 					const imp = new Importer();
 					if (imp.logErrors !== undefined) imp.logErrors = true;
@@ -407,7 +398,7 @@ export function mountAlphaTexBlock(
 
 		// Apply track filtering after score loaded if requested
 		try {
-			interface AlphaTabApiWithScoreLoaded {
+			type AlphaTabApiWithScoreLoaded = alphaTab.AlphaTabApi & {
 				scoreLoaded?: {
 					on?: (callback: () => void) => void;
 				};
@@ -415,13 +406,13 @@ export function mountAlphaTexBlock(
 					tracks?: Array<{ index?: number }>;
 				};
 				renderTracks?: (tracks: unknown[]) => void;
-			}
-			(api as unknown as AlphaTabApiWithScoreLoaded).scoreLoaded?.on?.(() => {
+			};
+			(api as AlphaTabApiWithScoreLoaded).scoreLoaded?.on?.(() => {
 				try {
 					const tracksRequest = merged.tracks;
 					if (!Array.isArray(tracksRequest) || tracksRequest.length === 0) return;
 					if (tracksRequest.includes(-1)) return;
-					const apiWithScore = api as unknown as AlphaTabApiWithScoreLoaded;
+					const apiWithScore = api as AlphaTabApiWithScoreLoaded;
 					const allTracks = apiWithScore.score?.tracks;
 					if (!allTracks || allTracks.length === 0) return;
 					const wanted = new Set<number>(tracksRequest);
@@ -550,10 +541,10 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '滚动到光标');
 					btn.onclick = () => {
 						try {
-							interface AlphaTabApiWithScrollToCursor {
+							type AlphaTabApiWithScrollToCursor = alphaTab.AlphaTabApi & {
 								scrollToCursor?: () => void;
-							}
-							(api as unknown as AlphaTabApiWithScrollToCursor).scrollToCursor?.();
+							};
+							(api as AlphaTabApiWithScrollToCursor).scrollToCursor?.();
 						} catch {
 							// Ignore scroll to cursor errors
 						}
@@ -565,36 +556,26 @@ export function mountAlphaTexBlock(
 					btn.className = 'clickable-icon';
 					btn.setAttribute('type', 'button');
 					const icon = document.createElement('span');
-					interface DisplaySettingsWithLayoutMode {
+					type DisplaySettingsWithLayoutMode = alphaTab.DisplaySettings & {
 						layoutMode?: number;
-					}
-					interface AlphaTabWithLayoutMode {
+					};
+					type AlphaTabWithLayoutMode = {
 						LayoutMode?: {
 							Horizontal?: number;
 							Page?: number;
 						};
-					}
+					};
 					const isHorizontal =
-						(api!.settings?.display as unknown as DisplaySettingsWithLayoutMode)
-							?.layoutMode ===
-						(alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode?.Horizontal;
+						(api!.settings?.display as DisplaySettingsWithLayoutMode)?.layoutMode ===
+						(alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal;
 					setIcon(icon, isHorizontal ? 'lucide-panels-top-left' : 'lucide-layout');
 					btn.appendChild(icon);
 					btn.setAttribute('aria-label', isHorizontal ? '布局: 横向' : '布局: 页面');
 					btn.onclick = () => {
 						try {
-							interface DisplaySettingsWithLayoutMode {
-								layoutMode?: number;
-							}
-							interface AlphaTabWithLayoutMode {
-								LayoutMode?: {
-									Horizontal?: number;
-									Page?: number;
-								};
-							}
 							const displaySettings = api!.settings
-								?.display as unknown as DisplaySettingsWithLayoutMode;
-							const alphaTabLayout = alphaTab as unknown as AlphaTabWithLayoutMode;
+								?.display as DisplaySettingsWithLayoutMode;
+							const alphaTabLayout = alphaTab as AlphaTabWithLayoutMode;
 							const current = displaySettings?.layoutMode;
 							const next =
 								current === alphaTabLayout.LayoutMode?.Page
@@ -607,17 +588,13 @@ export function mountAlphaTexBlock(
 							api!.render();
 							setIcon(
 								icon,
-								next ===
-									(alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode
-										?.Horizontal
+								next === (alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal
 									? 'lucide-panels-top-left'
 									: 'lucide-layout'
 							);
 							btn.setAttribute(
 								'aria-label',
-								next ===
-									(alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode
-										?.Horizontal
+								next === (alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal
 									? '布局: 横向'
 									: '布局: 页面'
 							);
@@ -637,12 +614,13 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '回到顶部');
 					btn.onclick = () => {
 						try {
-							interface AlphaTabApiWithTickPosition {
+							type AlphaTabApiWithTickPosition = alphaTab.AlphaTabApi & {
 								tickPosition?: number;
 								scrollToCursor?: () => void;
-							}
-							(api as unknown as AlphaTabApiWithTickPosition).tickPosition = 0;
-							(api as unknown as AlphaTabApiWithTickPosition).scrollToCursor?.();
+							};
+							const apiWithPosition = api as AlphaTabApiWithTickPosition;
+							apiWithPosition.tickPosition = 0;
+							apiWithPosition.scrollToCursor?.();
 						} catch {
 							// Ignore scroll to top errors
 						}
@@ -659,7 +637,7 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '回到底部');
 					btn.onclick = () => {
 						try {
-							interface AlphaTabApiWithScore {
+							type AlphaTabApiWithScore = alphaTab.AlphaTabApi & {
 								score?: {
 									masterBars?: Array<{
 										start?: number;
@@ -668,8 +646,8 @@ export function mountAlphaTexBlock(
 								};
 								tickPosition?: number;
 								scrollToCursor?: () => void;
-							}
-							const apiWithScore = api as unknown as AlphaTabApiWithScore;
+							};
+							const apiWithScore = api as AlphaTabApiWithScore;
 							const score = apiWithScore.score;
 							const masterBars = score?.masterBars || [];
 							if (!masterBars.length) return;

@@ -1,13 +1,5 @@
 // <-- ./src/views/TabView.ts -->
-import {
-	FileView,
-	TFile,
-	WorkspaceLeaf,
-	Plugin,
-	Notice,
-	ViewStateResult,
-	type EventRef,
-} from 'obsidian';
+import { FileView, TFile, WorkspaceLeaf, Notice, ViewStateResult, type EventRef } from 'obsidian';
 
 export const VIEW_TYPE_TAB = 'tab-view';
 
@@ -22,11 +14,29 @@ import { TracksModal } from '../components/TracksModal';
 import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
 import { t } from 'i18n';
+import type TabFlowPlugin from '../main';
 
 export type AlphaTabResources = {
 	bravuraUri: string;
 	alphaTabWorkerUri: string;
 	soundFontUri: string;
+};
+
+type AlphaTabApiWithRenderTracks = alphaTab.AlphaTabApi & {
+	renderTracks?: (tracks: alphaTab.model.Track[]) => void;
+};
+
+type AlphaTabApiWithTimePosition = alphaTab.AlphaTabApi & {
+	timePosition?: number;
+};
+
+type AlphaTabApiWithPlayerPosition = alphaTab.AlphaTabApi & {
+	playerPosition?: number;
+};
+
+type ScoreWithDuration = {
+	durationMillis?: number;
+	duration?: number;
 };
 
 // 音轨状态持久化接口
@@ -56,7 +66,7 @@ export class TabView extends FileView {
 	// private scorePersistenceService: ScorePersistenceService; // 已弃用，使用 trackStateStore
 	private trackStateStore: TrackStateStore;
 	private _api!: alphaTab.AlphaTabApi;
-	private plugin: Plugin;
+	private plugin: TabFlowPlugin;
 	private resources: AlphaTabResources;
 	private scoreTitle = '';
 	private audioEl: HTMLAudioElement | null = null;
@@ -107,10 +117,7 @@ export class TabView extends FileView {
 					state.selectedTracks!.includes(t.index)
 				);
 				if (tracks.length) {
-					interface AlphaTabApiWithRenderTracks {
-						renderTracks?: (tracks: unknown[]) => void;
-					}
-					(this._api as unknown as AlphaTabApiWithRenderTracks).renderTracks?.(tracks);
+					(this._api as AlphaTabApiWithRenderTracks).renderTracks?.(tracks);
 				}
 			}
 		} catch (e) {
@@ -123,23 +130,23 @@ export class TabView extends FileView {
 			if (!this._api?.player) {
 				return false;
 			}
-			if (
-				typeof this._api.player.play === 'function' &&
-				typeof this._api.player.pause === 'function'
-			) {
+			const player = this._api.player;
+			const hasPlay =
+				typeof (player as { play?: (...args: unknown[]) => unknown }).play === 'function';
+			const hasPause =
+				typeof (player as { pause?: (...args: unknown[]) => unknown }).pause === 'function';
+			if (hasPlay && hasPause) {
 				return true;
 			}
-			interface PlayerWithState {
-				state?: number;
-				readyForPlayback?: boolean;
+
+			if (typeof player === 'object' && player !== null) {
+				const state = (player as { state?: unknown }).state;
+				if (typeof state === 'number') return state >= 0;
+
+				const ready = (player as { readyForPlayback?: unknown }).readyForPlayback;
+				if (typeof ready === 'boolean') return ready;
 			}
-			const playerState = (this._api.player as unknown as PlayerWithState).state;
-			if (typeof playerState === 'number') {
-				return playerState >= 0;
-			}
-			if ((this._api.player as unknown as PlayerWithState).readyForPlayback === true) {
-				return true;
-			}
+
 			return false;
 		} catch (error) {
 			console.error('[TabView] Error checking audio status:', error);
@@ -149,7 +156,7 @@ export class TabView extends FileView {
 
 	constructor(
 		leaf: WorkspaceLeaf,
-		plugin: Plugin,
+		plugin: TabFlowPlugin,
 		resources: AlphaTabResources,
 		eventBus?: EventBus
 	) {
@@ -162,7 +169,7 @@ export class TabView extends FileView {
 		type WorkspaceWithAnyEvents = {
 			on: (name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => EventRef;
 		};
-		const ws = this.app.workspace as unknown as WorkspaceWithAnyEvents;
+		const ws = this.app.workspace as WorkspaceWithAnyEvents;
 		this.registerEvent(
 			ws.on('tabflow:playbar-components-changed', () => {
 				if (this._api) {
@@ -171,11 +178,7 @@ export class TabView extends FileView {
 			})
 		);
 		// 从插件实例获取 TrackStateStore
-		interface PluginWithTrackStateStore {
-			trackStateStore?: TrackStateStore;
-		}
-		this.trackStateStore = (plugin as unknown as PluginWithTrackStateStore)
-			.trackStateStore as TrackStateStore;
+		this.trackStateStore = plugin.trackStateStore;
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
@@ -221,12 +224,7 @@ export class TabView extends FileView {
 				}
 				if (tracksToRender.length) {
 					try {
-						interface AlphaTabApiWithRenderTracks {
-							renderTracks?: (tracks: unknown[]) => void;
-						}
-						(this._api as unknown as AlphaTabApiWithRenderTracks).renderTracks?.(
-							tracksToRender
-						);
+						(this._api as AlphaTabApiWithRenderTracks).renderTracks?.(tracksToRender);
 					} catch (e) {
 						console.warn('[TabView] 应用选中音轨失败', e);
 					}
@@ -346,12 +344,7 @@ export class TabView extends FileView {
 						selectedTrackIndices.has(track.index)
 					);
 					if (tracksToRender.length > 0) {
-						interface AlphaTabApiWithRenderTracks {
-							renderTracks?: (tracks: unknown[]) => void;
-						}
-						(this._api as unknown as AlphaTabApiWithRenderTracks).renderTracks?.(
-							tracksToRender
-						);
+						(this._api as AlphaTabApiWithRenderTracks).renderTracks?.(tracksToRender);
 					}
 				}
 			};
@@ -415,27 +408,20 @@ export class TabView extends FileView {
 			eventBus: this.eventBus,
 			initialPlaying: false,
 			getCurrentTime: () => {
-				interface AlphaTabApiWithTimePosition {
-					timePosition?: number;
-				}
 				return this._api?.tickPosition !== undefined && this._api.score
-					? (this._api as unknown as AlphaTabApiWithTimePosition).timePosition || 0
+					? (this._api as AlphaTabApiWithTimePosition).timePosition || 0
 					: 0;
 			},
 			getDuration: () => {
-				interface ScoreWithDuration {
-					duration?: number;
+				if (this._api?.score) {
+					const { durationMillis, duration } = this._api.score as ScoreWithDuration;
+					return durationMillis ?? duration ?? 0;
 				}
-				return this._api?.score
-					? (this._api.score as unknown as ScoreWithDuration).duration || 0
-					: 0;
+				return 0;
 			},
 			seekTo: (ms) => {
 				if (this._api) {
-					interface AlphaTabApiWithPlayerPosition {
-						playerPosition?: number;
-					}
-					(this._api as unknown as AlphaTabApiWithPlayerPosition).playerPosition = ms;
+					(this._api as AlphaTabApiWithPlayerPosition).playerPosition = ms;
 				}
 			},
 			onAudioCreated: (audioEl: HTMLAudioElement) => {
@@ -483,13 +469,7 @@ export class TabView extends FileView {
 	 */
 	private _renderDebugBarIfEnabled(): void {
 		try {
-			interface PluginWithSettings {
-				settings?: {
-					showDebugBar?: boolean;
-				};
-			}
-			const show =
-				(this.plugin as unknown as PluginWithSettings)?.settings?.showDebugBar === true;
+			const show = this.plugin.settings?.showDebugBar === true;
 			const existing = this.contentEl.querySelector('.debug-bar');
 			if (!show) {
 				if (existing) (existing as HTMLElement).remove();
@@ -716,14 +696,7 @@ export class TabView extends FileView {
 		setTimeout(() => {
 			if (this._api.settings.player) {
 				// 根据用户设置选择滚动模式
-				interface PluginWithSettings {
-					settings?: {
-						scrollMode?: string;
-					};
-				}
-				const mode =
-					(this.plugin as unknown as PluginWithSettings).settings?.scrollMode ||
-					'continuous';
+				const mode = this.plugin.settings?.scrollMode || 'continuous';
 				let sm: alphaTab.ScrollMode;
 				switch (mode) {
 					case 'continuous':

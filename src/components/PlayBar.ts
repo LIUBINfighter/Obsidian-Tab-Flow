@@ -350,7 +350,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 							try {
 								return (
 									(
-										document.querySelector('.view-header-title')?.textContent || ''
+										document.querySelector('.view-header-title')?.textContent ||
+										''
 									).trim() || 'Untitled'
 								);
 							} catch {

@@ -425,7 +425,8 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 							try {
 								return (
 									(
-										document.querySelector('.view-header-title')?.textContent || ''
+										document.querySelector('.view-header-title')?.textContent ||
+										''
 									).trim() || 'Untitled'
 								);
 							} catch {
