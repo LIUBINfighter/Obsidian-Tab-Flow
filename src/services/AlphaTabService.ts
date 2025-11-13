@@ -133,7 +133,9 @@ export class AlphaTabService {
 		this.eventBus.subscribe('命令:设置原生滚动', (enabled: boolean) =>
 			this.scrollManager.setNativeBrowserSmoothScroll(enabled)
 		);
-		this.eventBus.subscribe('命令:滚动到光标', () => this.scrollManager.triggerScrollToCursor());
+		this.eventBus.subscribe('命令:滚动到光标', () =>
+			this.scrollManager.triggerScrollToCursor()
+		);
 		// 新增：布局切换事件
 		this.eventBus.subscribe('命令:切换布局', (layoutMode: number) => {
 			if (this.api.settings && this.api.settings.display) {
