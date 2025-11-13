@@ -1,7 +1,7 @@
 import { Notice, App } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 // import { dispatchUIEvent } from "../events/dispatch";
-import { ScrollConfigProxy } from '../services/ScrollConfigProxy';
+import { ScrollEventManager } from '../events/scrollEvents';
 import { AudioExportModal } from './AudioExportModal';
 
 // Extend Window interface for alphaTab global
@@ -34,13 +34,13 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	const debugBar = document.createElement('div');
 	debugBar.className = 'debug-bar';
 
-	// 创建滚动配置代理
-	const scrollProxy = new ScrollConfigProxy(api);
-
-	// 监听滚动配置变更事件
-	scrollProxy.onConfigChange((event) => {
-		// console.debug(`[DebugBar] 滚动配置变更: ${event.property} = ${event.newValue}`);
-		new Notice(`滚动设置已更新: ${event.property}`);
+	// 创建滚动配置管理器
+	const scrollManager = new ScrollEventManager(api);
+	scrollManager.setEventHandlers({
+		onScrollConfigChange: (event) => {
+			// console.debug(`[DebugBar] 滚动配置变更: ${event.property} = ${event.newValue}`);
+			new Notice(`滚动设置已更新: ${event.property}`);
+		},
 	});
 
 	// 布局模式切换按钮
@@ -324,7 +324,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	});
 	scrollModeSelect.onchange = () => {
 		const mode = parseInt(scrollModeSelect.value) as alphaTab.ScrollMode;
-		eventBus.publish('命令:设置滚动模式', mode);
+		scrollManager.setScrollMode(mode);
 	};
 	debugBar.appendChild(scrollModeSelect);
 
@@ -344,7 +344,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	scrollSpeedSlider.title = '滚动动画时长(ms)';
 	scrollSpeedSlider.oninput = () => {
 		const speed = parseInt(scrollSpeedSlider.value);
-		scrollProxy.setScrollSpeed(speed);
+		scrollManager.setScrollSpeed(speed);
 		scrollSpeedLabel.innerText = `速度:${speed}ms`;
 	};
 	debugBar.appendChild(scrollSpeedSlider);
@@ -364,10 +364,30 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	offsetYSlider.classList.add('small-slider');
 	offsetYSlider.oninput = () => {
 		const offset = parseInt(offsetYSlider.value);
-		scrollProxy.setScrollOffsetY(offset);
+		scrollManager.setScrollOffsetY(offset);
 		offsetYLabel.innerText = `Y偏移:${offset}`;
 	};
 	debugBar.appendChild(offsetYSlider);
+
+	// X轴偏移控制
+	const offsetXLabel = document.createElement('label');
+	offsetXLabel.innerText = 'X偏移:';
+	offsetXLabel.classList.add('control-label--tight');
+	debugBar.appendChild(offsetXLabel);
+
+	const offsetXSlider = document.createElement('input');
+	offsetXSlider.type = 'range';
+	offsetXSlider.min = '-100';
+	offsetXSlider.max = '100';
+	offsetXSlider.step = '5';
+	offsetXSlider.value = '0';
+	offsetXSlider.classList.add('small-slider');
+	offsetXSlider.oninput = () => {
+		const offset = parseInt(offsetXSlider.value);
+		scrollManager.setScrollOffsetX(offset);
+		offsetXLabel.innerText = `X偏移:${offset}`;
+	};
+	debugBar.appendChild(offsetXSlider);
 
 	// 原生滚动开关
 	const nativeScrollLabel = document.createElement('label');
@@ -380,7 +400,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	nativeScrollToggle.checked = false; // 默认使用自定义滚动
 	nativeScrollToggle.title = '使用浏览器原生平滑滚动';
 	nativeScrollToggle.onchange = () => {
-		scrollProxy.setNativeBrowserSmoothScroll(nativeScrollToggle.checked);
+		scrollManager.setNativeBrowserSmoothScroll(nativeScrollToggle.checked);
 		// 如果启用原生滚动，禁用速度滑块
 		scrollSpeedSlider.disabled = nativeScrollToggle.checked;
 		scrollSpeedLabel.classList.toggle('disabled-label', nativeScrollToggle.checked);
@@ -392,7 +412,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	scrollToCursorBtn.innerText = '滚动到光标';
 	scrollToCursorBtn.title = '手动触发滚动到当前播放位置';
 	scrollToCursorBtn.onclick = () => {
-		eventBus.publish('命令:滚动到光标');
+		scrollManager.triggerScrollToCursor();
 		new Notice('已滚动到当前光标位置');
 	};
 	debugBar.appendChild(scrollToCursorBtn);

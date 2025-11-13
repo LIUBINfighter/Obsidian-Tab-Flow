@@ -3,12 +3,12 @@
 import * as alphaTab from '@coderline/alphatab';
 import { App } from 'obsidian';
 import { EventBus, convertSamplesToWavBlobUrl } from '../utils';
-import { ScrollConfigProxy } from '../services/ScrollConfigProxy';
+import { ScrollEventManager } from '../events/scrollEvents';
 import * as convert from 'color-convert';
 
 export class AlphaTabService {
 	private api: alphaTab.AlphaTabApi;
-	private scrollProxy: ScrollConfigProxy;
+	private scrollManager: ScrollEventManager;
 	private eventBus: EventBus;
 	private app: App;
 	private element: HTMLElement;
@@ -84,7 +84,7 @@ export class AlphaTabService {
 				},
 			},
 		});
-		this.scrollProxy = new ScrollConfigProxy(this.api);
+		this.scrollManager = new ScrollEventManager(this.api);
 
 		this.registerCommandHandlers();
 		this.registerApiListeners();
@@ -119,21 +119,21 @@ export class AlphaTabService {
 		});
 		// 滚动相关
 		this.eventBus.subscribe('命令:设置滚动模式', (mode: number) =>
-			this.scrollProxy.setScrollMode(mode)
+			this.scrollManager.setScrollMode(mode as alphaTab.ScrollMode)
 		);
 		this.eventBus.subscribe('命令:设置滚动速度', (speed: number) =>
-			this.scrollProxy.setScrollSpeed(speed)
+			this.scrollManager.setScrollSpeed(speed)
 		);
 		this.eventBus.subscribe('命令:设置Y偏移', (offset: number) =>
-			this.scrollProxy.setScrollOffsetY(offset)
+			this.scrollManager.setScrollOffsetY(offset)
 		);
 		this.eventBus.subscribe('命令:设置X偏移', (offset: number) =>
-			this.scrollProxy.setScrollOffsetX(offset)
+			this.scrollManager.setScrollOffsetX(offset)
 		);
 		this.eventBus.subscribe('命令:设置原生滚动', (enabled: boolean) =>
-			this.scrollProxy.setNativeBrowserSmoothScroll(enabled)
+			this.scrollManager.setNativeBrowserSmoothScroll(enabled)
 		);
-		this.eventBus.subscribe('命令:滚动到光标', () => this.scrollProxy.triggerScrollToCursor());
+		this.eventBus.subscribe('命令:滚动到光标', () => this.scrollManager.triggerScrollToCursor());
 		// 新增：布局切换事件
 		this.eventBus.subscribe('命令:切换布局', (layoutMode: number) => {
 			if (this.api.settings && this.api.settings.display) {
@@ -351,7 +351,7 @@ export class AlphaTabService {
 
 	public destroy() {
 		this.api.destroy();
-		this.scrollProxy.destroy();
+		this.scrollManager.destroy();
 	}
 
 	/**
@@ -366,11 +366,11 @@ export class AlphaTabService {
 					// Ignore API destroy errors
 				}
 			}
-			if (this.scrollProxy) {
+			if (this.scrollManager) {
 				try {
-					this.scrollProxy.destroy();
-				} catch {
-					// Ignore scroll proxy destroy errors
+					this.scrollManager.destroy();
+				} catch (e) {
+					console.warn('[AlphaTabService] scrollManager destroy failed', e);
 				}
 			}
 			const style = window.getComputedStyle(this.element);
@@ -422,7 +422,7 @@ export class AlphaTabService {
 					},
 				},
 			});
-			this.scrollProxy = new ScrollConfigProxy(this.api);
+			this.scrollManager = new ScrollEventManager(this.api);
 			this.registerApiListeners();
 			// 将新 API 上报给外界：某些组件直接持有 _api 引用
 			this.eventBus.publish('状态:API已重建', this.api);
