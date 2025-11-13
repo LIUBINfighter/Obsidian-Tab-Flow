@@ -389,7 +389,7 @@ export function createAlphaTexPlayground(
 	}
 
 	// 初次渲染
-	renderPreview();
+	void renderPreview();
 
 	// 订阅事件
 	if (eventBus) {
@@ -457,7 +457,7 @@ export function createAlphaTexPlayground(
 		});
 
 		eventBus.subscribe('命令:重新构造AlphaTabApi', () => {
-			renderPreview();
+			void renderPreview();
 		});
 	}
 
@@ -490,7 +490,9 @@ export function createAlphaTexPlayground(
 			observer.disconnect();
 			wrapper.detach();
 		},
-		refresh: () => renderPreview(),
+		refresh: () => {
+			void renderPreview();
+		},
 		getApi: () => mounted?.api || null,
 		updateCurrentBarInfo: (info: string) => {
 			currentBarInfo = info;
