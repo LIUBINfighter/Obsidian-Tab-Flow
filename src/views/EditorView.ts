@@ -131,7 +131,7 @@ export class EditorView extends FileView {
 						.then((latest) => {
 							if (!this.editor) {
 								// 如果编辑器不存在，做完整重载
-								this.reloadFile();
+								void this.reloadFile();
 								return;
 							}
 							// 无论是否有本地未保存更改，自动用磁盘最新内容覆盖编辑器视图（按需求自动更新）
@@ -310,7 +310,7 @@ export class EditorView extends FileView {
 		const currentState = this.leaf.getViewState();
 		if (currentState.state) {
 			currentState.state.layout = this.layout;
-			this.leaf.setViewState(currentState);
+			void this.leaf.setViewState(currentState);
 		}
 
 		// 创建嵌入式编辑器
@@ -436,7 +436,7 @@ export class EditorView extends FileView {
 			};
 			const btn = this.addAction(iconMap[nextLayout], '切换布局', () => {
 				this.layout = nextLayout;
-				this.render();
+				void this.render();
 			});
 			this.layoutToggleAction = btn as unknown as HTMLElement;
 		} catch (e) {

@@ -1028,7 +1028,7 @@ export class ShareCardModal extends Modal {
 		try {
 			if (this.currentPresetId) {
 				this.plugin.settings.shareCardLastUsedPresetId = this.currentPresetId;
-				this.plugin.saveSettings();
+				void this.plugin.saveSettings();
 			}
 		} catch (e) {
 			// ignore

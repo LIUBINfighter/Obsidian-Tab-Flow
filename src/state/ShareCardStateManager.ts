@@ -166,7 +166,7 @@ export class ShareCardStateManager {
 		s.autosaveEnabled =
 			all.length === 1 || (id === defaultId && options.autosaveDefaultPreset !== false);
 		this.plugin.settings.shareCardLastUsedPresetId = id;
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 	}
 
 	isDirty() {

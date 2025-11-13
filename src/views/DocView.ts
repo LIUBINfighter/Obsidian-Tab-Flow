@@ -37,7 +37,7 @@ export class DocView extends ItemView {
 					this.activeId = this.panels[0]?.id ?? null;
 					// 如果视图已打开，重新渲染
 					try {
-						this.render();
+						void this.render();
 					} catch {
 						/* ignore */
 					}

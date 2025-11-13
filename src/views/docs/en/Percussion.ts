@@ -221,7 +221,7 @@ export default {
 				attr: { 'data-copy-text': item[0] as string },
 			});
 			nameLongBtn.addEventListener('click', () => {
-				navigator.clipboard.writeText(item[0] as string);
+				void navigator.clipboard.writeText(item[0] as string);
 				nameLongBtn.textContent = 'Copied!';
 				setTimeout(() => {
 					nameLongBtn.textContent = item[0] as string;
@@ -237,7 +237,7 @@ export default {
 				attr: { 'data-copy-text': shortName },
 			});
 			nameShortBtn.addEventListener('click', () => {
-				navigator.clipboard.writeText(shortName);
+				void navigator.clipboard.writeText(shortName);
 				nameShortBtn.textContent = 'Copied!';
 				setTimeout(() => {
 					nameShortBtn.textContent = shortName;

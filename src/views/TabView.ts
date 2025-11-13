@@ -146,7 +146,7 @@ export class TabView extends FileView {
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
 				// console.debug(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
-				this.reloadFile();
+				void this.reloadFile();
 			}
 		};
 	}
@@ -710,7 +710,7 @@ export class TabView extends FileView {
 				const plugin = this.plugin as any;
 				if (plugin && plugin.settings) {
 					plugin.settings.scrollMode = mode;
-					plugin.saveSettings();
+					void plugin.saveSettings();
 					// 应用新的滚动模式
 					this.configureScrollElement();
 					// 触发滚动模式变更事件

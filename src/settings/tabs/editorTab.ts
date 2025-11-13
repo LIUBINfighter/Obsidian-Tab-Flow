@@ -738,7 +738,7 @@ export async function renderEditorTab(
 				const newOrder = [...saved, ...missing];
 				if (plugin.settings.editorBar) {
 					plugin.settings.editorBar.order = newOrder;
-					plugin.saveSettings();
+					void plugin.saveSettings();
 				}
 				return newOrder;
 			}
@@ -917,18 +917,22 @@ export async function renderEditorTab(
 				}
 			};
 
-			upIcon.addEventListener('click', () => moveUp());
+			upIcon.addEventListener('click', () => {
+				void moveUp();
+			});
 			upIcon.addEventListener('keydown', (e: KeyboardEvent) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					moveUp();
+					void moveUp();
 				}
 			});
-			downIcon.addEventListener('click', () => moveDown());
+			downIcon.addEventListener('click', () => {
+				void moveDown();
+			});
 			downIcon.addEventListener('keydown', (e: KeyboardEvent) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					moveDown();
+					void moveDown();
 				}
 			});
 
