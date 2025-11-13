@@ -104,8 +104,13 @@ export class EditorView extends FileView {
 		super(leaf);
 		this.container = this.contentEl;
 		this.eventBus = new EventBus();
+		// 宽化 workspace.on 类型以订阅自定义事件
+		type WorkspaceWithAnyEvents = {
+			on: (name: string, callback: (...args: unknown[]) => any, ctx?: any) => any;
+		};
+		const ws = this.app.workspace as unknown as WorkspaceWithAnyEvents;
 		this.registerEvent(
-			this.app.workspace.on('tabflow:editorbar-components-changed', () => {
+			ws.on('tabflow:editorbar-components-changed', () => {
 				this._remountEditorBar();
 			})
 		);

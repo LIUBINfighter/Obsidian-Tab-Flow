@@ -149,8 +149,13 @@ export class TabView extends FileView {
 		this.resources = resources;
 		this.eventBus = eventBus ?? new EventBus();
 		this.eventBus.subscribe('UI:showTracksModal', this.showTracksModal);
+		// 宽化 workspace.on 类型以支持自定义事件
+		type WorkspaceWithAnyEvents = {
+			on: (name: string, callback: (...args: unknown[]) => any, ctx?: any) => any;
+		};
+		const ws = this.app.workspace as unknown as WorkspaceWithAnyEvents;
 		this.registerEvent(
-			this.app.workspace.on('tabflow:playbar-components-changed', () => {
+			ws.on('tabflow:playbar-components-changed', () => {
 				if (this._api) {
 					this._mountPlayBarInternal();
 				}
@@ -558,10 +563,14 @@ export class TabView extends FileView {
 
 		// 监听 scoreLoaded：首次加载时挂载播放栏并应用持久化音轨状态
 		try {
+			// 本地定义 AlphaTabApi 的最小接口支持 scoreLoaded
+			interface AlphaTabApiWithScoreLoaded {
+				scoreLoaded?: { on?: (cb: () => void) => void };
+			}
 			const apiWithScoreLoaded = this._api as AlphaTabApiWithScoreLoaded;
 			apiWithScoreLoaded.scoreLoaded?.on?.(() => {
 				try {
-					this._applyPersistedTrackState();
+					this._applyStoredTrackState();
 				} catch (e) {
 					console.warn('[TabView] 应用轨道参数失败', e);
 				}

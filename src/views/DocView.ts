@@ -199,7 +199,7 @@ export class DocView extends ItemView {
 						this.plugin.app.commands.executeCommandById('app:open-settings');
 						setTimeout(() => {
 							try {
-								const search = document.querySelector('input.setting-search-input');
+								const search = document.querySelector<HTMLInputElement>('input.setting-search-input');
 								if (search) {
 									search.value = 'Tab Flow';
 									const ev = new Event('input', { bubbles: true });
