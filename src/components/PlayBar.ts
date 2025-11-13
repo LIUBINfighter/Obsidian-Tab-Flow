@@ -341,31 +341,33 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			setIcon(icon, 'lucide-download');
 			exportChooserBtn.appendChild(icon);
 			exportChooserBtn.setAttribute('aria-label', t('export.export'));
-			exportChooserBtn.onclick = async () => {
-				try {
-					// Lazy load modal to reduce initial bundle size
-					const { ExportChooserModal } = await import('./ExportChooserModal');
-					const getTitle = () => {
-						try {
-							return (
-								(
-									document.querySelector('.view-header-title')?.textContent || ''
-								).trim() || 'Untitled'
-							);
-						} catch {
-							return 'Untitled';
+			exportChooserBtn.onclick = () => {
+				void (async () => {
+					try {
+						// Lazy load modal to reduce initial bundle size
+						const { ExportChooserModal } = await import('./ExportChooserModal');
+						const getTitle = () => {
+							try {
+								return (
+									(
+										document.querySelector('.view-header-title')?.textContent || ''
+									).trim() || 'Untitled'
+								);
+							} catch {
+								return 'Untitled';
+							}
+						};
+						if (eventBus) {
+							new ExportChooserModal({
+								app,
+								eventBus: eventBus as Required<typeof eventBus>,
+								getFileName: getTitle,
+							}).open();
 						}
-					};
-					if (eventBus) {
-						new ExportChooserModal({
-							app,
-							eventBus: eventBus as Required<typeof eventBus>,
-							getFileName: getTitle,
-						}).open();
+					} catch (e) {
+						console.error('[PlayBar] 打开导出选择器失败:', e);
 					}
-				} catch (e) {
-					console.error('[PlayBar] 打开导出选择器失败:', e);
-				}
+				})();
 			};
 			bar.appendChild(exportChooserBtn);
 		},

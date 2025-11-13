@@ -130,20 +130,22 @@ export async function renderGeneralTab(
 	});
 	toggleHidden(restartBtn, !plugin.settings.assetsDownloaded);
 
-	downloadBtn.onclick = async () => {
-		downloadBtn.disabled = true;
-		downloadBtn.textContent = t('assetManagement.downloading');
-		const ok = await plugin.downloadAssets?.();
-		if (ok) {
-			new Notice(t('assetManagement.assetsDownloaded'));
-			toggleHidden(restartBtn, false);
-			await renderTab('general');
-		} else {
-			downloadBtn.disabled = false;
-			downloadBtn.textContent = allOk
-				? t('assetManagement.redownload')
-				: t('assetManagement.retryDownload');
-		}
+	downloadBtn.onclick = () => {
+		void (async () => {
+			downloadBtn.disabled = true;
+			downloadBtn.textContent = t('assetManagement.downloading');
+			const ok = await plugin.downloadAssets?.();
+			if (ok) {
+				new Notice(t('assetManagement.assetsDownloaded'));
+				toggleHidden(restartBtn, false);
+				await renderTab('general');
+			} else {
+				downloadBtn.disabled = false;
+				downloadBtn.textContent = allOk
+					? t('assetManagement.redownload')
+					: t('assetManagement.retryDownload');
+			}
+		})();
 	};
 
 	const openDirBtn = buttons.createEl('button', {

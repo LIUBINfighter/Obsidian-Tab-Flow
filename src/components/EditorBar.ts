@@ -416,32 +416,34 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			setIcon(icon, 'lucide-download');
 			exportChooserBtn.appendChild(icon);
 			exportChooserBtn.setAttribute('aria-label', t('export.export'));
-			exportChooserBtn.onclick = async () => {
-				try {
-					// Lazy load modal to reduce initial bundle size
-					const { ExportChooserModal } = await import('./ExportChooserModal');
-					const getTitle = () => {
-						try {
-							return (
-								(
-									document.querySelector('.view-header-title')?.textContent || ''
-								).trim() || 'Untitled'
-							);
-						} catch {
-							return 'Untitled';
-						}
-					};
-					new ExportChooserModal({
-						app,
-						eventBus: eventBus as {
-							publish: (event: string, payload?: unknown) => void;
-							subscribe: (event: string, handler: (p?: unknown) => void) => void;
-						},
-						getFileName: getTitle,
-					}).open();
-				} catch (e) {
-					console.error('[PlayBar] 打开导出选择器失败:', e);
-				}
+			exportChooserBtn.onclick = () => {
+				void (async () => {
+					try {
+						// Lazy load modal to reduce initial bundle size
+						const { ExportChooserModal } = await import('./ExportChooserModal');
+						const getTitle = () => {
+							try {
+								return (
+									(
+										document.querySelector('.view-header-title')?.textContent || ''
+									).trim() || 'Untitled'
+								);
+							} catch {
+								return 'Untitled';
+							}
+						};
+						new ExportChooserModal({
+							app,
+							eventBus: eventBus as {
+								publish: (event: string, payload?: unknown) => void;
+								subscribe: (event: string, handler: (p?: unknown) => void) => void;
+							},
+							getFileName: getTitle,
+						}).open();
+					} catch (e) {
+						console.error('[PlayBar] 打开导出选择器失败:', e);
+					}
+				})();
 			};
 			bar.appendChild(exportChooserBtn);
 		},

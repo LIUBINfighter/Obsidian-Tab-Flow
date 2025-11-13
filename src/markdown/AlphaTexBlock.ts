@@ -337,7 +337,8 @@ export function mountAlphaTexBlock(
 			interface PlayerSettingsWithScrollElement {
 				scrollElement?: HTMLElement;
 			}
-			(api.settings.player as unknown as PlayerSettingsWithScrollElement).scrollElement = wrapper;
+			(api.settings.player as unknown as PlayerSettingsWithScrollElement).scrollElement =
+				wrapper;
 			api.updateSettings();
 		} catch {
 			// Ignore scroll element setup errors

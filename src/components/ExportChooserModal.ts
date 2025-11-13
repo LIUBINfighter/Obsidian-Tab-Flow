@@ -45,53 +45,55 @@ export class ExportChooserModal extends Modal {
 
 		// 音频导出（触发事件，由服务层导出并在状态回调时呼出音频播放器）
 		const audioBtn = row.createEl('button', { text: '导出音频(WAV)', cls: 'mod-cta' });
-		audioBtn.onclick = async () => {
-			try {
-				const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
-				const onOk = async (url?: string) => {
-					try {
-						// Lazy load audio player modal to reduce initial bundle size
-						const { AudioExportModal } = await import('./AudioExportModal');
-						const fileName = chosenName + '.wav';
-						new AudioExportModal(this.app, url || '', fileName).open();
-						new Notice('音频导出完成，已弹出播放器');
-					} catch (e) {
-						console.error('[ExportChooserModal] 打开音频播放器失败', e);
-					}
-				};
-				const okHandler = (url?: string) => {
-					onOk(url);
-					try {
-						this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
-					} catch {
-						// Ignore unsubscribe errors
-					}
-					try {
-						this.eventBus.unsubscribe?.('状态:音频导出失败', failHandler);
-					} catch {
-						// Ignore unsubscribe errors
-					}
-				};
-				const failHandler = (err?: unknown) => {
-					new Notice('音频导出失败' + (err ? ': ' + String(err) : ''));
-					try {
-						this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
-					} catch {
-						// Ignore unsubscribe errors
-					}
-					try {
-						this.eventBus.unsubscribe?.('状态:音频导出失败', failHandler);
-					} catch {
-						// Ignore unsubscribe errors
-					}
-				};
-				this.eventBus.subscribe('状态:音频导出完成', okHandler);
-				this.eventBus.subscribe('状态:音频导出失败', failHandler);
-				this.eventBus.publish('命令:导出音频', { fileName: chosenName });
-				this.close();
-			} catch (e) {
-				new Notice('导出启动失败: ' + e);
-			}
+		audioBtn.onclick = () => {
+			void (async () => {
+				try {
+					const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
+					const onOk = async (url?: string) => {
+						try {
+							// Lazy load audio player modal to reduce initial bundle size
+							const { AudioExportModal } = await import('./AudioExportModal');
+							const fileName = chosenName + '.wav';
+							new AudioExportModal(this.app, url || '', fileName).open();
+							new Notice('音频导出完成，已弹出播放器');
+						} catch (e) {
+							console.error('[ExportChooserModal] 打开音频播放器失败', e);
+						}
+					};
+					const okHandler = (url?: string) => {
+						void onOk(url);
+						try {
+							this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
+						} catch {
+							// Ignore unsubscribe errors
+						}
+						try {
+							this.eventBus.unsubscribe?.('状态:音频导出失败', failHandler);
+						} catch {
+							// Ignore unsubscribe errors
+						}
+					};
+					const failHandler = (err?: unknown) => {
+						new Notice('音频导出失败' + (err ? ': ' + String(err) : ''));
+						try {
+							this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
+						} catch {
+							// Ignore unsubscribe errors
+						}
+						try {
+							this.eventBus.unsubscribe?.('状态:音频导出失败', failHandler);
+						} catch {
+							// Ignore unsubscribe errors
+						}
+					};
+					this.eventBus.subscribe('状态:音频导出完成', okHandler);
+					this.eventBus.subscribe('状态:音频导出失败', failHandler);
+					this.eventBus.publish('命令:导出音频', { fileName: chosenName });
+					this.close();
+				} catch (e) {
+					new Notice('导出启动失败: ' + e);
+				}
+			})();
 		};
 
 		// MIDI
