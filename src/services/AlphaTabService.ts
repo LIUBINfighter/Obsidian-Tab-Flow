@@ -304,9 +304,9 @@ export class AlphaTabService {
 				await (this.api as any).tex(textContent);
 			} else {
 				// 备用方案：使用 AlphaTexImporter
-				const Importer: any = (alphaTab as any).importer?.AlphaTexImporter;
+				const Importer: unknown = (alphaTab as any).importer?.AlphaTexImporter;
 				if (Importer) {
-					const importer = new Importer();
+					const importer = new (Importer as any)();
 					importer.initFromString(textContent, this.api.settings);
 					const score = importer.readScore();
 					this.api.renderScore(score);
@@ -424,9 +424,9 @@ export class AlphaTabService {
 		const exporter = await this.api.exportAudio(exportOptions);
 		const chunks: Float32Array[] = [];
 		try {
-			let chunk: any;
+			let chunk: unknown;
 			while ((chunk = await exporter.render(500))) {
-				chunks.push(chunk.samples);
+				chunks.push((chunk as any).samples);
 			}
 		} finally {
 			exporter.destroy();
