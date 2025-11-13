@@ -2,7 +2,7 @@ import { App, Notice, Setting } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
 
-export async function renderAboutTab(
+export function renderAboutTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
 	app: App
@@ -80,4 +80,6 @@ export async function renderAboutTab(
 				}
 			});
 		});
+
+	return Promise.resolve();
 }

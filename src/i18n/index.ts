@@ -253,7 +253,13 @@ export function t(key: string, params?: Record<string, unknown>, fallback?: stri
 		// 如果有参数，进行模板替换
 		if (params && typeof translation === 'string') {
 			translation = translation.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
-				return params[paramKey] !== undefined ? String(params[paramKey]) : match;
+				const value = params[paramKey];
+				if (value === undefined || value === null) return match;
+				if (typeof value === 'string') return value;
+				if (typeof value === 'number' || typeof value === 'boolean') {
+					return String(value);
+				}
+				return match;
 			});
 		}
 

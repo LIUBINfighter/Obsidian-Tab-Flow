@@ -113,7 +113,7 @@ export class DocView extends ItemView {
 		await this.render();
 	}
 
-	async onClose() {
+	onClose(): Promise<void> {
 		// 清理右上角设置按钮（如果存在）
 		try {
 			if (this.settingsAction && this.settingsAction.parentElement) {
@@ -123,6 +123,7 @@ export class DocView extends ItemView {
 		} catch {
 			// ignore
 		}
+		return Promise.resolve();
 	}
 
 	private async render() {

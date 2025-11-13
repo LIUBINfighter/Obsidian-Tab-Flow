@@ -124,8 +124,13 @@ export function createAuthorBlock(
 				const arr = await f.arrayBuffer();
 				const blob = new Blob([arr], { type: f.type });
 				const reader = new FileReader();
-				reader.onload = () =>
-					callbacks.onAvatarChange && callbacks.onAvatarChange(String(reader.result));
+				reader.onload = () => {
+					if (!callbacks.onAvatarChange) return;
+					const result = reader.result;
+					if (typeof result === 'string') {
+						callbacks.onAvatarChange(result);
+					}
+				};
 				reader.readAsDataURL(blob);
 			})()
 	);

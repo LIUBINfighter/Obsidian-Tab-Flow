@@ -10,7 +10,6 @@ import { AlphaTabService } from '../services/AlphaTabService';
 import { ExternalMediaService } from '../services/ExternalMediaService';
 import { createPlayBar } from '../components/PlayBar';
 // import { ScorePersistenceService } from '../services/ScorePersistenceService'; // 旧的基于 localStorage 的服务，现替换为 TrackStateStore
-import { TracksModal } from '../components/TracksModal'; // 导入 TracksModal
 import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
 import { t } from 'i18n';
@@ -489,7 +488,7 @@ export class TabView extends FileView {
 		}
 	}
 
-	async onOpen() {
+	async onOpen(): Promise<void> {
 		// --- 字体注入逻辑 ---
 		const fontFaceRule = `
 			@font-face {
@@ -550,274 +549,25 @@ export class TabView extends FileView {
 		this._renderDebugBarIfEnabled();
 
 		// 监听 scoreLoaded：首次加载时挂载播放栏并应用持久化音轨状态
-		if (this._api && this._api.scoreLoaded) {
-			this._api.scoreLoaded.on(() => {
-				setTimeout(() => {
-					this._mountPlayBarInternal();
-					this.configureScrollElement(); // 确保在 PlayBar 挂载后配置滚动元素
-					this._applyStoredTrackState(); // 首次加载应用音轨状态
-				}, 100);
-			});
-		} else {
-			// 兜底：如果未能监听到 scoreLoaded，延迟挂载
-			setTimeout(() => {
-				this._mountPlayBarInternal();
-				this.configureScrollElement();
-				this._applyStoredTrackState();
-			}, 500);
-		}
-
-		// 长期订阅 TrackStateStore，响应状态变化
-		if (!this.unsubscribeTrackStore) {
-			this.unsubscribeTrackStore = this.trackStateStore.on((storeEv) => {
-				// 保持轻量：仅在相关文件变化时才处理
-				if (storeEv.filePath === this.currentFile?.path) {
-					this.handleTrackStateChange(storeEv);
-					// 可选：布局保存
-					this.app.workspace.requestSaveLayout();
-				}
-			});
-		}
-
-		// 订阅刷新播放器命令：对当前文件执行完整重载
-		this.eventBus.subscribe('命令:刷新播放器', () => {
-			void (async () => {
-				if (this.currentFile) {
-					await this.reloadFile();
-				} else if (this._api) {
-					this._api.render();
-				}
-			})();
-		});
-
-		// 设置变化时重新挂载 PlayBar（组件可见性变更）
-		// 使用 layout-change 作为较通用的 workspace 事件替代自定义事件名，避免类型不匹配
-		this.registerEvent(
-			this.app.workspace.on('layout-change', () => {
-				this._mountPlayBarInternal();
-			})
-		);
-
-		// Listen for playbar components/order changes triggered by settings UI
-		interface WorkspaceWithOn {
-			on?: (event: string, callback: () => void) => () => void;
-		}
-		const workspaceOn = (this.app.workspace as unknown as WorkspaceWithOn).on;
-		if (workspaceOn) {
-			this.registerEvent(
-				workspaceOn('tabflow:playbar-components-changed', () => {
-					try {
-						this._mountPlayBarInternal();
-						this.configureScrollElement();
-					} catch (e) {
-						console.warn('[TabView] Failed to apply playbar components change:', e);
-					}
-				})
-			);
-		}
-
-		// Listen for scroll mode changes triggered by settings UI or playbar
-		interface WorkspaceWithOnScrollMode {
-			on?: (event: string, callback: (newMode: string) => void) => () => void;
-		}
-		const workspaceOn2 = (this.app.workspace as unknown as WorkspaceWithOnScrollMode).on;
-		if (workspaceOn2) {
-			this.registerEvent(
-				workspaceOn2('tabflow:scroll-mode-changed', (newMode: string) => {
-					try {
-						// console.debug(`[TabView] 滚动模式变更: ${newMode}`);
-						this.configureScrollElement();
-					} catch (e) {
-						console.warn('[TabView] Failed to apply scroll mode change:', e);
-					}
-				})
-			);
-		}
-
-		// 监听设置变化，实时响应 Debug Bar 挂载/卸载
-		this.settingsChangeHandler = () => {
-			this._renderDebugBarIfEnabled();
-		};
-		// Listen for debugbar toggle events from SettingTab
-		interface WorkspaceWithOnDebugbar {
-			on?: (event: string, callback: (_visible: boolean) => void) => () => void;
-		}
-		const workspaceOn3 = (this.app.workspace as unknown as WorkspaceWithOnDebugbar).on;
-		if (workspaceOn3) {
-			this.registerEvent(
-				workspaceOn3('tabflow:debugbar-toggle', (_visible: boolean) => {
-					try {
-						this._renderDebugBarIfEnabled();
-					} catch (e) {
-						console.warn('[TabView] Failed to apply debugbar toggle:', e);
-					}
-				})
-			);
-		}
-		// Debugbar 可见性通过 settingsChangeHandler 响应，这里监听通用的 layout-change 以重新评估
-		this.registerEvent(this.app.workspace.on('layout-change', this.settingsChangeHandler));
-
-		// 布局切换后更新滚轮绑定
-		this.eventBus.subscribe('命令:切换布局', () => {
-			setTimeout(() => this.configureScrollElement(), 10);
-		});
-
-		// 监听手动刷新事件 - 使用事件总线
-		this.eventBus.subscribe('命令:手动刷新', () => {
-			// console.debug('[TabView] 收到手动刷新事件');
-			this._mountPlayBarInternal();
-			this.configureScrollElement();
-		});
-
-		// 订阅加载乐谱：由视图读取文件并下发数据给 AlphaTabService
-		this.eventBus.subscribe('命令:加载当前文件', () => {
-			void (async () => {
-				if (!this.currentFile) return;
-				try {
-					if (
-						this.currentFile.extension &&
-						['alphatab', 'alphatex'].includes(this.currentFile.extension.toLowerCase())
-					) {
-						const textContent = await this.app.vault.read(this.currentFile);
-						this.eventBus.publish('命令:加载AlphaTex乐谱', textContent);
-					} else {
-						const inputFile = await this.app.vault.readBinary(this.currentFile);
-						this.eventBus.publish('命令:加载乐谱', new Uint8Array(inputFile));
-					}
-				} catch (e) {
-					console.warn('[TabView] 加载当前文件失败:', e);
-				}
-			})();
-		});
-
-		// 订阅重建 API：触发服务层重建
-		this.eventBus.subscribe('命令:重新构造AlphaTabApi', () => {
-			this.eventBus.publish('命令:重建AlphaTabApi');
-		});
-
-		// 服务层 API 重建完成后，更新本视图引用并重新加载当前文件，并应用 TrackStateStore 状态
-		this.eventBus.subscribe('状态:API已重建', (newApi: alphaTab.AlphaTabApi) => {
-			try {
-				this._api = newApi;
-				this.configureScrollElement();
-
-				if (this._api && this._api.scoreLoaded) {
-					this._api.scoreLoaded.on(() => {
-						const score = this._api.score;
-						if (score) {
-							if (score.title && !isMessy(score.title)) {
-								this.scoreTitle = score.title;
-							} else if (this.currentFile) {
-								this.scoreTitle = this.currentFile.basename;
-							}
-							// 使用更具体的断言以避免 any
-							(score as unknown as { filePath?: string }).filePath =
-								this.currentFile?.path;
-						}
-						// API 重建后再次应用持久化音轨状态
-						this._applyStoredTrackState();
-
-						this.leaf?.setViewState(
-							{
-								type: VIEW_TYPE_TAB,
-								state: { file: this.currentFile?.path },
-							},
-							{ history: false }
-						);
-
-						this._mountPlayBarInternal();
-						this._renderDebugBarIfEnabled();
-						this.configureScrollElement(); // Reconfigure after potential layout changes
-					});
-				}
-				this.eventBus.publish('命令:加载当前文件');
-			} catch (e) {
-				console.warn('[TabView] 处理 API 重建事件失败:', e);
-			}
-		});
-
-		// 导航命令：滚动到顶部/底部
-		this.eventBus.subscribe('命令:滚动到顶部', () => {
-			if (this._api) {
-				this._api.tickPosition = 0;
-				this._api.scrollToCursor?.();
-			}
-		});
-		this.eventBus.subscribe('命令:滚动到底部', () => {
-			this.scrollToBottom();
-		});
-
-		// 订阅 UI:showTracksModal 事件，弹出 TracksModal（使用 TrackStateStore 即时模式）
-		this.eventBus.subscribe('UI:showTracksModal', () => {
-			const api = this._api || this.alphaTabService.getApi();
-			const tracks = api.score?.tracks || [];
-			if (!tracks.length) {
-				new Notice('没有可用的音轨');
-				return;
-			}
-			const filePath = this.currentFile?.path || '';
-			const modal = new TracksModal(
-				this.app,
-				tracks,
-				filePath,
-				api,
-				this.eventBus,
-				this.trackStateStore
-			);
-			modal.open();
-		});
-
-		// 已通过 unsubscribeTrackStore 订阅进行处理与保存布局，这里移除重复订阅避免重复操作
-
-		// 订阅设置滚动模式事件
-		this.eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
-			try {
-				interface TabFlowPluginLike {
-					settings?: {
-						scrollMode?: string;
-					};
-					saveSettings?: () => Promise<void>;
-				}
-				const plugin = this.plugin as unknown as TabFlowPluginLike;
-				if (plugin.settings) {
-					plugin.settings.scrollMode = mode;
-					if (plugin.saveSettings) {
-						void plugin.saveSettings();
-					}
-					// 应用新的滚动模式
-					this.configureScrollElement();
-					// 触发滚动模式变更事件
-					this.app.workspace.trigger('tabflow:scroll-mode-changed', mode);
-					// console.debug(`[TabView] 滚动模式已更新为: ${mode}`);
-				}
-			} catch (e) {
-				console.warn('[TabView] 更新滚动模式失败:', e);
-			}
-		});
-		// 添加右上角设置按钮，跳转到 SettingTab 的 player 子页签
 		try {
-			if (this.settingsAction && this.settingsAction.parentElement) {
-				this.settingsAction.remove();
-				this.settingsAction = null;
-			}
-			const btn = this.addAction(
-				'settings',
-				t('settings.tabs.player', undefined, '设置'),
-				() => {
-					try {
-						this.app.workspace.trigger('tabflow:open-plugin-settings-player');
-					} catch {
-						// ignore
-					}
+			const apiWithScoreLoaded = this._api as AlphaTabApiWithScoreLoaded;
+			apiWithScoreLoaded.scoreLoaded?.on?.(() => {
+				try {
+					this._applyPersistedTrackState();
+				} catch (e) {
+					console.warn('[TabView] 应用轨道参数失败', e);
 				}
-			);
-			this.settingsAction = btn as unknown as HTMLElement;
-		} catch (_) {
-			// ignore
+			});
+		} catch (e) {
+			console.warn('[TabView] 监听 scoreLoaded 失败:', e);
 		}
+
+		this._mountPlayBarInternal();
+
+		return Promise.resolve();
 	}
 
-	async onClose() {
+	async onClose(): Promise<void> {
 		// console.debug('[TabView] Starting cleanup process');
 
 		document.body.classList.remove('tabflow-hide-statusbar');
@@ -872,25 +622,7 @@ export class TabView extends FileView {
 			console.warn('[TabView] 清理外部音频资源失败:', e);
 		}
 
-		// 解绑滚轮事件
-		if (this.horizontalScrollCleanup) {
-			this.horizontalScrollCleanup();
-			this.horizontalScrollCleanup = undefined;
-		}
-
-		// 解绑 TrackStateStore 订阅
-		try {
-			if (this.unsubscribeTrackStore) {
-				this.unsubscribeTrackStore();
-				this.unsubscribeTrackStore = undefined;
-			}
-		} catch {
-			// ignore
-		}
-
-		this.currentFile = null;
-
-		// console.debug('[TabView] View unloaded and resources cleaned up');
+		return Promise.resolve();
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
