@@ -41,8 +41,8 @@ export class TrackStateStore {
 
 	constructor(plugin: TabFlowPlugin) {
 		this.plugin = plugin;
-		const existing: any = (plugin.settings as any).trackStates;
-		if (existing && typeof existing === 'object' && existing.version === 1) {
+		const existing: unknown = (plugin.settings as any).trackStates;
+		if (existing && typeof existing === 'object' && (existing as any).version === 1) {
 			this.data = existing as PersistedTrackStatesV1;
 		} else {
 			this.data = { version: 1, files: {} };

@@ -195,7 +195,13 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(exportLabel);
 
 	// 动态加载导出事件注册器
-	let exportHandlers: any = null;
+	type ExportHandlers = {
+		exportAudio: () => Promise<void>;
+		exportMidi: () => void;
+		exportGp: () => void;
+		exportPdf: () => void;
+	};
+	let exportHandlers: ExportHandlers | null = null;
 	async function ensureExportHandlers() {
 		if (!exportHandlers) {
 			// Dynamically import to avoid circular dependency with events module

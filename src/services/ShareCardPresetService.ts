@@ -199,7 +199,26 @@ export class ShareCardPresetService {
 	}
 
 	/** 将预设应用到 modal 实例字段（不含文件名） */
-	applyToModal(modal: any, preset: ShareCardPresetV1): void {
+	applyToModal(
+		modal: {
+			exportBgMode?: string;
+			exportBgCustomColor?: string;
+			showAuthor?: boolean;
+			authorName?: string;
+			authorRemark?: string;
+			showAvatar?: boolean;
+			avatarDataUrl?: string | null;
+			authorPosition?: string;
+			authorBg?: string;
+			authorTextColor?: string;
+			authorFontSize?: number;
+			authorAlign?: string;
+			__applyShareCardDimension?: (width: number) => void;
+			__applyShareCardFormat?: (format: string, resolution: string, disableLazy: boolean) => void;
+			renderAuthorBlock?: () => void;
+		},
+		preset: ShareCardPresetV1
+	): void {
 		// 直接映射：确保字段名保持一致
 		modal.exportBgMode = preset.exportBgMode;
 		modal.exportBgCustomColor = this.normalizeColorToHex(
