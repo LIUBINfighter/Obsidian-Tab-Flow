@@ -27,16 +27,18 @@ export function handleTrackEvent(
 		case 'mute':
 			api.changeTrackMute([payload.track], !!value);
 			break;
-		case 'volume':
+		case 'volume': {
 			// value: 0-16, alphaTab 期望 0-1
 			const volValue = typeof value === 'number' ? value : 0;
 			api.changeTrackVolume([payload.track], Math.max(0, Math.min(1, volValue / 16)));
 			break;
-		case 'transpose':
+		}
+		case 'transpose': {
 			// value: -12 ~ 12
 			const transposeValue = typeof value === 'number' ? value : 0;
 			api.changeTrackTranspositionPitch([payload.track], transposeValue);
 			break;
+		}
 		case 'transposeAudio':
 			// 这里可扩展为音频移调逻辑
 			// 具体API视alphaTab版本而定

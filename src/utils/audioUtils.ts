@@ -12,9 +12,22 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
 	try {
 		// try using alphaTab ByteBuffer if present for compatibility
 		// @ts-ignore
-		// TO FIX: 避免尽可能地转换为 any 类型
-		// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-		if (alphaTab && (alphaTab as any).io && (alphaTab as any).io.ByteBuffer) {
+		// AlphaTab internal IO API types (not exported)
+		interface AlphaTabIO {
+			io?: {
+				ByteBuffer?: {
+					withCapacity: (size: number) => {
+						write: (data: Uint8Array, offset: number, length: number) => void;
+					};
+				};
+				IOHelper?: {
+					writeInt32LE: (buffer: unknown, value: number) => void;
+					writeInt16LE: (buffer: unknown, value: number) => void;
+				};
+			};
+		}
+		const alphaTabIO = alphaTab as unknown as AlphaTabIO;
+		if (alphaTabIO && alphaTabIO.io && alphaTabIO.io.ByteBuffer) {
 			// @ts-ignore
 			// TO FIX: 避免尽可能地转换为 any 类型
 			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
