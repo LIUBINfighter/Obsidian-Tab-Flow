@@ -58,6 +58,7 @@
 		"dom-to-image-more": "^2.9.0",
 		"jszip": "^3.10.1",
 		"mime-types": "^3.0.1",
-		"monkey-around": "^3.0.0"
+		"monkey-around": "^3.0.0",
+		"color-convert": "^2.0.1"
 	}
 }
