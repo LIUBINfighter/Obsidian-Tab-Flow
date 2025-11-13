@@ -29,16 +29,18 @@ export class ExportChooserModal extends Modal {
 
 		// 文件名编辑框
 		const nameWrap = contentEl.createDiv({
-			attr: { style: 'display:flex; align-items:center; gap:8px; margin-bottom:8px;' },
+			cls: 'tabflow-export-chooser__name-row',
 		});
 		nameWrap.createEl('label', { text: '文件名:' });
-		const nameInput = nameWrap.createEl('input', { type: 'text' });
-		nameInput.style.width = '260px';
+		const nameInput = nameWrap.createEl('input', {
+			type: 'text',
+			cls: 'tabflow-export-chooser__name-input',
+		});
 		const defaultName = (this.getFileName?.() || 'Untitled').trim();
 		nameInput.value = defaultName;
 
 		const row = contentEl.createDiv({
-			attr: { style: 'display:flex; gap: 8px; flex-wrap: wrap;' },
+			cls: 'tabflow-export-chooser__actions',
 		});
 
 		// 音频导出（触发事件，由服务层导出并在状态回调时呼出音频播放器）

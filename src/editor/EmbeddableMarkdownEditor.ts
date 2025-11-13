@@ -441,7 +441,7 @@ function resolveEditorPrototype(app: App): unknown {
 
 	const widgetEditorView = embedRegistry.embedByExtension.md(
 		{ app, containerEl: createDiv() },
-		null as unknown as TFile,
+		null,
 		''
 	);
 	interface WidgetEditorView {

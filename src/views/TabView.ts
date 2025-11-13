@@ -14,6 +14,7 @@ export const VIEW_TYPE_TAB = 'tab-view';
 import * as alphaTab from '@coderline/alphatab';
 
 import { EventBus, isMessy, formatTime, setupHorizontalScroll } from '../utils';
+import { setCssProps } from '../utils/styleUtils';
 import { AlphaTabService } from '../services/AlphaTabService';
 import { ExternalMediaService } from '../services/ExternalMediaService';
 import { createPlayBar } from '../components/PlayBar';
@@ -467,9 +468,9 @@ export class TabView extends FileView {
 
 						if (duration > 0) {
 							const progress = (currentTime / duration) * 100;
-							progressFill.style.width = `${progress}%`;
+							setCssProps(progressFill, { width: `${progress}%` });
 							const handlePos = progress;
-							progressHandle.style.left = `${handlePos}%`;
+							setCssProps(progressHandle, { left: `${handlePos}%` });
 						}
 					}
 				});

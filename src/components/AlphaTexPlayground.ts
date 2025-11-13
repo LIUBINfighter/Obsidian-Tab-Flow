@@ -1,6 +1,5 @@
 import type TabFlowPlugin from '../main';
 import { setIcon, normalizePath, TFile, Notice } from 'obsidian';
-import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEditor';
 import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
@@ -368,10 +367,8 @@ export function createAlphaTexPlayground(
 			infoBar.createEl('span', { text: currentBarInfo });
 		}
 
-		const resources: AlphaTabResources | undefined = (
-			plugin as unknown as { resources?: AlphaTabResources }
-		).resources;
-		if (!resources || !resources.bravuraUri || !resources.alphaTabWorkerUri) {
+		const resources = plugin.resources;
+		if (!resources?.bravuraUri || !resources.alphaTabWorkerUri) {
 			const holder = previewWrap.createDiv({ cls: 'alphatex-block' });
 			holder.createEl('div', { text: t('playground.resourcesMissing') });
 			const btn = holder.createEl('button', { text: t('playground.downloadResources') });
@@ -382,10 +379,7 @@ export function createAlphaTexPlayground(
 						btn.setAttr('disabled', 'true');
 						btn.setText(t('playground.downloading'));
 						try {
-							interface Downloader {
-								downloadAssets?: () => Promise<boolean>;
-							}
-							const ok = await (plugin as unknown as Downloader).downloadAssets?.();
+							const ok = await plugin.downloadAssets();
 							btn.removeAttribute('disabled');
 							btn.setText(
 								ok

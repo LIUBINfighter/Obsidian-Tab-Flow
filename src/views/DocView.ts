@@ -216,7 +216,7 @@ export class DocView extends ItemView {
 					}
 				}
 			});
-			this.settingsAction = btn as unknown as HTMLElement;
+			this.settingsAction = btn;
 		} catch (_) {
 			// ignore
 		}

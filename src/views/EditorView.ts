@@ -421,7 +421,7 @@ export class EditorView extends FileView {
 				const modal = new ShareCardModal(this.plugin);
 				modal.open();
 			});
-			this.newFileAction = newFileBtn as unknown as HTMLElement;
+			this.newFileAction = newFileBtn;
 
 			if (this.settingsAction && this.settingsAction.parentElement) {
 				this.settingsAction.remove();
@@ -439,7 +439,7 @@ export class EditorView extends FileView {
 					}
 				}
 			);
-			this.settingsAction = settingsBtn as unknown as HTMLElement;
+			this.settingsAction = settingsBtn;
 		} catch (_) {
 			// ignore
 		}
@@ -466,7 +466,7 @@ export class EditorView extends FileView {
 				this.layout = nextLayout;
 				void this.render();
 			});
-			this.layoutToggleAction = btn as unknown as HTMLElement;
+			this.layoutToggleAction = btn;
 		} catch (_) {
 			this.layoutToggleAction = null;
 		}
