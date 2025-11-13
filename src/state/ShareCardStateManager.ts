@@ -57,7 +57,7 @@ export class ShareCardStateManager {
 		const active =
 			this.presetService.get(activeId) || this.presetService.get(defaultId) || all[0];
 		const core = this.strip(active);
-		const options: ShareCardOptions = (this.plugin.settings as any).shareCardOptions || {};
+		const options: ShareCardOptions = this.plugin.settings.shareCardOptions || {};
 		this.autosaveDelay = options.autosaveDelayMs || 800;
 		const autosaveEnabled =
 			all.length === 1 ||
@@ -106,8 +106,12 @@ export class ShareCardStateManager {
 	updateField<K extends keyof ShareCardCorePreset>(k: K, v: ShareCardCorePreset[K]) {
 		const s = this.state;
 		if (!s) return;
-		if ((s.working as any)[k] === v) return;
-		(s.working as any)[k] = v;
+		interface WorkingPreset {
+			[key: string]: unknown;
+		}
+		const working = s.working as unknown as WorkingPreset;
+		if (working[k] === v) return;
+		working[k] = v;
 		if (!s.suppressDirty) {
 			s.dirty = !this.shallowEqual(s.working, s.base);
 			if (s.dirty && s.autosaveEnabled) this.scheduleAutosave();
@@ -129,7 +133,7 @@ export class ShareCardStateManager {
 		if (!s.dirty && reason === 'autosave') return;
 		const preset = this.presetService.get(s.activePresetId);
 		if (!preset) return;
-		const patch: Partial<ShareCardPresetV1> = { ...s.working, updatedAt: Date.now() } as any;
+		const patch: Partial<ShareCardPresetV1> = { ...s.working, updatedAt: Date.now() };
 		this.presetService.update(s.activePresetId, patch);
 		s.base = JSON.parse(JSON.stringify(s.working));
 		s.dirty = false;
@@ -167,7 +171,7 @@ export class ShareCardStateManager {
 		s.suppressDirty = false;
 		const all = this.presetService.list();
 		const defaultId = this.plugin.settings.shareCardDefaultPresetId;
-		const options: ShareCardOptions = (this.plugin.settings as any).shareCardOptions || {};
+		const options: ShareCardOptions = this.plugin.settings.shareCardOptions || {};
 		s.autosaveEnabled =
 			all.length === 1 || (id === defaultId && options.autosaveDefaultPreset !== false);
 		this.plugin.settings.shareCardLastUsedPresetId = id;
@@ -185,8 +189,11 @@ export class ShareCardStateManager {
 	private shallowEqual(a: ShareCardCorePreset, b: ShareCardCorePreset) {
 		const ka = Object.keys(a) as (keyof ShareCardCorePreset)[];
 		for (const k of ka) {
-			const av = (a as any)[k];
-			const bv = (b as any)[k];
+			interface PresetRecord {
+				[key: string]: unknown;
+			}
+			const av = (a as unknown as PresetRecord)[k];
+			const bv = (b as unknown as PresetRecord)[k];
 			if (typeof av === 'object') {
 				if (JSON.stringify(av) !== JSON.stringify(bv)) return false;
 			} else if (av !== bv) return false;
