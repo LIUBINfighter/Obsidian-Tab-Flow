@@ -1,5 +1,13 @@
 // <-- ./src/views/TabView.ts -->
-import { FileView, TFile, WorkspaceLeaf, Plugin, Notice, ViewStateResult, type EventRef } from 'obsidian';
+import {
+	FileView,
+	TFile,
+	WorkspaceLeaf,
+	Plugin,
+	Notice,
+	ViewStateResult,
+	type EventRef,
+} from 'obsidian';
 
 export const VIEW_TYPE_TAB = 'tab-view';
 
