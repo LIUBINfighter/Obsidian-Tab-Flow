@@ -110,7 +110,10 @@ export class EmbeddableMarkdownEditor {
 			buildLocalExtensions: (originalMethod: (this: InternalMarkdownEditor) => unknown[]) =>
 				function (this: InternalMarkdownEditor) {
 					const extensions = originalMethod.call(this) || [];
-					if (this === (selfRef as any).editor) {
+					interface EmbeddableMarkdownEditorWithEditor {
+						editor?: unknown;
+					}
+					if (this === (selfRef as unknown as EmbeddableMarkdownEditorWithEditor).editor) {
 						if (selfRef.options.placeholder)
 							extensions.push(placeholder(selfRef.options.placeholder));
 						// Disable browser spellcheck/auto-correct in the embedded editor
@@ -126,18 +129,24 @@ export class EmbeddableMarkdownEditor {
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
 								blur: () => {
 									app.keymap.popScope(selfRef.scope);
+									interface WorkspaceWithActiveEditor {
+										activeEditor?: unknown;
+									}
 									if (
 										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
-										(app.workspace as any).activeEditor === selfRef.editor
+										(app.workspace as unknown as WorkspaceWithActiveEditor).activeEditor === selfRef.editor
 									) {
-										(app.workspace as any).activeEditor = null;
+										(app.workspace as unknown as WorkspaceWithActiveEditor).activeEditor = null;
 									}
 									selfRef.options.onBlur?.(selfRef);
 								},
 								focusin: () => {
 									app.keymap.pushScope(selfRef.scope);
+									interface WorkspaceWithActiveEditor {
+										activeEditor?: unknown;
+									}
 									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
-										(app.workspace as any).activeEditor = selfRef.editor;
+										(app.workspace as unknown as WorkspaceWithActiveEditor).activeEditor = selfRef.editor;
 									}
 								},
 							})
@@ -167,9 +176,9 @@ export class EmbeddableMarkdownEditor {
 								key: 'Enter',
 								run: () => selfRef.options.onEnter?.(selfRef, false, false),
 								shift: () => selfRef.options.onEnter?.(selfRef, false, true),
-							} as any;
+							};
 						}
-						extensions.push(Prec.highest(keymap.of(keyBindings as any)));
+						extensions.push(Prec.highest(keymap.of(keyBindings)));
 						// Add highlight plugins extracted to separate module
 						// Resolve highlight settings: prefer explicit options, fallback to global plugin settings if available
 						const resolveSetting = (key: string, def = true) => {
@@ -181,9 +190,12 @@ export class EmbeddableMarkdownEditor {
 									return !!selfRef.options.highlightSettings[key];
 								}
 								// fallback: some callers may expose settings on window for minimal changes
-								const globalSettings = (window as any).__tabflow_settings__ as
-									| Record<string, any>
-									| undefined;
+								interface WindowWithSettings {
+									__tabflow_settings__?: {
+										editorHighlights?: Record<string, boolean>;
+									};
+								}
+								const globalSettings = (window as unknown as WindowWithSettings).__tabflow_settings__;
 								if (
 									globalSettings &&
 									globalSettings.editorHighlights &&
@@ -263,8 +275,8 @@ export class EmbeddableMarkdownEditor {
 						// Inject AlphaTex language/highlighting
 						try {
 							const alphaExt = alphaTex();
-							if (Array.isArray(alphaExt)) extensions.push(...(alphaExt as any));
-							else extensions.push(alphaExt as any);
+							if (Array.isArray(alphaExt)) extensions.push(...alphaExt);
+							else extensions.push(alphaExt);
 						} catch {
 							// fail gracefully if alphaTex isn't available in runtime
 						}

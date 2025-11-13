@@ -160,16 +160,29 @@ export class EditorView extends FileView {
 		};
 
 		// 监听 EditorBar 设置变化事件，实现实时更新
-		this.registerEvent(
-			(this.app.workspace as any).on('tabflow:editorbar-components-changed', () => {
-				try {
-					console.debug('[EditorView] 检测到 EditorBar 设置变化，正在重新渲染...');
-					this._remountEditorBar();
-				} catch (e) {
-					console.warn('[EditorView] 重新渲染 EditorBar 失败:', e);
+		// Note: Obsidian's workspace.on may not be available in all contexts
+		// Using a try-catch to handle cases where the event system is not ready
+		try {
+			interface WorkspaceWithOn {
+				on?: (event: string, callback: () => void) => () => void;
+			}
+			const workspaceOn = (this.app.workspace as unknown as WorkspaceWithOn).on;
+			if (workspaceOn) {
+				const unsubscribe = workspaceOn('tabflow:editorbar-components-changed', () => {
+					try {
+						console.debug('[EditorView] 检测到 EditorBar 设置变化，正在重新渲染...');
+						this._remountEditorBar();
+					} catch (e) {
+						console.warn('[EditorView] 重新渲染 EditorBar 失败:', e);
+					}
+				});
+				if (unsubscribe) {
+					this.registerEvent(unsubscribe);
 				}
-			})
-		);
+			}
+		} catch (e) {
+			console.warn('[EditorView] 无法注册 EditorBar 设置变化监听器:', e);
+		}
 	}
 
 	getViewType(): string {
@@ -318,8 +331,11 @@ export class EditorView extends FileView {
 		const editorWrapper = editorContainer.createDiv({ cls: 'alphatex-editor-wrapper' });
 		// ensure global fallback for older code paths
 		try {
-			(window as any).__tabflow_settings__ =
-				(window as any).__tabflow_settings__ || this.plugin.settings;
+			interface WindowWithSettings {
+				__tabflow_settings__?: unknown;
+			}
+			(window as unknown as WindowWithSettings).__tabflow_settings__ =
+				(window as unknown as WindowWithSettings).__tabflow_settings__ || this.plugin.settings;
 		} catch {
 			// ignore
 		}
@@ -469,18 +485,24 @@ export class EditorView extends FileView {
 			initialPlaying: false,
 			getCurrentTime: () => {
 				const api = this.playground?.getApi();
-				return api ? (api as any).timePosition || 0 : 0;
+				interface AlphaTabApiWithTimePosition {
+					timePosition?: number;
+				}
+				return api ? (api as unknown as AlphaTabApiWithTimePosition).timePosition || 0 : 0;
 			},
 			getDuration: () => {
 				const api = this.playground?.getApi();
 				return api?.score
-					? (api.score as any).durationMillis || (api.score as any).duration || 0
+					? (api.score as unknown as { durationMillis?: number; duration?: number }).durationMillis || (api.score as unknown as { durationMillis?: number; duration?: number }).duration || 0
 					: 0;
 			},
 			seekTo: (ms: number) => {
 				const api = this.playground?.getApi();
 				if (api) {
-					(api as any).timePosition = ms;
+					interface AlphaTabApiWithTimePosition {
+						timePosition?: number;
+					}
+					(api as unknown as AlphaTabApiWithTimePosition).timePosition = ms;
 				}
 			},
 			onAudioCreated: (audioEl: HTMLAudioElement) => {
@@ -494,8 +516,12 @@ export class EditorView extends FileView {
 					const api = this.playground?.getApi();
 					if (api && api.playerPositionChanged) {
 						api.playerPositionChanged.on((args: unknown) => {
-							const position = (args as any).currentTime;
-							const duration = (args as any).endTime;
+							interface PlayerPositionArgs {
+								currentTime?: number;
+								endTime?: number;
+							}
+							const position = (args as PlayerPositionArgs).currentTime;
+							const duration = (args as PlayerPositionArgs).endTime;
 							if (this.progressBar && this.progressBar.updateProgress) {
 								// 更新进度条
 								this.progressBar.updateProgress(position, duration);

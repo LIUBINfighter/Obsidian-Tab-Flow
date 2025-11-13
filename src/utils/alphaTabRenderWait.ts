@@ -30,12 +30,19 @@ interface ListenerContainer {
 	detach(): void;
 }
 
+interface DocumentWithFonts {
+	fonts?: {
+		ready?: Promise<void>;
+	};
+}
+
 function onceFontReady(debug?: boolean): Promise<void> {
-	if (!(document as any).fonts || typeof (document as any).fonts.ready?.then !== 'function') {
+	const doc = document as unknown as DocumentWithFonts;
+	if (!doc.fonts || typeof doc.fonts.ready?.then !== 'function') {
 		debug && console.debug('[AlphaTabWait] Font API not supported; skip');
 		return Promise.resolve();
 	}
-	return (document as any).fonts.ready.catch(() => void 0);
+	return doc.fonts.ready.catch(() => void 0);
 }
 
 /**
@@ -63,7 +70,14 @@ export async function waitAlphaTabFullRender(
 
 	const start = performance.now();
 	if (!api) return { success: false, elapsedMs: 0, reason: 'api-null' };
-	const renderer: unknown = (api as any).renderer;
+	interface AlphaTabApiWithRenderer {
+		renderer?: {
+			on?: (event: string, callback: (...args: unknown[]) => void) => void;
+			off?: (event: string, callback: (...args: unknown[]) => void) => void;
+			renderResult?: (id: number | string) => void;
+		};
+	}
+	const renderer = (api as unknown as AlphaTabApiWithRenderer).renderer;
 	if (!renderer) return { success: false, elapsedMs: 0, reason: 'renderer-missing' };
 
 	let partialIds: Set<number | string> = new Set();
@@ -82,10 +96,15 @@ export async function waitAlphaTabFullRender(
 	};
 
 	const listeners: ListenerContainer[] = [];
+	interface EventEmitter {
+		on?: (event: string, callback: (...args: unknown[]) => void) => void;
+		off?: (event: string, callback: (...args: unknown[]) => void) => void;
+	}
 	const add = (target: unknown, evt: string, cb: (...args: unknown[]) => void) => {
 		try {
-			(target as any)?.[evt]?.on?.(cb);
-			listeners.push({ detach: () => (target as any)?.[evt]?.off?.(cb) });
+			const emitter = target as EventEmitter;
+			emitter?.on?.(evt, cb);
+			listeners.push({ detach: () => emitter?.off?.(evt, cb) });
 		} catch {
 			// ignore
 		}
@@ -99,12 +118,22 @@ export async function waitAlphaTabFullRender(
 		layoutFinished = false;
 	});
 
+	interface RenderResult {
+		id?: number | string;
+		totalWidth?: number;
+		totalHeight?: number;
+	}
 	add(renderer, 'partialLayoutFinished', (r: unknown) => {
 		abortIf();
-		partialIds.add((r as any).id);
+		const result = r as RenderResult;
+		if (result.id !== undefined) {
+			partialIds.add(result.id);
+		}
 		// proactively request rendering when lazy loading active
 		try {
-			(renderer as any).renderResult?.((r as any).id);
+			if (result.id !== undefined) {
+				renderer.renderResult?.(result.id);
+			}
 		} catch {
 			/* ignore */
 		}
@@ -112,19 +141,23 @@ export async function waitAlphaTabFullRender(
 
 	add(renderer, 'partialRenderFinished', (r: unknown) => {
 		abortIf();
-		renderedPartials.add((r as any).id);
+		const result = r as RenderResult;
+		if (result.id !== undefined) {
+			renderedPartials.add(result.id);
+		}
 	});
 
 	add(renderer, 'renderFinished', (r: unknown) => {
 		abortIf();
 		layoutFinished = true;
-		totalWidth = (r as any).totalWidth;
-		totalHeight = (r as any).totalHeight;
+		const result = r as RenderResult;
+		totalWidth = result.totalWidth ?? 0;
+		totalHeight = result.totalHeight ?? 0;
 		debug &&
 			console.debug(
 				'[AlphaTabWait] renderFinished layout complete',
-				(r as any).totalWidth,
-				(r as any).totalHeight
+				result.totalWidth,
+				result.totalHeight
 			);
 	});
 
