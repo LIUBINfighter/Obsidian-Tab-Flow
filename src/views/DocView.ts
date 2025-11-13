@@ -199,9 +199,7 @@ export class DocView extends ItemView {
 						this.plugin.app.commands.executeCommandById('app:open-settings');
 						setTimeout(() => {
 							try {
-								const search = document.querySelector(
-									'input.setting-search-input'
-								);
+								const search = document.querySelector('input.setting-search-input');
 								if (search) {
 									search.value = 'Tab Flow';
 									const ev = new Event('input', { bubbles: true });
@@ -297,7 +295,7 @@ export class DocView extends ItemView {
 					});
 				});
 				prev.addEventListener('keypress', (e) => {
-					if ((e).key === 'Enter') {
+					if (e.key === 'Enter') {
 						this.activeId = prevPanel.id;
 						this.render().then(() => {
 							this.scrollToContentAfterRender();

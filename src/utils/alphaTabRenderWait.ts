@@ -266,7 +266,7 @@ export async function withExportLock<T>(fn: () => Promise<T>): Promise<T> {
 		release = res as ReleaseFunction;
 	});
 	const callRelease = () => {
-		if (release) (release)();
+		if (release) release();
 	};
 	try {
 		const result = await fn();

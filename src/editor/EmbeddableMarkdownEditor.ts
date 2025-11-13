@@ -330,11 +330,7 @@ export class EmbeddableMarkdownEditor {
 							interface OldMethod {
 								call?: (thisArg: unknown, ...args: unknown[]) => void;
 							}
-							(oldMethod as OldMethod).call?.(
-								app.workspace,
-								leaf,
-								...args
-							);
+							(oldMethod as OldMethod).call?.(app.workspace, leaf, ...args);
 						}
 					},
 			})

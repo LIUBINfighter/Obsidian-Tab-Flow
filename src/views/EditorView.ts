@@ -63,7 +63,7 @@ export class EditorView extends FileView {
 	private async flushSave(): Promise<void> {
 		try {
 			if (!this.file || !this.editor) return;
-			const content = (this.editor).value;
+			const content = this.editor.value;
 			if (content === this.lastSavedContent) return;
 
 			// 使用 Vault.process 以防止在读取与写入之间发生外部更改导致的数据丢失
@@ -141,7 +141,7 @@ export class EditorView extends FileView {
 								return;
 							}
 							// 无论是否有本地未保存更改，自动用磁盘最新内容覆盖编辑器视图（按需求自动更新）
-							if ((this.editor).value !== latest) {
+							if (this.editor.value !== latest) {
 								this.editor.set(latest, false);
 								this.playground?.setValue(latest);
 								this.lastSavedContent = latest;

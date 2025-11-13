@@ -357,7 +357,7 @@ export async function renderPlayerTab(
 				(e.dataTransfer as DataTransfer).dropEffect = 'move';
 				clearDndHighlights();
 				const rect = card.getBoundingClientRect();
-				const offsetY = (e).clientY - rect.top;
+				const offsetY = e.clientY - rect.top;
 				const ratio = offsetY / rect.height;
 				if (ratio < 0.33) {
 					card.classList.add('insert-before');
