@@ -43,7 +43,7 @@ export async function renderPlayerTab(
 		attr: { style: 'display:flex; flex-direction:column; gap:8px;' },
 	});
 	const meta: Array<{
-		key: keyof PlayBarComponentVisibility | 'audioPlayer';
+		key: keyof PlayBarComponentVisibility;
 		label: string;
 		icon: string;
 		desc?: string;
@@ -165,7 +165,7 @@ export async function renderPlayerTab(
 	const renderCards = () => {
 		cardsWrap.empty();
 		const order = getOrder().filter((k) => meta.some((m) => m.key === k));
-		const comp = plugin.settings.playBar?.components || ({} as Record<string, boolean>);
+		const comp = plugin.settings.playBar?.components;
 		order.forEach((key) => {
 			const m = meta.find((x) => x.key === key);
 			if (!m) return;
@@ -211,18 +211,24 @@ export async function renderPlayerTab(
 			setIcon(downIcon, 'lucide-arrow-down');
 
 			new Setting(right)
-				.addToggle((t) => {
-					const current = !!(comp as Record<string, boolean>)[key];
-					t.setValue(m.disabled ? false : current).onChange(async (v) => {
-						plugin.settings.playBar = plugin.settings.playBar || {
-							components: {} as PlayBarComponentVisibility,
-						};
-						plugin.settings.playBar.components =
-							plugin.settings.playBar.components ||
-							({} as PlayBarComponentVisibility);
-						plugin.settings.playBar.components[
-							key as keyof PlayBarComponentVisibility
-						] = m.disabled ? false : v;
+				.addToggle((toggle) => {
+					const current = !!comp?.[key];
+					toggle.setValue(m.disabled ? false : current).onChange(async (value) => {
+						const playBarSettings =
+							plugin.settings.playBar ??
+							(plugin.settings.playBar = {
+								components: JSON.parse(
+									JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})
+								) as PlayBarComponentVisibility,
+								order: (DEFAULT_SETTINGS.playBar?.order || []).slice(),
+							});
+						const components =
+							playBarSettings.components ??
+							(playBarSettings.components = JSON.parse(
+								JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})
+							) as PlayBarComponentVisibility);
+
+						components[key] = m.disabled ? false : value;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(
@@ -233,10 +239,7 @@ export async function renderPlayerTab(
 						}
 					});
 					if (m.disabled) {
-						interface ToggleSetting {
-							toggleEl?: HTMLElement;
-						}
-						(t as unknown as ToggleSetting).toggleEl
+						toggle.toggleEl
 							?.querySelector('input')
 							?.setAttribute('disabled', 'true');
 					}

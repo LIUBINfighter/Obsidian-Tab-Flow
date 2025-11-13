@@ -674,8 +674,13 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.player as ExtendedPlayerSettings).scrollMode =
-						select.value as unknown as alphaTab.ScrollMode;
+					const modeMap: Record<string, alphaTab.ScrollMode> = {
+						continuous: alphaTab.ScrollMode.Continuous,
+						offScreen: alphaTab.ScrollMode.OffScreen,
+						off: alphaTab.ScrollMode.Off,
+					};
+					const nextMode = modeMap[select.value] ?? alphaTab.ScrollMode.Continuous;
+					(api.settings.player as ExtendedPlayerSettings).scrollMode = nextMode;
 					api.updateSettings();
 				} else {
 					eventBus?.publish('命令:设置滚动模式', select.value);

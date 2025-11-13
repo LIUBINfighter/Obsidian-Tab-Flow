@@ -39,11 +39,11 @@ export class AlphaTabService {
 		this.api = new alphaTab.AlphaTabApi(element, {
 			core: {
 				scriptFile: resources.alphaTabWorkerUri,
-				smuflFontSources: (resources.bravuraUri
-					? new Map([
+				smuflFontSources: resources.bravuraUri
+					? new Map<number, string>([
 							[
 								(
-									alphaTab as unknown as {
+									alphaTab as {
 										rendering?: {
 											glyphs?: { FontFileFormat?: { Woff2?: number } };
 										};
@@ -52,7 +52,7 @@ export class AlphaTabService {
 								resources.bravuraUri,
 							],
 						])
-					: new Map()) as unknown as Map<number, string>,
+					: new Map<number, string>(),
 				fontDirectory: '',
 			},
 			player: {
@@ -308,10 +308,9 @@ export class AlphaTabService {
 	public async loadAlphaTexScore(textContent: string) {
 		try {
 			// 使用 AlphaTab 的 tex 方法加载 AlphaTex 内容
-			interface ExtendedAlphaTabApi {
+			const extendedApi = this.api as alphaTab.AlphaTabApi & {
 				tex?: (text: string) => void | Promise<void>;
-			}
-			const extendedApi = this.api as unknown as ExtendedAlphaTabApi;
+			};
 			if (typeof extendedApi.tex === 'function') {
 				const result = extendedApi.tex(textContent);
 				if (result instanceof Promise) {
@@ -319,16 +318,15 @@ export class AlphaTabService {
 				}
 			} else {
 				// 备用方案：使用 AlphaTexImporter
-				interface AlphaTabImporter {
+				type AlphaTabImporter = {
 					importer?: {
 						AlphaTexImporter?: new () => {
 							initFromString: (text: string, settings: unknown) => void;
 							readScore: () => unknown;
 						};
 					};
-				}
-				const Importer = (alphaTab as unknown as AlphaTabImporter).importer
-					?.AlphaTexImporter;
+				};
+				const Importer = (alphaTab as AlphaTabImporter).importer?.AlphaTexImporter;
 				if (Importer) {
 					const importer = new Importer();
 					importer.initFromString(textContent, this.api.settings);
@@ -379,11 +377,11 @@ export class AlphaTabService {
 			this.api = new alphaTab.AlphaTabApi(this.element, {
 				core: {
 					scriptFile: this.resources.alphaTabWorkerUri,
-					smuflFontSources: (this.resources.bravuraUri
-						? new Map([
+					smuflFontSources: this.resources.bravuraUri
+						? new Map<number, string>([
 								[
 									(
-										alphaTab as unknown as {
+										alphaTab as {
 											rendering?: {
 												glyphs?: { FontFileFormat?: { Woff2?: number } };
 											};
@@ -392,7 +390,7 @@ export class AlphaTabService {
 									this.resources.bravuraUri,
 								],
 							])
-						: new Map()) as unknown as Map<number, string>,
+						: new Map<number, string>(),
 					fontDirectory: '',
 				},
 				player: {

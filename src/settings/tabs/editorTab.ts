@@ -43,116 +43,84 @@ export async function renderEditorTab(
 			'rem'
 		);
 
-		const sFont = new Setting(tabContents)
-			.setName(t('settings.editor.fontSize', undefined, '编辑器字体大小'))
-			.setDesc(
-				t(
-					'settings.editor.fontSizeDesc',
-					undefined,
-					'数值 + 单位，例如 0.95 rem；仅接受数字并从下拉选择单位'
-				)
-			);
+	let fontText: TextComponent;
+	let fontDropdown: DropdownComponent;
+	let fontUnit = fontDefault.unit;
+	let fontValue = fontDefault.num;
 
-		let fontText: TextComponent;
-		let fontDropdown: DropdownComponent;
+	const sFont = new Setting(tabContents)
+		.setName(t('settings.editor.fontSize', undefined, '编辑器字体大小'))
+		.setDesc(
+			t(
+				'settings.editor.fontSizeDesc',
+				undefined,
+				'数值 + 单位，例如 0.95 rem；仅接受数字并从下拉选择单位'
+			)
+		);
 
-		sFont
-			.addText((text) => {
-				fontText = text;
-				// restrict to numeric input
-				try {
-					interface TextComponentWithInput {
-						inputEl?: HTMLInputElement;
-					}
-					(text as unknown as TextComponentWithInput).inputEl?.setAttribute(
-						'type',
-						'number'
-					);
-					(text as unknown as TextComponentWithInput).inputEl?.setAttribute(
-						'step',
-						'0.01'
-					);
-					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('min', '0');
-				} catch (_) {
-					// console.debug('set input attributes failed', _);
+	sFont
+		.addText((text) => {
+			fontText = text;
+			const inputEl = text.inputEl;
+			if (inputEl) {
+				inputEl.setAttribute('type', 'number');
+				inputEl.setAttribute('step', '0.01');
+				inputEl.setAttribute('min', '0');
+			}
+			text.setValue(fontDefault.num).onChange(async (numStr) => {
+				fontValue = numStr;
+				const composed = `${numStr}${fontUnit}`;
+				const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
+				if (!valid) {
+					fontText.inputEl.classList.add('tabflow-invalid-input');
+					return;
 				}
-				text.setValue(fontDefault.num).onChange(async (numStr) => {
-					interface SettingWithUnit {
-						__unitValue?: string;
-					}
-					const unit =
-						(sFont as unknown as SettingWithUnit).__unitValue || fontDefault.unit;
-					const composed = `${numStr}${unit}`;
+				fontText.inputEl.classList.remove('tabflow-invalid-input');
+				plugin.settings.editorFontSize = composed;
+				await plugin.saveSettings();
+				document.documentElement.style.setProperty('--alphatex-editor-font-size', composed);
+			});
+		})
+		.addDropdown((dd) => {
+			fontDropdown = dd;
+			unitsFont.forEach((u) => dd.addOption(u, u));
+			dd.setValue(fontDefault.unit).onChange((unit) => {
+				void (async () => {
+					fontUnit = unit;
+					const composed = `${fontValue}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
 					if (!valid) {
-						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
 						fontText.inputEl.classList.add('tabflow-invalid-input');
 						return;
 					}
 					fontText.inputEl.classList.remove('tabflow-invalid-input');
 					plugin.settings.editorFontSize = composed;
 					await plugin.saveSettings();
+					document.documentElement.style.setProperty('--alphatex-editor-font-size', composed);
+				})();
+			});
+		})
+		.addButton((btn) => {
+			btn.setIcon('rotate-ccw')
+				.setTooltip('重置为默认')
+				.onClick(async () => {
+					const defaultVal = DEFAULT_SETTINGS.editorFontSize || '0.95rem';
+					const parsed = parseCssValue(defaultVal, '0.95', 'rem');
+					fontUnit = parsed.unit;
+					fontValue = parsed.num;
+					plugin.settings.editorFontSize = defaultVal;
+					await plugin.saveSettings();
 					document.documentElement.style.setProperty(
 						'--alphatex-editor-font-size',
-						composed
+						defaultVal
 					);
-					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+					fontText.setValue(parsed.num);
+					fontDropdown.setValue(parsed.unit);
+					new Notice(
+						t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
+					);
 				});
-			})
-			.addDropdown((dd) => {
-				fontDropdown = dd;
-				unitsFont.forEach((u) => dd.addOption(u, u));
-				dd.setValue(fontDefault.unit).onChange((unit) => {
-					void (async () => {
-						// store unit on setting instance for access from text handler
-						interface SettingWithUnit {
-							__unitValue?: string;
-							value?: string;
-						}
-						(sFont as unknown as SettingWithUnit).__unitValue = unit;
-						const num = (sFont as unknown as SettingWithUnit).value || fontDefault.num;
-						const composed = `${num}${unit}`;
-						const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
-						if (!valid) {
-							// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
-							fontText.inputEl.classList.add('tabflow-invalid-input');
-							return;
-						}
-						fontText.inputEl.classList.remove('tabflow-invalid-input');
-						plugin.settings.editorFontSize = composed;
-						await plugin.saveSettings();
-						document.documentElement.style.setProperty(
-							'--alphatex-editor-font-size',
-							composed
-						);
-						// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
-					})();
-				});
-			})
-			.addButton((btn) => {
-				btn.setIcon('rotate-ccw')
-					.setTooltip('重置为默认')
-					.onClick(async () => {
-						const defaultVal = DEFAULT_SETTINGS.editorFontSize || '0.95rem';
-						const parsed = parseCssValue(defaultVal, '0.95', 'rem');
-						plugin.settings.editorFontSize = defaultVal;
-						await plugin.saveSettings();
-						document.documentElement.style.setProperty(
-							'--alphatex-editor-font-size',
-							defaultVal
-						);
-						// Update UI values
-						fontText.setValue(parsed.num);
-						fontDropdown.setValue(parsed.unit);
-						interface SettingWithUnit {
-							__unitValue?: string;
-						}
-						(sFont as unknown as SettingWithUnit).__unitValue = parsed.unit;
-						new Notice(
-							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
-						);
-					});
-			});
+		});
 
 		// Bottom gap
 		const gapDefault = parseCssValue(
@@ -173,30 +141,23 @@ export async function renderEditorTab(
 
 		let gapText: TextComponent;
 		let gapDropdown: DropdownComponent;
+		let gapUnit = gapDefault.unit;
+		let gapValue = gapDefault.num;
 
 		sGap.addText((text) => {
 			gapText = text;
-			try {
-				interface TextComponentWithInput {
-					inputEl?: HTMLInputElement;
-				}
-				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('type', 'number');
-				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('step', '1');
-				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('min', '0');
-			} catch (_) {
-				// console.debug('set input attributes failed', _);
+			const inputEl = text.inputEl;
+			if (inputEl) {
+				inputEl.setAttribute('type', 'number');
+				inputEl.setAttribute('step', '1');
+				inputEl.setAttribute('min', '0');
 			}
 			text.setValue(gapDefault.num).onChange((numStr) => {
 				void (async () => {
-					interface SettingWithUnit {
-						__unitValue?: string;
-					}
-					const unit =
-						(sGap as unknown as SettingWithUnit).__unitValue || gapDefault.unit;
-					const composed = `${numStr}${unit}`;
+					gapValue = numStr;
+					const composed = `${numStr}${gapUnit}`;
 					const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 					if (!valid) {
-						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
 						gapText.inputEl.classList.add('tabflow-invalid-input');
 						return;
 					}
@@ -204,10 +165,9 @@ export async function renderEditorTab(
 					plugin.settings.editorBottomGap = composed;
 					await plugin.saveSettings();
 					document.documentElement.style.setProperty(
-						'--alphatex-editor-font-size',
+						'--alphatex-editor-bottom-gap',
 						composed
 					);
-					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
 				})();
 			});
 		})
@@ -216,16 +176,10 @@ export async function renderEditorTab(
 				unitsGap.forEach((u) => dd.addOption(u, u));
 				dd.setValue(gapDefault.unit).onChange((unit) => {
 					void (async () => {
-						interface SettingWithUnit {
-							__unitValue?: string;
-							value?: string;
-						}
-						(sGap as unknown as SettingWithUnit).__unitValue = unit;
-						const num = (sGap as unknown as SettingWithUnit).value || gapDefault.num;
-						const composed = `${num}${unit}`;
+						gapUnit = unit;
+						const composed = `${gapValue}${unit}`;
 						const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 						if (!valid) {
-							// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
 							gapText.inputEl.classList.add('tabflow-invalid-input');
 							return;
 						}
@@ -236,7 +190,6 @@ export async function renderEditorTab(
 							'--alphatex-editor-bottom-gap',
 							composed
 						);
-						// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
 					})();
 				});
 			})
@@ -246,19 +199,16 @@ export async function renderEditorTab(
 					.onClick(async () => {
 						const defaultVal = DEFAULT_SETTINGS.editorBottomGap || '40vh';
 						const parsed = parseCssValue(defaultVal, '40', 'vh');
+						gapUnit = parsed.unit;
+						gapValue = parsed.num;
 						plugin.settings.editorBottomGap = defaultVal;
 						await plugin.saveSettings();
 						document.documentElement.style.setProperty(
 							'--alphatex-editor-bottom-gap',
 							defaultVal
 						);
-						// Update UI values
 						gapText.setValue(parsed.num);
 						gapDropdown.setValue(parsed.unit);
-						interface SettingWithUnit {
-							__unitValue?: string;
-						}
-						(sGap as unknown as SettingWithUnit).__unitValue = parsed.unit;
 						new Notice(
 							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
 						);
@@ -647,7 +597,7 @@ export async function renderEditorTab(
 	});
 
 	const meta: Array<{
-		key: keyof EditorBarComponentVisibility | 'audioPlayer';
+		key: keyof EditorBarComponentVisibility;
 		label: string;
 		icon: string;
 		desc?: string;
@@ -801,7 +751,7 @@ export async function renderEditorTab(
 	const renderCards = () => {
 		cardsWrap.empty();
 		const order = getOrder().filter((k) => meta.some((m) => m.key === k));
-		const comp = plugin.settings.editorBar?.components || ({} as EditorBarComponentVisibility);
+		const comp = plugin.settings.editorBar?.components;
 		order.forEach((key) => {
 			const m = meta.find((x) => x.key === key);
 			if (!m) return;
@@ -851,22 +801,26 @@ export async function renderEditorTab(
 			setIcon(downIcon, 'lucide-arrow-down');
 
 			new Setting(right)
-				.addToggle((t) => {
-					const current = !!(comp as unknown as Record<string, boolean>)[key];
-					t.setValue(m.disabled ? false : current).onChange(async (v) => {
-						plugin.settings.editorBar = plugin.settings.editorBar || {
-							components: {} as EditorBarComponentVisibility,
-						};
-						if (!plugin.settings.editorBar.components) {
-							plugin.settings.editorBar.components =
-								{} as EditorBarComponentVisibility;
-						}
-						(
-							plugin.settings.editorBar.components as unknown as Record<
-								string,
-								boolean
-							>
-						)[key] = m.disabled ? false : v;
+				.addToggle((toggle) => {
+					const current = !!comp?.[key];
+					toggle.setValue(m.disabled ? false : current).onChange(async (value) => {
+						const editorBarSettings =
+							plugin.settings.editorBar ??
+							(plugin.settings.editorBar = {
+								components: JSON.parse(
+									JSON.stringify(
+										DEFAULT_SETTINGS.editorBar?.components || {}
+									)
+								) as EditorBarComponentVisibility,
+								order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
+							});
+						const components =
+							editorBarSettings.components ??
+							(editorBarSettings.components = JSON.parse(
+								JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
+							) as EditorBarComponentVisibility);
+
+						components[key] = m.disabled ? false : value;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(
@@ -876,11 +830,8 @@ export async function renderEditorTab(
 							// Ignore workspace trigger errors
 						}
 					});
-					interface ToggleSetting {
-						toggleEl?: HTMLElement;
-					}
 					if (m.disabled) {
-						(t as unknown as ToggleSetting).toggleEl
+						toggle.toggleEl
 							?.querySelector('input')
 							?.setAttribute('disabled', 'true');
 					}

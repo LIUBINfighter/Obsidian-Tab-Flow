@@ -2,6 +2,13 @@ import { App, PluginSettingTab } from 'obsidian';
 import TabFlowPlugin from '../main';
 import { t } from '../i18n';
 
+type AppWithSetting = App & {
+	setting?: {
+		open?: () => void;
+		openTabById?: (id: string) => void;
+	};
+};
+
 /**
  * 新的 SettingTab：将三个子页签的渲染逻辑委派给 tabs/* 下的模块。
  * 每个子页导出对应的 renderXTab(container, plugin, app)
@@ -9,6 +16,7 @@ import { t } from '../i18n';
 export class SettingTab extends PluginSettingTab {
 	plugin: TabFlowPlugin;
 	private _eventBound = false;
+	private forcedTab?: string;
 
 	constructor(app: App, plugin: TabFlowPlugin) {
 		super(app, plugin);
@@ -16,26 +24,16 @@ export class SettingTab extends PluginSettingTab {
 
 		if (!this._eventBound) {
 			// 保留来自旧实现的事件：打开 plugin settings 的 player 子页签
-			// @ts-ignore
 			this.app.workspace.on('tabflow:open-plugin-settings-player', async () => {
 				try {
-					// 打开设置面板并定位到本插件设置页
-					interface AppWithSetting {
-						setting?: {
-							open?: () => void;
-							openTabById?: (id: string) => void;
-						};
-					}
-					interface SettingTabWithForce {
-						_forceActiveInnerTab?: string;
-					}
-					(this.app as unknown as AppWithSetting).setting?.open?.();
-					const setting = (this.app as unknown as AppWithSetting).setting;
+					const settingManager = (this.app as AppWithSetting).setting;
+					settingManager?.open?.();
+					const setting = settingManager;
 					if (setting?.openTabById) {
 						setting.openTabById(this.plugin.manifest.id);
 					}
 					// 标记强制激活 player 子页签
-					(this as unknown as SettingTabWithForce)._forceActiveInnerTab = 'player';
+					this.forcedTab = 'player';
 					try {
 						await this.display();
 					} catch {
@@ -47,28 +45,12 @@ export class SettingTab extends PluginSettingTab {
 			});
 
 			// 添加 editor 子页签的事件监听
-			// @ts-ignore
 			this.app.workspace.on('tabflow:open-plugin-settings-editor', async () => {
 				try {
-					// 打开设置面板并定位到本插件设置页
-					// @ts-ignore
-					interface AppWithSetting {
-						setting?: {
-							open?: () => void;
-							openTabById?: (id: string) => void;
-						};
-					}
-					(this.app as unknown as AppWithSetting).setting?.open?.();
-					if ((this.app as unknown as AppWithSetting).setting?.openTabById) {
-						(this.app as unknown as AppWithSetting).setting?.openTabById?.(
-							this.plugin.manifest.id
-						);
-					}
-					// 标记强制激活 editor 子页签
-					interface SettingTabWithForce {
-						_forceActiveInnerTab?: string;
-					}
-					(this as unknown as SettingTabWithForce)._forceActiveInnerTab = 'editor';
+					const settingManager = (this.app as AppWithSetting).setting;
+					settingManager?.open?.();
+					settingManager?.openTabById?.(this.plugin.manifest.id);
+					this.forcedTab = 'editor';
 					try {
 						await this.display();
 					} catch {
@@ -80,28 +62,12 @@ export class SettingTab extends PluginSettingTab {
 			});
 
 			// 添加 about 子页签的事件监听
-			// @ts-ignore
 			this.app.workspace.on('tabflow:open-plugin-settings-about', async () => {
 				try {
-					// 打开设置面板并定位到本插件设置页
-					// @ts-ignore
-					interface AppWithSetting {
-						setting?: {
-							open?: () => void;
-							openTabById?: (id: string) => void;
-						};
-					}
-					(this.app as unknown as AppWithSetting).setting?.open?.();
-					if ((this.app as unknown as AppWithSetting).setting?.openTabById) {
-						(this.app as unknown as AppWithSetting).setting?.openTabById?.(
-							this.plugin.manifest.id
-						);
-					}
-					// 标记强制激活 about 子页签
-					interface SettingTabWithForce {
-						_forceActiveInnerTab?: string;
-					}
-					(this as unknown as SettingTabWithForce)._forceActiveInnerTab = 'about';
+					const settingManager = (this.app as AppWithSetting).setting;
+					settingManager?.open?.();
+					settingManager?.openTabById?.(this.plugin.manifest.id);
+					this.forcedTab = 'about';
 					try {
 						await this.display();
 					} catch {
@@ -129,11 +95,8 @@ export class SettingTab extends PluginSettingTab {
 			{ id: 'about', name: t('settings.tabs.about') },
 		];
 
-		interface SettingTabWithForce {
-			_forceActiveInnerTab?: string;
-		}
-		let activeTab = (this as unknown as SettingTabWithForce)._forceActiveInnerTab || 'general';
-		(this as unknown as SettingTabWithForce)._forceActiveInnerTab = undefined;
+		let activeTab = this.forcedTab || 'general';
+		this.forcedTab = undefined;
 
 		const renderTab = async (tabId: string) => {
 			contentsEl.empty();

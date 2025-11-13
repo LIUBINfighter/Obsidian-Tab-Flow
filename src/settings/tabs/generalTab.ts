@@ -154,12 +154,8 @@ export async function renderGeneralTab(
 	});
 	openDirBtn.onclick = () => {
 		try {
-			interface VaultAdapterWithBasePath {
-				getBasePath?: () => string;
-			}
-			const basePath = (
-				app.vault.adapter as unknown as VaultAdapterWithBasePath
-			).getBasePath?.();
+			const adapter = app.vault.adapter as { getBasePath?: () => string };
+			const basePath = typeof adapter.getBasePath === 'function' ? adapter.getBasePath() : undefined;
 			if (!basePath) {
 				new Notice(t('assetManagement.desktopOnly'));
 				return;
@@ -186,8 +182,8 @@ export async function renderGeneralTab(
 				message: t('assetManagement.confirmRestart'),
 			});
 			if (confirmed) {
-				// @ts-ignore
-				app.commands.executeCommandById('app:reload');
+				const commands = app.commands as { executeCommandById?: (id: string) => void };
+				commands.executeCommandById?.('app:reload');
 			}
 		})();
 	};
