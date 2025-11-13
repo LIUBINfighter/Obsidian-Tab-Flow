@@ -165,10 +165,10 @@ export async function renderPlayerTab(
 
 	const renderCards = () => {
 		cardsWrap.empty();
-		const order = getOrder().filter((k) => meta.some((m) => m.key === (k as any)));
-		const comp = plugin.settings.playBar?.components || ({} as any);
+		const order = getOrder().filter((k) => meta.some((m) => m.key === k));
+		const comp = plugin.settings.playBar?.components || ({} as Record<string, boolean>);
 		order.forEach((key) => {
-			const m = meta.find((x) => x.key === (key as any));
+			const m = meta.find((x) => x.key === key);
 			if (!m) return;
 			const card = cardsWrap.createDiv({
 				cls: 'tabflow-card',
@@ -214,11 +214,11 @@ export async function renderPlayerTab(
 					const current = !!(comp as any)[key];
 					t.setValue(m.disabled ? false : current).onChange(async (v) => {
 						plugin.settings.playBar = plugin.settings.playBar || {
-							components: {} as any,
+							components: {} as PlayBarComponentVisibility,
 						};
-						(plugin.settings.playBar as any).components =
-							plugin.settings.playBar?.components || {};
-						(plugin.settings.playBar as any).components[key] = m.disabled ? false : v;
+						plugin.settings.playBar.components =
+							plugin.settings.playBar.components || ({} as PlayBarComponentVisibility);
+						plugin.settings.playBar.components[key as keyof PlayBarComponentVisibility] = m.disabled ? false : v;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(
@@ -228,10 +228,14 @@ export async function renderPlayerTab(
 							// Ignore workspace trigger errors
 						}
 					});
-					if (m.disabled)
-						(t as any).toggleEl
-							.querySelector('input')
+					if (m.disabled) {
+						interface ToggleSetting {
+							toggleEl?: HTMLElement;
+						}
+						(t as unknown as ToggleSetting).toggleEl
+							?.querySelector('input')
 							?.setAttribute('disabled', 'true');
+					}
 				})
 				.setClass('tabflow-no-border');
 
@@ -278,10 +282,12 @@ export async function renderPlayerTab(
 				if (i > 0) {
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
-						plugin.settings.playBar = plugin.settings.playBar || {
-							components: {} as any,
-						};
-						(plugin.settings.playBar as any).order = cur;
+						if (!plugin.settings.playBar) {
+							plugin.settings.playBar = {
+								components: {} as PlayBarComponentVisibility,
+							};
+						}
+						plugin.settings.playBar.order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -301,10 +307,12 @@ export async function renderPlayerTab(
 				if (i >= 0 && i < cur.length - 1) {
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
-						plugin.settings.playBar = plugin.settings.playBar || {
-							components: {} as any,
-						};
-						(plugin.settings.playBar as any).order = cur;
+						if (!plugin.settings.playBar) {
+							plugin.settings.playBar = {
+								components: {} as PlayBarComponentVisibility,
+							};
+						}
+						plugin.settings.playBar.order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -377,8 +385,12 @@ export async function renderPlayerTab(
 						if (from < insertIndex) insertIndex -= 1;
 						cur.splice(insertIndex, 0, moved);
 					}
-					plugin.settings.playBar = plugin.settings.playBar || { components: {} as any };
-					(plugin.settings.playBar as any).order = cur;
+					plugin.settings.playBar = plugin.settings.playBar || { components: {} as PlayBarComponentVisibility };
+					if (plugin.settings.playBar) {
+						if (plugin.settings.playBar) {
+							plugin.settings.playBar.order = cur;
+						}
+					}
 					await plugin.saveSettings();
 					renderCards();
 					try {

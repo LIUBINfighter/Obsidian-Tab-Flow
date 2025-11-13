@@ -61,14 +61,20 @@ export async function renderEditorTab(
 				fontText = text;
 				// restrict to numeric input
 				try {
-					(text as any).inputEl.setAttribute('type', 'number');
-					(text as any).inputEl.setAttribute('step', '0.01');
-					(text as any).inputEl.setAttribute('min', '0');
+					interface TextComponentWithInput {
+						inputEl?: HTMLInputElement;
+					}
+					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('type', 'number');
+					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('step', '0.01');
+					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('min', '0');
 				} catch (e) {
 					// console.debug('set input attributes failed', e);
 				}
 				text.setValue(fontDefault.num).onChange(async (numStr) => {
-					const unit = (sFont as any).__unitValue || fontDefault.unit;
+					interface SettingWithUnit {
+						__unitValue?: string;
+					}
+					const unit = (sFont as unknown as SettingWithUnit).__unitValue || fontDefault.unit;
 					const composed = `${numStr}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
 					if (!valid) {
@@ -92,8 +98,12 @@ export async function renderEditorTab(
 				dd.setValue(fontDefault.unit).onChange((unit) => {
 					void (async () => {
 						// store unit on setting instance for access from text handler
-						(sFont as any).__unitValue = unit;
-						const num = (sFont as any).value || fontDefault.num;
+						interface SettingWithUnit {
+							__unitValue?: string;
+							value?: string;
+						}
+						(sFont as unknown as SettingWithUnit).__unitValue = unit;
+						const num = (sFont as unknown as SettingWithUnit).value || fontDefault.num;
 						const composed = `${num}${unit}`;
 						const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
 						if (!valid) {
@@ -157,9 +167,12 @@ export async function renderEditorTab(
 		sGap.addText((text) => {
 			gapText = text;
 			try {
-				(text as any).inputEl.setAttribute('type', 'number');
-				(text as any).inputEl.setAttribute('step', '1');
-				(text as any).inputEl.setAttribute('min', '0');
+				interface TextComponentWithInput {
+					inputEl?: HTMLInputElement;
+				}
+				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('type', 'number');
+				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('step', '1');
+				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('min', '0');
 			} catch (e) {
 				// console.debug('set input attributes failed', e);
 			}

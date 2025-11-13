@@ -43,12 +43,21 @@ export class SettingTab extends PluginSettingTab {
 				try {
 					// 打开设置面板并定位到本插件设置页
 					// @ts-ignore
-					(this.app as any).setting?.open?.();
-					if ((this.app as any).setting?.openTabById) {
-						(this.app as any).setting.openTabById(this.plugin.manifest.id);
+					interface AppWithSetting {
+						setting?: {
+							open?: () => void;
+							openTabById?: (id: string) => void;
+						};
+					}
+					(this.app as unknown as AppWithSetting).setting?.open?.();
+					if ((this.app as unknown as AppWithSetting).setting?.openTabById) {
+						(this.app as unknown as AppWithSetting).setting?.openTabById?.(this.plugin.manifest.id);
 					}
 					// 标记强制激活 editor 子页签
-					(this as any)._forceActiveInnerTab = 'editor';
+					interface SettingTabWithForce {
+						_forceActiveInnerTab?: string;
+					}
+					(this as unknown as SettingTabWithForce)._forceActiveInnerTab = 'editor';
 					try {
 						await this.display();
 					} catch {
@@ -65,12 +74,21 @@ export class SettingTab extends PluginSettingTab {
 				try {
 					// 打开设置面板并定位到本插件设置页
 					// @ts-ignore
-					(this.app as any).setting?.open?.();
-					if ((this.app as any).setting?.openTabById) {
-						(this.app as any).setting.openTabById(this.plugin.manifest.id);
+					interface AppWithSetting {
+						setting?: {
+							open?: () => void;
+							openTabById?: (id: string) => void;
+						};
+					}
+					(this.app as unknown as AppWithSetting).setting?.open?.();
+					if ((this.app as unknown as AppWithSetting).setting?.openTabById) {
+						(this.app as unknown as AppWithSetting).setting?.openTabById?.(this.plugin.manifest.id);
 					}
 					// 标记强制激活 about 子页签
-					(this as any)._forceActiveInnerTab = 'about';
+					interface SettingTabWithForce {
+						_forceActiveInnerTab?: string;
+					}
+					(this as unknown as SettingTabWithForce)._forceActiveInnerTab = 'about';
 					try {
 						await this.display();
 					} catch {
@@ -98,8 +116,11 @@ export class SettingTab extends PluginSettingTab {
 			{ id: 'about', name: t('settings.tabs.about') },
 		];
 
-		let activeTab = (this as any)._forceActiveInnerTab || 'general';
-		(this as any)._forceActiveInnerTab = undefined;
+		interface SettingTabWithForce {
+			_forceActiveInnerTab?: string;
+		}
+		let activeTab = (this as unknown as SettingTabWithForce)._forceActiveInnerTab || 'general';
+		(this as unknown as SettingTabWithForce)._forceActiveInnerTab = undefined;
 
 		const renderTab = async (tabId: string) => {
 			contentsEl.empty();
