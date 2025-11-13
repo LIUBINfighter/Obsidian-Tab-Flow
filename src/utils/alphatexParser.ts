@@ -77,11 +77,11 @@ export function toScrollMode(value: number | string | undefined): number | undef
 	const key = String(value).toLowerCase();
 	// Disable no-explicit-any: AlphaTab ScrollMode enum requires dynamic access
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const ScrollMode: any = (alphaTab as any).ScrollMode || {};
+	const ScrollMode: unknown = (alphaTab as any).ScrollMode || {};
 	const mapping: Record<string, number | undefined> = {
-		continuous: ScrollMode.Continuous,
-		singlepage: ScrollMode.SinglePage,
-		page: ScrollMode.Page,
+		continuous: (ScrollMode as any).Continuous,
+		singlepage: (ScrollMode as any).SinglePage,
+		page: (ScrollMode as any).Page,
 	};
 	return mapping[key];
 }

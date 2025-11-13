@@ -5,7 +5,7 @@ const initQueue: Array<() => void> = [];
 export function requestIdle(fn: () => void) {
 	const ric = (window as any).requestIdleCallback as
 		| undefined
-		| ((cb: (deadline: any) => void) => number);
+		| ((cb: (deadline: unknown) => void) => number);
 	if (typeof ric === 'function') {
 		ric(() => fn());
 	} else {

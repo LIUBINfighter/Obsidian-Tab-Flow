@@ -63,7 +63,7 @@ export async function waitAlphaTabFullRender(
 
 	const start = performance.now();
 	if (!api) return { success: false, elapsedMs: 0, reason: 'api-null' };
-	const renderer: any = (api as any).renderer;
+	const renderer: unknown = (api as any).renderer;
 	if (!renderer) return { success: false, elapsedMs: 0, reason: 'renderer-missing' };
 
 	let partialIds: Set<number | string> = new Set();

@@ -7,7 +7,7 @@ export type TrackEventType = 'solo' | 'mute' | 'volume' | 'transpose' | 'transpo
 export interface TrackEventPayload {
 	type: TrackEventType;
 	track: alphaTab.model.Track;
-	value: any;
+	value: unknown;
 }
 
 export function handleTrackEvent(
@@ -18,20 +18,21 @@ export function handleTrackEvent(
 		console.warn('[handleTrackEvent] AlphaTabApi 未定义，事件被忽略:', payload);
 		return;
 	}
+	const value = payload.value as any; // 动态类型,运行时类型多样
 	switch (payload.type) {
 		case 'solo':
-			api.changeTrackSolo([payload.track], !!payload.value);
+			api.changeTrackSolo([payload.track], !!value);
 			break;
 		case 'mute':
-			api.changeTrackMute([payload.track], !!payload.value);
+			api.changeTrackMute([payload.track], !!value);
 			break;
 		case 'volume':
 			// value: 0-16, alphaTab 期望 0-1
-			api.changeTrackVolume([payload.track], Math.max(0, Math.min(1, payload.value / 16)));
+			api.changeTrackVolume([payload.track], Math.max(0, Math.min(1, value / 16)));
 			break;
 		case 'transpose':
 			// value: -12 ~ 12
-			api.changeTrackTranspositionPitch([payload.track], payload.value);
+			api.changeTrackTranspositionPitch([payload.track], value);
 			break;
 		case 'transposeAudio':
 			// 这里可扩展为音频移调逻辑

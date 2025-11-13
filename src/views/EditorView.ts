@@ -35,7 +35,7 @@ export class EditorView extends FileView {
 		| 'single-bar' = 'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
 	private eventBus: EventBus;
-	private progressBar: any = null; // 保存进度条引用
+	private progressBar: ProgressBarElement | null = null; // 保存进度条引用
 	private lastSavedContent = '';
 	private pendingSaveTimer: number | null = null;
 
@@ -493,10 +493,12 @@ export class EditorView extends FileView {
 				const setupProgressUpdate = () => {
 					const api = this.playground?.getApi();
 					if (api && api.playerPositionChanged) {
-						api.playerPositionChanged.on((args: any) => {
+						api.playerPositionChanged.on((args: unknown) => {
+							const position = (args as any).currentTime;
+							const duration = (args as any).endTime;
 							if (this.progressBar && this.progressBar.updateProgress) {
 								// 更新进度条
-								this.progressBar.updateProgress(args.currentTime, args.endTime);
+								this.progressBar.updateProgress(position, duration);
 
 								// 同时更新时间显示元素
 								const editorBarContainer =
@@ -510,12 +512,8 @@ export class EditorView extends FileView {
 									) as HTMLSpanElement;
 
 									if (currentTimeDisplay && totalTimeDisplay) {
-										currentTimeDisplay.textContent = formatTime(
-											args.currentTime || 0
-										);
-										totalTimeDisplay.textContent = formatTime(
-											args.endTime || 0
-										);
+										currentTimeDisplay.textContent = formatTime(position || 0);
+										totalTimeDisplay.textContent = formatTime(duration || 0);
 									}
 								}
 							}

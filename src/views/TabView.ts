@@ -282,7 +282,7 @@ export class TabView extends FileView {
 	 * 设置视图的状态。
 	 * 当 Obsidian 反序列化布局时调用此方法。
 	 */
-	async setState(state: ITabViewPersistedState, result: any): Promise<void> {
+	async setState(state: ITabViewPersistedState, result: unknown): Promise<void> {
 		// 应用文件路径
 		if (state.filePath && state.filePath !== this.currentFile?.path) {
 			try {
@@ -322,7 +322,7 @@ export class TabView extends FileView {
 		}
 
 		// 调用父类的 setState
-		await super.setState(state, result);
+		await super.setState(state, result as any);
 	}
 
 	/**

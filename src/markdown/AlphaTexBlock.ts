@@ -333,9 +333,9 @@ export function mountAlphaTexBlock(
 					(api as any).tex(body);
 					return;
 				}
-				const Importer: any = (alphaTab as any).importer?.AlphaTexImporter;
+				const Importer: unknown = (alphaTab as any).importer?.AlphaTexImporter;
 				if (Importer) {
-					const imp = new Importer();
+					const imp = new (Importer as any)();
 					imp.logErrors = true;
 					imp.initFromString(body, api!.settings);
 					const score = imp.readScore();
@@ -565,8 +565,8 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '回到底部');
 					btn.onclick = () => {
 						try {
-							const score: any = (api as any).score;
-							const masterBars = score?.masterBars || [];
+							const score: unknown = (api as any).score;
+							const masterBars = (score as any)?.masterBars || [];
 							if (!masterBars.length) return;
 							const last = masterBars[masterBars.length - 1];
 							const endTick = last.start + last.calculateDuration();

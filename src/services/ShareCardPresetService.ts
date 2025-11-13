@@ -214,7 +214,11 @@ export class ShareCardPresetService {
 			authorFontSize?: number;
 			authorAlign?: string;
 			__applyShareCardDimension?: (width: number) => void;
-			__applyShareCardFormat?: (format: string, resolution: string, disableLazy: boolean) => void;
+			__applyShareCardFormat?: (
+				format: string,
+				resolution: string,
+				disableLazy: boolean
+			) => void;
 			renderAuthorBlock?: () => void;
 		},
 		preset: ShareCardPresetV1

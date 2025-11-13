@@ -11,8 +11,8 @@ export interface PlayBarOptions {
 	app: App;
 	eventBus?: {
 		publish: (event: string, payload?: unknown) => void;
-		subscribe?: (event: string, handler: (p?: any) => void) => void;
-		unsubscribe?: (event: string, handler: (p?: any) => void) => void;
+		subscribe?: (event: string, handler: (p?: unknown) => void) => void;
+		unsubscribe?: (event: string, handler: (p?: unknown) => void) => void;
 	};
 	initialPlaying?: boolean;
 	getCurrentTime?: () => number; // 获取当前播放时间（毫秒）

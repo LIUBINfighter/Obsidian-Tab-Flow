@@ -390,45 +390,43 @@ export class TracksModal extends Modal {
 				});
 			}
 			// 每轨设置更新
-			const applyTrackPatch = (idx: number, patch: any) => {
+			const applyTrackPatch = (idx: number, patch: unknown) => {
+				const p = patch as any; // 类型转换
 				const ref = this.uiRefs.get(idx);
 				const s = entry.trackSettings?.[String(idx)] || {};
 				// 独奏
-				if (ref?.soloBtn && (patch.solo !== undefined || s.solo !== undefined)) {
-					const isSolo = patch.solo ?? s.solo ?? false;
+				if (ref?.soloBtn && (p.solo !== undefined || s.solo !== undefined)) {
+					const isSolo = p.solo ?? s.solo ?? false;
 					ref.soloBtn
 						.setIcon(isSolo ? 'star' : 'star-off')
 						.setTooltip(isSolo ? t('tracks.unsolo') : t('tracks.solo'));
 					ref.soloBtn.extraSettingsEl.toggleClass('active', !!isSolo);
 				}
 				// 静音
-				if (ref?.muteBtn && (patch.mute !== undefined || s.mute !== undefined)) {
-					const isMute = patch.mute ?? s.mute ?? false;
+				if (ref?.muteBtn && (p.mute !== undefined || s.mute !== undefined)) {
+					const isMute = p.mute ?? s.mute ?? false;
 					ref.muteBtn
 						.setIcon(isMute ? 'volume-x' : 'volume-2')
 						.setTooltip(isMute ? t('tracks.unmute') : t('tracks.mute'));
 					ref.muteBtn.extraSettingsEl.toggleClass('active', !!isMute);
 				}
 				// 音量
-				if (ref?.vol && (patch.volume !== undefined || s.volume !== undefined)) {
-					const v = Number(patch.volume ?? s.volume ?? 8);
+				if (ref?.vol && (p.volume !== undefined || s.volume !== undefined)) {
+					const v = Number(p.volume ?? s.volume ?? 8);
 					ref.vol.slider.value = String(v);
 					ref.vol.input.value = String(v);
 					ref.vol.value.textContent = String(v);
 				}
 				// 全局移调
-				if (ref?.tr && (patch.transpose !== undefined || s.transpose !== undefined)) {
-					const v = Number(patch.transpose ?? s.transpose ?? 0);
+				if (ref?.tr && (p.transpose !== undefined || s.transpose !== undefined)) {
+					const v = Number(p.transpose ?? s.transpose ?? 0);
 					ref.tr.slider.value = String(v);
 					ref.tr.input.value = String(v);
 					ref.tr.value.textContent = String(v);
 				}
 				// 音频移调（逻辑）
-				if (
-					ref?.ta &&
-					(patch.transposeAudio !== undefined || s.transposeAudio !== undefined)
-				) {
-					const v = Number(patch.transposeAudio ?? s.transposeAudio ?? 0);
+				if (ref?.ta && (p.transposeAudio !== undefined || s.transposeAudio !== undefined)) {
+					const v = Number(p.transposeAudio ?? s.transposeAudio ?? 0);
 					ref.ta.slider.value = String(v);
 					ref.ta.input.value = String(v);
 					ref.ta.value.textContent = String(v);

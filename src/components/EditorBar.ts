@@ -7,12 +7,12 @@ import * as alphaTab from '@coderline/alphatab';
 import { formatTime } from '../utils';
 import { t } from '../i18n';
 
-export interface PlayBarOptions {
+export interface EditorBarOptions {
 	app: App;
-	eventBus: {
+	eventBus?: {
 		publish: (event: string, payload?: unknown) => void;
-		subscribe?: (event: string, handler: (p?: any) => void) => void;
-		unsubscribe?: (event: string, handler: (p?: any) => void) => void;
+		subscribe?: (event: string, handler: (p?: unknown) => void) => void;
+		unsubscribe?: (event: string, handler: (p?: unknown) => void) => void;
 	};
 	initialPlaying?: boolean;
 	getCurrentTime?: () => number; // 获取当前播放时间（毫秒）
@@ -24,7 +24,7 @@ export interface PlayBarOptions {
 	onProgressBarCreated?: (progressBar: ProgressBarElement) => void; // 新增：进度条创建回调
 }
 
-export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
+export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	const {
 		app,
 		eventBus,
@@ -399,7 +399,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 					};
 					new ExportChooserModal({
 						app,
-						eventBus: eventBus as Required<typeof eventBus>,
+						eventBus: eventBus as any,
 						getFileName: getTitle,
 					}).open();
 				} catch (e) {

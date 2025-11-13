@@ -11,7 +11,20 @@ import { Extension } from '@codemirror/state';
  *   extensions.push(...alphaTex());
  */
 
-function tokenBase(stream: any, state: any) {
+// CodeMirror stream parser types
+interface StreamParser {
+	eatSpace(): boolean;
+	match(pattern: string | RegExp): boolean | RegExpMatchArray | null;
+	skipToEnd(): void;
+	skipTo(pattern: string): boolean;
+	next(): string | null;
+}
+
+interface ParserState {
+	tokenize: (stream: StreamParser, state: ParserState) => string | null;
+}
+
+function tokenBase(stream: StreamParser, state: ParserState) {
 	// Whitespace
 	if (stream.eatSpace()) return null;
 
@@ -121,7 +134,7 @@ function tokenBase(stream: any, state: any) {
 	return null;
 }
 
-function tokenComment(stream: any, state: any) {
+function tokenComment(stream: StreamParser, state: ParserState) {
 	if (stream.skipTo('*/')) {
 		stream.match('*/');
 		state.tokenize = tokenBase;
@@ -131,7 +144,7 @@ function tokenComment(stream: any, state: any) {
 	return 'comment';
 }
 
-function tokenEffect(stream: any, state: any) {
+function tokenEffect(stream: StreamParser, state: ParserState) {
 	// consume until matching '}' (no nested handling)
 	if (stream.skipTo('}')) {
 		// do not consume the closing '}' here; leave it to tokenBase to mark as 'bracket'
@@ -142,7 +155,7 @@ function tokenEffect(stream: any, state: any) {
 	return 'effect';
 }
 
-function tokenChord(stream: any, state: any) {
+function tokenChord(stream: StreamParser, state: ParserState) {
 	// consume until ')'
 	if (stream.skipTo(')')) {
 		// leave the closing ')' for tokenBase to mark as 'bracket'
@@ -164,7 +177,7 @@ const alphaTexParser = StreamLanguage.define({
 		// reset inline tokenizers on blank lines
 		state.tokenize = tokenBase;
 	},
-});
+} as any);
 
 // Note: styling will be provided via CSS classes (cm-*) emitted by the stream parser.
 // Avoid runtime dependency on deprecated highlight tags which may be absent in host.

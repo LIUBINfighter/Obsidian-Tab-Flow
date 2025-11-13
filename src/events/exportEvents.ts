@@ -11,7 +11,7 @@ export interface ExportEventHandlersOptions {
 	getFileName?: () => string; // 可选：自定义文件名
 	onExportStart?: (type: string) => void;
 	onExportFinish?: (type: string, success: boolean, message?: string) => void;
-	app?: any; // Obsidian App 实例，用于创建模态框
+	app?: unknown; // Obsidian App 实例，用于创建模态框
 }
 
 export function registerExportEventHandlers(options: ExportEventHandlersOptions): {

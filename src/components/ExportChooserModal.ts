@@ -4,8 +4,8 @@ export interface ExportChooserOptions {
 	app: App;
 	eventBus: {
 		publish: (event: string, payload?: unknown) => void;
-		subscribe: (event: string, handler: (p?: any) => void) => void;
-		unsubscribe?: (event: string, handler: (p?: any) => void) => void;
+		subscribe: (event: string, handler: (p?: unknown) => void) => void;
+		unsubscribe?: (event: string, handler: (p?: unknown) => void) => void;
 	};
 	getFileName: () => string;
 }
@@ -70,7 +70,7 @@ export class ExportChooserModal extends Modal {
 						// Ignore unsubscribe errors
 					}
 				};
-				const failHandler = (err?: any) => {
+				const failHandler = (err?: unknown) => {
 					new Notice('音频导出失败' + (err ? ': ' + String(err) : ''));
 					try {
 						this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
