@@ -12,14 +12,14 @@ export function isMessy(t?: string): boolean {
 		// 仅由空白/标点/控制字符构成
 		try {
 			if (/^[\s\p{P}\p{C}]+$/u.test(t)) return true;
-		} catch (e) {
+		} catch (_) {
 			// 如果环境不支持 Unicode 属性类，退回到简单检测（仅标点/空白）
 			if (/^[\s\W_]+$/.test(t)) return true;
 		}
 		// 非中文且长度较短则可能不是合理标题
 		if (!/[\u4e00-\u9fa5]/.test(t) && s > 2 && !/[A-Za-z0-9]/.test(t)) return true;
 		return false;
-	} catch (e) {
+	} catch (_) {
 		return false;
 	}
 }

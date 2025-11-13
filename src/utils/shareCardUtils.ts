@@ -46,7 +46,7 @@ export function normalizeColorToHex(
 				'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
 			).toLowerCase();
 		}
-	} catch (e) {
+	} catch (_) {
 		// fallthrough
 	}
 	return fallback;
@@ -88,7 +88,7 @@ export function computeExportBgColor(
 		} else {
 			if (mime === 'image/jpeg') return '#fff';
 		}
-	} catch (e) {
+	} catch (_) {
 		return mime === 'image/jpeg' ? '#fff' : undefined;
 	}
 	return undefined;

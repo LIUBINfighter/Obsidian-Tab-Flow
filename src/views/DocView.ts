@@ -216,7 +216,7 @@ export class DocView extends ItemView {
 				}
 			});
 			this.settingsAction = btn as unknown as HTMLElement;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 		// Layout wrapper
@@ -261,7 +261,7 @@ export class DocView extends ItemView {
 			// let panel render into the container; pass plugin so panels can access resources
 			try {
 				active.render(contentWrap, this.plugin);
-			} catch (e) {
+			} catch (_) {
 				contentWrap.setText(t('docView.renderError'));
 			}
 		}

@@ -73,8 +73,8 @@ export async function renderEditorTab(
 						'0.01'
 					);
 					(text as unknown as TextComponentWithInput).inputEl?.setAttribute('min', '0');
-				} catch (e) {
-					// console.debug('set input attributes failed', e);
+				} catch (_) {
+					// console.debug('set input attributes failed', _);
 				}
 				text.setValue(fontDefault.num).onChange(async (numStr) => {
 					interface SettingWithUnit {
@@ -183,8 +183,8 @@ export async function renderEditorTab(
 				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('type', 'number');
 				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('step', '1');
 				(text as unknown as TextComponentWithInput).inputEl?.setAttribute('min', '0');
-			} catch (e) {
-				// console.debug('set input attributes failed', e);
+			} catch (_) {
+				// console.debug('set input attributes failed', _);
 			}
 			text.setValue(gapDefault.num).onChange((numStr) => {
 				void (async () => {

@@ -576,7 +576,7 @@ export class ShareCardModal extends Modal {
 					if (this.cardRoot) this.cardRoot.style.width = w + 'px';
 					try {
 						this.playgroundHandle?.refresh();
-					} catch (e) {
+					} catch (_) {
 						/* ignore refresh errors */
 					}
 					this.renderAuthorBlock();
@@ -734,7 +734,7 @@ export class ShareCardModal extends Modal {
 				if (!this.modalEl.contains(target)) {
 					this.close();
 				}
-			} catch (err) {
+			} catch (_) {
 				// 忽略任何异常
 			}
 		};
@@ -1073,24 +1073,24 @@ export class ShareCardModal extends Modal {
 				this.plugin.settings.shareCardLastUsedPresetId = this.currentPresetId;
 				void this.plugin.saveSettings();
 			}
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
-		try {
-			this.playgroundHandle?.destroy();
-		} catch (e) {
-			// ignore
-		}
+	try {
+		this.playgroundHandle?.destroy();
+	} catch (_) {
+		// ignore
+	}
 
-		// 移除外部点击关闭的监听
-		try {
-			if (this.outsidePointerDownHandler) {
-				document.removeEventListener('pointerdown', this.outsidePointerDownHandler);
-				this.outsidePointerDownHandler = null;
-			}
-		} catch (e) {
-			// ignore
+	// 移除外部点击关闭的监听
+	try {
+		if (this.outsidePointerDownHandler) {
+			document.removeEventListener('pointerdown', this.outsidePointerDownHandler);
+			this.outsidePointerDownHandler = null;
 		}
+	} catch (_) {
+		// ignore
+	}
 		this.playgroundHandle = null;
 		this.cardRoot = null;
 		this.contentEl.empty();

@@ -46,7 +46,7 @@ export class EditorView extends FileView {
 				this.pendingSaveTimer = null;
 				this.flushSave().catch(() => {});
 			}, delay);
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 	}
@@ -219,7 +219,7 @@ export class EditorView extends FileView {
 			this.flushSave().catch(() => {
 				/* already handled inside flushSave */
 			});
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
@@ -241,7 +241,7 @@ export class EditorView extends FileView {
 				this.layoutToggleAction.remove();
 			}
 			this.layoutToggleAction = null;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
@@ -251,7 +251,7 @@ export class EditorView extends FileView {
 				this.settingsAction.remove();
 			}
 			this.settingsAction = null;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
@@ -261,7 +261,7 @@ export class EditorView extends FileView {
 				this.newFileAction.remove();
 			}
 			this.newFileAction = null;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 	}
@@ -430,7 +430,7 @@ export class EditorView extends FileView {
 				}
 			);
 			this.settingsAction = settingsBtn as unknown as HTMLElement;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
@@ -457,7 +457,7 @@ export class EditorView extends FileView {
 				void this.render();
 			});
 			this.layoutToggleAction = btn as unknown as HTMLElement;
-		} catch (e) {
+		} catch (_) {
 			this.layoutToggleAction = null;
 		}
 	}

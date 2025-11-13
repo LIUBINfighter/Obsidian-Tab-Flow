@@ -310,7 +310,7 @@ export default class TabFlowPlugin extends Plugin {
 				'--alphatex-editor-bottom-gap',
 				this.settings.editorBottomGap || '40vh'
 			);
-		} catch (e) {
+		} catch (_) {
 			// ignore environments without DOM
 		}
 

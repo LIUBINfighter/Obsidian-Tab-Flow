@@ -812,7 +812,7 @@ export class TabView extends FileView {
 				}
 			);
 			this.settingsAction = btn as unknown as HTMLElement;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 	}
@@ -848,7 +848,7 @@ export class TabView extends FileView {
 				this.settingsAction.remove();
 			}
 			this.settingsAction = null;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
