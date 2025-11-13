@@ -106,12 +106,8 @@ export class ShareCardStateManager {
 	updateField<K extends keyof ShareCardCorePreset>(k: K, v: ShareCardCorePreset[K]) {
 		const s = this.state;
 		if (!s) return;
-		interface WorkingPreset {
-			[key: string]: unknown;
-		}
-		const working = s.working as unknown as WorkingPreset;
-		if (working[k] === v) return;
-		working[k] = v;
+		if (s.working[k] === v) return;
+		s.working[k] = v;
 		if (!s.suppressDirty) {
 			s.dirty = !this.shallowEqual(s.working, s.base);
 			if (s.dirty && s.autosaveEnabled) this.scheduleAutosave();
@@ -187,13 +183,10 @@ export class ShareCardStateManager {
 	}
 
 	private shallowEqual(a: ShareCardCorePreset, b: ShareCardCorePreset) {
-		const ka = Object.keys(a) as (keyof ShareCardCorePreset)[];
-		for (const k of ka) {
-			interface PresetRecord {
-				[key: string]: unknown;
-			}
-			const av = (a as unknown as PresetRecord)[k];
-			const bv = (b as unknown as PresetRecord)[k];
+		const keys = Object.keys(a) as (keyof ShareCardCorePreset)[];
+		for (const k of keys) {
+			const av = a[k];
+			const bv = b[k];
 			if (typeof av === 'object') {
 				if (JSON.stringify(av) !== JSON.stringify(bv)) return false;
 			} else if (av !== bv) return false;

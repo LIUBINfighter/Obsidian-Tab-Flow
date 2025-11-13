@@ -750,7 +750,9 @@ export async function renderEditorTab(
 
 	const renderCards = () => {
 		cardsWrap.empty();
-		const order = getOrder().filter((k) => meta.some((m) => m.key === k));
+		const order = getOrder().filter((k): k is keyof EditorBarComponentVisibility =>
+			meta.some((m) => m.key === k)
+		);
 		const comp = plugin.settings.editorBar?.components;
 		order.forEach((key) => {
 			const m = meta.find((x) => x.key === key);

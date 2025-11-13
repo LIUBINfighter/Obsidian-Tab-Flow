@@ -670,11 +670,10 @@ export default class TabFlowPlugin extends Plugin {
 	private refreshLanguageDependentUI(): void {
 		try {
 			// 刷新设置面板（如果打开的话）
-			const settingInstance = (
-				this.app as unknown as {
-					setting?: { activeTab?: { id?: string }; openTabById?: (id: string) => void };
-				}
-			).setting;
+			const settingInstance = Reflect.get(this.app, 'setting') as {
+				activeTab?: { id?: string };
+				openTabById?: (id: string) => void;
+			} | undefined;
 			const settingTabs = settingInstance?.activeTab;
 			if (settingTabs && settingTabs.id === 'tabflow') {
 				// 重新渲染设置标签页

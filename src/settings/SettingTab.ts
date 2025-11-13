@@ -23,60 +23,80 @@ export class SettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 
 		if (!this._eventBound) {
-			// 保留来自旧实现的事件：打开 plugin settings 的 player 子页签
-			this.app.workspace.on('tabflow:open-plugin-settings-player', async () => {
-				try {
-					const settingManager = (this.app as AppWithSetting).setting;
-					settingManager?.open?.();
-					const setting = settingManager;
-					if (setting?.openTabById) {
-						setting.openTabById(this.plugin.manifest.id);
-					}
-					// 标记强制激活 player 子页签
-					this.forcedTab = 'player';
-					try {
-						await this.display();
-					} catch {
-						// Ignore display errors
-					}
-				} catch {
-					// Ignore event binding errors
-				}
-			});
+			const workspaceOn = (this.app.workspace as { on?: unknown }).on as
+				((name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => unknown) |
+				undefined;
+			if (typeof workspaceOn === 'function') {
+				const playerRef = workspaceOn.call(
+					this.app.workspace,
+					'tabflow:open-plugin-settings-player',
+					async () => {
+						try {
+							const settingManager = (this.app as AppWithSetting).setting;
+							settingManager?.open?.();
+							const setting = settingManager;
+							if (setting?.openTabById) {
+								setting.openTabById(this.plugin.manifest.id);
+							}
+							// 标记强制激活 player 子页签
+							this.forcedTab = 'player';
+							try {
+								await this.display();
+							} catch {
+								// Ignore display errors
+							}
+						} catch {
+							// Ignore event binding errors
+						}
+					},
+					this
+				);
+				this.plugin.registerEvent(playerRef);
 
-			// 添加 editor 子页签的事件监听
-			this.app.workspace.on('tabflow:open-plugin-settings-editor', async () => {
-				try {
-					const settingManager = (this.app as AppWithSetting).setting;
-					settingManager?.open?.();
-					settingManager?.openTabById?.(this.plugin.manifest.id);
-					this.forcedTab = 'editor';
-					try {
-						await this.display();
-					} catch {
-						// Ignore display errors
-					}
-				} catch {
-					// Ignore event binding errors
-				}
-			});
+				const editorRef = workspaceOn.call(
+					this.app.workspace,
+					'tabflow:open-plugin-settings-editor',
+					async () => {
+						try {
+							const settingManager = (this.app as AppWithSetting).setting;
+							settingManager?.open?.();
+							settingManager?.openTabById?.(this.plugin.manifest.id);
+							this.forcedTab = 'editor';
+							try {
+								await this.display();
+							} catch {
+								// Ignore display errors
+							}
+						} catch {
+							// Ignore event binding errors
+						}
+					},
+					this
+				);
+				this.plugin.registerEvent(editorRef);
 
-			// 添加 about 子页签的事件监听
-			this.app.workspace.on('tabflow:open-plugin-settings-about', async () => {
-				try {
-					const settingManager = (this.app as AppWithSetting).setting;
-					settingManager?.open?.();
-					settingManager?.openTabById?.(this.plugin.manifest.id);
-					this.forcedTab = 'about';
-					try {
-						await this.display();
-					} catch {
-						// Ignore display errors
-					}
-				} catch {
-					// Ignore event binding errors
-				}
-			});
+				const aboutRef = workspaceOn.call(
+					this.app.workspace,
+					'tabflow:open-plugin-settings-about',
+					async () => {
+						try {
+							const settingManager = (this.app as AppWithSetting).setting;
+							settingManager?.open?.();
+							settingManager?.openTabById?.(this.plugin.manifest.id);
+							this.forcedTab = 'about';
+							try {
+								await this.display();
+							} catch {
+								// Ignore display errors
+							}
+						} catch {
+							// Ignore event binding errors
+						}
+					},
+					this
+				);
+				this.plugin.registerEvent(aboutRef);
+			}
 			this._eventBound = true;
 		}
 	}

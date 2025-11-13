@@ -105,15 +105,20 @@ export class EditorView extends FileView {
 		this.container = this.contentEl;
 		this.eventBus = new EventBus();
 		// 宽化 workspace.on 类型以订阅自定义事件
-		type WorkspaceWithAnyEvents = {
-			on: (name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => EventRef;
+		const workspaceWithEvents = this.app.workspace as {
+			on?: (name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => EventRef;
 		};
-		const ws = this.app.workspace as unknown as WorkspaceWithAnyEvents;
-		this.registerEvent(
-			ws.on('tabflow:editorbar-components-changed', () => {
-				this._remountEditorBar();
-			})
-		);
+		const workspaceOn = workspaceWithEvents.on;
+		if (typeof workspaceOn === 'function') {
+			const eventRef = workspaceOn.call(
+				this.app.workspace,
+				'tabflow:editorbar-components-changed',
+				() => {
+					this._remountEditorBar();
+				}
+			);
+			if (eventRef) this.registerEvent(eventRef);
+		}
 
 		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
@@ -169,29 +174,22 @@ export class EditorView extends FileView {
 			}
 		};
 
-		// 监听 EditorBar 设置变化事件，实现实时更新
-		// Note: Obsidian's workspace.on may not be available in all contexts
-		// Using a try-catch to handle cases where the event system is not ready
-		try {
-			interface WorkspaceWithOn {
-				on?: (event: string, callback: () => void) => () => void;
-			}
-			const workspaceOn = (this.app.workspace as unknown as WorkspaceWithOn).on;
-			if (workspaceOn) {
-				const unsubscribe = workspaceOn('tabflow:editorbar-components-changed', () => {
+		// 监听 EditorBar 设置变化事件，实现实时更新（向后兼容可能的插件广播接口）
+		const legacyOn = Reflect.get(this.app.workspace, 'on');
+		if (typeof legacyOn === 'function') {
+			const unsubscribe = legacyOn.call(
+				this.app.workspace,
+				'tabflow:editorbar-components-changed',
+				() => {
 					try {
 						console.debug('[EditorView] 检测到 EditorBar 设置变化，正在重新渲染...');
 						this._remountEditorBar();
 					} catch (e) {
 						console.warn('[EditorView] 重新渲染 EditorBar 失败:', e);
 					}
-				});
-				if (unsubscribe) {
-					this.registerEvent(unsubscribe);
 				}
-			}
-		} catch (e) {
-			console.warn('[EditorView] 无法注册 EditorBar 设置变化监听器:', e);
+			);
+			if (typeof unsubscribe === 'function') this.registerEvent(unsubscribe);
 		}
 	}
 
@@ -341,12 +339,10 @@ export class EditorView extends FileView {
 		const editorWrapper = editorContainer.createDiv({ cls: 'alphatex-editor-wrapper' });
 		// ensure global fallback for older code paths
 		try {
-			interface WindowWithSettings {
-				__tabflow_settings__?: unknown;
+			const existingSettings = Reflect.get(window, '__tabflow_settings__');
+			if (!existingSettings) {
+				Reflect.set(window, '__tabflow_settings__', this.plugin.settings);
 			}
-			(window as unknown as WindowWithSettings).__tabflow_settings__ =
-				(window as unknown as WindowWithSettings).__tabflow_settings__ ||
-				this.plugin.settings;
 		} catch {
 			// ignore
 		}
@@ -496,28 +492,23 @@ export class EditorView extends FileView {
 			initialPlaying: false,
 			getCurrentTime: () => {
 				const api = this.playground?.getApi();
-				interface AlphaTabApiWithTimePosition {
-					timePosition?: number;
-				}
-				return api ? (api as unknown as AlphaTabApiWithTimePosition).timePosition || 0 : 0;
+				if (!api || typeof api !== 'object') return 0;
+				const position = Reflect.get(api, 'timePosition');
+				return typeof position === 'number' ? position : 0;
 			},
 			getDuration: () => {
 				const api = this.playground?.getApi();
-				return api?.score
-					? (api.score as unknown as { durationMillis?: number; duration?: number })
-							.durationMillis ||
-							(api.score as unknown as { durationMillis?: number; duration?: number })
-								.duration ||
-							0
-					: 0;
+				const score = api?.score as { durationMillis?: number; duration?: number } | undefined;
+				if (!score) return 0;
+				return (
+					(typeof score.durationMillis === 'number' ? score.durationMillis : undefined) ??
+					(typeof score.duration === 'number' ? score.duration : 0)
+				);
 			},
 			seekTo: (ms: number) => {
 				const api = this.playground?.getApi();
-				if (api) {
-					interface AlphaTabApiWithTimePosition {
-						timePosition?: number;
-					}
-					(api as unknown as AlphaTabApiWithTimePosition).timePosition = ms;
+				if (api && typeof api === 'object') {
+					Reflect.set(api, 'timePosition', ms);
 				}
 			},
 			onAudioCreated: (audioEl: HTMLAudioElement) => {

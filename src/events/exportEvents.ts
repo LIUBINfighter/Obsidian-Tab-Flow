@@ -95,14 +95,11 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			onExportStart?.('gp');
 			if (!api.score) throw new Error('乐谱未加载');
 			// AlphaTab exporter types are not fully exported
-			interface AlphaTabExporter {
-				exporter?: {
-					Gp7Exporter?: new () => {
-						export: (score: unknown, settings: unknown) => Uint8Array;
-					};
+			const exporterModule = Reflect.get(alphaTab, 'exporter') as {
+				Gp7Exporter?: new () => {
+					export: (score: unknown, settings: unknown) => Uint8Array;
 				};
-			}
-			const exporterModule = (alphaTab as unknown as AlphaTabExporter).exporter;
+			} | undefined;
 			if (!exporterModule?.Gp7Exporter) {
 				throw new Error('Gp7Exporter 不可用');
 			}

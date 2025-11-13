@@ -30,19 +30,13 @@ interface ListenerContainer {
 	detach(): void;
 }
 
-interface DocumentWithFonts {
-	fonts?: {
-		ready?: Promise<void>;
-	};
-}
-
 function onceFontReady(debug?: boolean): Promise<void> {
-	const doc = document as unknown as DocumentWithFonts;
-	if (!doc.fonts || typeof doc.fonts.ready?.then !== 'function') {
+	const fonts = Reflect.get(document, 'fonts') as FontFaceSet | undefined;
+	if (!fonts || typeof fonts.ready?.then !== 'function') {
 		debug && console.debug('[AlphaTabWait] Font API not supported; skip');
 		return Promise.resolve();
 	}
-	return doc.fonts.ready.catch(() => void 0);
+	return fonts.ready.then(() => undefined).catch(() => undefined);
 }
 
 /**
@@ -70,14 +64,11 @@ export async function waitAlphaTabFullRender(
 
 	const start = performance.now();
 	if (!api) return { success: false, elapsedMs: 0, reason: 'api-null' };
-	interface AlphaTabApiWithRenderer {
-		renderer?: {
-			on?: (event: string, callback: (...args: unknown[]) => void) => void;
-			off?: (event: string, callback: (...args: unknown[]) => void) => void;
-			renderResult?: (id: number | string) => void;
-		};
-	}
-	const renderer = (api as unknown as AlphaTabApiWithRenderer).renderer;
+	const renderer = Reflect.get(api, 'renderer') as {
+		on?: (event: string, callback: (...args: unknown[]) => void) => void;
+		off?: (event: string, callback: (...args: unknown[]) => void) => void;
+		renderResult?: (id: number | string) => void;
+	} | undefined;
 	if (!renderer) return { success: false, elapsedMs: 0, reason: 'renderer-missing' };
 
 	let partialIds: Set<number | string> = new Set();

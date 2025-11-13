@@ -74,7 +74,7 @@ export class EmbeddableMarkdownEditor {
 	private options: typeof defaultProperties & MarkdownEditorProps;
 	private initialValue: string;
 	private scope: Scope;
-	private editor: InternalMarkdownEditor;
+	private editor?: InternalMarkdownEditor;
 
 	/**
 	 * Hard-coded configuration to control whether to set activeEditor.
@@ -113,11 +113,7 @@ export class EmbeddableMarkdownEditor {
 					// Note: selfRef.editor is set after EditorClass instantiation, so we check if this instance
 					// matches the one that will be assigned to selfRef.editor by comparing after assignment
 					// For now, we'll apply extensions to all instances and rely on the editor being set correctly
-					interface EmbeddableMarkdownEditorWithEditor {
-						editor?: InternalMarkdownEditor;
-					}
-					const editorRef = (selfRef as unknown as EmbeddableMarkdownEditorWithEditor)
-						.editor;
+					const editorRef = selfRef.editor;
 					// Only apply extensions if editor is already set and matches
 					// During initial construction, editorRef will be undefined, so we apply to all instances
 					// After editor is set, we only apply to the matching instance
@@ -137,29 +133,19 @@ export class EmbeddableMarkdownEditor {
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
 								blur: () => {
 									app.keymap.popScope(selfRef.scope);
-									interface WorkspaceWithActiveEditor {
-										activeEditor?: unknown;
-									}
+									const activeEditor = Reflect.get(app.workspace, 'activeEditor') as unknown;
 									if (
 										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
-										(app.workspace as unknown as WorkspaceWithActiveEditor)
-											.activeEditor === selfRef.editor
+										activeEditor === selfRef.editor
 									) {
-										(
-											app.workspace as unknown as WorkspaceWithActiveEditor
-										).activeEditor = null;
+										Reflect.set(app.workspace, 'activeEditor', null);
 									}
 									selfRef.options.onBlur?.(selfRef);
 								},
 								focusin: () => {
 									app.keymap.pushScope(selfRef.scope);
-									interface WorkspaceWithActiveEditor {
-										activeEditor?: unknown;
-									}
 									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
-										(
-											app.workspace as unknown as WorkspaceWithActiveEditor
-										).activeEditor = selfRef.editor;
+										Reflect.set(app.workspace, 'activeEditor', selfRef.editor ?? null);
 									}
 								},
 							})
@@ -203,13 +189,12 @@ export class EmbeddableMarkdownEditor {
 									return !!selfRef.options.highlightSettings[key];
 								}
 								// fallback: some callers may expose settings on window for minimal changes
-								interface WindowWithSettings {
-									__tabflow_settings__?: {
-										editorHighlights?: Record<string, boolean>;
-									};
-								}
-								const globalSettings = (window as unknown as WindowWithSettings)
-									.__tabflow_settings__;
+								const globalSettings = Reflect.get(
+									window,
+									'__tabflow_settings__'
+								) as {
+									editorHighlights?: Record<string, boolean>;
+								} | null;
 								if (
 									globalSettings &&
 									globalSettings.editorHighlights &&
@@ -316,12 +301,13 @@ export class EmbeddableMarkdownEditor {
 			onMarkdownScroll: () => {},
 			getMode: () => 'source',
 		});
-		interface EditorWithRegister {
-			register?: (cb: unknown) => void;
+		const editorInstance = this.editor;
+		if (!editorInstance) {
+			throw new Error('Failed to initialise editor instance');
 		}
-		(this.editor as unknown as EditorWithRegister).register?.(uninstaller);
+		editorInstance.register?.(uninstaller);
 		this.set(this.initialValue, false);
-		(this.editor as unknown as EditorWithRegister).register?.(
+		editorInstance.register?.(
 			around(app.workspace, {
 				setActiveLeaf:
 					(oldMethod: unknown) =>
@@ -336,41 +322,23 @@ export class EmbeddableMarkdownEditor {
 			})
 		);
 		if (options.cls && this.editorEl) this.editorEl.classList.add(options.cls);
-		if (options.cursorLocation && this.editor.editor?.cm) {
-			this.editor.editor.cm.dispatch({
+		if (options.cursorLocation && editorInstance.editor?.cm) {
+			editorInstance.editor.cm.dispatch({
 				selection: EditorSelection.range(
 					options.cursorLocation.anchor,
 					options.cursorLocation.head
 				),
 			});
 		}
-		const originalOnUpdate = this.editor.onUpdate?.bind(this.editor);
-		this.editor.onUpdate = (update: ViewUpdate, changed: boolean) => {
+		const originalOnUpdate = editorInstance.onUpdate?.bind(editorInstance);
+		editorInstance.onUpdate = (update: ViewUpdate, changed: boolean) => {
 			try {
-				// 保护：在视图未就绪或已卸载时不调用后续逻辑，避免 selection 相关错误
-				interface UpdateWithView {
-					view?: {
-						root?: HTMLElement;
-					};
-				}
-				const hasView = !!(update as unknown as UpdateWithView)?.view;
-				const root = (update as unknown as UpdateWithView)?.view?.root;
-				const rootOk =
-					!!root &&
-					root instanceof HTMLElement &&
-					typeof (root as unknown as { getSelection?: () => unknown }).getSelection ===
-						'function';
-				const inDom = !!this.editorEl?.isConnected;
-				interface SelfWithEditor {
-					editor?: {
-						activeCM?: unknown;
-					};
-					_loaded?: boolean;
-				}
+				const root = update.view?.root;
+				const inDom = Boolean(this.editorEl?.isConnected);
+				const embeddedEditor = this.editor;
 				const stillLoaded =
-					!!(this as unknown as SelfWithEditor).editor?.activeCM ||
-					!!(this as unknown as SelfWithEditor)._loaded;
-				if (!hasView || !rootOk || !inDom || !stillLoaded) return;
+					Boolean(embeddedEditor?.activeCM) || Boolean(embeddedEditor?._loaded);
+				if (!root || !inDom || !stillLoaded) return;
 				originalOnUpdate?.(update, changed);
 				if (changed) this.options.onChange?.(update);
 			} catch {
@@ -379,45 +347,52 @@ export class EmbeddableMarkdownEditor {
 		};
 	}
 
+	private requireEditor(): InternalMarkdownEditor {
+		if (!this.editor) {
+			throw new Error('Embedded markdown editor not initialised yet.');
+		}
+		return this.editor;
+	}
+
 	get editorEl(): HTMLElement {
-		return this.editor.editorEl;
+		return this.requireEditor().editorEl;
 	}
 	get containerEl(): HTMLElement {
-		return this.editor.containerEl;
+		return this.requireEditor().containerEl;
 	}
 	get activeCM(): EditorView {
-		return this.editor.activeCM;
+		return this.requireEditor().activeCM;
 	}
 	get appInstance(): App {
-		return this.editor.app;
+		return this.requireEditor().app;
 	}
 	get loaded(): boolean {
-		return this.editor._loaded;
+		return this.requireEditor()._loaded;
 	}
 	get value(): string {
-		return this.editor.editor?.cm?.state.doc.toString() || '';
+		return this.requireEditor().editor?.cm?.state.doc.toString() || '';
 	}
 	set(content: string, focus = false): void {
-		this.editor.set(content, focus);
+		this.requireEditor().set(content, focus);
 	}
 	register(cb: unknown): void {
-		this.editor.register(cb);
+		this.requireEditor().register(cb);
 	}
 	focus(): void {
 		this.activeCM?.focus();
 	}
 	destroy(): void {
-		if (this.loaded && typeof this.editor.unload === 'function') this.editor.unload();
-		interface KeymapWithPopScope {
-			popScope?: (scope: Scope) => void;
+		const editorInstance = this.editor;
+		if (editorInstance && this.loaded && typeof editorInstance.unload === 'function') {
+			editorInstance.unload();
 		}
-		(this.appInstance.keymap as unknown as KeymapWithPopScope).popScope?.(this.scope);
-		interface WorkspaceWithActiveEditor {
-			activeEditor?: unknown;
+		this.appInstance.keymap.popScope(this.scope);
+		if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
+			Reflect.set(this.appInstance.workspace, 'activeEditor', null);
 		}
-		(this.appInstance.workspace as unknown as WorkspaceWithActiveEditor).activeEditor = null;
 		this.containerEl.empty();
-		this.editor.destroy?.();
+		editorInstance?.destroy?.();
+		this.editor = undefined;
 	}
 	unload(): void {
 		this.destroy();

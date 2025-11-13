@@ -164,7 +164,9 @@ export async function renderPlayerTab(
 
 	const renderCards = () => {
 		cardsWrap.empty();
-		const order = getOrder().filter((k) => meta.some((m) => m.key === k));
+		const order = getOrder().filter((k): k is keyof PlayBarComponentVisibility =>
+			meta.some((m) => m.key === k)
+		);
 		const comp = plugin.settings.playBar?.components;
 		order.forEach((key) => {
 			const m = meta.find((x) => x.key === key);

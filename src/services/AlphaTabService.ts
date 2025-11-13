@@ -313,8 +313,12 @@ export class AlphaTabService {
 			};
 			if (typeof extendedApi.tex === 'function') {
 				const result = extendedApi.tex(textContent);
-				if (result instanceof Promise) {
-					await result;
+				const maybePromise = result as unknown;
+				if (
+					maybePromise &&
+					typeof (maybePromise as PromiseLike<void>).then === 'function'
+				) {
+					await (maybePromise as PromiseLike<void>);
 				}
 			} else {
 				// 备用方案：使用 AlphaTexImporter

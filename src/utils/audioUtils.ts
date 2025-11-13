@@ -13,44 +13,41 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
 		// try using alphaTab ByteBuffer if present for compatibility
 		// @ts-ignore
 		// AlphaTab internal IO API types (not exported)
-		interface AlphaTabIO {
-			io?: {
-				ByteBuffer?: {
-					withCapacity: (size: number) => {
-						write: (data: Uint8Array, offset: number, length: number) => void;
-						toArray: () => Uint8Array;
-					};
-				};
-				IOHelper?: {
-					writeInt32LE: (buffer: unknown, value: number) => void;
-					writeInt16LE: (buffer: unknown, value: number) => void;
+		const ioNamespace = Reflect.get(alphaTab, 'io') as {
+			ByteBuffer?: {
+				withCapacity: (size: number) => {
+					write: (data: Uint8Array, offset: number, length: number) => void;
+					toArray: () => Uint8Array;
 				};
 			};
-		}
-		const alphaTabIO = alphaTab as unknown as AlphaTabIO;
-		if (alphaTabIO && alphaTabIO.io && alphaTabIO.io.ByteBuffer && alphaTabIO.io.IOHelper) {
-			const buffer = alphaTabIO.io.ByteBuffer.withCapacity(fileSize);
+			IOHelper?: {
+				writeInt32LE: (buffer: unknown, value: number) => void;
+				writeInt16LE: (buffer: unknown, value: number) => void;
+			};
+		} | undefined;
+		if (ioNamespace?.ByteBuffer && ioNamespace.IOHelper) {
+			const buffer = ioNamespace.ByteBuffer.withCapacity(fileSize);
 			// RIFF
 			buffer.write(new Uint8Array([0x52, 0x49, 0x46, 0x46]), 0, 4);
-			alphaTabIO.io.IOHelper.writeInt32LE(buffer, fileSize - 8);
+			ioNamespace.IOHelper.writeInt32LE(buffer, fileSize - 8);
 			buffer.write(new Uint8Array([0x57, 0x41, 0x56, 0x45]), 0, 4);
 			// fmt
 			buffer.write(new Uint8Array([0x66, 0x6d, 0x74, 0x20]), 0, 4);
-			alphaTabIO.io.IOHelper.writeInt32LE(buffer, 16);
-			alphaTabIO.io.IOHelper.writeInt16LE(buffer, 3); // float
+			ioNamespace.IOHelper.writeInt32LE(buffer, 16);
+			ioNamespace.IOHelper.writeInt16LE(buffer, 3); // float
 			const channels = 2;
-			alphaTabIO.io.IOHelper.writeInt16LE(buffer, channels);
-			alphaTabIO.io.IOHelper.writeInt32LE(buffer, sampleRate);
-			alphaTabIO.io.IOHelper.writeInt32LE(
+			ioNamespace.IOHelper.writeInt16LE(buffer, channels);
+			ioNamespace.IOHelper.writeInt32LE(buffer, sampleRate);
+			ioNamespace.IOHelper.writeInt32LE(
 				buffer,
 				Float32Array.BYTES_PER_ELEMENT * channels * sampleRate
 			);
 			const bitsPerSample = Float32Array.BYTES_PER_ELEMENT * 8;
-			alphaTabIO.io.IOHelper.writeInt16LE(
+			ioNamespace.IOHelper.writeInt16LE(
 				buffer,
 				channels * Math.floor((bitsPerSample + 7) / 8)
 			);
-			alphaTabIO.io.IOHelper.writeInt16LE(buffer, bitsPerSample);
+			ioNamespace.IOHelper.writeInt16LE(buffer, bitsPerSample);
 			// data chunk
 			buffer.write(new Uint8Array([0x64, 0x61, 0x74, 0x61]), 0, 4);
 			for (const c of chunks) {

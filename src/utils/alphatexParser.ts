@@ -75,20 +75,19 @@ export function toScrollMode(value: number | string | undefined): number | undef
 	if (value == null) return undefined;
 	if (typeof value === 'number') return value;
 	const key = String(value).toLowerCase();
-	// Disable no-explicit-any: AlphaTab ScrollMode enum requires dynamic access
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	interface AlphaTabScrollMode {
-		ScrollMode?: {
-			Continuous?: number;
-			SinglePage?: number;
-			Page?: number;
-		};
+	const scrollModeRaw = Reflect.get(alphaTab, 'ScrollMode');
+	const scrollModeModule: Record<string, number> = {};
+	if (typeof scrollModeRaw === 'object' && scrollModeRaw !== null) {
+		for (const [key, value] of Object.entries(scrollModeRaw as Record<string, unknown>)) {
+			if (typeof value === 'number') {
+				scrollModeModule[key] = value;
+			}
+		}
 	}
-	const scrollModeModule = (alphaTab as unknown as AlphaTabScrollMode).ScrollMode || {};
 	const mapping: Record<string, number | undefined> = {
-		continuous: scrollModeModule.Continuous,
-		singlepage: scrollModeModule.SinglePage,
-		page: scrollModeModule.Page,
+		continuous: scrollModeModule['Continuous'],
+		singlepage: scrollModeModule['SinglePage'],
+		page: scrollModeModule['Page'],
 	};
 	return mapping[key];
 }

@@ -182,8 +182,10 @@ export async function renderGeneralTab(
 				message: t('assetManagement.confirmRestart'),
 			});
 			if (confirmed) {
-				const commands = app.commands as { executeCommandById?: (id: string) => void };
-				commands.executeCommandById?.('app:reload');
+				const commands = Reflect.get(app, 'commands') as {
+					executeCommandById?: (id: string) => void;
+				} | undefined;
+				commands?.executeCommandById?.('app:reload');
 			}
 		})();
 	};
