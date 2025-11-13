@@ -15,3 +15,7 @@
 	flex-wrap: wrap;
 	gap: 8px;
 }
+
+.tabflow-audio-preview {
+	width: 100%;
+}

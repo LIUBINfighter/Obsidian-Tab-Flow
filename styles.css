@@ -920,6 +920,10 @@
 	align-items: center;
 }
 
+.tabflow-doc-header__icon {
+	vertical-align: middle;
+}
+
 /* Two-column layout: left sidebar (navigation) + main content */
 .tabflow-doc-layout {
 	display: flex;
@@ -1386,6 +1390,10 @@
 	gap: 8px;
 }
 
+.tabflow-audio-preview {
+	width: 100%;
+}
+
 /* --- play.css --- */
 /* 播放栏自定义按钮样式 */
 .play-bar {
@@ -1645,6 +1653,42 @@
 }
 
 /* 组件卡片细节样式 */
+.tabflow-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+}
+
+.tabflow-card--compact {
+	padding: 4px;
+}
+
+.tabflow-card__left,
+.tabflow-card__right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.tabflow-card__right {
+	gap: 6px;
+}
+
+.tabflow-card__handle {
+	cursor: grab;
+	user-select: none;
+}
+
+.tabflow-card__desc {
+	color: var(--text-muted);
+	font-size: 0.9em;
+}
+
 .tabflow-card button {
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);

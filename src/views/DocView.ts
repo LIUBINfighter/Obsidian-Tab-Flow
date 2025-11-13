@@ -151,7 +151,7 @@ export class DocView extends ItemView {
 		svg.setAttribute('height', '22');
 		svg.setAttribute('viewBox', '0 0 16 16');
 		svg.setAttribute('fill', 'currentColor');
-		svg.style.verticalAlign = 'middle';
+		svg.classList.add('tabflow-doc-header__icon');
 
 		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 		path.setAttribute(

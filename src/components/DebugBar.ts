@@ -257,32 +257,40 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	// 音频导出按钮
 	const audioBtn = document.createElement('button');
 	audioBtn.innerText = '导出音频';
-	audioBtn.onclick = async () => {
-		(await ensureExportHandlers()).exportAudio();
+	audioBtn.onclick = () => {
+		void (async () => {
+			(await ensureExportHandlers()).exportAudio();
+		})();
 	};
 	debugBar.appendChild(audioBtn);
 
 	// MIDI 导出按钮
 	const midiBtn = document.createElement('button');
 	midiBtn.innerText = '导出MIDI';
-	midiBtn.onclick = async () => {
-		(await ensureExportHandlers()).exportMidi();
+	midiBtn.onclick = () => {
+		void (async () => {
+			(await ensureExportHandlers()).exportMidi();
+		})();
 	};
 	debugBar.appendChild(midiBtn);
 
 	// GP 导出按钮
 	const gpBtn = document.createElement('button');
 	gpBtn.innerText = '导出GP';
-	gpBtn.onclick = async () => {
-		(await ensureExportHandlers()).exportGp();
+	gpBtn.onclick = () => {
+		void (async () => {
+			(await ensureExportHandlers()).exportGp();
+		})();
 	};
 	debugBar.appendChild(gpBtn);
 
 	// PDF 打印按钮
 	const pdfBtn = document.createElement('button');
 	pdfBtn.innerText = '打印PDF';
-	pdfBtn.onclick = async () => {
-		(await ensureExportHandlers()).exportPdf();
+	pdfBtn.onclick = () => {
+		void (async () => {
+			(await ensureExportHandlers()).exportPdf();
+		})();
 	};
 	debugBar.appendChild(pdfBtn);
 

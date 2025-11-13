@@ -157,11 +157,13 @@ export class SettingTab extends PluginSettingTab {
 				text: tab.name,
 				cls: ['itabs-settings-tab', tab.id === activeTab ? 'active' : ''],
 			});
-			tabEl.onclick = async () => {
-				tabsEl.querySelectorAll('button').forEach((b) => b.removeClass('active'));
-				tabEl.addClass('active');
-				activeTab = tab.id;
-				await renderTab(tab.id);
+			tabEl.onclick = () => {
+				void (async () => {
+					tabsEl.querySelectorAll('button').forEach((b) => b.removeClass('active'));
+					tabEl.addClass('active');
+					activeTab = tab.id;
+					await renderTab(tab.id);
+				})();
 			};
 		});
 

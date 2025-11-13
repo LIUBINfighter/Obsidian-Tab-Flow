@@ -159,7 +159,6 @@ export async function renderPlayerTab(
 		const cards = cardsWrap.querySelectorAll('.tabflow-card');
 		cards.forEach((el) => {
 			el.classList.remove('insert-before', 'insert-after', 'swap-target');
-			(el as HTMLElement).style.background = '';
 		});
 	};
 
@@ -171,28 +170,30 @@ export async function renderPlayerTab(
 			const m = meta.find((x) => x.key === key);
 			if (!m) return;
 			const card = cardsWrap.createDiv({
-				cls: 'tabflow-card',
+				cls: ['tabflow-card', 'tabflow-card--draggable'],
 				attr: {
 					draggable: 'true',
-					style: 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--background-modifier-border); border-radius:6px;',
 				},
 			});
 			card.dataset.key = String(key);
 			const left = card.createDiv({
-				attr: { style: 'display:flex; align-items:center; gap:8px;' },
+				cls: 'tabflow-card__left',
 			});
-			left.createSpan({ text: '⠿', attr: { style: 'cursor:grab; user-select:none;' } });
+			left.createSpan({
+				text: '⠿',
+				cls: 'tabflow-card__handle',
+			});
 			const iconEl = left.createSpan(); // Create the span element
 			setIcon(iconEl, m.icon); // Use the imported setIcon function
 			left.createEl('strong', { text: m.label });
 			if (m.desc)
 				left.createSpan({
 					text: ` - ${m.desc}`,
-					attr: { style: 'color:var(--text-muted);font-size:0.9em;' },
+					cls: 'tabflow-card__desc',
 				});
 
 			const right = card.createDiv({
-				attr: { style: 'display:flex; align-items:center; gap:6px;' },
+				cls: 'tabflow-card__right',
 			});
 			const upIcon = right.createSpan({
 				cls: 'icon-clickable',

@@ -34,7 +34,7 @@ export class AudioExportModal extends Modal {
 		const audio = document.createElement('audio');
 		audio.controls = true;
 		audio.src = this.audioUrl;
-		audio.style.width = '100%';
+		audio.classList.add('tabflow-audio-preview');
 		this.contentEl.appendChild(audio);
 
 		new Setting(this.contentEl).setName(t('export.saveToLocal')).addButton((btn) => {
