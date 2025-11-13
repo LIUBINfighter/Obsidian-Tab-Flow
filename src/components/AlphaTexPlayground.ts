@@ -20,24 +20,21 @@ declare global {
 				Horizontal?: number;
 			};
 		};
-		requestIdleCallback?: (
-			cb: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void
-		) => number;
 	}
 }
 
-// Type for alphaTab API settings with extended properties
-interface ExtendedDisplaySettings extends alphaTab.DisplaySettings {
+// Type for alphaTab API settings with extended properties (using intersection types)
+type ExtendedDisplaySettings = alphaTab.DisplaySettings & {
 	staveProfile?: number;
-}
+};
 
-interface ExtendedPlayerSettings extends alphaTab.PlayerSettings {
+type ExtendedPlayerSettings = alphaTab.PlayerSettings & {
 	scrollMode?: string | alphaTab.ScrollMode;
-}
+};
 
-interface ExtendedAlphaTabApi extends alphaTab.AlphaTabApi {
+type ExtendedAlphaTabApi = alphaTab.AlphaTabApi & {
 	scrollToCursor?: () => void;
-}
+};
 
 export interface AlphaTexPlaygroundOptions {
 	placeholder?: string;
@@ -463,10 +460,10 @@ export function createAlphaTexPlayground(
 			}
 		});
 
-		eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
+		eventBus.subscribe('命令:设置滚动模式', (mode: string | alphaTab.ScrollMode) => {
 			const api = mounted?.api;
 			if (api) {
-				(api.settings.player as ExtendedPlayerSettings).scrollMode = mode;
+				(api.settings.player as ExtendedPlayerSettings).scrollMode = mode as alphaTab.ScrollMode;
 				api.updateSettings();
 			}
 		});

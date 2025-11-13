@@ -24,20 +24,20 @@ interface TabFlowPluginLike extends Plugin {
 	} | null;
 }
 
-// Type for alphaTab API settings with extended properties
-interface ExtendedDisplaySettings extends alphaTab.DisplaySettings {
+// Type for alphaTab API settings with extended properties (using intersection types)
+type ExtendedDisplaySettings = alphaTab.DisplaySettings & {
 	staveProfile?: number;
 	layoutMode?: number;
-}
+};
 
-interface ExtendedPlayerSettings extends alphaTab.PlayerSettings {
+type ExtendedPlayerSettings = alphaTab.PlayerSettings & {
 	scrollMode?: string | alphaTab.ScrollMode;
 	enableCountIn?: boolean;
-}
+};
 
-interface ExtendedAlphaTabApi extends alphaTab.AlphaTabApi {
+type ExtendedAlphaTabApi = alphaTab.AlphaTabApi & {
 	scrollToCursor?: () => void;
-}
+};
 
 export interface EditorBarOptions {
 	app: App;
@@ -158,7 +158,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
 		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
-		visibility = plugin?.settings?.editorBar?.components;
+		visibility = plugin?.settings?.editorBar?.components as Record<string, boolean> | undefined;
 		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
 	} catch {
 		// Ignore plugin access errors
@@ -431,7 +431,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 					};
 					new ExportChooserModal({
 						app,
-						eventBus: eventBus as { publish: (event: string, payload?: unknown) => void },
+						eventBus: eventBus as {
+							publish: (event: string, payload?: unknown) => void;
+							subscribe: (event: string, handler: (p?: unknown) => void) => void;
+						},
 						getFileName: getTitle,
 					}).open();
 				} catch (e) {
@@ -662,7 +665,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.player as ExtendedPlayerSettings).scrollMode = select.value;
+					(api.settings.player as ExtendedPlayerSettings).scrollMode = select.value as unknown as alphaTab.ScrollMode;
 					api.updateSettings();
 				} else {
 					eventBus?.publish('命令:设置滚动模式', select.value);

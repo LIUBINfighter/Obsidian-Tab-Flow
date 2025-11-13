@@ -141,7 +141,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
 		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(pluginId) as TabFlowPluginLike | null;
-		visibility = plugin?.settings?.playBar?.components;
+		visibility = plugin?.settings?.playBar?.components as Record<string, boolean> | undefined;
 		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
 	} catch {
 		// Ignore plugin access errors

@@ -100,7 +100,11 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 					};
 				};
 			}
-			const exporter = new ((alphaTab as unknown as AlphaTabExporter).exporter?.Gp7Exporter)();
+			const exporterModule = (alphaTab as unknown as AlphaTabExporter).exporter;
+			if (!exporterModule?.Gp7Exporter) {
+				throw new Error('Gp7Exporter 不可用');
+			}
+			const exporter = new exporterModule.Gp7Exporter();
 			const data = exporter.export(api.score, api.settings);
 			const a = document.createElement('a');
 			a.download = (getFileName?.() || api.score.title || 'Untitled') + '.gp';
@@ -122,7 +126,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			// 只打印乐谱区域
 			// 假设 api.renderTarget 是渲染的 DOM 元素
 			const extendedApi = api as ExtendedAlphaTabApi;
-			const el = extendedApi.renderTarget || api.container;
+			const el = extendedApi.renderTarget || (api.container as unknown as HTMLElement);
 			if (!el) throw new Error('找不到乐谱渲染区域');
 			// 新建窗口打印
 			const win = window.open('', '_blank');
@@ -143,7 +147,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 
 			const bodyEl = win.document.createElement('body');
 			// 复制乐谱元素
-			const clonedEl = el.cloneNode(true) as HTMLElement;
+			const clonedEl = (el as HTMLElement).cloneNode(true) as HTMLElement;
 			bodyEl.appendChild(clonedEl);
 
 			htmlEl.appendChild(headEl);
