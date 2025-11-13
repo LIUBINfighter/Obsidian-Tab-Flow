@@ -175,7 +175,8 @@ export class TrackStateStore {
 					mute: (track.playbackInfo as ExtendedPlaybackInfo).isMute ?? false,
 					volume: (track.playbackInfo as ExtendedPlaybackInfo).volume ?? 8,
 					transpose: 0,
-					transposeAudio: (track.playbackInfo as ExtendedPlaybackInfo).transposeAudio ?? 0,
+					transposeAudio:
+						(track.playbackInfo as ExtendedPlaybackInfo).transposeAudio ?? 0,
 				};
 			}
 		}

@@ -153,7 +153,8 @@ export class TabView extends FileView {
 		interface PluginWithTrackStateStore {
 			trackStateStore?: TrackStateStore;
 		}
-		this.trackStateStore = (plugin as unknown as PluginWithTrackStateStore).trackStateStore as TrackStateStore;
+		this.trackStateStore = (plugin as unknown as PluginWithTrackStateStore)
+			.trackStateStore as TrackStateStore;
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
@@ -202,7 +203,9 @@ export class TabView extends FileView {
 						interface AlphaTabApiWithRenderTracks {
 							renderTracks?: (tracks: unknown[]) => void;
 						}
-						(this._api as unknown as AlphaTabApiWithRenderTracks).renderTracks?.(tracksToRender);
+						(this._api as unknown as AlphaTabApiWithRenderTracks).renderTracks?.(
+							tracksToRender
+						);
 					} catch (e) {
 						console.warn('[TabView] 应用选中音轨失败', e);
 					}
@@ -325,7 +328,9 @@ export class TabView extends FileView {
 						interface AlphaTabApiWithRenderTracks {
 							renderTracks?: (tracks: unknown[]) => void;
 						}
-						(this._api as unknown as AlphaTabApiWithRenderTracks).renderTracks?.(tracksToRender);
+						(this._api as unknown as AlphaTabApiWithRenderTracks).renderTracks?.(
+							tracksToRender
+						);
 					}
 				}
 			};
@@ -400,7 +405,9 @@ export class TabView extends FileView {
 				interface ScoreWithDuration {
 					duration?: number;
 				}
-				return this._api?.score ? (this._api.score as unknown as ScoreWithDuration).duration || 0 : 0;
+				return this._api?.score
+					? (this._api.score as unknown as ScoreWithDuration).duration || 0
+					: 0;
 			},
 			seekTo: (ms) => {
 				if (this._api) {
@@ -460,7 +467,8 @@ export class TabView extends FileView {
 					showDebugBar?: boolean;
 				};
 			}
-			const show = (this.plugin as unknown as PluginWithSettings)?.settings?.showDebugBar === true;
+			const show =
+				(this.plugin as unknown as PluginWithSettings)?.settings?.showDebugBar === true;
 			const existing = this.contentEl.querySelector('.debug-bar');
 			if (!show) {
 				if (existing) (existing as HTMLElement).remove();
@@ -944,7 +952,9 @@ export class TabView extends FileView {
 						scrollMode?: string;
 					};
 				}
-				const mode = (this.plugin as unknown as PluginWithSettings).settings?.scrollMode || 'continuous';
+				const mode =
+					(this.plugin as unknown as PluginWithSettings).settings?.scrollMode ||
+					'continuous';
 				let sm: alphaTab.ScrollMode;
 				switch (mode) {
 					case 'continuous':

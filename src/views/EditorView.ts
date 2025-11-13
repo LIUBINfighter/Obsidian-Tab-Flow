@@ -335,7 +335,8 @@ export class EditorView extends FileView {
 				__tabflow_settings__?: unknown;
 			}
 			(window as unknown as WindowWithSettings).__tabflow_settings__ =
-				(window as unknown as WindowWithSettings).__tabflow_settings__ || this.plugin.settings;
+				(window as unknown as WindowWithSettings).__tabflow_settings__ ||
+				this.plugin.settings;
 		} catch {
 			// ignore
 		}
@@ -493,7 +494,11 @@ export class EditorView extends FileView {
 			getDuration: () => {
 				const api = this.playground?.getApi();
 				return api?.score
-					? (api.score as unknown as { durationMillis?: number; duration?: number }).durationMillis || (api.score as unknown as { durationMillis?: number; duration?: number }).duration || 0
+					? (api.score as unknown as { durationMillis?: number; duration?: number })
+							.durationMillis ||
+							(api.score as unknown as { durationMillis?: number; duration?: number })
+								.duration ||
+							0
 					: 0;
 			},
 			seekTo: (ms: number) => {

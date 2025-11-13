@@ -18,7 +18,8 @@ export function setupHorizontalScroll(element: HTMLElement, api: alphaTab.AlphaT
 			};
 		}
 		const isHorizontalLayout =
-			api.settings?.display?.layoutMode === (alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode?.Horizontal;
+			api.settings?.display?.layoutMode ===
+			(alphaTab as unknown as AlphaTabWithLayoutMode).LayoutMode?.Horizontal;
 		if (!isHorizontalLayout) return;
 
 		const target = element;

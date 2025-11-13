@@ -217,8 +217,11 @@ export async function renderPlayerTab(
 							components: {} as PlayBarComponentVisibility,
 						};
 						plugin.settings.playBar.components =
-							plugin.settings.playBar.components || ({} as PlayBarComponentVisibility);
-						plugin.settings.playBar.components[key as keyof PlayBarComponentVisibility] = m.disabled ? false : v;
+							plugin.settings.playBar.components ||
+							({} as PlayBarComponentVisibility);
+						plugin.settings.playBar.components[
+							key as keyof PlayBarComponentVisibility
+						] = m.disabled ? false : v;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(
@@ -385,7 +388,9 @@ export async function renderPlayerTab(
 						if (from < insertIndex) insertIndex -= 1;
 						cur.splice(insertIndex, 0, moved);
 					}
-					plugin.settings.playBar = plugin.settings.playBar || { components: {} as PlayBarComponentVisibility };
+					plugin.settings.playBar = plugin.settings.playBar || {
+						components: {} as PlayBarComponentVisibility,
+					};
 					if (plugin.settings.playBar) {
 						if (plugin.settings.playBar) {
 							plugin.settings.playBar.order = cur;
