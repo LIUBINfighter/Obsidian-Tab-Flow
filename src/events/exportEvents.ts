@@ -109,18 +109,28 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			// 新建窗口打印
 			const win = window.open('', '_blank');
 			if (!win) throw new Error('无法打开打印窗口');
-			win.document.write('<html><head><title>乐谱打印</title>');
-			// 使用 DOM API 替代 outerHTML，避免安全风险
+
+			// 使用 DOM API 而不是 document.write
+			const htmlEl = win.document.createElement('html');
+			const headEl = win.document.createElement('head');
+			const titleEl = win.document.createElement('title');
+			titleEl.textContent = '乐谱打印';
+			headEl.appendChild(titleEl);
+
 			// 复制样式
 			document.querySelectorAll('style,link[rel="stylesheet"]').forEach((style) => {
 				const clonedStyle = style.cloneNode(true) as HTMLElement;
-				win.document.head.appendChild(clonedStyle);
+				headEl.appendChild(clonedStyle);
 			});
-			win.document.write('</head><body>');
+
+			const bodyEl = win.document.createElement('body');
 			// 复制乐谱元素
 			const clonedEl = el.cloneNode(true) as HTMLElement;
-			win.document.body.appendChild(clonedEl);
-			win.document.write('</body></html>');
+			bodyEl.appendChild(clonedEl);
+
+			htmlEl.appendChild(headEl);
+			htmlEl.appendChild(bodyEl);
+			win.document.appendChild(htmlEl);
 			win.document.close();
 			win.focus();
 			win.print();

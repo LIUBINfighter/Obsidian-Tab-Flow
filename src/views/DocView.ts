@@ -112,7 +112,6 @@ export class DocView extends ItemView {
 	}
 
 	async onOpen() {
-		this.injectStyles();
 		await this.render();
 	}
 
@@ -125,23 +124,6 @@ export class DocView extends ItemView {
 			this.settingsAction = null;
 		} catch {
 			// ignore
-		}
-	}
-
-	private injectStyles() {
-		try {
-			const id = 'tabflow-doc-style';
-			if (document.getElementById(id)) return;
-			const link = document.createElement('link');
-			link.id = id;
-			link.rel = 'stylesheet';
-			const base = this.plugin.manifest?.dir
-				? `${this.plugin.manifest.dir.replace(/\\/g, '/')}`
-				: '';
-			link.href = base + '/src/styles/doc.css';
-			document.head.appendChild(link);
-		} catch (e) {
-			// fail silently
 		}
 	}
 
