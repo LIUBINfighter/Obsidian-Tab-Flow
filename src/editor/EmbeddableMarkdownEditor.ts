@@ -295,9 +295,9 @@ export class EmbeddableMarkdownEditor {
 		(this.editor as any).register?.(
 			around(app.workspace, {
 				setActiveLeaf:
-					(oldMethod: any) =>
+					(oldMethod: unknown) =>
 					(leaf: WorkspaceLeaf, ...args: unknown[]) => {
-						if (!this.activeCM?.hasFocus) oldMethod.call(app.workspace, leaf, ...args);
+						if (!this.activeCM?.hasFocus) (oldMethod as any).call(app.workspace, leaf, ...args);
 					},
 			})
 		);
@@ -367,13 +367,13 @@ export class EmbeddableMarkdownEditor {
 	}
 }
 
-function resolveEditorPrototype(app: App): any {
+function resolveEditorPrototype(app: App): unknown {
 	// 使用类型守卫替代类型转换，避免绕过TypeScript类型检查
 	const embedRegistry = (
 		app as {
 			embedRegistry?: {
 				embedByExtension?: {
-					md?: (options: any, file: TFile | null, extension: string) => any;
+					md?: (options: unknown, file: TFile | null, extension: string) => unknown;
 				};
 			};
 		}
@@ -402,5 +402,5 @@ export function createEmbeddableMarkdownEditor(
 	options: Partial<MarkdownEditorProps> = {}
 ): EmbeddableMarkdownEditor {
 	const EditorClass = resolveEditorPrototype(app);
-	return new EmbeddableMarkdownEditor(app, EditorClass, container, options);
+	return new EmbeddableMarkdownEditor(app, EditorClass as any, container, options);
 }
