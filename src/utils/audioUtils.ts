@@ -18,6 +18,7 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
 				ByteBuffer?: {
 					withCapacity: (size: number) => {
 						write: (data: Uint8Array, offset: number, length: number) => void;
+						toArray: () => Uint8Array;
 					};
 				};
 				IOHelper?: {
@@ -27,66 +28,36 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
 			};
 		}
 		const alphaTabIO = alphaTab as unknown as AlphaTabIO;
-		if (alphaTabIO && alphaTabIO.io && alphaTabIO.io.ByteBuffer) {
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			const buffer = (alphaTab as any).io.ByteBuffer.withCapacity(fileSize);
+		if (alphaTabIO && alphaTabIO.io && alphaTabIO.io.ByteBuffer && alphaTabIO.io.IOHelper) {
+			const buffer = alphaTabIO.io.ByteBuffer.withCapacity(fileSize);
 			// RIFF
 			buffer.write(new Uint8Array([0x52, 0x49, 0x46, 0x46]), 0, 4);
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt32LE(buffer, fileSize - 8);
+			alphaTabIO.io.IOHelper.writeInt32LE(buffer, fileSize - 8);
 			buffer.write(new Uint8Array([0x57, 0x41, 0x56, 0x45]), 0, 4);
 			// fmt
 			buffer.write(new Uint8Array([0x66, 0x6d, 0x74, 0x20]), 0, 4);
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt32LE(buffer, 16);
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt16LE(buffer, 3); // float
+			alphaTabIO.io.IOHelper.writeInt32LE(buffer, 16);
+			alphaTabIO.io.IOHelper.writeInt16LE(buffer, 3); // float
 			const channels = 2;
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt16LE(buffer, channels);
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt32LE(buffer, sampleRate);
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt32LE(
+			alphaTabIO.io.IOHelper.writeInt16LE(buffer, channels);
+			alphaTabIO.io.IOHelper.writeInt32LE(buffer, sampleRate);
+			alphaTabIO.io.IOHelper.writeInt32LE(
 				buffer,
 				Float32Array.BYTES_PER_ELEMENT * channels * sampleRate
 			);
 			const bitsPerSample = Float32Array.BYTES_PER_ELEMENT * 8;
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt16LE(
+			alphaTabIO.io.IOHelper.writeInt16LE(
 				buffer,
 				channels * Math.floor((bitsPerSample + 7) / 8)
 			);
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-			(alphaTab as any).io.IOHelper.writeInt16LE(buffer, bitsPerSample);
+			alphaTabIO.io.IOHelper.writeInt16LE(buffer, bitsPerSample);
 			// data chunk
 			buffer.write(new Uint8Array([0x64, 0x61, 0x74, 0x61]), 0, 4);
-			// @ts-ignore
-			// TO FIX: 避免尽可能地转换为 any 类型
-			// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
 			for (const c of chunks) {
 				const bytes = new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
 				buffer.write(bytes, 0, bytes.length);
 			}
-			const blob: Blob = new Blob([buffer.toArray()], { type: 'audio/wav' });
+			const blob = new Blob([buffer.toArray()], { type: 'audio/wav' });
 			return URL.createObjectURL(blob);
 		}
 	} catch (e) {

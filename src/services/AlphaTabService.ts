@@ -42,7 +42,7 @@ export class AlphaTabService {
 				smuflFontSources: (resources.bravuraUri
 					? new Map([
 							[
-								(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+								(alphaTab as unknown as { rendering?: { glyphs?: { FontFileFormat?: { Woff2?: number } } } }).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 								resources.bravuraUri,
 							],
 						])
@@ -139,7 +139,7 @@ export class AlphaTabService {
 		// 新增：刷新播放器（重新渲染当前乐谱）
 		this.eventBus.subscribe('命令:刷新播放器', () => {
 			try {
-				if ((this.api as any)?.score) {
+				if (this.api?.score) {
 					// 方案A：仅强制渲染
 					this.api.render();
 				}
@@ -282,7 +282,7 @@ export class AlphaTabService {
 			try {
 				// console.debug('[AlphaTabService] 收到手动刷新事件');
 				// 强制重新渲染
-				if (this.api && (this.api as any).score) {
+				if (this.api?.score) {
 					this.api.render();
 				}
 				// 重新配置滚动元素
@@ -300,13 +300,24 @@ export class AlphaTabService {
 	public async loadAlphaTexScore(textContent: string) {
 		try {
 			// 使用 AlphaTab 的 tex 方法加载 AlphaTex 内容
-			if (typeof (this.api as any).tex === 'function') {
-				await (this.api as any).tex(textContent);
+			interface ExtendedAlphaTabApi {
+				tex?: (text: string) => Promise<void>;
+			}
+			const extendedApi = this.api as ExtendedAlphaTabApi;
+			if (typeof extendedApi.tex === 'function') {
+				await extendedApi.tex(textContent);
 			} else {
 				// 备用方案：使用 AlphaTexImporter
-				const Importer: unknown = (alphaTab as any).importer?.AlphaTexImporter;
+				interface AlphaTabImporter {
+					importer?: {
+						AlphaTexImporter?: new () => {
+							import: (text: string) => unknown;
+						};
+					};
+				}
+				const Importer = (alphaTab as unknown as AlphaTabImporter).importer?.AlphaTexImporter;
 				if (Importer) {
-					const importer = new (Importer as any)();
+					const importer = new Importer();
 					importer.initFromString(textContent, this.api.settings);
 					const score = importer.readScore();
 					this.api.renderScore(score);
@@ -358,7 +369,7 @@ export class AlphaTabService {
 					smuflFontSources: (this.resources.bravuraUri
 						? new Map([
 								[
-									(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+									(alphaTab as unknown as { rendering?: { glyphs?: { FontFileFormat?: { Woff2?: number } } } }).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 									this.resources.bravuraUri,
 								],
 							])
@@ -426,7 +437,10 @@ export class AlphaTabService {
 		try {
 			let chunk: unknown;
 			while ((chunk = await exporter.render(500))) {
-				chunks.push((chunk as any).samples);
+				interface AudioChunk {
+					samples?: Float32Array;
+				}
+				chunks.push((chunk as AudioChunk).samples || new Float32Array());
 			}
 		} finally {
 			exporter.destroy();

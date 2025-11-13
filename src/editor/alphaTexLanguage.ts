@@ -170,14 +170,14 @@ const alphaTexParser = StreamLanguage.define({
 	startState() {
 		return { tokenize: tokenBase };
 	},
-	token(stream: any, state: any) {
+	token(stream: StreamParser, state: ParserState) {
 		return state.tokenize(stream, state);
 	},
-	blankLine(state: any) {
+	blankLine(state: ParserState) {
 		// reset inline tokenizers on blank lines
 		state.tokenize = tokenBase;
 	},
-} as any);
+} as unknown);
 
 // Note: styling will be provided via CSS classes (cm-*) emitted by the stream parser.
 // Avoid runtime dependency on deprecated highlight tags which may be absent in host.

@@ -253,7 +253,11 @@ export class ShareCardPresetService {
 
 	/** 从 modal 收集当前值生成一个预设对象（不含 id 等） */
 	collectFromModal(
-		modal: any
+		modal: {
+			__shareCardCurrentResolution?: '1x' | '2x' | '3x';
+			__shareCardCurrentFormat?: 'png' | 'jpg' | 'webp';
+			__shareCardDisableLazy?: boolean;
+		}
 	): Omit<ShareCardPresetV1, 'id' | 'version' | 'createdAt' | 'updatedAt'> {
 		return {
 			name: '未命名',
