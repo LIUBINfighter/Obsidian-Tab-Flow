@@ -1076,21 +1076,21 @@ export class ShareCardModal extends Modal {
 		} catch (_) {
 			// ignore
 		}
-	try {
-		this.playgroundHandle?.destroy();
-	} catch (_) {
-		// ignore
-	}
-
-	// 移除外部点击关闭的监听
-	try {
-		if (this.outsidePointerDownHandler) {
-			document.removeEventListener('pointerdown', this.outsidePointerDownHandler);
-			this.outsidePointerDownHandler = null;
+		try {
+			this.playgroundHandle?.destroy();
+		} catch (_) {
+			// ignore
 		}
-	} catch (_) {
-		// ignore
-	}
+
+		// 移除外部点击关闭的监听
+		try {
+			if (this.outsidePointerDownHandler) {
+				document.removeEventListener('pointerdown', this.outsidePointerDownHandler);
+				this.outsidePointerDownHandler = null;
+			}
+		} catch (_) {
+			// ignore
+		}
 		this.playgroundHandle = null;
 		this.cardRoot = null;
 		this.contentEl.empty();
