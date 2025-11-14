@@ -160,7 +160,6 @@ export class EditorView extends FileView {
 				}
 			}
 		};
-
 	}
 
 	getViewType(): string {
@@ -447,7 +446,9 @@ export class EditorView extends FileView {
 							const ok = await this.plugin.downloadAssets();
 							btn.removeAttribute('disabled');
 							btn.setText(
-								ok ? t('playground.downloadCompleted') : t('playground.downloadFailed')
+								ok
+									? t('playground.downloadCompleted')
+									: t('playground.downloadFailed')
 							);
 						} catch {
 							btn.removeAttribute('disabled');
@@ -472,7 +473,9 @@ export class EditorView extends FileView {
 			},
 		});
 		this.playerRoot = createRoot(this.playerContainer);
-		this.playerRoot.render(React.createElement(TablatureView, { controller: this.playerController }));
+		this.playerRoot.render(
+			React.createElement(TablatureView, { controller: this.playerController })
+		);
 
 		const runtimeStore = this.playerController.getRuntimeStore();
 		let lastApiReady = runtimeStore.getState().apiReady;
@@ -551,7 +554,8 @@ export class EditorView extends FileView {
 			const focusedContent = this.generateFocusedContent(content, position);
 			this.queuePlayerRender(focusedContent);
 			const barNumber = getBarNumberAtOffset(content, position);
-			const info = barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
+			const info =
+				barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
 			this.setCurrentBarInfo(info);
 		} else {
 			this.queuePlayerRender(content);
