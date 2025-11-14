@@ -21,6 +21,23 @@ import {
 	// chordHighlightPlugin,
 } from './Highlight';
 import { alphaTex } from './alphaTexLanguage';
+import { EditorView, keymap, placeholder, ViewUpdate, ViewPlugin } from '@codemirror/view';
+import {
+	dotHighlightPlugin,
+	barHighlightPlugin,
+	bracketHighlightPlugin,
+	metaHighlightPlugin,
+	commentHighlightPlugin,
+	debugHighlightPlugin,
+	whitespaceHighlightPlugin,
+	surroundedHighlightPlugin,
+	durationHighlightPlugin,
+	effectHighlightPlugin,
+	tuningHighlightPlugin,
+	booleanHighlightPlugin,
+	// chordHighlightPlugin,
+} from './Highlight';
+import { alphaTex } from './alphaTexLanguage';
 import { around } from 'monkey-around';
 
 export interface MarkdownEditorProps {
@@ -35,6 +52,8 @@ export interface MarkdownEditorProps {
 	onBlur?: (editor: EmbeddableMarkdownEditor) => void;
 	onPaste?: (e: ClipboardEvent, editor: EmbeddableMarkdownEditor) => void;
 	onChange?: (update: ViewUpdate) => void;
+	// optional map of highlight plugin toggles passed from caller
+	highlightSettings?: Record<string, boolean>;
 	// optional map of highlight plugin toggles passed from caller
 	highlightSettings?: Record<string, boolean>;
 }
@@ -53,6 +72,7 @@ const defaultProperties: Required<Omit<MarkdownEditorProps, 'cursorLocation'>> &
 	onBlur: () => {},
 	onPaste: () => {},
 	onChange: () => {},
+	highlightSettings: {},
 	highlightSettings: {},
 };
 

@@ -36,6 +36,19 @@ export class TracksModal extends Modal {
 	>();
 	private unsubscribeStore?: () => void;
 	private suppressToggleEvent = false;
+	private uiRefs = new Map<
+		number,
+		{
+			toggle?: ToggleComponent;
+			soloBtn?: ExtraButtonComponent;
+			muteBtn?: ExtraButtonComponent;
+			vol?: { slider: HTMLInputElement; input: HTMLInputElement; value: HTMLElement };
+			tr?: { slider: HTMLInputElement; input: HTMLInputElement; value: HTMLElement };
+			ta?: { slider: HTMLInputElement; input: HTMLInputElement; value: HTMLElement };
+		}
+	>();
+	private unsubscribeStore?: () => void;
+	private suppressToggleEvent = false;
 	constructor(
 		app: App,
 		private tracks: alphaTab.model.Track[],
@@ -43,9 +56,14 @@ export class TracksModal extends Modal {
 		private api: alphaTab.AlphaTabApi,
 		private eventBus: EventBus | undefined,
 		private trackStateStore: TrackStateStore
+		private filePath: string,
+		private api: alphaTab.AlphaTabApi,
+		private eventBus: EventBus | undefined,
+		private trackStateStore: TrackStateStore
 	) {
 		super(app);
 		this.modalEl.addClass('tracks-modal');
+		this.selectedTracks = new Set(tracks.length ? [tracks[0]] : []);
 		this.selectedTracks = new Set(tracks.length ? [tracks[0]] : []);
 	}
 
@@ -58,8 +76,40 @@ export class TracksModal extends Modal {
 		try {
 			if (this.filePath) {
 				this.trackStateStore.ensureDefaultsFromApi(this.filePath, this.api);
+		this.contentEl.empty();
+		this.titleEl.setText('');
+		this.uiRefs.clear();
+
+		// 确保 Store 中存在基于当前 API 的默认值（不直接改动 API）
+		try {
+			if (this.filePath) {
+				this.trackStateStore.ensureDefaultsFromApi(this.filePath, this.api);
 			}
 		} catch {
+			// ignore
+		}
+
+		// 读全局状态
+		const globalState = this.filePath ? this.trackStateStore.getFileState(this.filePath) : {};
+		const savedTrackSettings = globalState.trackSettings || {};
+		if (globalState.selectedTracks?.length) {
+			const set = new Set(globalState.selectedTracks);
+			const match = this.tracks.filter((t) => set.has(t.index));
+			if (match.length) this.selectedTracks = new Set(match);
+			else this.selectedTracks = new Set(this.tracks.length ? [this.tracks[0]] : []);
+		} else {
+			// 当未有持久化选中时，使用 API 当前渲染的轨道作为初始选中；若不可用则退回为全部轨道
+			const apiRendered = (this.api?.tracks as alphaTab.model.Track[] | undefined) || [];
+			if (apiRendered.length) {
+				const indices = new Set(apiRendered.map((t) => t.index));
+				const match = this.tracks.filter((t) => indices.has(t.index));
+				this.selectedTracks = new Set(match.length ? match : this.tracks);
+			} else {
+				this.selectedTracks = new Set(this.tracks);
+			}
+		}
+
+		// 标题栏（精简，无 Apply/Cancel）
 			// ignore
 		}
 
@@ -104,14 +154,33 @@ export class TracksModal extends Modal {
 			);
 		};
 
+		const applySelectedToStore = () => {
+			const list = Array.from(this.selectedTracks).sort((a, b) => a.index - b.index);
+			this.trackStateStore.setSelectedTracks(
+				this.filePath,
+				list.map((t) => t.index)
+			);
+		};
+
 		this.tracks.forEach((track) => {
 			const trackSetting = new Setting(scrollContainer)
 				.setName(track.name)
 				.setDesc(track.shortName || t('tracks.trackNumber', { number: track.index + 1 }));
 			trackSetting.settingEl.classList.add('track-item');
+			trackSetting.settingEl.classList.add('track-item');
 
 			// 选择音轨 toggle -> 即时更新
+			// 选择音轨 toggle -> 即时更新
 			trackSetting.addToggle((toggle) => {
+				toggle.setValue(this.selectedTracks.has(track)).onChange((val) => {
+					if (this.suppressToggleEvent) return; // 避免从 Store 回推时触发循环
+					if (val) this.selectedTracks.add(track);
+					else {
+						if (this.selectedTracks.size === 1) {
+							// 保证至少一条
+							toggle.setValue(true);
+							return;
+						}
 				toggle.setValue(this.selectedTracks.has(track)).onChange((val) => {
 					if (this.suppressToggleEvent) return; // 避免从 Store 回推时触发循环
 					if (val) this.selectedTracks.add(track);
@@ -124,13 +193,19 @@ export class TracksModal extends Modal {
 						this.selectedTracks.delete(track);
 					}
 					applySelectedToStore();
+					applySelectedToStore();
 				});
+				// 保存引用以便 Store 变化时刷新
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.toggle = toggle;
+				this.uiRefs.set(track.index, ref);
 				// 保存引用以便 Store 变化时刷新
 				const ref = this.uiRefs.get(track.index) || {};
 				ref.toggle = toggle;
 				this.uiRefs.set(track.index, ref);
 			});
 
+			// === 独奏按钮 ===
 			// === 独奏按钮 ===
 			trackSetting.addExtraButton((btn) => {
 				const updateUI = () => {
@@ -144,7 +219,9 @@ export class TracksModal extends Modal {
 						isSolo ? t('tracks.unsolo') : t('tracks.solo')
 					);
 					btn.extraSettingsEl.toggleClass('active', !!isSolo);
+					btn.extraSettingsEl.toggleClass('active', !!isSolo);
 				};
+				updateUI();
 				updateUI();
 				btn.onClick(() => {
 					const prev =
@@ -163,9 +240,14 @@ export class TracksModal extends Modal {
 				const ref = this.uiRefs.get(track.index) || {};
 				ref.soloBtn = btn;
 				this.uiRefs.set(track.index, ref);
+				// 保存引用
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.soloBtn = btn;
+				this.uiRefs.set(track.index, ref);
 				return btn;
 			});
 
+			// === 静音按钮 ===
 			// === 静音按钮 ===
 			trackSetting.addExtraButton((btn) => {
 				const updateUI = () => {
@@ -179,7 +261,9 @@ export class TracksModal extends Modal {
 						isMute ? t('tracks.unmute') : t('tracks.mute')
 					);
 					btn.extraSettingsEl.toggleClass('active', !!isMute);
+					btn.extraSettingsEl.toggleClass('active', !!isMute);
 				};
+				updateUI();
 				updateUI();
 				btn.onClick(() => {
 					const prev =
@@ -194,6 +278,10 @@ export class TracksModal extends Modal {
 					});
 					updateUI();
 				});
+				// 保存引用
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.muteBtn = btn;
+				this.uiRefs.set(track.index, ref);
 				// 保存引用
 				const ref = this.uiRefs.get(track.index) || {};
 				ref.muteBtn = btn;
@@ -250,7 +338,55 @@ export class TracksModal extends Modal {
 				ref.vol = { slider: volSlider, input: volInput, value: volValue };
 				this.uiRefs.set(track.index, ref);
 			}
+			volSlider.oninput = (e) => applyVolume(Number((e.target as HTMLInputElement).value));
+			volInput.onchange = (e) => applyVolume(Number((e.target as HTMLInputElement).value));
+			volWrapper.appendChild(volLabel);
+			volWrapper.appendChild(volSlider);
+			volWrapper.appendChild(volValue);
+			volWrapper.appendChild(volInput);
+			trackSetting.settingEl.appendChild(volWrapper);
+			// 保存引用
+			{
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.vol = { slider: volSlider, input: volInput, value: volValue };
+				this.uiRefs.set(track.index, ref);
+			}
 
+			// === 全局移调 ===
+			const trWrapper = document.createElement('div');
+			trWrapper.className = 'track-param-row';
+			const trLabel = document.createElement('span');
+			trLabel.textContent = t('tracks.globalTranspose');
+			const trSlider = document.createElement('input');
+			trSlider.type = 'range';
+			trSlider.min = '-12';
+			trSlider.max = '12';
+			trSlider.step = '1';
+			const curTr =
+				typeof savedTrackSettings[String(track.index)]?.transpose === 'number'
+					? savedTrackSettings[String(track.index)].transpose
+					: 0;
+			trSlider.value = String(curTr);
+			const trValue = document.createElement('span');
+			trValue.textContent = trSlider.value;
+			const trInput = document.createElement('input');
+			trInput.type = 'number';
+			trInput.min = '-12';
+			trInput.max = '12';
+			trInput.value = trSlider.value;
+			let trDebounce: number | null = null;
+			const applyTranspose = (v: number) => {
+				v = Math.max(-12, Math.min(12, v));
+				if (trDebounce) window.clearTimeout(trDebounce);
+				trDebounce = window.setTimeout(() => {
+					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
+						transpose: v,
+					});
+					trSlider.value = String(v);
+					trValue.textContent = String(v);
+					trInput.value = String(v);
+					trDebounce = null;
+				}, 60);
 			// === 全局移调 ===
 			const trWrapper = document.createElement('div');
 			trWrapper.className = 'track-param-row';
@@ -300,7 +436,100 @@ export class TracksModal extends Modal {
 				ref.tr = { slider: trSlider, input: trInput, value: trValue };
 				this.uiRefs.set(track.index, ref);
 			}
+			trSlider.oninput = (e) => applyTranspose(Number((e.target as HTMLInputElement).value));
+			trInput.onchange = (e) => applyTranspose(Number((e.target as HTMLInputElement).value));
+			trWrapper.appendChild(trLabel);
+			trWrapper.appendChild(trSlider);
+			trWrapper.appendChild(trValue);
+			trWrapper.appendChild(trInput);
+			trackSetting.settingEl.appendChild(trWrapper);
+			// 保存引用
+			{
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.tr = { slider: trSlider, input: trInput, value: trValue };
+				this.uiRefs.set(track.index, ref);
+			}
 
+			// === 音频移调（逻辑） ===
+			const taWrapper = document.createElement('div');
+			taWrapper.className = 'track-param-row';
+			const taLabel = document.createElement('span');
+			taLabel.textContent = t('tracks.audioTranspose');
+			const taSlider = document.createElement('input');
+			taSlider.type = 'range';
+			taSlider.min = '-12';
+			taSlider.max = '12';
+			taSlider.step = '1';
+			const curTa =
+				typeof savedTrackSettings[String(track.index)]?.transposeAudio === 'number'
+					? savedTrackSettings[String(track.index)].transposeAudio
+					: 0;
+			taSlider.value = String(curTa);
+			const taValue = document.createElement('span');
+			taValue.textContent = taSlider.value;
+			const taInput = document.createElement('input');
+			taInput.type = 'number';
+			taInput.min = '-12';
+			taInput.max = '12';
+			taInput.value = taSlider.value;
+			let taDebounce: number | null = null;
+			const applyTa = (v: number) => {
+				v = Math.max(-12, Math.min(12, v));
+				// 暂无 API；仅存储逻辑值
+				if (taDebounce) window.clearTimeout(taDebounce);
+				taDebounce = window.setTimeout(() => {
+					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
+						transposeAudio: v,
+					});
+					taSlider.value = String(v);
+					taValue.textContent = String(v);
+					taInput.value = String(v);
+					taDebounce = null;
+				}, 60);
+			};
+			taSlider.oninput = (e) => applyTa(Number((e.target as HTMLInputElement).value));
+			taInput.onchange = (e) => applyTa(Number((e.target as HTMLInputElement).value));
+			taWrapper.appendChild(taLabel);
+			taWrapper.appendChild(taSlider);
+			taWrapper.appendChild(taValue);
+			taWrapper.appendChild(taInput);
+			trackSetting.settingEl.appendChild(taWrapper);
+			// 保存引用
+			{
+				const ref = this.uiRefs.get(track.index) || {};
+				ref.ta = { slider: taSlider, input: taInput, value: taValue };
+				this.uiRefs.set(track.index, ref);
+			}
+		});
+
+		// === 底部操作区：恢复默认按钮（仅清除存储，不主动改动当前播放状态） ===
+		const footer = document.createElement('div');
+		footer.className = 'tracks-footer-actions';
+		const resetBtn = document.createElement('button');
+		resetBtn.className = 'mod-warning';
+		resetBtn.textContent = t('tracks.resetToDefaults', undefined, '恢复默认');
+		resetBtn.onclick = () => {
+			try {
+				// 清除持久化，不改动 API；根据“无持久化”状态重新渲染 Modal 内容
+				this.trackStateStore.clearFile(this.filePath);
+				this.contentEl.empty();
+				this.onOpen();
+				// 将选中轨道设置为第一条（index 0 或列表第一项），驱动 TabView 只渲染第一轨
+				if (this.tracks.length) {
+					const first = this.tracks.find((tr) => tr.index === 0) || this.tracks[0];
+					// 更新 Store（触发 TabView 渲染第一轨）
+					this.trackStateStore.setSelectedTracks(this.filePath, [first.index]);
+					// 同步 Modal UI toggle 显示
+					this.suppressToggleEvent = true;
+					this.selectedTracks = new Set([first]);
+					this.tracks.forEach((tr) => {
+						const ref = this.uiRefs.get(tr.index);
+						if (ref?.toggle) ref.toggle.setValue(tr.index === first.index);
+					});
+					this.suppressToggleEvent = false;
+				}
+			} catch (e) {
+				console.warn('[TracksModal] 重置轨道状态失败', e);
 			// === 音频移调（逻辑） ===
 			const taWrapper = document.createElement('div');
 			taWrapper.className = 'track-param-row';
@@ -463,10 +692,19 @@ export class TracksModal extends Modal {
 				this.tracks.forEach((t) => applyTrackPatch(t.index, {}));
 			}
 		});
+		});
 	}
 
 	onClose() {
 		this.contentEl.empty();
+		// 解绑 Store 订阅，清理引用
+		try {
+			if (this.unsubscribeStore) this.unsubscribeStore();
+			this.unsubscribeStore = undefined;
+		} catch {
+			/* ignore */
+		}
+		this.uiRefs.clear();
 		// 解绑 Store 订阅，清理引用
 		try {
 			if (this.unsubscribeStore) this.unsubscribeStore();

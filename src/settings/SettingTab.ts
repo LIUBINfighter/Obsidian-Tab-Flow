@@ -112,6 +112,7 @@ export class SettingTab extends PluginSettingTab {
 			{ id: 'general', name: t('settings.tabs.general') },
 			{ id: 'player', name: t('settings.tabs.player') },
 			{ id: 'editor', name: t('settings.tabs.editor') },
+			{ id: 'editor', name: t('settings.tabs.editor') },
 			{ id: 'about', name: t('settings.tabs.about') },
 		];
 
@@ -126,6 +127,9 @@ export class SettingTab extends PluginSettingTab {
 			} else if (tabId === 'player') {
 				const mod = await import('./tabs/playerTab');
 				await mod.renderPlayerTab(contentsEl, this.plugin, this.app);
+			} else if (tabId === 'editor') {
+				const mod = await import('./tabs/editorTab');
+				await mod.renderEditorTab(contentsEl, this.plugin, this.app);
 			} else if (tabId === 'editor') {
 				const mod = await import('./tabs/editorTab');
 				await mod.renderEditorTab(contentsEl, this.plugin, this.app);

@@ -15,6 +15,7 @@ export async function renderPlayerTab(
 		.setName(t('settings.player.resetToDefault'))
 		.setDesc(t('settings.player.resetToDefaultDesc'))
 		.setClass('tabflow-no-border')
+		.setClass('tabflow-no-border')
 		.addButton((btn) => {
 			btn.setButtonText(t('settings.player.resetToDefault')).onClick(async () => {
 				try {
@@ -107,6 +108,11 @@ export async function renderPlayerTab(
 			icon: 'lucide-scroll',
 		},
 		{
+			key: 'scrollMode',
+			label: t('settings.player.components.scrollMode'),
+			icon: 'lucide-scroll',
+		},
+		{
 			key: 'audioPlayer',
 			label: t('settings.player.components.audioPlayer'),
 			icon: 'audio-file',
@@ -133,6 +139,7 @@ export async function renderPlayerTab(
 			'speed',
 			'staveProfile',
 			'zoom',
+			'scrollMode',
 			'scrollMode',
 			'audioPlayer',
 		];
@@ -421,11 +428,13 @@ export async function renderPlayerTab(
 	tabContents.createEl('div', {
 		text: t('settings.player.debugBar.description'),
 		cls: 'tabflow-setting-description',
+		cls: 'tabflow-setting-description',
 	});
 
 	new Setting(tabContents)
 		.setName(t('settings.player.debugBar.showDebugBar'))
 		.setDesc(t('settings.player.debugBar.showDebugBarDesc'))
+		.setClass('tabflow-no-border')
 		.setClass('tabflow-no-border')
 		.addToggle((toggle) => {
 			toggle.setValue(plugin.settings.showDebugBar ?? false).onChange(async (value) => {

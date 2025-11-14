@@ -78,6 +78,7 @@ export async function renderGeneralTab(
 	});
 	const pre = tabContents.createEl('pre', {
 		cls: 'tabflow-setting-description',
+		cls: 'tabflow-setting-description',
 	});
 	pre.createEl('code', {
 		text: `${app.vault.configDir}/tab-flow/\n├── main.js\n├── data.json(optional)\n├── manifest.json\n├── styles.css\n└── assets/\n    ├── ${ASSET_FILES.ALPHA_TAB}\n    ├── ${ASSET_FILES.BRAVURA}\n    └── ${ASSET_FILES.SOUNDFONT}`,

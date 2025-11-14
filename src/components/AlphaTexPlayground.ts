@@ -43,8 +43,26 @@ export interface AlphaTexPlaygroundOptions {
 	alphaTabOptions?: Record<string, unknown>;
 	/** 布局：vertical(上下) 或 horizontal(左右) */
 	layout?: 'vertical' | 'horizontal' | 'horizontal-swapped' | 'vertical-swapped' | 'single-bar';
+	layout?: 'vertical' | 'horizontal' | 'horizontal-swapped' | 'vertical-swapped' | 'single-bar';
 	/** 附加到根容器的自定义类名（可用于主题/自定义布局） */
 	className?: string;
+	/** 是否显示编辑区 */
+	showEditor?: boolean;
+	/** EventBus for handling commands */
+	eventBus?: EventBus;
+
+	/** 当前小节信息（用于 single-bar 模式显示） */
+	currentBarInfo?: string;
+
+	/**
+	 * 回调：当 playground 内部内容发生变更时触发（例如 playground 内部编辑器、格式化按钮、或工具
+	 * 操作导致的内容修改）。注意：
+	 * - 在常规模式下（非 single-bar）该回调通常用于将 playground 内部的调整同步回宿主编辑器（双向绑定）。
+	 * - 在 `single-bar`（单小节聚焦）模式下，playground 的内容通常只包含局部片段（当前小节）。
+	 *   如果在该模式下启用 `onChange` 并把返回的局部文本直接写回源编辑器，会导致源文件被覆盖为局部片段，
+	 *   从而丢失其他小节。调用方必须在 single-bar 模式下避免传入 `onChange`，或在回调内部对写回操作做保护性合并。
+	 */
+	onChange?: (value: string) => void;
 	/** 是否显示编辑区 */
 	showEditor?: boolean;
 	/** EventBus for handling commands */
@@ -71,6 +89,8 @@ export interface AlphaTexPlaygroundHandle {
 	refresh(): void; // 强制重新渲染
 	getApi(): alphaTab.AlphaTabApi | null;
 	updateCurrentBarInfo(info: string): void;
+	getApi(): alphaTab.AlphaTabApi | null;
+	updateCurrentBarInfo(info: string): void;
 }
 
 /**
@@ -90,7 +110,11 @@ export function createAlphaTexPlayground(
 		onChange,
 		alphaTabOptions = {},
 		layout = 'horizontal', // 默认改为左右布局
+		layout = 'horizontal', // 默认改为左右布局
 		className = '',
+		showEditor = true,
+		eventBus,
+		currentBarInfo: initialCurrentBarInfo,
 		showEditor = true,
 		eventBus,
 		currentBarInfo: initialCurrentBarInfo,
@@ -98,6 +122,8 @@ export function createAlphaTexPlayground(
 
 	container.empty();
 	const wrapper = container.createDiv({ cls: 'alphatex-playground inmarkdown-wrapper' });
+	if (layout === 'horizontal' || layout === 'horizontal-swapped' || layout === 'single-bar')
+		wrapper.classList.add('is-horizontal');
 	if (layout === 'horizontal' || layout === 'horizontal-swapped' || layout === 'single-bar')
 		wrapper.classList.add('is-horizontal');
 	else wrapper.classList.add('is-vertical');
@@ -340,6 +366,13 @@ export function createAlphaTexPlayground(
 	}
 
 	let mounted: AlphaTexMountHandle | null = null;
+	// 在 single-bar 模式下显示当前小节信息
+	if (layout === 'single-bar' && currentBarInfo) {
+		const infoBar = previewWrap.createDiv({ cls: 'alphatex-bar-info' });
+		infoBar.createEl('span', { text: currentBarInfo });
+	}
+
+	let mounted: AlphaTexMountHandle | null = null;
 	let debounceTimer: number | null = null;
 
 	function scheduleRender() {
@@ -349,6 +382,7 @@ export function createAlphaTexPlayground(
 				window.requestIdleCallback(() => renderPreview());
 			else renderPreview();
 		}, debounceMs);
+		onChange?.(currentValue);
 		onChange?.(currentValue);
 	}
 
@@ -399,6 +433,7 @@ export function createAlphaTexPlayground(
 		const { mountAlphaTexBlock } = await import('../markdown/AlphaTexBlock');
 		try {
 			mounted = mountAlphaTexBlock(previewWrap, currentValue, resources, {
+			mounted = mountAlphaTexBlock(previewWrap, currentValue, resources, {
 				scale: 1,
 				speed: 1,
 				scrollMode: 'Continuous',
@@ -409,8 +444,10 @@ export function createAlphaTexPlayground(
 			console.warn('[Playground] AlphaTex 渲染失败:', e);
 			const err = previewWrap.createDiv({ cls: 'alphatex-block' });
 			const msg = e instanceof Error ? e.message : String(e);
+			const msg = e instanceof Error ? e.message : String(e);
 			err.createEl('div', {
 				cls: 'alphatex-error',
+				text: t('playground.engineError') + msg,
 				text: t('playground.engineError') + msg,
 			});
 		}
@@ -505,7 +542,10 @@ export function createAlphaTexPlayground(
 
 	return {
 		getValue: () => currentValue,
+		getValue: () => currentValue,
 		setValue: (v: string) => {
+			currentValue = v;
+			if (embedded) embedded.set(v, false);
 			currentValue = v;
 			if (embedded) embedded.set(v, false);
 			scheduleRender();

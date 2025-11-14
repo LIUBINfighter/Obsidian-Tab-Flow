@@ -235,6 +235,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 				app, // 传递 app
 				onExportStart: (type: string) => {
 					// console.debug(`[Export] 开始导出: ${type}`);
+					// console.debug(`[Export] 开始导出: ${type}`);
 				},
 				onExportFinish: (type: string, success: boolean, msg?: string) => {
 					if (type === 'audio' && success && msg) {
@@ -245,7 +246,9 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 					}
 					if (success) {
 						// console.debug(`[Export] 导出${type}成功`);
+						// console.debug(`[Export] 导出${type}成功`);
 					} else {
+						// console.debug(`[Export] 导出${type}失败: ${msg || '未知错误'}`);
 						// console.debug(`[Export] 导出${type}失败: ${msg || '未知错误'}`);
 					}
 				},

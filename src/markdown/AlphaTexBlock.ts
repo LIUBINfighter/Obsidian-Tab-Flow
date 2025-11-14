@@ -219,6 +219,8 @@ export function mountAlphaTexBlock(
 	let errorEventsCount = 0;
 	// eslint-disable-next-line prefer-const
 	let handle: AlphaTexMountHandle;
+	// eslint-disable-next-line prefer-const
+	let handle: AlphaTexMountHandle;
 	const stopAlphaEngine = (reason?: string) => {
 		if (!api) return;
 		try {
@@ -254,6 +256,9 @@ export function mountAlphaTexBlock(
 				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
 				// @ts-ignore
 				enableLazyLoading: disableLazyLoading ? false : undefined,
+				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
+				// @ts-ignore
+				enableLazyLoading: disableLazyLoading ? false : undefined,
 			},
 			player: {
 				enablePlayer: playerEnabled,
@@ -281,6 +286,9 @@ export function mountAlphaTexBlock(
 				scale: merged.scale ?? 1.0,
 			},
 		});
+
+		// Update handle.api after creating the API
+		handle.api = api;
 
 		// Update handle.api after creating the API
 		handle.api = api;
@@ -721,6 +729,7 @@ export function mountAlphaTexBlock(
 	scheduleInit(heavyInit);
 
 	handle = {
+	handle = {
 		destroy: () => {
 			if (destroyed) return;
 			destroyed = true;
@@ -729,6 +738,7 @@ export function mountAlphaTexBlock(
 			} catch {
 				// Ignore API destroy errors
 			}
+
 
 			try {
 				while (rootEl.firstChild) {
@@ -745,7 +755,10 @@ export function mountAlphaTexBlock(
 			}
 		},
 		api: api,
+		api: api,
 	};
+
+	return handle;
 
 	return handle;
 }

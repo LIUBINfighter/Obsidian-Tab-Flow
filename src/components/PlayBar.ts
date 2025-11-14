@@ -73,6 +73,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	function updatePlayPauseButton() {
 		if (!playPauseBtn) return;
 
+
 		while (playPauseBtn.firstChild) {
 			playPauseBtn.removeChild(playPauseBtn.firstChild);
 		}
@@ -84,6 +85,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 
 	function updateMetronomeBtn() {
 		if (!metronomeBtn) return;
+
 
 		while (metronomeBtn.firstChild) {
 			metronomeBtn.removeChild(metronomeBtn.firstChild);
@@ -101,6 +103,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	function updateCountInBtn() {
 		if (!countInBtn) return;
 
+
 		while (countInBtn.firstChild) {
 			countInBtn.removeChild(countInBtn.firstChild);
 		}
@@ -117,6 +120,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	function updateLayoutToggleBtn() {
 		if (!layoutToggleBtn) return;
 
+
 		while (layoutToggleBtn.firstChild) {
 			layoutToggleBtn.removeChild(layoutToggleBtn.firstChild);
 		}
@@ -132,6 +136,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	}
 
 	// 从运行期覆盖或全局设置读取可见性（覆盖优先）
+	let visibility: Record<string, boolean> | undefined = undefined;
 	let visibility: Record<string, boolean> | undefined = undefined;
 	let runtimeOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
@@ -180,6 +185,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		'staveProfile',
 		'zoom',
 		'scrollMode',
+		'scrollMode',
 		'audioPlayer',
 	];
 
@@ -210,11 +216,17 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				// 当使用数字序列时，默认只渲染这组组件：将其它组件视作隐藏
 				const currentRuntimeOverride = runtimeOverride || {};
 				const currentComponents = currentRuntimeOverride.components || {};
+				const currentRuntimeOverride = runtimeOverride || {};
+				const currentComponents = currentRuntimeOverride.components || {};
 				const allowed = new Set(order);
 				defaultOrder.forEach((k) => {
 					if (!allowed.has(k)) currentComponents[k] = false;
+					if (!allowed.has(k)) currentComponents[k] = false;
 				});
 				// 确保已选择的键默认显示
+				order.forEach((k) => (currentComponents[k] = true));
+				currentRuntimeOverride.components = currentComponents;
+				runtimeOverride = currentRuntimeOverride;
 				order.forEach((k) => (currentComponents[k] = true));
 				currentRuntimeOverride.components = currentComponents;
 				runtimeOverride = currentRuntimeOverride;
@@ -551,6 +563,27 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			bar.appendChild(select);
 		},
 		audioPlayer: () => {
+			if (!show('audioPlayer')) return;
+			const audioPlayer = createAudioPlayer({
+				app,
+				onAudioCreated: (audioEl: HTMLAudioElement) => {
+					// 通知父组件音频元素已创建
+					options.onAudioCreated(audioEl);
+				},
+				onTimeUpdate: (currentTime: number, duration: number) => {
+					// 可以在这里处理时间更新
+				},
+				onPlay: () => {
+					// 可以在这里处理播放事件
+				},
+				onPause: () => {
+					// 可以在这里处理暂停事件
+				},
+				onSeek: (time: number) => {
+					// 可以在这里处理跳转事件
+				},
+			});
+			bar.appendChild(audioPlayer);
 			if (!show('audioPlayer')) return;
 			const audioPlayer = createAudioPlayer({
 				app,
