@@ -295,3 +295,41 @@ export class AlphaTexEditor {
 2. 添加 Obsidian 版本检查
 3. 在 TODO 中标记为技术债务，计划重构
 
+## 七、实施记录
+
+### 2025-01-27: 已完成 CodeMirror 重构
+
+**实施内容**：
+1. ✅ 创建了 `src/editor/AlphaTexCodeMirrorEditor.ts`
+   - 直接使用 CodeMirror 6，不依赖 Obsidian 私有 API
+   - 实现了完整的编辑器功能（value, set, focus, destroy）
+   - 集成了所有语法高亮插件
+
+2. ✅ 在 `EditorView` 中替换了旧实现
+   - 移除了对 `EmbeddableMarkdownEditor` 的依赖
+   - 保持了 API 兼容性（value, set, onChange 等）
+   - 修复了初始化时序问题
+
+3. ✅ 安装并配置了必要的 CodeMirror 包
+   - `@codemirror/commands` - 基础命令和快捷键
+   - `@codemirror/language` - 语言支持和括号匹配
+   - `@codemirror/autocomplete` - 自动补全
+   - `@codemirror/search` - 搜索和高亮
+
+**优势**：
+- ✅ 不再依赖 Obsidian 私有 API，稳定性大幅提升
+- ✅ 类型安全，IDE 支持更好
+- ✅ 代码更简洁，易于维护
+- ✅ 初始化时序问题已解决
+
+**待测试功能**：
+- [ ] 基础编辑功能（输入、删除、撤销/重做）
+- [ ] 语法高亮显示
+- [ ] 自动保存
+- [ ] 单小节模式（光标位置变化时更新预览）
+- [ ] 文件外部修改同步
+
+**后续工作**：
+- 如果新编辑器稳定，可以考虑移除 `EmbeddableMarkdownEditor.ts`
+- 评估是否需要在 Settings 预览中也使用新编辑器
+

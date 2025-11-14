@@ -5,6 +5,7 @@ import { TablatureView } from './components/TablatureView';
 import { PlayerController, type PlayerControllerResources } from './PlayerController';
 import { StoreFactory, type StoreCollection } from './store/StoreFactory';
 import type TabFlowPlugin from '../main';
+import { VIEW_TYPE_ALPHATEX_EDITOR } from '../views/EditorView';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
@@ -24,6 +25,9 @@ export class ReactView extends FileView {
 	// Store 管理
 	private storeFactory: StoreFactory;
 	private stores: StoreCollection | null = null;
+
+	// 切换到编辑器视图的按钮
+	private switchToEditorAction: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin, resources: PlayerControllerResources) {
 		super(leaf);
@@ -102,6 +106,9 @@ export class ReactView extends FileView {
 		// 注意: 不移除全局字体样式,因为可能有其他实例在使用
 		// 字体样式会在插件卸载时自动清理
 
+		// 清理切换到编辑器视图的按钮
+		this.cleanupSwitchToEditorButton();
+
 		// 1. 清理 React root
 		if (this.root) {
 			this.root.unmount();
@@ -147,9 +154,14 @@ export class ReactView extends FileView {
 		this.controller.loadFileWhenReady(file).catch((error) => {
 			console.error(`[ReactView] Controller failed to load file:`, error);
 		});
+
+		// 如果是 .alphatab 或 .alphatex 文件，添加切换到编辑器视图的按钮
+		this.updateSwitchToEditorButton();
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {
+		// 清理切换到编辑器视图的按钮
+		this.cleanupSwitchToEditorButton();
 		this.currentFile = null;
 		await super.onUnloadFile(file);
 	}
@@ -162,5 +174,47 @@ export class ReactView extends FileView {
 				controller: this.controller,
 			})
 		);
+	}
+
+	/**
+	 * 更新切换到编辑器视图的按钮（仅在 .alphatab 或 .alphatex 文件时显示）
+	 */
+	private updateSwitchToEditorButton(): void {
+		// 清理旧按钮
+		this.cleanupSwitchToEditorButton();
+
+		// 检查文件扩展名
+		if (!this.currentFile) return;
+		const extension = this.currentFile.extension?.toLowerCase();
+		if (!extension || !['alphatab', 'alphatex'].includes(extension)) {
+			return;
+		}
+
+		// 添加切换到编辑器视图的按钮
+		try {
+			this.switchToEditorAction = this.addAction('edit', '切换到编辑器视图', () => {
+				if (!this.currentFile) return;
+				void this.leaf.setViewState({
+					type: VIEW_TYPE_ALPHATEX_EDITOR,
+					state: { file: this.currentFile.path },
+				});
+			});
+		} catch (error) {
+			console.warn('[ReactView] Failed to add switch to editor button:', error);
+		}
+	}
+
+	/**
+	 * 清理切换到编辑器视图的按钮
+	 */
+	private cleanupSwitchToEditorButton(): void {
+		try {
+			if (this.switchToEditorAction && this.switchToEditorAction.parentElement) {
+				this.switchToEditorAction.remove();
+			}
+			this.switchToEditorAction = null;
+		} catch (error) {
+			console.warn('[ReactView] Failed to cleanup switch to editor button:', error);
+		}
 	}
 }

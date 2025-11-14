@@ -2,9 +2,9 @@ import { FileView, TFile, WorkspaceLeaf } from 'obsidian';
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import {
-	createEmbeddableMarkdownEditor,
-	type EmbeddableMarkdownEditor,
-} from '../editor/EmbeddableMarkdownEditor';
+	createAlphaTexEditor,
+	type AlphaTexCodeMirrorEditor,
+} from '../editor/AlphaTexCodeMirrorEditor';
 import ShareCardModal from '../components/ShareCardModal';
 import {
 	getBarAtOffset,
@@ -17,11 +17,12 @@ import TabFlowPlugin from '../main';
 import { PlayerController, type PlayerControllerResources } from '../player/PlayerController';
 import { StoreFactory, type StoreCollection } from '../player/store/StoreFactory';
 import { TablatureView } from '../player/components/TablatureView';
+import { VIEW_TYPE_REACT } from '../player/ReactView';
 
 export const VIEW_TYPE_ALPHATEX_EDITOR = 'alphatex-editor-view';
 
 export class EditorView extends FileView {
-	private editor: EmbeddableMarkdownEditor | null = null;
+	private editor: AlphaTexCodeMirrorEditor | null = null;
 	private container: HTMLElement;
 	private layout:
 		| 'horizontal'
@@ -98,6 +99,7 @@ export class EditorView extends FileView {
 	private layoutToggleAction: HTMLElement | null = null;
 	private newFileAction: HTMLElement | null = null;
 	private settingsAction: HTMLElement | null = null;
+	private switchToPlayerAction: HTMLElement | null = null;
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -238,6 +240,16 @@ export class EditorView extends FileView {
 		} catch (_) {
 			// ignore
 		}
+
+		// 清理切换到播放器按钮
+		try {
+			if (this.switchToPlayerAction && this.switchToPlayerAction.parentElement) {
+				this.switchToPlayerAction.remove();
+			}
+			this.switchToPlayerAction = null;
+		} catch (_) {
+			// ignore
+		}
 	}
 
 	private async render(): Promise<void> {
@@ -313,14 +325,14 @@ export class EditorView extends FileView {
 			// ignore
 		}
 
-		this.editor = createEmbeddableMarkdownEditor(this.app, editorWrapper, {
+		this.editor = createAlphaTexEditor(editorWrapper, {
 			value: content,
 			placeholder: t('alphatex.editor.placeholder', undefined, '输入 AlphaTex 内容...'),
 			onChange: (update) => {
 				// 确保编辑器已完全初始化后再访问
 				if (!this.editor || !this.editor.loaded) return;
 				try {
-					const cursorPos = update.view?.state.selection.main.head;
+					const cursorPos = update.view.state.selection.main.head;
 					this.updatePlayerWithEditorValue(cursorPos);
 					this.scheduleSave(1000);
 				} catch (error) {
@@ -348,7 +360,27 @@ export class EditorView extends FileView {
 		// 新添加的 action 会出现在已有 action 的左侧（即插入顺序决定从右到左的可视顺序）。
 		// 因此若希望某个按钮出现在最右侧（视觉上靠右），需要先添加该按钮，再添加其它按钮。
 		try {
-			// 先添加“新建文件”按钮，使其显示在最右侧
+			// 先添加"切换到播放器"按钮，使其显示在最右侧
+			if (this.switchToPlayerAction && this.switchToPlayerAction.parentElement) {
+				this.switchToPlayerAction.remove();
+				this.switchToPlayerAction = null;
+			}
+			const switchToPlayerBtn = this.addAction('play', '切换到播放器视图', () => {
+				if (!this.file) return;
+				// 先保存当前编辑器的内容，确保切换到播放器视图时文件是最新的
+				const file = this.file; // 保存文件引用，避免在异步函数中 this.file 可能为 null
+				void (async () => {
+					await this.flushSave();
+					if (!file) return; // 再次检查，确保文件仍然存在
+					await this.leaf.setViewState({
+						type: VIEW_TYPE_REACT,
+						state: { file: file.path },
+					});
+				})();
+			});
+			this.switchToPlayerAction = switchToPlayerBtn;
+
+			// 添加"新建文件"按钮
 			if (this.newFileAction && this.newFileAction.parentElement) {
 				this.newFileAction.remove();
 				this.newFileAction = null;
