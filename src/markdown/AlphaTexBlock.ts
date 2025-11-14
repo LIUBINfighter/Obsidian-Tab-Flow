@@ -210,19 +210,7 @@ export function mountAlphaTexBlock(
 	const scoreInfoColor = mainGlyphColor;
 
 	// 字体由全局注入一次（main.ts），此处不再重复注入，减少样式计算与回流
-
-	// Cursor and highlight styles (aligned with TabView)
-	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
-	const runtimeStyle = document.createElement('style');
-
-	const styleContent = `
-		.alphatex-block .at-cursor-bar { background: ${accent}; opacity: 0.2; }
-		.alphatex-block .at-selection div { background: ${accent}; opacity: 0.4; }
-		.alphatex-block .at-cursor-beat { background: ${accent}; width: 3px; }
-		.alphatex-block .at-highlight * { fill: ${accent}; stroke: ${accent}; }
-	`;
-	runtimeStyle.appendChild(document.createTextNode(styleContent));
-	document.head.appendChild(runtimeStyle);
+	// 光标和高亮样式已移至 alphatex.css，使用 CSS 变量，无需动态创建
 
 	const playerEnabled = String(merged.player || 'enable').toLowerCase() !== 'disable';
 	let destroyed = false;
@@ -748,11 +736,6 @@ export function mountAlphaTexBlock(
 				}
 			} catch {
 				// Ignore DOM cleanup errors
-			}
-			try {
-				runtimeStyle.remove();
-			} catch {
-				// Ignore style removal errors
 			}
 			// clear runtime UI override when this block unmounts
 			try {

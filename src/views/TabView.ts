@@ -58,7 +58,6 @@ interface ITabViewPersistedState extends Record<string, unknown> {
 export class TabView extends FileView {
 	private static instanceId = 0;
 	private _styles: HTMLStyleElement;
-	private _fontStyle: HTMLStyleElement | null = null;
 	private currentFile: TFile | null = null;
 	private fileModifyHandler: (file: TFile) => void;
 	public eventBus: EventBus; // Public for external interaction
@@ -491,22 +490,13 @@ export class TabView extends FileView {
 	}
 
 	async onOpen(): Promise<void> {
-		// --- 字体注入逻辑 ---
-		const fontFaceRule = `
-			@font-face {
-				font-family: 'alphaTab';
-				src: url(${this.resources.bravuraUri});
-			}
-		`;
-		this._fontStyle = this.containerEl.ownerDocument.createElement('style');
-		this._fontStyle.id = `alphatab-font-style-${TabView.instanceId}`;
-
-		this._fontStyle.appendChild(document.createTextNode(fontFaceRule));
-		this.containerEl.ownerDocument.head.appendChild(this._fontStyle);
+		// 字体注入已由 main.ts 全局处理，此处不再重复注入
 
 		const cls = `alphatab-${TabView.instanceId++}`;
 		const styles = this.containerEl.createEl('style');
 
+		// 动态样式：为每个实例创建独立的作用域，避免多实例间的样式冲突
+		// 使用 CSS 变量确保主题一致性
 		const styleContent = `
 		.${cls} .at-cursor-bar {
 			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
@@ -526,9 +516,6 @@ export class TabView extends FileView {
 		}
 		`;
 		styles.appendChild(document.createTextNode(styleContent));
-
-		const additionalStyle = `.tabflow-hide-statusbar .status-bar { display: none !important; }`;
-		styles.appendChild(document.createTextNode(additionalStyle));
 		this._styles = styles;
 
 		// 添加标记类以隐藏状态栏
@@ -583,11 +570,6 @@ export class TabView extends FileView {
 		// console.debug('[TabView] Starting cleanup process');
 
 		document.body.classList.remove('tabflow-hide-statusbar');
-
-		if (this._fontStyle) {
-			this._fontStyle.remove();
-			// console.debug('[TabView] Removed injected @font-face style.');
-		}
 
 		this.unregisterFileWatcher();
 

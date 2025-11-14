@@ -14,6 +14,7 @@ import ShareCardPresetService from './services/ShareCardPresetService';
 import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
 import { TrackStateStore } from './state/TrackStateStore';
+import { setCssProps } from './utils/styleUtils';
 
 type SettingManager = {
 	activeTab?: { id?: string };
@@ -307,14 +308,10 @@ export default class TabFlowPlugin extends Plugin {
 
 		// Apply editor UI preferences as CSS variables so they take effect immediately
 		try {
-			document.documentElement.style.setProperty(
-				'--alphatex-editor-font-size',
-				this.settings.editorFontSize || '0.95rem'
-			);
-			document.documentElement.style.setProperty(
-				'--alphatex-editor-bottom-gap',
-				this.settings.editorBottomGap || '40vh'
-			);
+			setCssProps(document.documentElement, {
+				'--alphatex-editor-font-size': this.settings.editorFontSize || '0.95rem',
+				'--alphatex-editor-bottom-gap': this.settings.editorBottomGap || '40vh',
+			});
 		} catch (_) {
 			// ignore environments without DOM
 		}

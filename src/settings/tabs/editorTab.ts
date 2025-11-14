@@ -7,6 +7,7 @@ import {
 	createEmbeddableMarkdownEditor,
 	type EmbeddableMarkdownEditor,
 } from '../../editor/EmbeddableMarkdownEditor';
+import { setCssProps } from '../../utils/styleUtils';
 
 export async function renderEditorTab(
 	tabContents: HTMLElement,
@@ -78,10 +79,9 @@ export async function renderEditorTab(
 					fontText.inputEl.classList.remove('tabflow-invalid-input');
 					plugin.settings.editorFontSize = composed;
 					await plugin.saveSettings();
-					document.documentElement.style.setProperty(
-						'--alphatex-editor-font-size',
-						composed
-					);
+					setCssProps(document.documentElement, {
+						'--alphatex-editor-font-size': composed,
+					});
 				});
 			})
 			.addDropdown((dd) => {
@@ -99,10 +99,9 @@ export async function renderEditorTab(
 						fontText.inputEl.classList.remove('tabflow-invalid-input');
 						plugin.settings.editorFontSize = composed;
 						await plugin.saveSettings();
-						document.documentElement.style.setProperty(
-							'--alphatex-editor-font-size',
-							composed
-						);
+						setCssProps(document.documentElement, {
+							'--alphatex-editor-font-size': composed,
+						});
 					})();
 				});
 			})
@@ -116,10 +115,9 @@ export async function renderEditorTab(
 						fontValue = parsed.num;
 						plugin.settings.editorFontSize = defaultVal;
 						await plugin.saveSettings();
-						document.documentElement.style.setProperty(
-							'--alphatex-editor-font-size',
-							defaultVal
-						);
+						setCssProps(document.documentElement, {
+							'--alphatex-editor-font-size': defaultVal,
+						});
 						fontText.setValue(parsed.num);
 						fontDropdown.setValue(parsed.unit);
 						new Notice(
@@ -170,10 +168,9 @@ export async function renderEditorTab(
 					gapText.inputEl.classList.remove('tabflow-invalid-input');
 					plugin.settings.editorBottomGap = composed;
 					await plugin.saveSettings();
-					document.documentElement.style.setProperty(
-						'--alphatex-editor-bottom-gap',
-						composed
-					);
+					setCssProps(document.documentElement, {
+						'--alphatex-editor-bottom-gap': composed,
+					});
 				})();
 			});
 		})
@@ -192,10 +189,9 @@ export async function renderEditorTab(
 						gapText.inputEl.classList.remove('tabflow-invalid-input');
 						plugin.settings.editorBottomGap = composed;
 						await plugin.saveSettings();
-						document.documentElement.style.setProperty(
-							'--alphatex-editor-bottom-gap',
-							composed
-						);
+						setCssProps(document.documentElement, {
+							'--alphatex-editor-bottom-gap': composed,
+						});
 					})();
 				});
 			})
@@ -209,10 +205,9 @@ export async function renderEditorTab(
 						gapValue = parsed.num;
 						plugin.settings.editorBottomGap = defaultVal;
 						await plugin.saveSettings();
-						document.documentElement.style.setProperty(
-							'--alphatex-editor-bottom-gap',
-							defaultVal
-						);
+						setCssProps(document.documentElement, {
+							'--alphatex-editor-bottom-gap': defaultVal,
+						});
 						gapText.setValue(parsed.num);
 						gapDropdown.setValue(parsed.unit);
 						new Notice(
