@@ -3,6 +3,12 @@
 
 import type * as alphaTab from '@coderline/alphatab';
 
+interface AlphaTabRenderer {
+	on?: (event: string, callback: (...args: unknown[]) => void) => void;
+	off?: (event: string, callback: (...args: unknown[]) => void) => void;
+	renderResult?: (id: number | string) => void;
+}
+
 export interface WaitRenderOptions {
 	/** Milliseconds to wait overall before giving up (fallback to best-effort). */
 	timeoutMs?: number;
@@ -31,11 +37,12 @@ interface ListenerContainer {
 }
 
 function onceFontReady(debug?: boolean): Promise<void> {
-	if (!(document as any).fonts || typeof (document as any).fonts.ready?.then !== 'function') {
+	const fonts = Reflect.get(document, 'fonts') as FontFaceSet | undefined;
+	if (!fonts || typeof fonts.ready?.then !== 'function') {
 		debug && console.debug('[AlphaTabWait] Font API not supported; skip');
 		return Promise.resolve();
 	}
-	return (document as any).fonts.ready.catch(() => void 0);
+	return fonts.ready.then(() => undefined).catch(() => undefined);
 }
 
 /**
@@ -63,7 +70,7 @@ export async function waitAlphaTabFullRender(
 
 	const start = performance.now();
 	if (!api) return { success: false, elapsedMs: 0, reason: 'api-null' };
-	const renderer: any = (api as any).renderer;
+	const renderer = Reflect.get(api, 'renderer') as AlphaTabRenderer | undefined;
 	if (!renderer) return { success: false, elapsedMs: 0, reason: 'renderer-missing' };
 
 	let partialIds: Set<number | string> = new Set();
@@ -82,10 +89,15 @@ export async function waitAlphaTabFullRender(
 	};
 
 	const listeners: ListenerContainer[] = [];
-	const add = (target: any, evt: string, cb: (...args: any[]) => void) => {
+	interface EventEmitter {
+		on?: (event: string, callback: (...args: unknown[]) => void) => void;
+		off?: (event: string, callback: (...args: unknown[]) => void) => void;
+	}
+	const add = (target: unknown, evt: string, cb: (...args: unknown[]) => void) => {
 		try {
-			target?.[evt]?.on?.(cb);
-			listeners.push({ detach: () => target?.[evt]?.off?.(cb) });
+			const emitter = target as EventEmitter;
+			emitter?.on?.(evt, cb);
+			listeners.push({ detach: () => emitter?.off?.(evt, cb) });
 		} catch {
 			// ignore
 		}
@@ -99,32 +111,46 @@ export async function waitAlphaTabFullRender(
 		layoutFinished = false;
 	});
 
-	add(renderer, 'partialLayoutFinished', (r: any) => {
+	interface RenderResult {
+		id?: number | string;
+		totalWidth?: number;
+		totalHeight?: number;
+	}
+	add(renderer, 'partialLayoutFinished', (r: unknown) => {
 		abortIf();
-		partialIds.add(r.id);
+		const result = r as RenderResult;
+		if (result.id !== undefined) {
+			partialIds.add(result.id);
+		}
 		// proactively request rendering when lazy loading active
 		try {
-			renderer.renderResult?.(r.id);
+			if (result.id !== undefined) {
+				renderer.renderResult?.(result.id);
+			}
 		} catch {
 			/* ignore */
 		}
 	});
 
-	add(renderer, 'partialRenderFinished', (r: any) => {
+	add(renderer, 'partialRenderFinished', (r: unknown) => {
 		abortIf();
-		renderedPartials.add(r.id);
+		const result = r as RenderResult;
+		if (result.id !== undefined) {
+			renderedPartials.add(result.id);
+		}
 	});
 
-	add(renderer, 'renderFinished', (r: any) => {
+	add(renderer, 'renderFinished', (r: unknown) => {
 		abortIf();
 		layoutFinished = true;
-		totalWidth = r.totalWidth;
-		totalHeight = r.totalHeight;
+		const result = r as RenderResult;
+		totalWidth = result.totalWidth ?? 0;
+		totalHeight = result.totalHeight ?? 0;
 		debug &&
 			console.debug(
 				'[AlphaTabWait] renderFinished layout complete',
-				r.totalWidth,
-				r.totalHeight
+				result.totalWidth,
+				result.totalHeight
 			);
 	});
 
@@ -199,17 +225,18 @@ export async function waitAlphaTabFullRender(
 			partialCount: partialIds.size,
 			elapsedMs: elapsed,
 		};
-	} catch (e: any) {
+	} catch (e: unknown) {
 		cleanup();
 		const elapsed = performance.now() - start;
 		if (aborted) return { success: false, elapsedMs: elapsed, reason: 'aborted' };
+		const reason = e instanceof Error ? e.message : 'unknown-error';
 		return {
 			success: false,
 			totalHeight,
 			totalWidth,
 			partialCount: partialIds.size,
 			elapsedMs: elapsed,
-			reason: e?.message || 'unknown-error',
+			reason,
 		};
 	}
 }
@@ -226,17 +253,21 @@ export async function withExportLock<T>(fn: () => Promise<T>): Promise<T> {
 			/* ignore */
 		}
 	}
-	let release: ((...args: any[]) => void) | null = null as any;
-	exportLock = new Promise<void>((res: () => void) => {
-		release = res as (...a: any[]) => void;
+	type ReleaseFunction = () => void;
+	let release: ReleaseFunction | null = null;
+	exportLock = new Promise<void>((res) => {
+		release = res as ReleaseFunction;
 	});
+	const callRelease = () => {
+		if (release) release();
+	};
 	try {
 		const result = await fn();
-		if (typeof release === 'function') (release as any)();
+		callRelease();
 		exportLock = null;
 		return result;
 	} catch (e) {
-		if (typeof release === 'function') (release as any)();
+		callRelease();
 		exportLock = null;
 		throw e;
 	}

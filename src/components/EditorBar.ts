@@ -1,15 +1,51 @@
 // PlayBar.ts - 底部固定播放栏组件
-import { App, setIcon } from 'obsidian';
+import { App, setIcon, Plugin } from 'obsidian';
 import { createProgressBar } from './ProgressBar';
 import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
 import { formatTime } from '../utils';
 import { t } from '../i18n';
+import type { TabFlowSettings } from '../settings/defaults';
 
-export interface PlayBarOptions {
+// Extend App interface for plugin access
+interface AppWithPlugins extends App {
+	plugins?: {
+		getPlugin?: (id: string) => Plugin | null;
+	};
+}
+
+// Type for TabFlowPlugin with settings
+interface TabFlowPluginLike extends Plugin {
+	settings?: TabFlowSettings;
+	runtimeUiOverride?: {
+		components?: Record<string, boolean>;
+		order?: string[] | string;
+	} | null;
+}
+
+// Type for alphaTab API settings with extended properties (using intersection types)
+type ExtendedDisplaySettings = alphaTab.DisplaySettings & {
+	staveProfile?: number;
+	layoutMode?: number;
+};
+
+type ExtendedPlayerSettings = alphaTab.PlayerSettings & {
+	scrollMode?: string | alphaTab.ScrollMode;
+	enableCountIn?: boolean;
+};
+
+type ExtendedAlphaTabApi = alphaTab.AlphaTabApi & {
+	scrollToCursor?: () => void;
+};
+
+export interface EditorBarOptions {
 	app: App;
-	eventBus: { publish: (event: string, payload?: unknown) => void };
+	eventBus?: {
+		publish: (event: string, payload?: unknown) => void;
+		subscribe?: (event: string, handler: (p?: unknown) => void) => void;
+		unsubscribe?: (event: string, handler: (p?: unknown) => void) => void;
+	};
 	initialPlaying?: boolean;
 	getCurrentTime?: () => number; // 获取当前播放时间（毫秒）
 	getDuration?: () => number; // 获取总时长（毫秒）
@@ -17,10 +53,10 @@ export interface PlayBarOptions {
 	onAudioCreated: (audioEl: HTMLAudioElement) => void; // 新增
 	audioPlayerOptions?: Partial<AudioPlayerOptions>; // 可选，透传给 AudioPlayer
 	getApi?: () => alphaTab.AlphaTabApi | null; // 新增：获取 playground 的 API
-	onProgressBarCreated?: (progressBar: any) => void; // 新增：进度条创建回调
+	onProgressBarCreated?: (progressBar: ProgressBarElement) => void; // 新增：进度条创建回调
 }
 
-export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
+export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	const {
 		app,
 		eventBus,
@@ -117,13 +153,15 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 	let runtimeOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = undefined;
-	let plugin: any = undefined;
+	let plugin: TabFlowPluginLike | null = null;
 	try {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
-		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-		visibility = plugin?.settings?.editorBar?.components;
-		runtimeOverride = plugin?.runtimeUiOverride;
+		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
+			pluginId
+		) as TabFlowPluginLike | null;
+		visibility = plugin?.settings?.editorBar?.components as Record<string, boolean> | undefined;
+		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
 	} catch {
 		// Ignore plugin access errors
 	}
@@ -172,7 +210,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				: plugin?.settings?.editorBar?.order;
 
 		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
-			order = rawOrder as string[];
+			order = rawOrder;
 		} else if (typeof rawOrder === 'string' && rawOrder.trim().length > 0) {
 			// 解析数字序列，例如 "2,1,3" -> 映射到默认键序列的索引
 			const indices = rawOrder
@@ -278,7 +316,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				const api = options.getApi?.();
 				if (api) {
 					countInOn = !countInOn;
-					(api.settings.player as any).enableCountIn = countInOn;
+					(api.settings.player as ExtendedPlayerSettings).enableCountIn = countInOn;
 					api.updateSettings();
 					updateCountInBtn();
 				} else {
@@ -334,7 +372,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			btn.onclick = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api as any).scrollToCursor?.();
+					(api as ExtendedAlphaTabApi).scrollToCursor?.();
 				} else {
 					eventBus?.publish('命令:滚动到光标');
 				}
@@ -354,7 +392,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 						layoutMode === alphaTab.LayoutMode.Page
 							? alphaTab.LayoutMode.Horizontal
 							: alphaTab.LayoutMode.Page;
-					(api.settings.display as any).layoutMode = layoutMode;
+					(api.settings.display as ExtendedDisplaySettings).layoutMode = layoutMode;
 					api.updateSettings();
 					api.render();
 					updateLayoutToggleBtn();
@@ -379,24 +417,34 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			exportChooserBtn.appendChild(icon);
 			exportChooserBtn.setAttribute('aria-label', t('export.export'));
 			exportChooserBtn.onclick = () => {
-				try {
-					// eslint-disable-next-line @typescript-eslint/no-var-requires
-					const { ExportChooserModal } = require('./ExportChooserModal');
-					const getTitle = () => {
-						try {
-							return (
-								(
-									document.querySelector('.view-header-title')?.textContent || ''
-								).trim() || 'Untitled'
-							);
-						} catch {
-							return 'Untitled';
-						}
-					};
-					new ExportChooserModal({ app, eventBus, getFileName: getTitle }).open();
-				} catch (e) {
-					console.error('[PlayBar] 打开导出选择器失败:', e);
-				}
+				void (async () => {
+					try {
+						// Lazy load modal to reduce initial bundle size
+						const { ExportChooserModal } = await import('./ExportChooserModal');
+						const getTitle = () => {
+							try {
+								return (
+									(
+										document.querySelector('.view-header-title')?.textContent ||
+										''
+									).trim() || 'Untitled'
+								);
+							} catch {
+								return 'Untitled';
+							}
+						};
+						new ExportChooserModal({
+							app,
+							eventBus: eventBus as {
+								publish: (event: string, payload?: unknown) => void;
+								subscribe: (event: string, handler: (p?: unknown) => void) => void;
+							},
+							getFileName: getTitle,
+						}).open();
+					} catch (e) {
+						console.error('[PlayBar] 打开导出选择器失败:', e);
+					}
+				})();
 			};
 			bar.appendChild(exportChooserBtn);
 		},
@@ -413,7 +461,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 				const api = options.getApi?.();
 				if (api) {
 					api.tickPosition = 0;
-					(api as any).scrollToCursor?.();
+					(api as ExtendedAlphaTabApi).scrollToCursor?.();
 				} else {
 					eventBus?.publish('命令:滚动到顶部');
 				}
@@ -437,7 +485,7 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 						const lastBar = masterBars[masterBars.length - 1];
 						const endTick = lastBar.start + lastBar.calculateDuration();
 						api.tickPosition = endTick;
-						(api as any).scrollToCursor?.();
+						(api as ExtendedAlphaTabApi).scrollToCursor?.();
 					}
 				} else {
 					eventBus?.publish('命令:滚动到底部');
@@ -466,9 +514,9 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 						app.commands.executeCommandById('app:open-settings');
 						setTimeout(() => {
 							try {
-								const search = document.querySelector(
+								const search: HTMLInputElement | null = document.querySelector(
 									'input.setting-search-input'
-								) as HTMLInputElement | null;
+								);
 								if (search) {
 									search.value = 'Tab Flow';
 									const ev = new Event('input', { bubbles: true });
@@ -549,7 +597,9 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.display as any).staveProfile = parseInt(select.value);
+					(api.settings.display as ExtendedDisplaySettings).staveProfile = parseInt(
+						select.value
+					);
 					api.updateSettings();
 					api.render();
 				} else {
@@ -613,8 +663,10 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			try {
 				const pluginId = 'tab-flow';
 				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
-				const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
-				const currentMode = plugin?.settings?.scrollMode || 'continuous';
+				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
+					pluginId
+				) as TabFlowPluginLike | null;
+				const currentMode = localPlugin?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
 			} catch {
 				select.value = 'continuous';
@@ -622,7 +674,13 @@ export function createEditorBar(options: PlayBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.player as any).scrollMode = select.value;
+					const modeMap: Record<string, alphaTab.ScrollMode> = {
+						continuous: alphaTab.ScrollMode.Continuous,
+						offScreen: alphaTab.ScrollMode.OffScreen,
+						off: alphaTab.ScrollMode.Off,
+					};
+					const nextMode = modeMap[select.value] ?? alphaTab.ScrollMode.Continuous;
+					(api.settings.player as ExtendedPlayerSettings).scrollMode = nextMode;
 					api.updateSettings();
 				} else {
 					eventBus?.publish('命令:设置滚动模式', select.value);

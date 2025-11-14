@@ -74,7 +74,7 @@ export class EmbeddableMarkdownEditor {
 	private options: typeof defaultProperties & MarkdownEditorProps;
 	private initialValue: string;
 	private scope: Scope;
-	private editor: InternalMarkdownEditor;
+	private editor?: InternalMarkdownEditor;
 
 	/**
 	 * Hard-coded configuration to control whether to set activeEditor.
@@ -94,22 +94,30 @@ export class EmbeddableMarkdownEditor {
 
 	constructor(
 		app: App,
-		EditorClass: new (...args: any[]) => InternalMarkdownEditor,
+		EditorClass: new (...args: unknown[]) => InternalMarkdownEditor,
 		container: HTMLElement,
 		options: Partial<MarkdownEditorProps>
 	) {
-		this.options = { ...defaultProperties, ...options } as any;
+		this.options = { ...defaultProperties, ...options };
 		this.initialValue = this.options.value || '';
 		this.scope = new Scope(app.scope);
 		this.scope.register(['Mod'], 'Enter', () => true);
 
+		// Disable no-this-alias: Need stable reference for monkey-patching hooks
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const selfRef = this; // capture instance for function-based hooks
 		const uninstaller = around(EditorClass.prototype, {
 			buildLocalExtensions: (originalMethod: (this: InternalMarkdownEditor) => unknown[]) =>
 				function (this: InternalMarkdownEditor) {
 					const extensions = originalMethod.call(this) || [];
-					if (this === (selfRef as any).editor) {
+					// Note: selfRef.editor is set after EditorClass instantiation, so we check if this instance
+					// matches the one that will be assigned to selfRef.editor by comparing after assignment
+					// For now, we'll apply extensions to all instances and rely on the editor being set correctly
+					const editorRef = selfRef.editor;
+					// Only apply extensions if editor is already set and matches
+					// During initial construction, editorRef will be undefined, so we apply to all instances
+					// After editor is set, we only apply to the matching instance
+					if (editorRef === undefined || this === editorRef) {
 						if (selfRef.options.placeholder)
 							extensions.push(placeholder(selfRef.options.placeholder));
 						// Disable browser spellcheck/auto-correct in the embedded editor
@@ -118,25 +126,33 @@ export class EmbeddableMarkdownEditor {
 								spellcheck: 'false',
 								autocorrect: 'off',
 								autocapitalize: 'off',
-							}) as any
+							})
 						);
 						extensions.push(
 							EditorView.domEventHandlers({
 								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
 								blur: () => {
 									app.keymap.popScope(selfRef.scope);
+									const activeEditor = Reflect.get(
+										app.workspace,
+										'activeEditor'
+									) as unknown;
 									if (
 										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
-										(app.workspace as any).activeEditor === selfRef.editor
+										activeEditor === selfRef.editor
 									) {
-										(app.workspace as any).activeEditor = null;
+										Reflect.set(app.workspace, 'activeEditor', null);
 									}
 									selfRef.options.onBlur?.(selfRef);
 								},
 								focusin: () => {
 									app.keymap.pushScope(selfRef.scope);
 									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
-										(app.workspace as any).activeEditor = selfRef.editor;
+										Reflect.set(
+											app.workspace,
+											'activeEditor',
+											selfRef.editor ?? null
+										);
 									}
 								},
 							})
@@ -166,9 +182,9 @@ export class EmbeddableMarkdownEditor {
 								key: 'Enter',
 								run: () => selfRef.options.onEnter?.(selfRef, false, false),
 								shift: () => selfRef.options.onEnter?.(selfRef, false, true),
-							} as any;
+							};
 						}
-						extensions.push(Prec.highest(keymap.of(keyBindings as any)));
+						extensions.push(Prec.highest(keymap.of(keyBindings)));
 						// Add highlight plugins extracted to separate module
 						// Resolve highlight settings: prefer explicit options, fallback to global plugin settings if available
 						const resolveSetting = (key: string, def = true) => {
@@ -180,9 +196,12 @@ export class EmbeddableMarkdownEditor {
 									return !!selfRef.options.highlightSettings[key];
 								}
 								// fallback: some callers may expose settings on window for minimal changes
-								const globalSettings = (window as any).__tabflow_settings__ as
-									| Record<string, any>
-									| undefined;
+								const globalSettings = Reflect.get(
+									window,
+									'__tabflow_settings__'
+								) as {
+									editorHighlights?: Record<string, boolean>;
+								} | null;
 								if (
 									globalSettings &&
 									globalSettings.editorHighlights &&
@@ -227,9 +246,7 @@ export class EmbeddableMarkdownEditor {
 									}
 								}
 								private applyAttrs() {
-									const content = this.view.dom.querySelector(
-										'.cm-content'
-									) as HTMLElement | null;
+									const content = this.view.dom.querySelector('.cm-content');
 									if (content) {
 										content.setAttribute('spellcheck', 'false');
 										content.setAttribute('autocorrect', 'off');
@@ -252,7 +269,7 @@ export class EmbeddableMarkdownEditor {
 								spellcheck: 'false',
 								autocorrect: 'off',
 								autocapitalize: 'off',
-							}) as any
+							})
 						);
 						if (resolveSetting('bracket', true))
 							extensions.push(bracketHighlightPlugin());
@@ -264,8 +281,8 @@ export class EmbeddableMarkdownEditor {
 						// Inject AlphaTex language/highlighting
 						try {
 							const alphaExt = alphaTex();
-							if (Array.isArray(alphaExt)) extensions.push(...(alphaExt as any));
-							else extensions.push(alphaExt as any);
+							if (Array.isArray(alphaExt)) extensions.push(...alphaExt);
+							else extensions.push(alphaExt);
 						} catch {
 							// fail gracefully if alphaTex isn't available in runtime
 						}
@@ -290,37 +307,45 @@ export class EmbeddableMarkdownEditor {
 			app,
 			onMarkdownScroll: () => {},
 			getMode: () => 'source',
-		}) as InternalMarkdownEditor;
-		(this.editor as any).register?.(uninstaller);
+		});
+		const editorInstance = this.editor;
+		if (!editorInstance) {
+			throw new Error('Failed to initialise editor instance');
+		}
+		editorInstance.register?.(uninstaller);
 		this.set(this.initialValue, false);
-		(this.editor as any).register?.(
+		editorInstance.register?.(
 			around(app.workspace, {
 				setActiveLeaf:
-					(oldMethod: any) =>
+					(oldMethod: unknown) =>
 					(leaf: WorkspaceLeaf, ...args: unknown[]) => {
-						if (!this.activeCM?.hasFocus) oldMethod.call(app.workspace, leaf, ...args);
+						if (!this.activeCM?.hasFocus) {
+							interface OldMethod {
+								call?: (thisArg: unknown, ...args: unknown[]) => void;
+							}
+							(oldMethod as OldMethod).call?.(app.workspace, leaf, ...args);
+						}
 					},
 			})
 		);
 		if (options.cls && this.editorEl) this.editorEl.classList.add(options.cls);
-		if (options.cursorLocation && this.editor.editor?.cm) {
-			this.editor.editor.cm.dispatch({
+		if (options.cursorLocation && editorInstance.editor?.cm) {
+			editorInstance.editor.cm.dispatch({
 				selection: EditorSelection.range(
 					options.cursorLocation.anchor,
 					options.cursorLocation.head
 				),
 			});
 		}
-		const originalOnUpdate = this.editor.onUpdate?.bind(this.editor);
-		this.editor.onUpdate = (update: ViewUpdate, changed: boolean) => {
+		const originalOnUpdate = editorInstance.onUpdate?.bind(editorInstance);
+		editorInstance.onUpdate = (update: ViewUpdate, changed: boolean) => {
 			try {
-				// 保护：在视图未就绪或已卸载时不调用后续逻辑，避免 selection 相关错误
-				const hasView = !!(update as any)?.view;
-				const root = (update as any)?.view?.root;
-				const rootOk = !!root && typeof root.getSelection === 'function';
-				const inDom = !!this.editorEl?.isConnected;
-				const stillLoaded = !!(this as any).editor?.activeCM || !!(this as any)._loaded;
-				if (!hasView || !rootOk || !inDom || !stillLoaded) return;
+				const root = update.view?.root;
+				const inDom = Boolean(this.editorEl?.isConnected);
+				const embeddedEditor = this.editor;
+				const stillLoaded =
+					Boolean(embeddedEditor?.activeCM) || Boolean(embeddedEditor?._loaded);
+				if (!root || !inDom || !stillLoaded) return;
 				originalOnUpdate?.(update, changed);
 				if (changed) this.options.onChange?.(update);
 			} catch {
@@ -329,52 +354,65 @@ export class EmbeddableMarkdownEditor {
 		};
 	}
 
+	private requireEditor(): InternalMarkdownEditor {
+		if (!this.editor) {
+			throw new Error('Embedded markdown editor not initialised yet.');
+		}
+		return this.editor;
+	}
+
 	get editorEl(): HTMLElement {
-		return this.editor.editorEl;
+		return this.requireEditor().editorEl;
 	}
 	get containerEl(): HTMLElement {
-		return this.editor.containerEl;
+		return this.requireEditor().containerEl;
 	}
 	get activeCM(): EditorView {
-		return this.editor.activeCM;
+		return this.requireEditor().activeCM;
 	}
 	get appInstance(): App {
-		return this.editor.app;
+		return this.requireEditor().app;
 	}
 	get loaded(): boolean {
-		return this.editor._loaded;
+		return this.requireEditor()._loaded;
 	}
 	get value(): string {
-		return this.editor.editor?.cm?.state.doc.toString() || '';
+		return this.requireEditor().editor?.cm?.state.doc.toString() || '';
 	}
 	set(content: string, focus = false): void {
-		this.editor.set(content, focus);
+		this.requireEditor().set(content, focus);
 	}
 	register(cb: unknown): void {
-		this.editor.register(cb);
+		this.requireEditor().register(cb);
 	}
 	focus(): void {
 		this.activeCM?.focus();
 	}
 	destroy(): void {
-		if (this.loaded && typeof this.editor.unload === 'function') this.editor.unload();
-		(this.appInstance.keymap as any).popScope(this.scope);
-		(this.appInstance.workspace as any).activeEditor = null;
+		const editorInstance = this.editor;
+		if (editorInstance && this.loaded && typeof editorInstance.unload === 'function') {
+			editorInstance.unload();
+		}
+		this.appInstance.keymap.popScope(this.scope);
+		if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
+			Reflect.set(this.appInstance.workspace, 'activeEditor', null);
+		}
 		this.containerEl.empty();
-		this.editor.destroy?.();
+		editorInstance?.destroy?.();
+		this.editor = undefined;
 	}
 	unload(): void {
 		this.destroy();
 	}
 }
 
-function resolveEditorPrototype(app: App): any {
+function resolveEditorPrototype(app: App): unknown {
 	// 使用类型守卫替代类型转换，避免绕过TypeScript类型检查
 	const embedRegistry = (
 		app as {
 			embedRegistry?: {
 				embedByExtension?: {
-					md?: (options: any, file: TFile | null, extension: string) => any;
+					md?: (options: unknown, file: TFile | null, extension: string) => unknown;
 				};
 			};
 		}
@@ -385,15 +423,22 @@ function resolveEditorPrototype(app: App): any {
 
 	const widgetEditorView = embedRegistry.embedByExtension.md(
 		{ app, containerEl: createDiv() },
-		null as unknown as TFile,
+		null,
 		''
 	);
-	(widgetEditorView as any).editable = true;
-	(widgetEditorView as any).showEditor();
-	const MarkdownEditor = Object.getPrototypeOf(
-		Object.getPrototypeOf((widgetEditorView as any).editMode!)
-	);
-	(widgetEditorView as any).unload();
+	interface WidgetEditorView {
+		editable?: boolean;
+		showEditor?: () => void;
+		editMode?: {
+			constructor?: unknown;
+		};
+		unload?: () => void;
+	}
+	const widget = widgetEditorView as WidgetEditorView;
+	widget.editable = true;
+	widget.showEditor?.();
+	const MarkdownEditor = Object.getPrototypeOf(Object.getPrototypeOf(widget.editMode!));
+	widget.unload?.();
 	return MarkdownEditor.constructor;
 }
 
@@ -403,5 +448,10 @@ export function createEmbeddableMarkdownEditor(
 	options: Partial<MarkdownEditorProps> = {}
 ): EmbeddableMarkdownEditor {
 	const EditorClass = resolveEditorPrototype(app);
-	return new EmbeddableMarkdownEditor(app, EditorClass, container, options);
+	return new EmbeddableMarkdownEditor(
+		app,
+		EditorClass as new (...args: unknown[]) => InternalMarkdownEditor,
+		container,
+		options
+	);
 }
