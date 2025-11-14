@@ -2,6 +2,11 @@ import type TabFlowPlugin from '../main';
 import ShareCardPresetService from '../services/ShareCardPresetService';
 import type { ShareCardPresetV1 } from '../settings/defaults';
 
+interface ShareCardOptions {
+	autosaveDelayMs?: number;
+	autosaveDefaultPreset?: boolean;
+}
+
 // 核心字段（去掉元数据）
 export interface ShareCardCorePreset {
 	name: string;
@@ -52,7 +57,7 @@ export class ShareCardStateManager {
 		const active =
 			this.presetService.get(activeId) || this.presetService.get(defaultId) || all[0];
 		const core = this.strip(active);
-		const options: any = (this.plugin.settings as any).shareCardOptions || {};
+		const options: ShareCardOptions = this.plugin.settings.shareCardOptions || {};
 		this.autosaveDelay = options.autosaveDelayMs || 800;
 		const autosaveEnabled =
 			all.length === 1 ||
@@ -101,8 +106,8 @@ export class ShareCardStateManager {
 	updateField<K extends keyof ShareCardCorePreset>(k: K, v: ShareCardCorePreset[K]) {
 		const s = this.state;
 		if (!s) return;
-		if ((s.working as any)[k] === v) return;
-		(s.working as any)[k] = v;
+		if (s.working[k] === v) return;
+		s.working[k] = v;
 		if (!s.suppressDirty) {
 			s.dirty = !this.shallowEqual(s.working, s.base);
 			if (s.dirty && s.autosaveEnabled) this.scheduleAutosave();
@@ -124,7 +129,7 @@ export class ShareCardStateManager {
 		if (!s.dirty && reason === 'autosave') return;
 		const preset = this.presetService.get(s.activePresetId);
 		if (!preset) return;
-		const patch: Partial<ShareCardPresetV1> = { ...s.working, updatedAt: Date.now() } as any;
+		const patch: Partial<ShareCardPresetV1> = { ...s.working, updatedAt: Date.now() };
 		this.presetService.update(s.activePresetId, patch);
 		s.base = JSON.parse(JSON.stringify(s.working));
 		s.dirty = false;
@@ -162,11 +167,11 @@ export class ShareCardStateManager {
 		s.suppressDirty = false;
 		const all = this.presetService.list();
 		const defaultId = this.plugin.settings.shareCardDefaultPresetId;
-		const options: any = (this.plugin.settings as any).shareCardOptions || {};
+		const options: ShareCardOptions = this.plugin.settings.shareCardOptions || {};
 		s.autosaveEnabled =
 			all.length === 1 || (id === defaultId && options.autosaveDefaultPreset !== false);
 		this.plugin.settings.shareCardLastUsedPresetId = id;
-		this.plugin.saveSettings();
+		void this.plugin.saveSettings();
 	}
 
 	isDirty() {
@@ -178,10 +183,10 @@ export class ShareCardStateManager {
 	}
 
 	private shallowEqual(a: ShareCardCorePreset, b: ShareCardCorePreset) {
-		const ka = Object.keys(a) as (keyof ShareCardCorePreset)[];
-		for (const k of ka) {
-			const av = (a as any)[k];
-			const bv = (b as any)[k];
+		const keys = Object.keys(a) as (keyof ShareCardCorePreset)[];
+		for (const k of keys) {
+			const av = a[k];
+			const bv = b[k];
 			if (typeof av === 'object') {
 				if (JSON.stringify(av) !== JSON.stringify(bv)) return false;
 			} else if (av !== bv) return false;

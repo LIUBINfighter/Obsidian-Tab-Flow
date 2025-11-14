@@ -137,6 +137,7 @@
 	top: 0;
 	left: 0;
 	transform-origin: top left;
+	transform: var(--share-card-pan-transform, translate(0px, 0px) scale(1));
 }
 .share-card-root {
 	box-sizing: border-box;
@@ -147,6 +148,7 @@
 	overflow: hidden;
 	/* little elevation on the inner card to visually separate controls */
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+	width: var(--share-card-width, auto);
 }
 
 /* Playground 内容容器（与作者信息分离） */
@@ -162,6 +164,13 @@
 	align-items: center;
 	gap: 8px;
 	margin-top: 8px;
+	justify-content: var(--share-card-author-justify, flex-start);
+	background: var(--share-card-author-background, transparent);
+	color: var(--share-card-author-text-color, inherit);
+	font-size: var(--share-card-author-font-size, 13px);
+	padding: 8px;
+	position: relative;
+	z-index: 10;
 }
 .share-card-author-container:first-child {
 	/* 顶部模式时去掉上 margin */
@@ -173,12 +182,26 @@
 	box-shadow:
 		0 0 0 1px rgba(255, 255, 255, 0.08),
 		0 2px 4px rgba(0, 0, 0, 0.25);
+	width: var(--share-card-author-avatar-size, 40px);
+	height: var(--share-card-author-avatar-size, 40px);
+	background-image: var(--share-card-author-avatar-image, none);
+	background-size: var(--share-card-author-avatar-size-mode, cover);
+	background-position: center;
+	border-radius: 6px;
 }
 .share-card-author-name {
 	font-weight: 600;
 }
 .share-card-author-remark {
-	opacity: 0.85;
+	opacity: var(--share-card-author-remark-opacity, 0.85);
+	font-size: var(--share-card-author-remark-font-size, 12px);
+}
+
+.share-card-author-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	line-height: 1.1;
 }
 
 /* Two-column compact form grid for author settings */
@@ -282,4 +305,20 @@
 /* 在文件末尾添加（隐藏滚动条，Chrome/Safari/Edge） */
 .share-card-left::-webkit-scrollbar {
 	display: none;
+}
+
+.share-card-modal select,
+.share-card-modal input[type='text'],
+.share-card-modal input[type='number'],
+.share-card-modal input[type='color'],
+.share-card-modal textarea {
+	width: 100%;
+}
+
+.is-hidden {
+	display: none !important;
+}
+
+.share-card-field-checkbox label {
+	margin-left: 4px;
 }

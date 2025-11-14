@@ -40,6 +40,42 @@
 }
 
 /* 组件卡片细节样式 */
+.tabflow-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+}
+
+.tabflow-card--compact {
+	padding: 4px;
+}
+
+.tabflow-card__left,
+.tabflow-card__right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.tabflow-card__right {
+	gap: 6px;
+}
+
+.tabflow-card__handle {
+	cursor: grab;
+	user-select: none;
+}
+
+.tabflow-card__desc {
+	color: var(--text-muted);
+	font-size: 0.9em;
+}
+
 .tabflow-card button {
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
@@ -50,6 +86,12 @@
 
 .tabflow-card button:hover {
 	background: var(--background-secondary-alt);
+}
+
+.tabflow-card-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 
 /* Clickable icon style to replace buttons for order controls */
@@ -172,4 +214,89 @@ ul.tabflow-setting-description li {
 	font-size: 0.85em;
 }
 
+.tabflow-highlight-section {
+	margin-top: 12px;
+}
+
+.tabflow-highlight-section__summary {
+	cursor: pointer;
+	font-size: 0.9em;
+	font-weight: 600;
+	color: var(--text-accent);
+}
+
+.tabflow-highlight-preview {
+	display: inline-flex;
+	gap: 6px;
+	flex-wrap: wrap;
+	align-items: center;
+	padding: 4px 6px;
+	border-radius: 4px;
+	background: var(--background-secondary);
+	font-family: var(--font-monospace);
+	font-size: 0.9em;
+}
+
+.tabflow-highlight-preview-container {
+	margin-bottom: 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px;
+}
+
+.tabflow-highlight-preview-editor {
+	height: 200px;
+	overflow: auto;
+	border-radius: 4px;
+}
+
 /* reset styling intentionally uses existing setting-item styles to match other reset buttons */
+
+.tabflow-assets-status {
+	margin-bottom: 1em;
+	padding: 10px;
+	border-radius: 5px;
+	background-color: var(--background-secondary);
+}
+
+.tabflow-assets-status__summary {
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+.tabflow-assets-status__summary.is-success,
+.tabflow-assets-status__file.is-success,
+.tabflow-assets-status__state.is-success {
+	color: var(--text-success);
+}
+
+.tabflow-assets-status__summary.is-error,
+.tabflow-assets-status__file.is-error,
+.tabflow-assets-status__state.is-error {
+	color: var(--text-error);
+}
+
+.tabflow-assets-status__list {
+	margin: 0;
+	padding-left: 20px;
+}
+
+.tabflow-assets-status__state {
+	font-style: italic;
+}
+
+.tabflow-assets-structure-heading {
+	margin-top: 20px;
+	font-weight: bold;
+}
+
+.tabflow-assets-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.tabflow-assets-actions__restart {
+	display: inline-block;
+}

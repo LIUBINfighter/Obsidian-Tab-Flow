@@ -22,7 +22,10 @@ export function watchThemeModeChange(callback: (mode: 'dark' | 'light') => void)
 	});
 	observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 	// expose callback for tests that want to trigger it
-	(observer as any).callback = (mutations: MutationRecord[]) => {
+	interface ExtendedMutationObserver extends MutationObserver {
+		callback?: (mutations: MutationRecord[]) => void;
+	}
+	(observer as ExtendedMutationObserver).callback = (mutations: MutationRecord[]) => {
 		callback(getCurrentThemeMode());
 	};
 	return observer;
