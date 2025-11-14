@@ -428,7 +428,6 @@ export async function renderPlayerTab(
 	tabContents.createEl('div', {
 		text: t('settings.player.debugBar.description'),
 		cls: 'tabflow-setting-description',
-		cls: 'tabflow-setting-description',
 	});
 
 	new Setting(tabContents)

@@ -1217,9 +1217,6 @@
 	font-size: 18px;
 	line-height: 2;
 	max-height: 600px;
-	font-size: 18px;
-	line-height: 2;
-	max-height: 600px;
 	/* keep a reasonable height */
 	overflow: auto;
 }
@@ -1439,7 +1436,6 @@
 	color: var(--text-normal);
 }
 
-@media (max-width: 500px) {
 @media (max-width: 500px) {
 	.doc-nav {
 		flex-direction: column;
@@ -1934,13 +1930,11 @@
 }
 
 .tabflow-setting-description {
-.tabflow-setting-description {
 	color: var(--text-muted);
 	font-size: 0.95em;
 	margin-bottom: 0.5em;
 }
 
-pre.tabflow-setting-description {
 pre.tabflow-setting-description {
 	background-color: var(--background-secondary);
 	padding: 12px 16px;
@@ -1965,7 +1959,6 @@ pre.tabflow-setting-description {
 }
 
 pre.tabflow-setting-description code {
-pre.tabflow-setting-description code {
 	white-space: pre;
 	font-size: 0.9em;
 	color: var(--text-normal);
@@ -1975,14 +1968,10 @@ pre.tabflow-setting-description code {
 
 ol.tabflow-setting-description,
 ul.tabflow-setting-description {
-ol.tabflow-setting-description,
-ul.tabflow-setting-description {
 	margin-left: 1.5em;
 	margin-bottom: 0.5em;
 }
 
-ol.tabflow-setting-description li,
-ul.tabflow-setting-description li {
 ol.tabflow-setting-description li,
 ul.tabflow-setting-description li {
 	margin-bottom: 0.2em;

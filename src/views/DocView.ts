@@ -15,7 +15,6 @@ export class DocView extends ItemView {
 	activeId: string | null = null;
 	private layoutObserver?: ResizeObserver;
 	private settingsAction: HTMLElement | null = null;
-	private settingsAction: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
 		super(leaf);
@@ -108,7 +107,6 @@ export class DocView extends ItemView {
 
 	getDisplayText(): string {
 		return t('docView.displayText');
-		return t('docView.displayText');
 	}
 
 	async onOpen() {
@@ -137,7 +135,6 @@ export class DocView extends ItemView {
 
 		// 标题（先渲染）
 		header.createEl('h2', { text: t('docView.title') });
-		header.createEl('h2', { text: t('docView.title') });
 
 		// 按钮组（后渲染，和标题同级）
 		const btnGroup = header.createDiv({ cls: 'tabflow-doc-header-btns' });
@@ -148,7 +145,6 @@ export class DocView extends ItemView {
 			attr: { target: '_blank', rel: 'noopener', 'aria-label': 'GitHub' },
 			cls: 'mod-cta',
 		});
-
 
 		const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 		svg.setAttribute('width', '22');
@@ -173,7 +169,6 @@ export class DocView extends ItemView {
 			cls: 'mod-cta',
 		});
 		issueBtn.innerText = 'Feedback';
-		issueBtn.innerText = 'Feedback';
 
 		// alphaTab.js 官方文档按钮（黑体文字）
 		const alphaTabBtn = btnGroup.createEl('a', {
@@ -183,14 +178,8 @@ export class DocView extends ItemView {
 				rel: 'noopener',
 				'aria-label': t('docView.alphaTabOfficialDoc'),
 			},
-			attr: {
-				target: '_blank',
-				rel: 'noopener',
-				'aria-label': t('docView.alphaTabOfficialDoc'),
-			},
 			cls: 'mod-cta',
 		});
-		alphaTabBtn.innerText = 'alphaTab.js';
 		alphaTabBtn.innerText = 'alphaTab.js';
 
 		// 使用视图 action 注入设置按钮，统一管理生命周期
@@ -259,9 +248,6 @@ export class DocView extends ItemView {
 				this.render().then(() => {
 					this.scrollToContentAfterRender();
 				});
-				this.render().then(() => {
-					this.scrollToContentAfterRender();
-				});
 			});
 			if (panel.id === this.activeId) tabEl.addClass('active');
 		});
@@ -299,21 +285,13 @@ export class DocView extends ItemView {
 					cls: 'doc-nav-label',
 					text: t('navigation.previous'),
 				});
-				const label = prev.createDiv({
-					cls: 'doc-nav-label',
-					text: t('navigation.previous'),
-				});
 				label.setAttr('aria-hidden', 'true');
 				prev.createDiv({ cls: 'doc-nav-title', text: prevPanel.title });
 				prev.setAttr('role', 'button');
 				prev.setAttr('tabindex', '0');
 				prev.setAttr('aria-label', `${t('navigation.previous')}：${prevPanel.title}`);
-				prev.setAttr('aria-label', `${t('navigation.previous')}：${prevPanel.title}`);
 				prev.addEventListener('click', () => {
 					this.activeId = prevPanel.id;
-					this.render().then(() => {
-						this.scrollToContentAfterRender();
-					});
 					this.render().then(() => {
 						this.scrollToContentAfterRender();
 					});
@@ -324,9 +302,6 @@ export class DocView extends ItemView {
 						this.render().then(() => {
 							this.scrollToContentAfterRender();
 						});
-						this.render().then(() => {
-							this.scrollToContentAfterRender();
-						});
 					}
 				});
 			}
@@ -334,18 +309,13 @@ export class DocView extends ItemView {
 			if (nextPanel) {
 				const next = docNav.createDiv({ cls: 'doc-nav-item doc-nav-item--next' });
 				const label = next.createDiv({ cls: 'doc-nav-label', text: t('navigation.next') });
-				const label = next.createDiv({ cls: 'doc-nav-label', text: t('navigation.next') });
 				label.setAttr('aria-hidden', 'true');
 				next.createDiv({ cls: 'doc-nav-title', text: nextPanel.title });
 				next.setAttr('role', 'button');
 				next.setAttr('tabindex', '0');
 				next.setAttr('aria-label', `${t('navigation.next')}：${nextPanel.title}`);
-				next.setAttr('aria-label', `${t('navigation.next')}：${nextPanel.title}`);
 				next.addEventListener('click', () => {
 					this.activeId = nextPanel.id;
-					this.render().then(() => {
-						this.scrollToContentAfterRender();
-					});
 					this.render().then(() => {
 						this.scrollToContentAfterRender();
 					});
@@ -353,9 +323,6 @@ export class DocView extends ItemView {
 				next.addEventListener('keypress', (e) => {
 					if (e.key === 'Enter') {
 						this.activeId = nextPanel.id;
-						this.render().then(() => {
-							this.scrollToContentAfterRender();
-						});
 						this.render().then(() => {
 							this.scrollToContentAfterRender();
 						});
@@ -368,46 +335,6 @@ export class DocView extends ItemView {
 			if (count >= 2) docNav.addClass('two');
 			else docNav.addClass('one');
 		}
-
-		// 添加键盘事件处理器：支持左右箭头键切换页签
-		this.registerDomEvent(layout, 'keydown', (e: KeyboardEvent) => {
-			if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-				// 检查事件目标，如果用户正在编辑器或其他输入控件中，则不处理
-				const target = e.target as Element;
-				if (
-					target &&
-					(target.classList.contains('cm-content') || // CodeMirror 编辑器内容
-						target.closest('.cm-editor') || // CodeMirror 编辑器容器
-						target.closest('.inmarkdown-editor') || // playground 编辑器区域
-						target.closest('input') || // 输入框
-						target.closest('textarea') || // 文本域
-						target.tagName === 'INPUT' || // 直接是输入元素
-						target.tagName === 'TEXTAREA' || // 直接是文本域
-						(target as HTMLElement).isContentEditable) // 可编辑内容
-				) {
-					return; // 不处理键盘事件，让编辑器正常工作
-				}
-
-				const currentIndex = this.panels.findIndex((p) => p.id === this.activeId);
-				if (currentIndex === -1) return;
-
-				let newIndex = currentIndex;
-				if (e.key === 'ArrowLeft' && currentIndex > 0) {
-					newIndex = currentIndex - 1;
-				} else if (e.key === 'ArrowRight' && currentIndex < this.panels.length - 1) {
-					newIndex = currentIndex + 1;
-				}
-
-				if (newIndex !== currentIndex) {
-					// 阻止默认行为，避免与其他键盘导航冲突
-					e.preventDefault();
-					this.activeId = this.panels[newIndex].id;
-					this.render().then(() => {
-						this.scrollToContentAfterRender();
-					});
-				}
-			}
-		});
 
 		// 添加键盘事件处理器：支持左右箭头键切换页签
 		this.registerDomEvent(layout, 'keydown', (e: KeyboardEvent) => {

@@ -130,9 +130,6 @@ export class SettingTab extends PluginSettingTab {
 			} else if (tabId === 'editor') {
 				const mod = await import('./tabs/editorTab');
 				await mod.renderEditorTab(contentsEl, this.plugin, this.app);
-			} else if (tabId === 'editor') {
-				const mod = await import('./tabs/editorTab');
-				await mod.renderEditorTab(contentsEl, this.plugin, this.app);
 			} else if (tabId === 'about') {
 				const mod = await import('./tabs/aboutTab');
 				await mod.renderAboutTab(contentsEl, this.plugin, this.app);
