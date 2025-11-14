@@ -6,11 +6,51 @@ import { SettingsPanel } from './SettingsPanel';
 import { TracksPanel } from './TracksPanel';
 import { MediaSync } from './MediaSync';
 
-interface TablatureViewProps {
-	controller: PlayerController;
+/**
+ * TablatureView 配置选项
+ * 用于自定义播放器组件的显示和行为
+ */
+export interface TablatureViewOptions {
+	/** 是否显示 DebugBar（默认：true） */
+	showDebugBar?: boolean;
+	/** 是否显示 PlayBar（默认：true） */
+	showPlayBar?: boolean;
+	/** 是否显示 SettingsPanel（默认：true） */
+	showSettingsPanel?: boolean;
+	/** 是否显示 TracksPanel（默认：true） */
+	showTracksPanel?: boolean;
+	/** 是否显示 MediaSync（默认：true） */
+	showMediaSync?: boolean;
+	/** 自定义组件渲染器（可选） */
+	customComponents?: {
+		/** 自定义顶部组件（替代或补充 DebugBar） */
+		topBar?: React.ComponentType<{ controller: PlayerController }>;
+		/** 自定义底部组件（替代或补充 PlayBar） */
+		bottomBar?: React.ComponentType<{ controller: PlayerController }>;
+		/** 自定义侧边栏组件 */
+		sidebars?: React.ComponentType<{ controller: PlayerController }>[];
+	};
 }
 
-export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
+interface TablatureViewProps {
+	controller: PlayerController;
+	/** 配置选项（可选） */
+	options?: TablatureViewOptions;
+}
+
+export const TablatureView: React.FC<TablatureViewProps> = ({
+	controller,
+	options = {},
+}) => {
+	// 默认配置
+	const {
+		showDebugBar = true,
+		showPlayBar = true,
+		showSettingsPanel = true,
+		showTracksPanel = true,
+		showMediaSync = true,
+		customComponents,
+	} = options;
 	// 两个 ref：viewport 是滚动容器，container 是 AlphaTab 渲染目标
 	const viewportRef = useRef<HTMLDivElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -82,26 +122,38 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 				flexDirection: 'column',
 			}}
 		>
-			{/* DebugBar - 调试/开发用完整控制栏（顶部） */}
-			<DebugBar
-				controller={controller}
-				viewportRef={viewportRef}
-				onSettingsClick={handleToggleSettings}
-				onTracksClick={handleToggleTracks}
-				onMediaSyncClick={handleToggleMediaSync}
-			/>
+			{/* 自定义顶部组件或默认 DebugBar */}
+			{customComponents?.topBar ? (
+				<customComponents.topBar controller={controller} />
+			) : showDebugBar ? (
+				<DebugBar
+					controller={controller}
+					viewportRef={viewportRef}
+					onSettingsClick={handleToggleSettings}
+					onTracksClick={handleToggleTracks}
+					onMediaSyncClick={handleToggleMediaSync}
+				/>
+			) : null}
 			{/* Tracks Panel - 音轨管理侧边栏 */}
-			<TracksPanel
-				controller={controller}
-				isOpen={tracksPanelOpen}
-				onClose={() => uiStore.getState().hidePanel('tracksPanel')}
-			/>
+			{showTracksPanel && (
+				<TracksPanel
+					controller={controller}
+					isOpen={tracksPanelOpen}
+					onClose={() => uiStore.getState().hidePanel('tracksPanel')}
+				/>
+			)}
 			{/* Settings Panel - 设置侧边栏 */}
-			<SettingsPanel
-				controller={controller}
-				isOpen={settingsPanelOpen}
-				onClose={() => uiStore.getState().hidePanel('settingsPanel')}
-			/>{' '}
+			{showSettingsPanel && (
+				<SettingsPanel
+					controller={controller}
+					isOpen={settingsPanelOpen}
+					onClose={() => uiStore.getState().hidePanel('settingsPanel')}
+				/>
+			)}
+			{/* 自定义侧边栏组件 */}
+			{customComponents?.sidebars?.map((Sidebar, index) => (
+				<Sidebar key={index} controller={controller} />
+			))}
 			{/* Loading Indicator */}
 			{loading.isLoading && (
 				<div
@@ -191,15 +243,21 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller }) => {
 					}}
 				/>
 			</div>
-			{/* PlayBar - 用户界面播放控制栏（底部） */}
-			<PlayBar controller={controller} />
+			{/* 自定义底部组件或默认 PlayBar */}
+			{customComponents?.bottomBar ? (
+				<customComponents.bottomBar controller={controller} />
+			) : showPlayBar ? (
+				<PlayBar controller={controller} />
+			) : null}
 			{/* MediaSync Panel - 底部媒体同步面板（浮动） */}
-			<MediaSync
-				controller={controller}
-				app={controller.getApp()}
-				isOpen={mediaSyncOpen}
-				onClose={() => uiStore.getState().hidePanel('mediaSyncPanel')}
-			/>
+			{showMediaSync && (
+				<MediaSync
+					controller={controller}
+					app={controller.getApp()}
+					isOpen={mediaSyncOpen}
+					onClose={() => uiStore.getState().hidePanel('mediaSyncPanel')}
+				/>
+			)}
 		</div>
 	);
 };

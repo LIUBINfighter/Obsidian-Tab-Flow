@@ -505,8 +505,18 @@ export class EditorView extends FileView {
 			},
 		});
 		this.playerRoot = createRoot(this.playerContainer);
+		// 在 EditorView 中不显示 DebugBar，使用更简洁的界面
 		this.playerRoot.render(
-			React.createElement(TablatureView, { controller: this.playerController })
+			React.createElement(TablatureView, {
+				controller: this.playerController,
+				options: {
+					showDebugBar: false, // EditorView 中不显示 DebugBar
+					showPlayBar: true,
+					showSettingsPanel: true,
+					showTracksPanel: true,
+					showMediaSync: true,
+				},
+			})
 		);
 
 		const runtimeStore = this.playerController.getRuntimeStore();
