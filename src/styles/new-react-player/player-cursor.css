@@ -37,7 +37,6 @@
 /* 深色模式下增强可见度 */
 .theme-dark .at-cursor-beat {
 	opacity: 0.85;
-	box-shadow: 0 0 4px rgba(124, 58, 237, 0.3);
 }
 
 /* 
@@ -171,12 +170,3 @@
  * 10. 焦点状态 - 键盘导航时的光标增强
  * 当用户使用键盘控制播放时，增强光标可见度
  */
-.tab-flow-player-container:focus-within .at-cursor-beat {
-	opacity: 0.9;
-	box-shadow: 0 0 6px var(--interactive-accent);
-}
-
-.theme-dark .tab-flow-player-container:focus-within .at-cursor-beat {
-	opacity: 1;
-	box-shadow: 0 0 8px var(--interactive-accent-hover);
-}
