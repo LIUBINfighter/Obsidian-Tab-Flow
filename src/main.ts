@@ -14,6 +14,12 @@ import ShareCardPresetService from './services/ShareCardPresetService';
 import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
 import { TrackStateStore } from './state/TrackStateStore';
+import { setCssProps } from './utils/styleUtils';
+
+type SettingManager = {
+	activeTab?: { id?: string };
+	openTabById?: (id: string) => void;
+};
 
 // AssetStatus moved to src/types/assets.ts
 
@@ -302,15 +308,11 @@ export default class TabFlowPlugin extends Plugin {
 
 		// Apply editor UI preferences as CSS variables so they take effect immediately
 		try {
-			document.documentElement.style.setProperty(
-				'--alphatex-editor-font-size',
-				this.settings.editorFontSize || '0.95rem'
-			);
-			document.documentElement.style.setProperty(
-				'--alphatex-editor-bottom-gap',
-				this.settings.editorBottomGap || '40vh'
-			);
-		} catch (e) {
+			setCssProps(document.documentElement, {
+				'--alphatex-editor-font-size': this.settings.editorFontSize || '0.95rem',
+				'--alphatex-editor-bottom-gap': this.settings.editorBottomGap || '40vh',
+			});
+		} catch (_) {
 			// ignore environments without DOM
 		}
 
@@ -438,9 +440,8 @@ export default class TabFlowPlugin extends Plugin {
 
 			// 注册 Markdown 代码块处理器: alphatex
 			try {
-				// 动态引入以避免在测试环境下的循环依赖
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
-				const { mountAlphaTexBlock } = require('./markdown/AlphaTexBlock');
+				// Dynamically import to avoid circular dependency in test environment
+				const { mountAlphaTexBlock } = await import('./markdown/AlphaTexBlock');
 				this.registerMarkdownCodeBlockProcessor('alphatex', async (source, el, ctx) => {
 					// 资源缺失：在块内提示并提供下载按钮
 					if (!this.resources.bravuraUri || !this.resources.alphaTabWorkerUri) {
@@ -456,21 +457,29 @@ export default class TabFlowPlugin extends Plugin {
 						const btn = holder.createEl('button', {
 							text: t('common.download', undefined, '下载资源'),
 						});
-						btn.addEventListener('click', async () => {
-							btn.setAttr('disabled', 'true');
-							btn.setText(t('common.downloading', undefined, '下载中...'));
-							const ok = await this.downloadAssets();
-							btn.removeAttribute('disabled');
-							btn.setText(
-								ok
-									? t(
-											'common.downloadComplete',
-											undefined,
-											'下载完成，请刷新预览'
-										)
-									: t('common.downloadFailed', undefined, '下载失败，重试')
-							);
-						});
+						btn.addEventListener(
+							'click',
+							() =>
+								void (async () => {
+									btn.setAttr('disabled', 'true');
+									btn.setText(t('common.downloading', undefined, '下载中...'));
+									const ok = await this.downloadAssets();
+									btn.removeAttribute('disabled');
+									btn.setText(
+										ok
+											? t(
+													'common.downloadComplete',
+													undefined,
+													'下载完成，请刷新预览'
+												)
+											: t(
+													'common.downloadFailed',
+													undefined,
+													'下载失败，重试'
+												)
+									);
+								})()
+						);
 						return;
 					}
 
@@ -663,11 +672,7 @@ export default class TabFlowPlugin extends Plugin {
 	private refreshLanguageDependentUI(): void {
 		try {
 			// 刷新设置面板（如果打开的话）
-			const settingInstance = (
-				this.app as unknown as {
-					setting?: { activeTab?: { id?: string }; openTabById?: (id: string) => void };
-				}
-			).setting;
+			const settingInstance = Reflect.get(this.app, 'setting') as SettingManager | undefined;
 			const settingTabs = settingInstance?.activeTab;
 			if (settingTabs && settingTabs.id === 'tabflow') {
 				// 重新渲染设置标签页

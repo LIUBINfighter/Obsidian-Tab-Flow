@@ -7,6 +7,12 @@ import { t } from '../../i18n';
 import path from 'path';
 // @ts-ignore
 import { shell } from 'electron';
+import { showConfirmDialog } from '../../utils/dialogs';
+import { toggleHidden } from '../../utils/styleUtils';
+
+type CommandManager = {
+	executeCommandById?: (id: string) => void;
+};
 
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
 	const pluginId = plugin.manifest.id;
@@ -45,10 +51,7 @@ export async function renderGeneralTab(
 	tabContents.createEl('h3', { text: t('assetManagement.assetFileManagement') });
 
 	const assetsStatusContainer = tabContents.createDiv({
-		cls: 'tabflow-setting-description',
-		attr: {
-			style: 'margin-bottom: 1em; padding: 10px; border-radius: 5px; background-color: var(--background-secondary);',
-		},
+		cls: 'tabflow-setting-description tabflow-assets-status',
 	});
 	assetsStatusContainer.createEl('strong', { text: t('status.assetsCheckInProgress') });
 
@@ -61,20 +64,17 @@ export async function renderGeneralTab(
 
 	assetsStatusContainer.empty();
 	const allOk = statuses.every((s) => s.exists);
-	assetsStatusContainer.createEl('div', {
+	assetsStatusContainer.createDiv({
 		text: allOk ? `✅ ${t('status.allAssetsInstalled')}` : `❌ ${t('status.assetsIncomplete')}`,
-		attr: {
-			style: `font-weight: bold; color: ${allOk ? 'var(--text-success)' : 'var(--text-error)'}; margin-bottom: 10px;`,
-		},
+		cls: `tabflow-assets-status__summary ${allOk ? 'is-success' : 'is-error'}`,
 	});
 
 	const list = assetsStatusContainer.createEl('ul', {
-		attr: { style: 'margin:0;padding-left:20px;' },
+		cls: 'tabflow-assets-status__list',
 	});
 	tabContents.createEl('div', {
 		text: t('status.expectedFileStructure'),
-		cls: 'tabflow-setting-description',
-		attr: { style: 'margin-top:20px;font-weight:bold;' },
+		cls: 'tabflow-setting-description tabflow-assets-structure-heading',
 	});
 	const pre = tabContents.createEl('pre', {
 		cls: 'tabflow-setting-description',
@@ -84,13 +84,13 @@ export async function renderGeneralTab(
 	});
 	statuses.forEach((s) => {
 		const li = list.createEl('li');
-		const color = s.exists ? 'var(--text-success)' : 'var(--text-error)';
 		const icon = s.exists ? '✅' : '❌';
 		const sizeText = s.size != null ? ` - ${(s.size / 1024).toFixed(1)} KB` : '';
+		const statusClass = s.exists ? 'is-success' : 'is-error';
 
 		// 创建第一个span元素（文件名和图标）
 		const fileSpan = document.createElement('span');
-		fileSpan.style.color = color;
+		fileSpan.classList.add('tabflow-assets-status__file', statusClass);
 		fileSpan.textContent = `${icon} ${s.file}`;
 		li.appendChild(fileSpan);
 
@@ -103,8 +103,7 @@ export async function renderGeneralTab(
 
 		// 创建第二个span元素（状态）
 		const statusSpan = document.createElement('span');
-		statusSpan.style.color = color;
-		statusSpan.style.fontStyle = 'italic';
+		statusSpan.classList.add('tabflow-assets-status__state', statusClass);
 		statusSpan.textContent = `(${s.exists ? t('status.installed') : t('status.notInstalled')})`;
 		li.appendChild(statusSpan);
 
@@ -123,7 +122,7 @@ export async function renderGeneralTab(
 		.setDesc(
 			allOk ? t('assetManagement.ifSuspectCorruption') : t('assetManagement.restartRequired')
 		);
-	const buttons = actionSetting.controlEl.createDiv({ attr: { style: 'display:flex;gap:8px;' } });
+	const buttons = actionSetting.controlEl.createDiv({ cls: 'tabflow-assets-actions' });
 
 	const downloadBtn = buttons.createEl('button', {
 		text: allOk ? t('assetManagement.redownload') : t('assetManagement.downloadMissingAssets'),
@@ -131,24 +130,26 @@ export async function renderGeneralTab(
 	});
 	const restartBtn = buttons.createEl('button', {
 		text: t('assetManagement.restartObsidian'),
-		cls: 'mod-warning',
-		attr: { style: plugin.settings.assetsDownloaded ? '' : 'display:none;' },
+		cls: 'mod-warning tabflow-assets-actions__restart',
 	});
+	toggleHidden(restartBtn, !plugin.settings.assetsDownloaded);
 
-	downloadBtn.onclick = async () => {
-		downloadBtn.disabled = true;
-		downloadBtn.textContent = t('assetManagement.downloading');
-		const ok = await plugin.downloadAssets?.();
-		if (ok) {
-			new Notice(t('assetManagement.assetsDownloaded'));
-			restartBtn.style.display = 'inline-block';
-			await renderTab('general');
-		} else {
-			downloadBtn.disabled = false;
-			downloadBtn.textContent = allOk
-				? t('assetManagement.redownload')
-				: t('assetManagement.retryDownload');
-		}
+	downloadBtn.onclick = () => {
+		void (async () => {
+			downloadBtn.disabled = true;
+			downloadBtn.textContent = t('assetManagement.downloading');
+			const ok = await plugin.downloadAssets?.();
+			if (ok) {
+				new Notice(t('assetManagement.assetsDownloaded'));
+				toggleHidden(restartBtn, false);
+				await renderTab('general');
+			} else {
+				downloadBtn.disabled = false;
+				downloadBtn.textContent = allOk
+					? t('assetManagement.redownload')
+					: t('assetManagement.retryDownload');
+			}
+		})();
 	};
 
 	const openDirBtn = buttons.createEl('button', {
@@ -157,7 +158,9 @@ export async function renderGeneralTab(
 	});
 	openDirBtn.onclick = () => {
 		try {
-			const basePath = (app.vault.adapter as any).getBasePath?.();
+			const adapter = app.vault.adapter as { getBasePath?: () => string };
+			const basePath =
+				typeof adapter.getBasePath === 'function' ? adapter.getBasePath() : undefined;
 			if (!basePath) {
 				new Notice(t('assetManagement.desktopOnly'));
 				return;
@@ -179,9 +182,14 @@ export async function renderGeneralTab(
 	};
 
 	restartBtn.onclick = () => {
-		if (confirm(t('assetManagement.confirmRestart'))) {
-			// @ts-ignore
-			app.commands.executeCommandById('app:reload');
-		}
+		void (async () => {
+			const confirmed = await showConfirmDialog(app, {
+				message: t('assetManagement.confirmRestart'),
+			});
+			if (confirmed) {
+				const commands = Reflect.get(app, 'commands') as CommandManager | undefined;
+				commands?.executeCommandById?.('app:reload');
+			}
+		})();
 	};
 }
