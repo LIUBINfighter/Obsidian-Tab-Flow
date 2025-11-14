@@ -1748,6 +1748,53 @@
 	/* box-shadow removed - no focus highlight */
 }
 
+/* --- editor\editor.css --- */
+/* EditorView 样式 - 添加类似 playground 的边框和圆角，使编辑器和预览看起来像两个独立的"页面" */
+
+/* 缩小 Obsidian 自带的 .view-content 的边角和间距，让主要内容区域更大 */
+.workspace-leaf-content[data-type='alphatex-editor-view'] .view-content {
+	border-radius: 0;
+	padding: 0;
+	margin: 0;
+}
+
+/* 编辑器包装器 - 独立的页面样式 */
+.alphatex-editor-wrapper {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	position: relative;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	/* padding 已在 alphatex.css 中定义为 12px，这里不覆盖 */
+}
+
+/* 预览区域 - 独立的页面样式 */
+.alphatex-preview-section {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background: var(--background-primary);
+	position: relative;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 水平布局时，两个区域之间添加间距，保持独立外观 */
+.alphatex-editor-layout.is-horizontal {
+	gap: 12px;
+	padding: 8px;
+}
+
+/* 垂直布局时，两个区域之间添加间距，保持独立外观 */
+.alphatex-editor-layout.is-vertical {
+	gap: 12px;
+	padding: 8px;
+}
+
+/* 确保编辑器内部元素背景透明，以显示 wrapper 的背景 */
+.alphatex-editor-wrapper .cm-editor {
+	background: transparent;
+}
+
+
 /* --- exportChooser.css --- */
 .tabflow-export-chooser__name-row {
 	display: flex;
