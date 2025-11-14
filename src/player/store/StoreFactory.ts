@@ -68,9 +68,16 @@ export class StoreFactory {
 
 		// 2. 注入 View 回调到 workspace adapter
 		workspaceAdapter.setCallbacks({
-			getViewState: () => view.getState(),
-			setViewState: async (state: any, result: any) => {
-				// @ts-ignore - Obsidian View setState signature varies
+			getViewState: () => {
+				const state = view.getState();
+				if (!state || typeof state !== 'object') {
+					return null;
+				}
+				const snapshot: Record<string, unknown> = {};
+				return Object.assign(snapshot, state);
+			},
+			setViewState: async (state, result) => {
+				// @ts-expect-error - Obsidian View setState signature varies between versions
 				await view.setState(state, result);
 			},
 		});

@@ -114,7 +114,7 @@ export class MediaSwitchService {
 				break;
 
 			default:
-				throw new Error(`不支持的媒体类型: ${(source as any).type}`);
+				this.assertUnsupportedMedia(source);
 		}
 	}
 
@@ -199,6 +199,10 @@ export class MediaSwitchService {
 	 */
 	canSwitchMedia(): boolean {
 		return this.api !== null && this.api.score !== null;
+	}
+
+	private assertUnsupportedMedia(value: never): never {
+		throw new Error('不支持的媒体类型');
 	}
 
 	/**

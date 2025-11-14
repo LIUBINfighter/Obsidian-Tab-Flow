@@ -33,6 +33,28 @@ import type { AlphaTabApi } from '@coderline/alphatab';
  */
 export type AlphaTabEventHandler<TEventArgs = void> = (args: TEventArgs) => void;
 
+type UntypedEventHandler = (args?: unknown) => void;
+
+interface GenericEventEmitter {
+	on(handler: UntypedEventHandler): () => void;
+	off(handler: UntypedEventHandler): void;
+}
+
+function getEventEmitter(api: AlphaTabApi, eventName: string): GenericEventEmitter | null {
+	const candidate = (api as Record<string, unknown>)[eventName];
+
+	if (
+		candidate &&
+		typeof candidate === 'object' &&
+		typeof (candidate as { on?: unknown }).on === 'function' &&
+		typeof (candidate as { off?: unknown }).off === 'function'
+	) {
+		return candidate as GenericEventEmitter;
+	}
+
+	return null;
+}
+
 /**
  * AlphaTab 事件名称类型（部分常用事件）
  * 完整事件列表请参考 AlphaTab 文档
@@ -96,10 +118,8 @@ export function useAlphaTabEvent<TEventArgs = void>(
 			return;
 		}
 
-		// AlphaTab 的事件对象在 API 上（如 api.renderFinished）
-		const eventObject = (api as any)[eventName];
-
-		if (!eventObject || typeof eventObject.on !== 'function') {
+		const eventEmitter = getEventEmitter(api, eventName);
+		if (!eventEmitter) {
 			console.warn(`[useAlphaTabEvent] 事件不存在或无效: ${eventName}`);
 			return;
 		}
@@ -107,17 +127,17 @@ export function useAlphaTabEvent<TEventArgs = void>(
 		console.log(`[useAlphaTabEvent] 注册事件: ${eventName}`);
 
 		// 创建稳定的事件处理器（调用最新的 handler）
-		const eventHandler = (args: TEventArgs) => {
-			handlerRef.current(args);
+		const eventHandler = (args?: TEventArgs) => {
+			handlerRef.current(args as TEventArgs);
 		};
 
 		// 注册事件监听器：api.eventName.on(handler)
-		eventObject.on(eventHandler);
+		const dispose = eventEmitter.on(eventHandler);
 
 		// 清理函数：取消事件监听
 		return () => {
 			console.log(`[useAlphaTabEvent] 清理事件: ${eventName}`);
-			eventObject.off(eventHandler);
+			dispose();
 		};
 	}, [api, eventName, ...deps]);
 }
@@ -136,7 +156,7 @@ export function useAlphaTabEvent<TEventArgs = void>(
  */
 export function useAlphaTabEvents(
 	api: AlphaTabApi | null,
-	events: Record<string, AlphaTabEventHandler<any>>
+	events: Record<string, AlphaTabEventHandler<unknown>>
 ): void {
 	useEffect(() => {
 		if (!api) {
@@ -149,11 +169,11 @@ export function useAlphaTabEvents(
 
 		// 注册所有事件
 		Object.entries(events).forEach(([eventName, handler]) => {
-			const eventObject = (api as any)[eventName];
+			const eventEmitter = getEventEmitter(api, eventName);
 
-			if (eventObject && typeof eventObject.on === 'function') {
-				eventObject.on(handler);
-				cleanups.push(() => eventObject.off(handler));
+			if (eventEmitter) {
+				const eventHandler: UntypedEventHandler = (payload) => handler(payload);
+				cleanups.push(eventEmitter.on(eventHandler));
 			} else {
 				console.warn(`[useAlphaTabEvents] 事件不存在或无效: ${eventName}`);
 			}
@@ -190,28 +210,27 @@ export function useAlphaTabEventOnce<TEventArgs = void>(
 			return;
 		}
 
-		const eventObject = (api as any)[eventName];
-
-		if (!eventObject || typeof eventObject.on !== 'function') {
+		const eventEmitter = getEventEmitter(api, eventName);
+		if (!eventEmitter) {
 			console.warn(`[useAlphaTabEventOnce] 事件不存在或无效: ${eventName}`);
 			return;
 		}
 
 		console.log(`[useAlphaTabEventOnce] 注册一次性事件: ${eventName}`);
 
-		const eventHandler = (args: TEventArgs) => {
+		const eventHandler = (args?: TEventArgs) => {
 			if (!hasTriggered.current) {
 				hasTriggered.current = true;
 				handler(args);
-				eventObject.off(eventHandler);
+				eventEmitter.off(eventHandler);
 				console.log(`[useAlphaTabEventOnce] 事件已触发并清理: ${eventName}`);
 			}
 		};
 
-		eventObject.on(eventHandler);
+		eventEmitter.on(eventHandler);
 
 		return () => {
-			eventObject.off(eventHandler);
+			eventEmitter.off(eventHandler);
 		};
 	}, [api, eventName, handler]);
 }
@@ -241,20 +260,20 @@ export function useAlphaTabEventConditional<TEventArgs = void>(
 			return;
 		}
 
-		const eventObject = (api as any)[eventName];
-
-		if (!eventObject || typeof eventObject.on !== 'function') {
+		const eventEmitter = getEventEmitter(api, eventName);
+		if (!eventEmitter) {
 			console.warn(`[useAlphaTabEventConditional] 事件不存在或无效: ${eventName}`);
 			return;
 		}
 
 		console.log(`[useAlphaTabEventConditional] 条件满足，注册事件: ${eventName}`);
 
-		eventObject.on(handler);
+		const eventHandler = (args?: TEventArgs) => handler(args as TEventArgs);
+		eventEmitter.on(eventHandler);
 
 		return () => {
 			console.log(`[useAlphaTabEventConditional] 条件变化，清理事件: ${eventName}`);
-			eventObject.off(handler);
+			eventEmitter.off(eventHandler);
 		};
 	}, [api, eventName, handler, condition]);
 }
@@ -286,16 +305,15 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
 			return;
 		}
 
-		const eventObject = (api as any)[eventName];
-
-		if (!eventObject || typeof eventObject.on !== 'function') {
+		const eventEmitter = getEventEmitter(api, eventName);
+		if (!eventEmitter) {
 			console.warn(`[useAlphaTabEventDebounced] 事件不存在或无效: ${eventName}`);
 			return;
 		}
 
 		console.log(`[useAlphaTabEventDebounced] 注册防抖事件: ${eventName}, delay=${delay}ms`);
 
-		const eventHandler = (args: TEventArgs) => {
+		const eventHandler = (args?: TEventArgs) => {
 			// 清除之前的定时器
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
@@ -307,13 +325,13 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
 			}, delay);
 		};
 
-		eventObject.on(eventHandler);
+		eventEmitter.on(eventHandler);
 
 		return () => {
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
 			}
-			eventObject.off(eventHandler);
+			eventEmitter.off(eventHandler);
 		};
 	}, [api, eventName, handler, delay]);
 }
@@ -346,9 +364,8 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 			return;
 		}
 
-		const eventObject = (api as any)[eventName];
-
-		if (!eventObject || typeof eventObject.on !== 'function') {
+		const eventEmitter = getEventEmitter(api, eventName);
+		if (!eventEmitter) {
 			console.warn(`[useAlphaTabEventThrottled] 事件不存在或无效: ${eventName}`);
 			return;
 		}
@@ -357,7 +374,7 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 			`[useAlphaTabEventThrottled] 注册节流事件: ${eventName}, interval=${interval}ms`
 		);
 
-		const eventHandler = (args: TEventArgs) => {
+		const eventHandler = (args?: TEventArgs) => {
 			const now = Date.now();
 			const timeSinceLastExecution = now - lastExecutionRef.current;
 
@@ -372,19 +389,19 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 				}
 
 				timeoutRef.current = setTimeout(() => {
-					handler(args);
+					handler(args as TEventArgs);
 					lastExecutionRef.current = Date.now();
 				}, interval - timeSinceLastExecution);
 			}
 		};
 
-		eventObject.on(eventHandler);
+		eventEmitter.on(eventHandler);
 
 		return () => {
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
 			}
-			eventObject.off(eventHandler);
+			eventEmitter.off(eventHandler);
 		};
 	}, [api, eventName, handler, interval]);
 }

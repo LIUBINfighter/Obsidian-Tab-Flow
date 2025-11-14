@@ -71,7 +71,7 @@ export async function copyConfigToClipboard(config: AlphaTabPlayerConfig): Promi
 /**
  * 格式化设置值为可读字符串
  */
-export function formatSettingValue(value: any): string {
+export function formatSettingValue(value: unknown): string {
 	if (value === null || value === undefined) {
 		return 'N/A';
 	}

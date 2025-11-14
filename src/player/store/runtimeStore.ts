@@ -11,12 +11,13 @@
  */
 
 import { create, type StoreApi, type UseBoundStore } from 'zustand';
+import type { AlphaTabApi } from '@coderline/alphatab';
 import type { SessionState } from '../types/config-schema';
 import { getInitialSessionState } from '../types/config-schema';
 
 export interface RuntimeStore extends SessionState {
 	// 额外的 API 实例引用（不在 SessionState 中）
-	alphaTabApi: any | null;
+	alphaTabApi: AlphaTabApi | null;
 
 	// 保存最后加载的乐谱数据，用于 API 重建后重新加载
 	lastLoadedScore: {
@@ -26,7 +27,7 @@ export interface RuntimeStore extends SessionState {
 	};
 
 	// Actions
-	setApi: (api: any | null) => void;
+	setApi: (api: AlphaTabApi | null) => void;
 	setApiReady: (ready: boolean) => void;
 	setScoreLoaded: (loaded: boolean) => void;
 	setLastLoadedScore: (

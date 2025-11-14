@@ -10,11 +10,21 @@
  * 独立于 React 组件，可被任何视图层使用
  */
 
-import type { AlphaTabApi } from '@coderline/alphatab';
+import { FontFileFormat } from '@coderline/alphatab';
+import type { AlphaTabApi, synth } from '@coderline/alphatab';
 import type { StoreCollection } from './store/StoreFactory';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import * as convert from 'color-convert';
+
+type AlphaTabSettingsInput = ConstructorParameters<typeof alphaTab.AlphaTabApi>[1];
+type PlayerStateChangedEventArgs = synth.PlayerStateChangedEventArgs;
+type PositionChangedEventArgsWithBeatInfo = synth.PositionChangedEventArgs & {
+	currentBar?: number;
+	currentBeat?: number;
+	currentTick?: number;
+};
+type EventDisposer = () => void;
 
 export interface PlayerControllerResources {
 	bravuraUri: string;
@@ -32,7 +42,7 @@ export class PlayerController {
 	private plugin: Plugin;
 	private resources: PlayerControllerResources;
 	private pendingFileLoad: (() => Promise<void>) | null = null;
-	private eventHandlers: Map<string, any> = new Map();
+	private eventDisposers: EventDisposer[] = [];
 	private intersectionObserver: IntersectionObserver | null = null; // 容器可见性观察器
 
 	// Store 集合（由 ReactView 注入）
@@ -271,7 +281,7 @@ export class PlayerController {
 		}
 	}
 
-	private createAlphaTabSettings(): any {
+	private createAlphaTabSettings(): AlphaTabSettingsInput {
 		const globalConfig = this.stores.globalConfig.getState();
 
 		// 获取当前容器的计算样式用于颜色配置
@@ -313,7 +323,7 @@ export class PlayerController {
 			}
 		}
 
-		const settings: any = {
+		const settings: AlphaTabSettingsInput = {
 			core: {
 				file: null, // 总是 null，通过 API 方法加载
 				engine: globalConfig.alphaTabSettings.core.engine || 'svg',
@@ -369,11 +379,12 @@ export class PlayerController {
 		// AlphaTab 的 FontFileFormat 枚举值：Woff2 = 0, Woff = 1, Ttf = 2
 		if (this.resources.bravuraUri) {
 			// 使用 AlphaTab 内部的枚举值（向后兼容）
-			const FontFileFormat_Woff2 =
-				(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0;
-			settings.core.smuflFontSources = new Map([
-				[FontFileFormat_Woff2, this.resources.bravuraUri],
-			]) as unknown as Map<number, string>;
+			settings.core.smuflFontSources = new Map<
+				| FontFileFormat
+				| keyof typeof FontFileFormat
+				| Lowercase<keyof typeof FontFileFormat>,
+				string
+			>([[FontFileFormat.Woff2, this.resources.bravuraUri]]);
 			console.log(
 				`[PlayerController #${this.instanceId}] Font configured:`,
 				this.resources.bravuraUri
@@ -513,24 +524,20 @@ export class PlayerController {
 	 * 解绑所有 API 事件
 	 */
 	private unbindApiEvents(): void {
-		if (!this.api || this.eventHandlers.size === 0) {
+		if (!this.api || this.eventDisposers.length === 0) {
 			return;
 		}
 
 		try {
-			this.eventHandlers.forEach((handler, eventName) => {
+			this.eventDisposers.forEach((dispose) => {
 				try {
-					// AlphaTab 事件解绑使用 off 方法
-					const event = (this.api as any)[eventName];
-					if (event && typeof event.off === 'function') {
-						event.off(handler);
-					}
+					dispose();
 				} catch (error) {
-					console.warn(`[PlayerController] Failed to unbind event ${eventName}:`, error);
+					console.warn('[PlayerController] Failed to unbind event handler:', error);
 				}
 			});
 
-			this.eventHandlers.clear();
+			this.eventDisposers = [];
 		} catch (error) {
 			console.error('[PlayerController] Failed to unbind events:', error);
 		}
@@ -562,20 +569,17 @@ export class PlayerController {
 					this.configureScrollElement();
 				}, 100);
 			};
-			this.api.scoreLoaded.on(scoreLoadedHandler);
-			this.eventHandlers.set('scoreLoaded', scoreLoadedHandler); // Render Started
+			this.eventDisposers.push(this.api.scoreLoaded.on(scoreLoadedHandler));
 			const renderStartedHandler = () => {
 				this.stores.runtime.getState().setRenderState('rendering');
 			};
-			this.api.renderStarted.on(renderStartedHandler);
-			this.eventHandlers.set('renderStarted', renderStartedHandler);
+			this.eventDisposers.push(this.api.renderStarted.on(renderStartedHandler));
 
 			// Render Finished
 			const renderFinishedHandler = () => {
 				this.stores.runtime.getState().setRenderState('finished');
 			};
-			this.api.renderFinished.on(renderFinishedHandler);
-			this.eventHandlers.set('renderFinished', renderFinishedHandler);
+			this.eventDisposers.push(this.api.renderFinished.on(renderFinishedHandler));
 
 			// Player Ready
 			const playerReadyHandler = async () => {
@@ -588,43 +592,41 @@ export class PlayerController {
 					this.pendingFileLoad = null;
 				}
 			};
-			this.api.playerReady.on(playerReadyHandler);
-			this.eventHandlers.set('playerReady', playerReadyHandler);
+			this.eventDisposers.push(this.api.playerReady.on(playerReadyHandler));
 
 			// Player State Changed
-			const playerStateChangedHandler = (e: any) => {
+			const playerStateChangedHandler = (event: PlayerStateChangedEventArgs) => {
 				const stateMap: Record<number, 'idle' | 'playing' | 'paused' | 'stopped'> = {
 					0: 'paused',
 					1: 'playing',
 					2: 'stopped',
 				};
-				this.stores.runtime.getState().setPlaybackState(stateMap[e.state] || 'idle');
+				this.stores.runtime.getState().setPlaybackState(stateMap[event.state] || 'idle');
 			};
-			this.api.playerStateChanged.on(playerStateChangedHandler);
-			this.eventHandlers.set('playerStateChanged', playerStateChangedHandler);
+			this.eventDisposers.push(this.api.playerStateChanged.on(playerStateChangedHandler));
 
 			// Player Position Changed
-			const playerPositionChangedHandler = (e: any) => {
-				this.stores.runtime.getState().setPosition(e.currentTime);
+			const playerPositionChangedHandler = (event: PositionChangedEventArgsWithBeatInfo) => {
+				this.stores.runtime.getState().setPosition(event.currentTime);
 				// 重要：使用 e.endTime 作为总时长，这是考虑了速度等因素的实际播放时长
-				if (e.endTime !== undefined) {
-					this.stores.runtime.getState().setDuration(e.endTime);
+				if (event.endTime !== undefined) {
+					this.stores.runtime.getState().setDuration(event.endTime);
 				}
 				this.stores.runtime.getState().setCurrentBeat({
-					bar: e.currentBar,
-					beat: e.currentBeat,
-					tick: e.currentTick || 0,
+					bar: event.currentBar ?? 0,
+					beat: event.currentBeat ?? 0,
+					tick: event.currentTick ?? 0,
 				});
 			};
-			this.api.playerPositionChanged.on(playerPositionChangedHandler);
-			this.eventHandlers.set('playerPositionChanged', playerPositionChangedHandler); // Error
-			const errorHandler = (error: any) => {
+			this.eventDisposers.push(
+				this.api.playerPositionChanged.on(playerPositionChangedHandler)
+			);
+			const errorHandler = (error: Error) => {
 				console.error('[PlayerController] alphaTab error:', error);
-				this.stores.runtime.getState().setError('api-init', error.message || String(error));
+				this.stores.runtime.getState().setError('api-init', error.message ?? String(error));
 				this.stores.ui.getState().showToast('error', 'An error occurred in the player');
 			};
-			this.api.error.on(errorHandler);
-			this.eventHandlers.set('error', errorHandler);
+			this.eventDisposers.push(this.api.error.on(errorHandler));
 		} catch (error) {
 			console.error('[PlayerController] Failed to bind API events:', error);
 			this.stores.runtime.getState().setError('api-init', 'Failed to bind API events');

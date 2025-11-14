@@ -7,10 +7,10 @@
 import type { StateCreator, StoreMutatorIdentifier } from 'zustand';
 import type { IStorageAdapter } from '../../storage/IStorageAdapter';
 
-export interface StorageAdapterOptions {
+export interface StorageAdapterOptions<TPersisted = unknown> {
 	name: string; // 存储键名
 	version?: number; // 版本号
-	migrate?: (persistedState: any, version: number) => any; // 迁移函数
+	migrate?: (persistedState: TPersisted, version: number) => TPersisted; // 迁移函数
 }
 
 type StorageAdapterMiddleware = <
@@ -19,13 +19,13 @@ type StorageAdapterMiddleware = <
 	Mcs extends [StoreMutatorIdentifier, unknown][] = [],
 >(
 	adapter: IStorageAdapter,
-	options: StorageAdapterOptions,
+	options: StorageAdapterOptions<Partial<T>>,
 	config: StateCreator<T, Mps, Mcs>
 ) => StateCreator<T, Mps, Mcs>;
 
 type StorageAdapterImpl = <T>(
 	adapter: IStorageAdapter,
-	options: StorageAdapterOptions,
+	options: StorageAdapterOptions<Partial<T>>,
 	config: StateCreator<T, [], []>
 ) => StateCreator<T, [], []>;
 
@@ -61,7 +61,7 @@ const storageAdapterImpl: StorageAdapterImpl = (adapter, options, config) => (se
 	const loadState = async () => {
 		try {
 			const persistedVersion = await adapter.load<number>(versionKey);
-			let persistedState = await adapter.load<any>(name);
+			let persistedState = await adapter.load<Partial<T>>(name);
 
 			if (!persistedState) {
 				console.log('[StorageAdapter] No persisted state found for:', name);
@@ -69,7 +69,12 @@ const storageAdapterImpl: StorageAdapterImpl = (adapter, options, config) => (se
 			}
 
 			// 版本迁移
-			if (migrate && persistedVersion !== null && persistedVersion < version) {
+			if (
+				persistedState &&
+				migrate &&
+				persistedVersion !== null &&
+				persistedVersion < version
+			) {
 				console.log(
 					`[StorageAdapter] Migrating ${name} from version ${persistedVersion} to ${version}`
 				);
@@ -77,7 +82,7 @@ const storageAdapterImpl: StorageAdapterImpl = (adapter, options, config) => (se
 			}
 
 			// 合并状态
-			set(persistedState);
+			set(persistedState as T);
 			console.log('[StorageAdapter] State loaded for:', name);
 		} catch (error) {
 			console.error('[StorageAdapter] Load failed:', error);

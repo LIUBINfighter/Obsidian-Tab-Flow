@@ -394,7 +394,7 @@ export class MediaSyncService {
 	/**
 	 * 日志输出（调试模式）
 	 */
-	private log(message: string, data?: any): void {
+	private log(message: string, data?: unknown): void {
 		if (!this.debugMode) {
 			return;
 		}

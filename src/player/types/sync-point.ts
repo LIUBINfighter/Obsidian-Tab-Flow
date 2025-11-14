@@ -95,9 +95,9 @@ export interface SyncPointEditEvent {
 	/** 受影响的标记 */
 	marker: SyncPointMarker;
 	/** 旧值（用于撤销） */
-	oldValue?: any;
+	oldValue?: unknown;
 	/** 新值 */
-	newValue?: any;
+	newValue?: unknown;
 }
 
 /**

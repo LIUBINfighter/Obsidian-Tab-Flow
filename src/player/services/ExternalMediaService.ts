@@ -321,7 +321,7 @@ export class ExternalMediaService {
 	/**
 	 * 日志输出（仅在调试模式下）
 	 */
-	private log(message: string, data?: any, throttle = false): void {
+	private log(message: string, data?: unknown, throttle = false): void {
 		if (!this.options.debug) {
 			return;
 		}
