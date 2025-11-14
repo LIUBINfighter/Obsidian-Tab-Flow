@@ -7,23 +7,27 @@
 	margin: 0;
 }
 
-/* 编辑器包装器 - 独立的页面样式 */
-.alphatex-editor-wrapper {
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	background: var(--background-primary);
-	position: relative;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	/* padding 已在 alphatex.css 中定义为 12px，这里不覆盖 */
-}
-
-/* 预览区域 - 独立的页面样式 */
+/* 统一的"页面"框线样式 - 确保编辑器和预览区域完全一致 */
+.alphatex-editor-wrapper,
 .alphatex-preview-section {
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
 	background: var(--background-primary);
 	position: relative;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	box-sizing: border-box;
+}
+
+/* 编辑器包装器的 padding 已在 alphatex.css 中定义为 12px，这里不覆盖 */
+
+/* 确保预览区域内的 React 容器背景色一致 */
+.alphatex-preview-section .react-tab-view-container {
+	background: var(--background-primary);
+}
+
+/* 确保预览区域内的 tablature-view 背景色一致 */
+.alphatex-preview-section .tablature-view {
+	background: var(--background-primary);
 }
 
 /* 水平布局时，两个区域之间添加间距，保持独立外观 */
@@ -43,3 +47,16 @@
 	background: transparent;
 }
 
+/* 为编辑器区域添加 padding，为边框留出空间，避免被 overflow: hidden 裁剪 */
+.alphatex-editor-section {
+	/* 保持 overflow: hidden 用于布局控制，但添加 padding 为边框留出空间 */
+	padding: 1px;
+	box-sizing: border-box;
+	/* 确保编辑器区域的背景色与预览区域一致 */
+	background: var(--background-primary);
+}
+
+/* 确保主布局容器背景色正确 */
+.alphatex-editor-layout {
+	background: var(--background-primary);
+}
