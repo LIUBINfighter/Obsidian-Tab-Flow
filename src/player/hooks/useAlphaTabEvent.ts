@@ -41,7 +41,7 @@ interface GenericEventEmitter {
 }
 
 function getEventEmitter(api: AlphaTabApi, eventName: string): GenericEventEmitter | null {
-	const candidate = (api as Record<string, unknown>)[eventName];
+	const candidate = (api as unknown as Record<string, unknown>)[eventName];
 
 	if (
 		candidate &&
@@ -221,7 +221,7 @@ export function useAlphaTabEventOnce<TEventArgs = void>(
 		const eventHandler = (args?: TEventArgs) => {
 			if (!hasTriggered.current) {
 				hasTriggered.current = true;
-				handler(args);
+				handler(args as TEventArgs);
 				eventEmitter.off(eventHandler);
 				console.log(`[useAlphaTabEventOnce] 事件已触发并清理: ${eventName}`);
 			}
@@ -269,11 +269,11 @@ export function useAlphaTabEventConditional<TEventArgs = void>(
 		console.log(`[useAlphaTabEventConditional] 条件满足，注册事件: ${eventName}`);
 
 		const eventHandler = (args?: TEventArgs) => handler(args as TEventArgs);
-		eventEmitter.on(eventHandler);
+		const dispose = eventEmitter.on(eventHandler);
 
 		return () => {
 			console.log(`[useAlphaTabEventConditional] 条件变化，清理事件: ${eventName}`);
-			eventEmitter.off(eventHandler);
+			dispose();
 		};
 	}, [api, eventName, handler, condition]);
 }
@@ -321,7 +321,7 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
 
 			// 设置新的定时器
 			timeoutRef.current = setTimeout(() => {
-				handler(args);
+				handler(args as TEventArgs);
 			}, delay);
 		};
 
@@ -380,7 +380,7 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 
 			if (timeSinceLastExecution >= interval) {
 				// 立即执行
-				handler(args);
+				handler(args as TEventArgs);
 				lastExecutionRef.current = now;
 			} else {
 				// 延迟执行（确保最后一次调用被执行）

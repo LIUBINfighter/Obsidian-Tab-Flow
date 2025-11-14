@@ -146,13 +146,13 @@ const factory = {
 	},
 
 	// AlphaTab API 直接属性访问器
-	apiAccessors(property: string) {
+	apiAccessors<P extends keyof alphaTab.AlphaTabApi>(property: P) {
 		return {
 			getValue(context: SettingsContextProps) {
 				const api = context.controller.getRuntimeStore().getState().alphaTabApi;
-				return api?.[property] ?? null;
+				return api ? (api[property] as alphaTab.AlphaTabApi[P]) : null;
 			},
-			setValue(context: SettingsContextProps, value: any) {
+			setValue(context: SettingsContextProps, value: alphaTab.AlphaTabApi[P]) {
 				const api = context.controller.getRuntimeStore().getState().alphaTabApi;
 				if (api) {
 					api[property] = value;

@@ -7,10 +7,10 @@
 import type { StateCreator, StoreMutatorIdentifier } from 'zustand';
 import type { IStorageAdapter } from '../../storage/IStorageAdapter';
 
-export interface StorageAdapterOptions<TPersisted = unknown> {
+export interface StorageAdapterOptions<TState> {
 	name: string; // 存储键名
 	version?: number; // 版本号
-	migrate?: (persistedState: TPersisted, version: number) => TPersisted; // 迁移函数
+	migrate?: (persistedState: TState, version: number) => TState; // 迁移函数
 }
 
 type StorageAdapterMiddleware = <
@@ -19,80 +19,68 @@ type StorageAdapterMiddleware = <
 	Mcs extends [StoreMutatorIdentifier, unknown][] = [],
 >(
 	adapter: IStorageAdapter,
-	options: StorageAdapterOptions<Partial<T>>,
+	options: StorageAdapterOptions<T>,
 	config: StateCreator<T, Mps, Mcs>
 ) => StateCreator<T, Mps, Mcs>;
 
-type StorageAdapterImpl = <T>(
+const storageAdapterImpl = <
+	T,
+	Mps extends [StoreMutatorIdentifier, unknown][] = [],
+	Mcs extends [StoreMutatorIdentifier, unknown][] = [],
+>(
 	adapter: IStorageAdapter,
-	options: StorageAdapterOptions<Partial<T>>,
-	config: StateCreator<T, [], []>
-) => StateCreator<T, [], []>;
+	options: StorageAdapterOptions<T>,
+	config: StateCreator<T, Mps, Mcs>
+): StateCreator<T, Mps, Mcs> => {
+	return (set, get, api) => {
+		const { name, version = 1, migrate } = options;
+		const versionKey = `${name}-version`;
 
-const storageAdapterImpl: StorageAdapterImpl = (adapter, options, config) => (set, get, api) => {
-	const { name, version = 1, migrate } = options;
-
-	// 存储版本信息的键
-	const versionKey = `${name}-version`;
-
-	// 初始化状态
-	const store = config(
-		(args) => {
-			set(args);
-			// 状态变化时保存
-			saveState();
-		},
-		get,
-		api
-	);
-
-	// 保存状态到适配器
-	const saveState = async () => {
-		try {
-			const state = get();
-			await adapter.save(name, state);
-			await adapter.save(versionKey, version);
-		} catch (error) {
-			console.error('[StorageAdapter] Save failed:', error);
-		}
-	};
-
-	// 从适配器加载状态
-	const loadState = async () => {
-		try {
-			const persistedVersion = await adapter.load<number>(versionKey);
-			let persistedState = await adapter.load<Partial<T>>(name);
-
-			if (!persistedState) {
-				console.log('[StorageAdapter] No persisted state found for:', name);
-				return;
+		const saveState = async () => {
+			try {
+				const state = get();
+				await adapter.save(name, state);
+				await adapter.save(versionKey, version);
+			} catch (error) {
+				console.error('[StorageAdapter] Save failed:', error);
 			}
+		};
 
-			// 版本迁移
-			if (
-				persistedState &&
-				migrate &&
-				persistedVersion !== null &&
-				persistedVersion < version
-			) {
-				console.log(
-					`[StorageAdapter] Migrating ${name} from version ${persistedVersion} to ${version}`
-				);
-				persistedState = migrate(persistedState, persistedVersion);
+		const store = config(set, get, api);
+		api.subscribe(() => {
+			void saveState();
+		});
+
+		const loadState = async () => {
+			try {
+				const persistedVersion = await adapter.load<number>(versionKey);
+				const persistedState = await adapter.load<T | null>(name);
+
+				if (!persistedState) {
+					console.log('[StorageAdapter] No persisted state found for:', name);
+					return;
+				}
+
+				let activeState: T = persistedState;
+
+				if (migrate && persistedVersion !== null && persistedVersion < version) {
+					console.log(
+						`[StorageAdapter] Migrating ${name} from version ${persistedVersion} to ${version}`
+					);
+					activeState = migrate(activeState, persistedVersion);
+				}
+
+				set(activeState, true);
+				console.log('[StorageAdapter] State loaded for:', name);
+			} catch (error) {
+				console.error('[StorageAdapter] Load failed:', error);
 			}
+		};
 
-			// 合并状态
-			set(persistedState as T);
-			console.log('[StorageAdapter] State loaded for:', name);
-		} catch (error) {
-			console.error('[StorageAdapter] Load failed:', error);
-		}
+		void loadState();
+
+		return store;
 	};
-
-	// 异步加载初始状态
-	loadState();
-
-	return store;
 };
 
 export const storageAdapter = storageAdapterImpl as unknown as StorageAdapterMiddleware;

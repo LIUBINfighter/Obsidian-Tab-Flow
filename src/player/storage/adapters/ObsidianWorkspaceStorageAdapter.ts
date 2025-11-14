@@ -66,7 +66,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 				key,
 				value ? 'found' : 'not found'
 			);
-			return value;
+			return value as T | null;
 		} catch (error) {
 			console.error('[WorkspaceStorage] Load failed:', key, error);
 			return null;

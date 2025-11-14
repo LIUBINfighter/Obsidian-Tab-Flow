@@ -17,7 +17,8 @@ import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import * as convert from 'color-convert';
 
-type AlphaTabSettingsInput = ConstructorParameters<typeof alphaTab.AlphaTabApi>[1];
+type AlphaTabSettingsInput = alphaTab.Settings;
+type AlphaTabSettingsJson = Parameters<alphaTab.Settings['fillFromJson']>[0];
 type PlayerStateChangedEventArgs = synth.PlayerStateChangedEventArgs;
 type PositionChangedEventArgsWithBeatInfo = synth.PositionChangedEventArgs & {
 	currentBar?: number;
@@ -323,7 +324,7 @@ export class PlayerController {
 			}
 		}
 
-		const settings: AlphaTabSettingsInput = {
+		const settingsJson: AlphaTabSettingsJson = {
 			core: {
 				file: null, // 总是 null，通过 API 方法加载
 				engine: globalConfig.alphaTabSettings.core.engine || 'svg',
@@ -356,22 +357,26 @@ export class PlayerController {
 			},
 		};
 
+		const displaySettings = settingsJson.display!;
+		const playerSettings = settingsJson.player!;
+		const coreSettings = settingsJson.core!;
+
 		// 调试：输出布局和滚动相关配置
 		console.log(`[PlayerController #${this.instanceId}] AlphaTab settings configured:`, {
 			layout: {
-				layoutMode: settings.display.layoutMode,
-				barsPerRow: settings.display.barsPerRow,
-				stretchForce: settings.display.stretchForce,
-				scale: settings.display.scale,
+				layoutMode: displaySettings.layoutMode,
+				barsPerRow: displaySettings.barsPerRow,
+				stretchForce: displaySettings.stretchForce,
+				scale: displaySettings.scale,
 				containerWidth: this.container?.getBoundingClientRect().width,
 			},
 			scroll: {
 				scrollElement:
 					typeof scrollElement === 'string' ? scrollElement : scrollElement.className,
-				scrollMode: settings.player.scrollMode,
-				scrollSpeed: settings.player.scrollSpeed,
-				scrollOffsetX: settings.player.scrollOffsetX,
-				scrollOffsetY: settings.player.scrollOffsetY,
+				scrollMode: playerSettings.scrollMode,
+				scrollSpeed: playerSettings.scrollSpeed,
+				scrollOffsetX: playerSettings.scrollOffsetX,
+				scrollOffsetY: playerSettings.scrollOffsetY,
 			},
 		});
 
@@ -379,7 +384,7 @@ export class PlayerController {
 		// AlphaTab 的 FontFileFormat 枚举值：Woff2 = 0, Woff = 1, Ttf = 2
 		if (this.resources.bravuraUri) {
 			// 使用 AlphaTab 内部的枚举值（向后兼容）
-			settings.core.smuflFontSources = new Map<
+			coreSettings.smuflFontSources = new Map<
 				| FontFileFormat
 				| keyof typeof FontFileFormat
 				| Lowercase<keyof typeof FontFileFormat>,
@@ -429,7 +434,7 @@ export class PlayerController {
 				});
 			}
 
-			settings.display.resources = {
+			displaySettings.resources = {
 				mainGlyphColor: style.getPropertyValue('--color-base-100') || '#000',
 				secondaryGlyphColor: style.getPropertyValue('--color-base-60') || '#666',
 				staffLineColor: style.getPropertyValue('--color-base-40') || '#ccc',
@@ -440,14 +445,14 @@ export class PlayerController {
 
 			console.log(
 				`[PlayerController #${this.instanceId}] Color resources configured:`,
-				settings.display.resources
+				displaySettings.resources
 			);
 		} else {
 			// 如果无法获取样式（容器未完全挂载），提供完整的硬编码安全默认值
 			console.warn(
 				`[PlayerController #${this.instanceId}] Container style not available, using fallback colors`
 			);
-			settings.display.resources = {
+			displaySettings.resources = {
 				mainGlyphColor: '#000',
 				secondaryGlyphColor: '#666',
 				staffLineColor: '#ccc',
@@ -457,6 +462,8 @@ export class PlayerController {
 			};
 		}
 
+		const settings = new alphaTab.Settings();
+		settings.fillFromJson(settingsJson);
 		return settings;
 	}
 
