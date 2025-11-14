@@ -2,19 +2,7 @@ import { App, Notice, Setting } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
 
-type CommandManager = {
-	executeCommandById?: (id: string) => unknown;
-};
-
-type SettingManager = {
-	close?: () => void;
-};
-
-type WorkspaceExtra = {
-	detachLeavesOfType?: (type: string) => void;
-};
-
-export function renderAboutTab(
+export async function renderAboutTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
 	app: App
@@ -35,10 +23,10 @@ export function renderAboutTab(
 					new Notice(t('settings.about.openingDoc'));
 					// 优先通过已注册的命令触发
 					try {
-						const commands = Reflect.get(app, 'commands') as CommandManager | undefined;
-						const execFn = commands?.executeCommandById;
+						const execFn =
+							(app as any).commands && (app as any).commands.executeCommandById;
 						if (typeof execFn === 'function') {
-							const res = execFn('open-tabflow-doc-view');
+							const res = execFn.call((app as any).commands, 'open-tabflow-doc-view');
 							if (!res) {
 								const leaf = app.workspace.getLeaf(true);
 								await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
@@ -58,18 +46,16 @@ export function renderAboutTab(
 
 					// 尝试关闭设置面板以便文档视图可见
 					try {
-						const settingManager = Reflect.get(app, 'setting') as
-							| SettingManager
-							| undefined;
-						if (typeof settingManager?.close === 'function') {
-							settingManager.close();
-						} else {
-							const workspaceExtra = Reflect.get(app, 'workspace') as
-								| WorkspaceExtra
-								| undefined;
-							if (typeof workspaceExtra?.detachLeavesOfType === 'function') {
-								workspaceExtra.detachLeavesOfType('settings');
-							}
+						if (
+							(app as any).setting &&
+							typeof (app as any).setting.close === 'function'
+						) {
+							(app as any).setting.close();
+						} else if (
+							(app as any).workspace &&
+							typeof (app as any).workspace.detachLeavesOfType === 'function'
+						) {
+							(app as any).workspace.detachLeavesOfType('settings');
 						}
 					} catch (closeErr) {
 						console.warn('[SettingTab.about] failed to close settings view', closeErr);
@@ -80,6 +66,4 @@ export function renderAboutTab(
 				}
 			});
 		});
-
-	return Promise.resolve();
 }

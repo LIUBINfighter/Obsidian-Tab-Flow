@@ -4,23 +4,6 @@ import { EventBus } from '../utils';
 import { TrackStateStore } from '../state/TrackStateStore';
 import { t } from '../i18n';
 
-// Extended playback info type for alphaTab tracks
-interface ExtendedPlaybackInfo {
-	isSolo?: boolean;
-	isMute?: boolean;
-	volume?: number;
-	transposeAudio?: number;
-}
-
-// Track patch type for applying updates
-interface TrackPatch {
-	solo?: boolean;
-	mute?: boolean;
-	volume?: number;
-	transpose?: number;
-	transposeAudio?: number;
-}
-
 export class TracksModal extends Modal {
 	private selectedTracks: Set<alphaTab.model.Track>;
 	private uiRefs = new Map<
@@ -138,8 +121,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						] || {};
-					const isSolo =
-						current.solo ?? (track.playbackInfo as ExtendedPlaybackInfo).isSolo;
+					const isSolo = current.solo ?? (track.playbackInfo as any).isSolo;
 					btn.setIcon(isSolo ? 'star' : 'star-off').setTooltip(
 						isSolo ? t('tracks.unsolo') : t('tracks.solo')
 					);
@@ -151,7 +133,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						]?.solo ??
-						(track.playbackInfo as ExtendedPlaybackInfo).isSolo ??
+						(track.playbackInfo as any).isSolo ??
 						false;
 					const newSolo = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
@@ -173,8 +155,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						] || {};
-					const isMute =
-						current.mute ?? (track.playbackInfo as ExtendedPlaybackInfo).isMute;
+					const isMute = current.mute ?? (track.playbackInfo as any).isMute;
 					btn.setIcon(isMute ? 'volume-x' : 'volume-2').setTooltip(
 						isMute ? t('tracks.unmute') : t('tracks.mute')
 					);
@@ -186,7 +167,7 @@ export class TracksModal extends Modal {
 						this.trackStateStore.getFileState(this.filePath).trackSettings?.[
 							String(track.index)
 						]?.mute ??
-						(track.playbackInfo as ExtendedPlaybackInfo).isMute ??
+						(track.playbackInfo as any).isMute ??
 						false;
 					const newMute = !prev;
 					this.trackStateStore.updateTrackSetting(this.filePath, track.index, {
@@ -213,7 +194,7 @@ export class TracksModal extends Modal {
 			const curVol =
 				typeof savedTrackSettings[String(track.index)]?.volume === 'number'
 					? savedTrackSettings[String(track.index)].volume
-					: (track.playbackInfo as ExtendedPlaybackInfo).volume;
+					: (track.playbackInfo as any).volume;
 			volSlider.value = String(curVol ?? 8);
 			const volValue = document.createElement('span');
 			volValue.textContent = volSlider.value;
@@ -409,43 +390,45 @@ export class TracksModal extends Modal {
 				});
 			}
 			// 每轨设置更新
-			const applyTrackPatch = (idx: number, patch: unknown) => {
-				const p = patch as TrackPatch;
+			const applyTrackPatch = (idx: number, patch: any) => {
 				const ref = this.uiRefs.get(idx);
 				const s = entry.trackSettings?.[String(idx)] || {};
 				// 独奏
-				if (ref?.soloBtn && (p.solo !== undefined || s.solo !== undefined)) {
-					const isSolo = p.solo ?? s.solo ?? false;
+				if (ref?.soloBtn && (patch.solo !== undefined || s.solo !== undefined)) {
+					const isSolo = patch.solo ?? s.solo ?? false;
 					ref.soloBtn
 						.setIcon(isSolo ? 'star' : 'star-off')
 						.setTooltip(isSolo ? t('tracks.unsolo') : t('tracks.solo'));
 					ref.soloBtn.extraSettingsEl.toggleClass('active', !!isSolo);
 				}
 				// 静音
-				if (ref?.muteBtn && (p.mute !== undefined || s.mute !== undefined)) {
-					const isMute = p.mute ?? s.mute ?? false;
+				if (ref?.muteBtn && (patch.mute !== undefined || s.mute !== undefined)) {
+					const isMute = patch.mute ?? s.mute ?? false;
 					ref.muteBtn
 						.setIcon(isMute ? 'volume-x' : 'volume-2')
 						.setTooltip(isMute ? t('tracks.unmute') : t('tracks.mute'));
 					ref.muteBtn.extraSettingsEl.toggleClass('active', !!isMute);
 				}
 				// 音量
-				if (ref?.vol && (p.volume !== undefined || s.volume !== undefined)) {
-					const v = Number(p.volume ?? s.volume ?? 8);
+				if (ref?.vol && (patch.volume !== undefined || s.volume !== undefined)) {
+					const v = Number(patch.volume ?? s.volume ?? 8);
 					ref.vol.slider.value = String(v);
 					ref.vol.input.value = String(v);
 					ref.vol.value.textContent = String(v);
 				}
 				// 全局移调
-				if (ref?.tr && (p.transpose !== undefined || s.transpose !== undefined)) {
-					const v = Number(p.transpose ?? s.transpose ?? 0);
+				if (ref?.tr && (patch.transpose !== undefined || s.transpose !== undefined)) {
+					const v = Number(patch.transpose ?? s.transpose ?? 0);
 					ref.tr.slider.value = String(v);
 					ref.tr.input.value = String(v);
 					ref.tr.value.textContent = String(v);
 				}
 				// 音频移调（逻辑）
-				if (ref?.ta && (p.transposeAudio !== undefined || s.transposeAudio !== undefined)) {
-					const v = Number(p.transposeAudio ?? s.transposeAudio ?? 0);
+				if (
+					ref?.ta &&
+					(patch.transposeAudio !== undefined || s.transposeAudio !== undefined)
+				) {
+					const v = Number(patch.transposeAudio ?? s.transposeAudio ?? 0);
 					ref.ta.slider.value = String(v);
 					ref.ta.input.value = String(v);
 					ref.ta.value.textContent = String(v);

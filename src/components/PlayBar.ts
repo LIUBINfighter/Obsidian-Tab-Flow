@@ -1,36 +1,15 @@
 // PlayBar.ts - 底部固定播放栏组件
-import { App, setIcon, Plugin } from 'obsidian';
+import { App, setIcon } from 'obsidian';
 import { createProgressBar } from './ProgressBar';
 import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
 import { formatTime } from '../utils';
 import { t } from '../i18n';
-import type { TabFlowSettings } from '../settings/defaults';
-
-// Extend App interface for plugin access
-interface AppWithPlugins extends App {
-	plugins?: {
-		getPlugin?: (id: string) => Plugin | null;
-	};
-}
-
-// Type for TabFlowPlugin with settings
-interface TabFlowPluginLike extends Plugin {
-	settings?: TabFlowSettings;
-	runtimeUiOverride?: {
-		components?: Record<string, boolean>;
-		order?: string[] | string;
-	} | null;
-}
 
 export interface PlayBarOptions {
 	app: App;
-	eventBus?: {
-		publish: (event: string, payload?: unknown) => void;
-		subscribe?: (event: string, handler: (p?: unknown) => void) => void;
-		unsubscribe?: (event: string, handler: (p?: unknown) => void) => void;
-	};
+	eventBus: { publish: (event: string, payload?: unknown) => void };
 	initialPlaying?: boolean;
 	getCurrentTime?: () => number; // 获取当前播放时间（毫秒）
 	getDuration?: () => number; // 获取总时长（毫秒）
@@ -136,15 +115,13 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let runtimeOverride:
 		| { components?: Record<string, boolean>; order?: string[] | string }
 		| undefined = undefined;
-	let plugin: TabFlowPluginLike | null = null;
+	let plugin: any = undefined;
 	try {
 		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
-		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
-			pluginId
-		) as TabFlowPluginLike | null;
-		visibility = plugin?.settings?.playBar?.components as Record<string, boolean> | undefined;
-		runtimeOverride = plugin?.runtimeUiOverride ?? undefined;
+		plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+		visibility = plugin?.settings?.playBar?.components;
+		runtimeOverride = plugin?.runtimeUiOverride;
 	} catch {
 		// Ignore plugin access errors
 	}
@@ -193,7 +170,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				: plugin?.settings?.playBar?.order;
 
 		if (Array.isArray(rawOrder) && rawOrder.length > 0) {
-			order = rawOrder;
+			order = rawOrder as string[];
 		} else if (typeof rawOrder === 'string' && rawOrder.trim().length > 0) {
 			// 解析数字序列，例如 "2,1,3" -> 映射到默认键序列的索引
 			const indices = rawOrder
@@ -342,33 +319,24 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			exportChooserBtn.appendChild(icon);
 			exportChooserBtn.setAttribute('aria-label', t('export.export'));
 			exportChooserBtn.onclick = () => {
-				void (async () => {
-					try {
-						// Lazy load modal to reduce initial bundle size
-						const { ExportChooserModal } = await import('./ExportChooserModal');
-						const getTitle = () => {
-							try {
-								return (
-									(
-										document.querySelector('.view-header-title')?.textContent ||
-										''
-									).trim() || 'Untitled'
-								);
-							} catch {
-								return 'Untitled';
-							}
-						};
-						if (eventBus) {
-							new ExportChooserModal({
-								app,
-								eventBus: eventBus as Required<typeof eventBus>,
-								getFileName: getTitle,
-							}).open();
+				try {
+					// eslint-disable-next-line @typescript-eslint/no-var-requires
+					const { ExportChooserModal } = require('./ExportChooserModal');
+					const getTitle = () => {
+						try {
+							return (
+								(
+									document.querySelector('.view-header-title')?.textContent || ''
+								).trim() || 'Untitled'
+							);
+						} catch {
+							return 'Untitled';
 						}
-					} catch (e) {
-						console.error('[PlayBar] 打开导出选择器失败:', e);
-					}
-				})();
+					};
+					new ExportChooserModal({ app, eventBus, getFileName: getTitle }).open();
+				} catch (e) {
+					console.error('[PlayBar] 打开导出选择器失败:', e);
+				}
 			};
 			bar.appendChild(exportChooserBtn);
 		},
@@ -417,9 +385,9 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 						app.commands.executeCommandById('app:open-settings');
 						setTimeout(() => {
 							try {
-								const search: HTMLInputElement | null = document.querySelector(
+								const search = document.querySelector(
 									'input.setting-search-input'
-								);
+								) as HTMLInputElement | null;
 								if (search) {
 									search.value = 'Tab Flow';
 									const ev = new Event('input', { bubbles: true });
@@ -537,10 +505,8 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 			try {
 				const pluginId = 'tab-flow';
 				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
-				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
-					pluginId
-				) as TabFlowPluginLike | null;
-				const currentMode = localPlugin?.settings?.scrollMode || 'continuous';
+				const plugin = (app as any)?.plugins?.getPlugin?.(pluginId);
+				const currentMode = plugin?.settings?.scrollMode || 'continuous';
 				select.value = currentMode;
 			} catch {
 				select.value = 'continuous';

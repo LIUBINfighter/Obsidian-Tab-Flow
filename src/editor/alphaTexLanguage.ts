@@ -11,65 +11,52 @@ import { Extension } from '@codemirror/state';
  *   extensions.push(...alphaTex());
  */
 
-// CodeMirror stream parser types
-// CodeMirror's StringStream type is not directly accessible, so we define our own interface
-interface StreamParser {
-	eatSpace(): boolean;
-	match(pattern: string | RegExp): boolean | RegExpMatchArray | null;
-	skipToEnd(): void;
-	skipTo(pattern: string): boolean;
-	next(): string | null;
-}
-
-interface ParserState {
-	tokenize: (stream: StreamParser, state: ParserState) => string | null;
-}
-
-function tokenBase(stream: unknown, state: ParserState) {
-	const s = stream as StreamParser;
+function tokenBase(stream: any, state: any) {
 	// Whitespace
-	if (s.eatSpace()) return null;
+	if (stream.eatSpace()) return null;
 
 	// Single-line comment //
-	if (s.match('//')) {
-		s.skipToEnd();
+	if (stream.match('//')) {
+		stream.skipToEnd();
 		return 'comment';
 	}
 
 	// Multi-line comment /* ... */
-	if (s.match('/*')) {
+	if (stream.match('/*')) {
 		state.tokenize = tokenComment;
-		return state.tokenize(s, state);
+		return state.tokenize(stream, state);
 	}
 
 	// Metadata tag: \tagName (maybe followed by args)
-	if (s.match(/\\[A-Za-z_][A-Za-z0-9_-]*/)) {
+	if (stream.match(/\\[A-Za-z_][A-Za-z0-9_-]*/)) {
 		return 'metadata';
 	}
 
 	// Chord literals: common guitar chords like Bm/D, Cadd9, G/B, Am7, G, F, B7, Em
 	// Pattern: [A-G][#b]?[mM]?[0-9]*[sus|add|dim|aug|maj]?[0-9]*[/[A-G][#b]?]?[0-9]*
-	if (s.match(/[A-G][#b]?[mM]?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-G][#b]?)?[0-9]*/)) {
+	if (
+		stream.match(/[A-G][#b]?[mM]?[0-9]*(?:sus|add|dim|aug|maj)?[0-9]*(?:\/[A-G][#b]?)?[0-9]*/)
+	) {
 		return 'chord';
 	}
 
 	// Strings "..." or '...'
-	if (s.match(/"(?:\\.|[^"\\])*"/) || s.match(/'(?:\\.|[^'\\])*'/)) {
+	if (stream.match(/"(?:\\.|[^"\\])*"/) || stream.match(/'(?:\\.|[^'\\])*'/)) {
 		return 'string';
 	}
 
 	// Beat-duration :[0-9]+
-	if (s.match(/:[0-9]+/)) {
+	if (stream.match(/:[0-9]+/)) {
 		return 'duration';
 	}
 
 	// Tuning literal [A-Ga-g][0-9]+
-	if (s.match(/[A-Ga-g][0-9]+/)) {
+	if (stream.match(/[A-Ga-g][0-9]+/)) {
 		return 'tuning';
 	}
 
 	// Boolean literals
-	if (s.match('true') || s.match('false')) {
+	if (stream.match('true') || stream.match('false')) {
 		return 'boolean';
 	}
 
@@ -78,93 +65,90 @@ function tokenBase(stream: unknown, state: ParserState) {
 		/f|fo|vs|v|vw|s|p|tt|txt|lyrics|dd|d|su|sd|tuplet|tb|tbe|bu|bd|ai|ad|ch|gr|ob|b|dy|cre|dec|tempo|volume|balance|tp|spd|sph|spu|spe|slashed|glpf|glpt|waho|wahc|barre|rasg|ot|legaoorigin|instrument|bank|fermata|beam|timer/;
 	const noteEffects =
 		/b|be|nh|ah|th|ph|sh|fh|tr|v|vw|sl|ss|sib|sia|sou|sod|psd|psu|h|lht|g|ac|hac|ten|pm|st|lr|x|t|lf|rf|acc|turn|iturn|umordent|lmordent|string|hide|slur/;
-	if (s.match(beatEffects)) {
+	if (stream.match(beatEffects)) {
 		return 'effect.beat';
 	}
-	if (s.match(noteEffects)) {
+	if (stream.match(noteEffects)) {
 		return 'effect.note';
 	}
 
 	// Section separator dot (single dot on its own or dot as separator)
-	if (s.match(/^\.(?=\s|$|\n)/)) {
+	if (stream.match(/^\.(?=\s|$|\n)/)) {
 		// single dot section separator
 		return 'dot';
 	}
 
 	// Bar symbol
-	if (s.match('|')) {
+	if (stream.match('|')) {
 		return 'bar';
 	}
 
 	// Effect block start { ... }
-	if (s.match('{')) {
+	if (stream.match('{')) {
 		// mark opening brace as bracket
 		state.tokenize = tokenEffect;
 		return 'bracket';
 	}
 
 	// Chord/group start '(' ... ')'
-	if (s.match('(')) {
+	if (stream.match('(')) {
 		state.tokenize = tokenChord;
 		return 'bracket';
 	}
 
 	// Closing delimiters
-	if (s.match(')') || s.match('}')) {
+	if (stream.match(')') || stream.match('}')) {
 		return 'bracket';
 	}
 
 	// Note pattern: fret.string.duration like 3.3.4 or r.8 or 0.6.2
-	if (s.match(/(?:[0-9x-]+)\.[0-9]+(?:\.[0-9]+)?/)) {
+	if (stream.match(/(?:[0-9x-]+)\.[0-9]+(?:\.[0-9]+)?/)) {
 		return 'note';
 	}
 
 	// Numbers (integers, floats)
-	if (s.match(/^[0-9]+(\.[0-9]+)?/)) {
+	if (stream.match(/^[0-9]+(\.[0-9]+)?/)) {
 		return 'number';
 	}
 
 	// Identifiers (e.g. keywords in metadata like ts, ks, tempo)
-	if (s.match(/^[A-Za-z_][A-Za-z0-9_-]*/)) {
+	if (stream.match(/^[A-Za-z_][A-Za-z0-9_-]*/)) {
 		return 'keyword';
 	}
 
 	// Fallback: consume one char
-	s.next();
+	stream.next();
 	return null;
 }
 
-function tokenComment(stream: unknown, state: ParserState) {
-	const s = stream as StreamParser;
-	if (s.skipTo('*/')) {
-		s.match('*/');
+function tokenComment(stream: any, state: any) {
+	if (stream.skipTo('*/')) {
+		stream.match('*/');
 		state.tokenize = tokenBase;
 	} else {
-		s.skipToEnd();
+		stream.skipToEnd();
 	}
 	return 'comment';
 }
 
-function tokenEffect(stream: unknown, state: ParserState) {
-	const s = stream as StreamParser;
+function tokenEffect(stream: any, state: any) {
 	// consume until matching '}' (no nested handling)
-	if (s.skipTo('}')) {
+	if (stream.skipTo('}')) {
 		// do not consume the closing '}' here; leave it to tokenBase to mark as 'bracket'
 		state.tokenize = tokenBase;
 	} else {
-		s.skipToEnd();
+		stream.skipToEnd();
 	}
 	return 'effect';
 }
 
-function tokenChord(stream: unknown, state: ParserState) {
-	const s = stream as StreamParser;
+function tokenChord(stream: any, state: any) {
 	// consume until ')'
-	if (s.skipTo(')')) {
+	if (stream.skipTo(')')) {
 		// leave the closing ')' for tokenBase to mark as 'bracket'
 		state.tokenize = tokenBase;
 	} else {
-		s.skipToEnd();
+		stream.skipToEnd();
 	}
 	return 'chord';
 }
@@ -173,10 +157,10 @@ const alphaTexParser = StreamLanguage.define({
 	startState() {
 		return { tokenize: tokenBase };
 	},
-	token(stream: unknown, state: ParserState) {
-		return state.tokenize(stream as StreamParser, state);
+	token(stream: any, state: any) {
+		return state.tokenize(stream, state);
 	},
-	blankLine(state: ParserState) {
+	blankLine(state: any) {
 		// reset inline tokenizers on blank lines
 		state.tokenize = tokenBase;
 	},

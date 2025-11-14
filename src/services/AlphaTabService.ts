@@ -3,12 +3,12 @@
 import * as alphaTab from '@coderline/alphatab';
 import { App } from 'obsidian';
 import { EventBus, convertSamplesToWavBlobUrl } from '../utils';
-import { ScrollEventManager } from '../events/scrollEvents';
+import { ScrollConfigProxy } from '../services/ScrollConfigProxy';
 import * as convert from 'color-convert';
 
 export class AlphaTabService {
 	private api: alphaTab.AlphaTabApi;
-	private scrollManager: ScrollEventManager;
+	private scrollProxy: ScrollConfigProxy;
 	private eventBus: EventBus;
 	private app: App;
 	private element: HTMLElement;
@@ -39,20 +39,14 @@ export class AlphaTabService {
 		this.api = new alphaTab.AlphaTabApi(element, {
 			core: {
 				scriptFile: resources.alphaTabWorkerUri,
-				smuflFontSources: resources.bravuraUri
-					? new Map<number, string>([
+				smuflFontSources: (resources.bravuraUri
+					? new Map([
 							[
-								(
-									alphaTab as {
-										rendering?: {
-											glyphs?: { FontFileFormat?: { Woff2?: number } };
-										};
-									}
-								).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+								(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 								resources.bravuraUri,
 							],
 						])
-					: new Map<number, string>(),
+					: new Map()) as unknown as Map<number, string>,
 				fontDirectory: '',
 			},
 			player: {
@@ -84,7 +78,7 @@ export class AlphaTabService {
 				},
 			},
 		});
-		this.scrollManager = new ScrollEventManager(this.api);
+		this.scrollProxy = new ScrollConfigProxy(this.api);
 
 		this.registerCommandHandlers();
 		this.registerApiListeners();
@@ -119,23 +113,21 @@ export class AlphaTabService {
 		});
 		// 滚动相关
 		this.eventBus.subscribe('命令:设置滚动模式', (mode: number) =>
-			this.scrollManager.setScrollMode(mode as alphaTab.ScrollMode)
+			this.scrollProxy.setScrollMode(mode)
 		);
 		this.eventBus.subscribe('命令:设置滚动速度', (speed: number) =>
-			this.scrollManager.setScrollSpeed(speed)
+			this.scrollProxy.setScrollSpeed(speed)
 		);
 		this.eventBus.subscribe('命令:设置Y偏移', (offset: number) =>
-			this.scrollManager.setScrollOffsetY(offset)
+			this.scrollProxy.setScrollOffsetY(offset)
 		);
 		this.eventBus.subscribe('命令:设置X偏移', (offset: number) =>
-			this.scrollManager.setScrollOffsetX(offset)
+			this.scrollProxy.setScrollOffsetX(offset)
 		);
 		this.eventBus.subscribe('命令:设置原生滚动', (enabled: boolean) =>
-			this.scrollManager.setNativeBrowserSmoothScroll(enabled)
+			this.scrollProxy.setNativeBrowserSmoothScroll(enabled)
 		);
-		this.eventBus.subscribe('命令:滚动到光标', () =>
-			this.scrollManager.triggerScrollToCursor()
-		);
+		this.eventBus.subscribe('命令:滚动到光标', () => this.scrollProxy.triggerScrollToCursor());
 		// 新增：布局切换事件
 		this.eventBus.subscribe('命令:切换布局', (layoutMode: number) => {
 			if (this.api.settings && this.api.settings.display) {
@@ -147,7 +139,7 @@ export class AlphaTabService {
 		// 新增：刷新播放器（重新渲染当前乐谱）
 		this.eventBus.subscribe('命令:刷新播放器', () => {
 			try {
-				if (this.api?.score) {
+				if ((this.api as any)?.score) {
 					// 方案A：仅强制渲染
 					this.api.render();
 				}
@@ -158,109 +150,98 @@ export class AlphaTabService {
 		// 音频导出事件
 		this.eventBus.subscribe(
 			'命令:导出音频',
-			(
+			async (
 				payload?: {
 					fileName?: string;
 				} & Partial<alphaTab.synth.AudioExportOptions>
 			) => {
-				void (async () => {
-					try {
-						const options = payload || {};
-						const wavUrl = await this.exportAudioToWav(options);
-						this.eventBus.publish('状态:音频导出完成', wavUrl);
-					} catch (e) {
-						this.eventBus.publish('状态:音频导出失败', e);
-					}
-				})();
+				try {
+					const options = payload || {};
+					const wavUrl = await this.exportAudioToWav(options);
+					this.eventBus.publish('状态:音频导出完成', wavUrl);
+				} catch (e) {
+					this.eventBus.publish('状态:音频导出失败', e);
+				}
 			}
 		);
 		// 新增：导出 MIDI / PDF / GP 事件
 		this.eventBus.subscribe('命令:导出MIDI', (payload?: { fileName?: string }) => {
-			void (async () => {
-				try {
-					// Dynamically import to avoid circular dependency with events module
-					const { registerExportEventHandlers } = await import('../events/exportEvents');
-					const handlers = registerExportEventHandlers({
-						api: this.api,
-						getFileName: () => {
-							const p = (payload?.fileName || '').trim();
-							if (p) return p;
-							const t = this.api?.score?.title;
-							return (t && String(t).trim()) || 'Untitled';
-						},
-						app: this.app,
-					});
-					handlers.exportMidi();
-				} catch (e) {
-					console.warn('[AlphaTabService] 导出MIDI失败:', e);
-				}
-			})();
+			try {
+				// 动态注册并执行
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				const { registerExportEventHandlers } = require('../events/exportEvents');
+				const handlers = registerExportEventHandlers({
+					api: this.api,
+					getFileName: () => {
+						const p = (payload?.fileName || '').trim();
+						if (p) return p;
+						const t = this.api?.score?.title;
+						return (t && String(t).trim()) || 'Untitled';
+					},
+					app: this.app,
+				});
+				handlers.exportMidi();
+			} catch (e) {
+				console.warn('[AlphaTabService] 导出MIDI失败:', e);
+			}
 		});
 		this.eventBus.subscribe('命令:导出PDF', (payload?: { fileName?: string }) => {
-			void (async () => {
-				try {
-					// Dynamically import to avoid circular dependency with events module
-					const { registerExportEventHandlers } = await import('../events/exportEvents');
-					const handlers = registerExportEventHandlers({
-						api: this.api,
-						getFileName: () => {
-							const p = (payload?.fileName || '').trim();
-							if (p) return p;
-							const t = this.api?.score?.title;
-							return (t && String(t).trim()) || 'Untitled';
-						},
-						app: this.app,
-					});
-					handlers.exportPdf();
-				} catch (e) {
-					console.warn('[AlphaTabService] 导出PDF失败:', e);
-				}
-			})();
+			try {
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				const { registerExportEventHandlers } = require('../events/exportEvents');
+				const handlers = registerExportEventHandlers({
+					api: this.api,
+					getFileName: () => {
+						const p = (payload?.fileName || '').trim();
+						if (p) return p;
+						const t = this.api?.score?.title;
+						return (t && String(t).trim()) || 'Untitled';
+					},
+					app: this.app,
+				});
+				handlers.exportPdf();
+			} catch (e) {
+				console.warn('[AlphaTabService] 导出PDF失败:', e);
+			}
 		});
 		this.eventBus.subscribe('命令:导出GP', (payload?: { fileName?: string }) => {
-			void (async () => {
-				try {
-					// Dynamically import to avoid circular dependency with events module
-					const { registerExportEventHandlers } = await import('../events/exportEvents');
-					const handlers = registerExportEventHandlers({
-						api: this.api,
-						getFileName: () => {
-							const p = (payload?.fileName || '').trim();
-							if (p) return p;
-							const t = this.api?.score?.title;
-							return (t && String(t).trim()) || 'Untitled';
-						},
-						app: this.app,
-					});
-					handlers.exportGp();
-				} catch (e) {
-					console.warn('[AlphaTabService] 导出GP失败:', e);
-				}
-			})();
+			try {
+				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				const { registerExportEventHandlers } = require('../events/exportEvents');
+				const handlers = registerExportEventHandlers({
+					api: this.api,
+					getFileName: () => {
+						const p = (payload?.fileName || '').trim();
+						if (p) return p;
+						const t = this.api?.score?.title;
+						return (t && String(t).trim()) || 'Untitled';
+					},
+					app: this.app,
+				});
+				handlers.exportGp();
+			} catch (e) {
+				console.warn('[AlphaTabService] 导出GP失败:', e);
+			}
 		});
 		// 命令：加载乐谱（传入 Uint8Array 或 ArrayBuffer）
-		this.eventBus.subscribe('命令:加载乐谱', (data: Uint8Array | ArrayBuffer) => {
-			void (async () => {
-				try {
-					const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-					await this.loadScore(bytes);
-					this.eventBus.publish('状态:乐谱已加载');
-				} catch (e) {
-					this.eventBus.publish('状态:加载失败', e);
-				}
-			})();
+		this.eventBus.subscribe('命令:加载乐谱', async (data: Uint8Array | ArrayBuffer) => {
+			try {
+				const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+				await this.loadScore(bytes);
+				this.eventBus.publish('状态:乐谱已加载');
+			} catch (e) {
+				this.eventBus.publish('状态:加载失败', e);
+			}
 		});
 
 		// 命令：加载 AlphaTex 乐谱（传入文本内容）
-		this.eventBus.subscribe('命令:加载AlphaTex乐谱', (textContent: string) => {
-			void (async () => {
-				try {
-					await this.loadAlphaTexScore(textContent);
-					this.eventBus.publish('状态:乐谱已加载');
-				} catch (e) {
-					this.eventBus.publish('状态:加载失败', e);
-				}
-			})();
+		this.eventBus.subscribe('命令:加载AlphaTex乐谱', async (textContent: string) => {
+			try {
+				await this.loadAlphaTexScore(textContent);
+				this.eventBus.publish('状态:乐谱已加载');
+			} catch (e) {
+				this.eventBus.publish('状态:加载失败', e);
+			}
 		});
 		// 命令：重新构造 AlphaTabApi
 		this.eventBus.subscribe('命令:重建AlphaTabApi', () => {
@@ -290,7 +271,7 @@ export class AlphaTabService {
 			try {
 				// console.debug('[AlphaTabService] 收到手动刷新事件');
 				// 强制重新渲染
-				if (this.api?.score) {
+				if (this.api && (this.api as any).score) {
 					this.api.render();
 				}
 				// 重新配置滚动元素
@@ -308,34 +289,16 @@ export class AlphaTabService {
 	public async loadAlphaTexScore(textContent: string) {
 		try {
 			// 使用 AlphaTab 的 tex 方法加载 AlphaTex 内容
-			const extendedApi = this.api as alphaTab.AlphaTabApi & {
-				tex?: (text: string) => void | Promise<void>;
-			};
-			if (typeof extendedApi.tex === 'function') {
-				const result = extendedApi.tex(textContent);
-				const maybePromise = result as unknown;
-				if (
-					maybePromise &&
-					typeof (maybePromise as PromiseLike<void>).then === 'function'
-				) {
-					await (maybePromise as PromiseLike<void>);
-				}
+			if (typeof (this.api as any).tex === 'function') {
+				await (this.api as any).tex(textContent);
 			} else {
 				// 备用方案：使用 AlphaTexImporter
-				type AlphaTabImporter = {
-					importer?: {
-						AlphaTexImporter?: new () => {
-							initFromString: (text: string, settings: unknown) => void;
-							readScore: () => unknown;
-						};
-					};
-				};
-				const Importer = (alphaTab as AlphaTabImporter).importer?.AlphaTexImporter;
+				const Importer: any = (alphaTab as any).importer?.AlphaTexImporter;
 				if (Importer) {
 					const importer = new Importer();
 					importer.initFromString(textContent, this.api.settings);
 					const score = importer.readScore();
-					this.api.renderScore(score as alphaTab.model.Score);
+					this.api.renderScore(score);
 				} else {
 					throw new Error('AlphaTexImporter not available');
 				}
@@ -355,7 +318,7 @@ export class AlphaTabService {
 
 	public destroy() {
 		this.api.destroy();
-		this.scrollManager.destroy();
+		this.scrollProxy.destroy();
 	}
 
 	/**
@@ -370,31 +333,25 @@ export class AlphaTabService {
 					// Ignore API destroy errors
 				}
 			}
-			if (this.scrollManager) {
+			if (this.scrollProxy) {
 				try {
-					this.scrollManager.destroy();
-				} catch (e) {
-					console.warn('[AlphaTabService] scrollManager destroy failed', e);
+					this.scrollProxy.destroy();
+				} catch {
+					// Ignore scroll proxy destroy errors
 				}
 			}
 			const style = window.getComputedStyle(this.element);
 			this.api = new alphaTab.AlphaTabApi(this.element, {
 				core: {
 					scriptFile: this.resources.alphaTabWorkerUri,
-					smuflFontSources: this.resources.bravuraUri
-						? new Map<number, string>([
+					smuflFontSources: (this.resources.bravuraUri
+						? new Map([
 								[
-									(
-										alphaTab as {
-											rendering?: {
-												glyphs?: { FontFileFormat?: { Woff2?: number } };
-											};
-										}
-									).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+									(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 									this.resources.bravuraUri,
 								],
 							])
-						: new Map<number, string>(),
+						: new Map()) as unknown as Map<number, string>,
 					fontDirectory: '',
 				},
 				player: {
@@ -426,7 +383,7 @@ export class AlphaTabService {
 					},
 				},
 			});
-			this.scrollManager = new ScrollEventManager(this.api);
+			this.scrollProxy = new ScrollConfigProxy(this.api);
 			this.registerApiListeners();
 			// 将新 API 上报给外界：某些组件直接持有 _api 引用
 			this.eventBus.publish('状态:API已重建', this.api);
@@ -456,12 +413,9 @@ export class AlphaTabService {
 		const exporter = await this.api.exportAudio(exportOptions);
 		const chunks: Float32Array[] = [];
 		try {
-			let chunk: unknown;
+			let chunk: any;
 			while ((chunk = await exporter.render(500))) {
-				interface AudioChunk {
-					samples?: Float32Array;
-				}
-				chunks.push((chunk as AudioChunk).samples || new Float32Array());
+				chunks.push(chunk.samples);
 			}
 		} finally {
 			exporter.destroy();

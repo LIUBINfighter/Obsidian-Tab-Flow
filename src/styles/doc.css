@@ -20,10 +20,6 @@
 	align-items: center;
 }
 
-.tabflow-doc-header__icon {
-	vertical-align: middle;
-}
-
 /* Two-column layout: left sidebar (navigation) + main content */
 .tabflow-doc-layout {
 	display: flex;

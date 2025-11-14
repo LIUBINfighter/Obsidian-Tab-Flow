@@ -37,7 +37,7 @@ export class DocView extends ItemView {
 					this.activeId = this.panels[0]?.id ?? null;
 					// 如果视图已打开，重新渲染
 					try {
-						void this.render();
+						this.render();
 					} catch {
 						/* ignore */
 					}
@@ -59,7 +59,7 @@ export class DocView extends ItemView {
 	private scrollToContentAfterRender(layout?: Element | null): void {
 		// 如果没有传入layout参数，尝试从DOM中查找
 		if (!layout) {
-			layout = this.contentEl.querySelector('.tabflow-doc-layout');
+			layout = this.contentEl.querySelector('.tabflow-doc-layout') as Element | null;
 			if (!layout) return;
 		}
 
@@ -68,7 +68,9 @@ export class DocView extends ItemView {
 		// 简单的延迟滚动，立即执行
 		setTimeout(() => {
 			if (!layout) return;
-			const contentElement = layout.querySelector('.tabflow-doc-markdown');
+			const contentElement = layout.querySelector(
+				'.tabflow-doc-markdown'
+			) as HTMLElement | null;
 			if (contentElement) {
 				this.performScroll(contentElement);
 			}
@@ -78,7 +80,7 @@ export class DocView extends ItemView {
 	/**
 	 * 执行滚动操作，包含降级处理
 	 */
-	private performScroll(contentElement: Element | null): void {
+	private performScroll(contentElement: HTMLElement | null): void {
 		if (!contentElement) return;
 
 		try {
@@ -110,10 +112,11 @@ export class DocView extends ItemView {
 	}
 
 	async onOpen() {
+		this.injectStyles();
 		await this.render();
 	}
 
-	onClose(): Promise<void> {
+	async onClose() {
 		// 清理右上角设置按钮（如果存在）
 		try {
 			if (this.settingsAction && this.settingsAction.parentElement) {
@@ -123,7 +126,23 @@ export class DocView extends ItemView {
 		} catch {
 			// ignore
 		}
-		return Promise.resolve();
+	}
+
+	private injectStyles() {
+		try {
+			const id = 'tabflow-doc-style';
+			if (document.getElementById(id)) return;
+			const link = document.createElement('link');
+			link.id = id;
+			link.rel = 'stylesheet';
+			const base = this.plugin.manifest?.dir
+				? `${this.plugin.manifest.dir.replace(/\\/g, '/')}`
+				: '';
+			link.href = base + '/src/styles/doc.css';
+			document.head.appendChild(link);
+		} catch (e) {
+			// fail silently
+		}
 	}
 
 	private async render() {
@@ -151,7 +170,7 @@ export class DocView extends ItemView {
 		svg.setAttribute('height', '22');
 		svg.setAttribute('viewBox', '0 0 16 16');
 		svg.setAttribute('fill', 'currentColor');
-		svg.classList.add('tabflow-doc-header__icon');
+		svg.style.verticalAlign = 'middle';
 
 		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 		path.setAttribute(
@@ -199,9 +218,9 @@ export class DocView extends ItemView {
 						this.plugin.app.commands.executeCommandById('app:open-settings');
 						setTimeout(() => {
 							try {
-								const search = document.querySelector<HTMLInputElement>(
+								const search = document.querySelector(
 									'input.setting-search-input'
-								);
+								) as HTMLInputElement | null;
 								if (search) {
 									search.value = 'Tab Flow';
 									const ev = new Event('input', { bubbles: true });
@@ -216,8 +235,8 @@ export class DocView extends ItemView {
 					}
 				}
 			});
-			this.settingsAction = btn;
-		} catch (_) {
+			this.settingsAction = btn as unknown as HTMLElement;
+		} catch (e) {
 			// ignore
 		}
 		// Layout wrapper
@@ -262,7 +281,7 @@ export class DocView extends ItemView {
 			// let panel render into the container; pass plugin so panels can access resources
 			try {
 				active.render(contentWrap, this.plugin);
-			} catch (_) {
+			} catch (e) {
 				contentWrap.setText(t('docView.renderError'));
 			}
 		}
@@ -297,7 +316,7 @@ export class DocView extends ItemView {
 					});
 				});
 				prev.addEventListener('keypress', (e) => {
-					if (e.key === 'Enter') {
+					if ((e as KeyboardEvent).key === 'Enter') {
 						this.activeId = prevPanel.id;
 						this.render().then(() => {
 							this.scrollToContentAfterRender();
@@ -321,7 +340,7 @@ export class DocView extends ItemView {
 					});
 				});
 				next.addEventListener('keypress', (e) => {
-					if (e.key === 'Enter') {
+					if ((e as KeyboardEvent).key === 'Enter') {
 						this.activeId = nextPanel.id;
 						this.render().then(() => {
 							this.scrollToContentAfterRender();

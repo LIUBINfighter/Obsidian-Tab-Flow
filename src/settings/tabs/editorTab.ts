@@ -1,13 +1,9 @@
-import { App, Notice, Setting, TextComponent, DropdownComponent } from 'obsidian';
+import { App, Notice, Setting } from 'obsidian';
 import { setIcon } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
 import { DEFAULT_SETTINGS, EditorBarComponentVisibility } from '../defaults';
-import {
-	createEmbeddableMarkdownEditor,
-	type EmbeddableMarkdownEditor,
-} from '../../editor/EmbeddableMarkdownEditor';
-import { setCssProps } from '../../utils/styleUtils';
+import { createEmbeddableMarkdownEditor } from '../../editor/EmbeddableMarkdownEditor';
 
 export async function renderEditorTab(
 	tabContents: HTMLElement,
@@ -44,11 +40,6 @@ export async function renderEditorTab(
 			'rem'
 		);
 
-		let fontText: TextComponent;
-		let fontDropdown: DropdownComponent;
-		let fontUnit = fontDefault.unit;
-		let fontValue = fontDefault.num;
-
 		const sFont = new Setting(tabContents)
 			.setName(t('settings.editor.fontSize', undefined, '编辑器字体大小'))
 			.setDesc(
@@ -59,50 +50,61 @@ export async function renderEditorTab(
 				)
 			);
 
+		let fontText: any;
+		let fontDropdown: any;
+
 		sFont
 			.addText((text) => {
 				fontText = text;
-				const inputEl = text.inputEl;
-				if (inputEl) {
-					inputEl.setAttribute('type', 'number');
-					inputEl.setAttribute('step', '0.01');
-					inputEl.setAttribute('min', '0');
+				// restrict to numeric input
+				try {
+					(text as any).inputEl.setAttribute('type', 'number');
+					(text as any).inputEl.setAttribute('step', '0.01');
+					(text as any).inputEl.setAttribute('min', '0');
+				} catch (e) {
+					// console.debug('set input attributes failed', e);
 				}
 				text.setValue(fontDefault.num).onChange(async (numStr) => {
-					fontValue = numStr;
-					const composed = `${numStr}${fontUnit}`;
+					const unit = (sFont as any).__unitValue || fontDefault.unit;
+					const composed = `${numStr}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
 					if (!valid) {
+						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
 						fontText.inputEl.classList.add('tabflow-invalid-input');
 						return;
 					}
 					fontText.inputEl.classList.remove('tabflow-invalid-input');
 					plugin.settings.editorFontSize = composed;
 					await plugin.saveSettings();
-					setCssProps(document.documentElement, {
-						'--alphatex-editor-font-size': composed,
-					});
+					document.documentElement.style.setProperty(
+						'--alphatex-editor-font-size',
+						composed
+					);
+					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
 				});
 			})
 			.addDropdown((dd) => {
 				fontDropdown = dd;
 				unitsFont.forEach((u) => dd.addOption(u, u));
-				dd.setValue(fontDefault.unit).onChange((unit) => {
-					void (async () => {
-						fontUnit = unit;
-						const composed = `${fontValue}${unit}`;
-						const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
-						if (!valid) {
-							fontText.inputEl.classList.add('tabflow-invalid-input');
-							return;
-						}
-						fontText.inputEl.classList.remove('tabflow-invalid-input');
-						plugin.settings.editorFontSize = composed;
-						await plugin.saveSettings();
-						setCssProps(document.documentElement, {
-							'--alphatex-editor-font-size': composed,
-						});
-					})();
+				dd.setValue(fontDefault.unit).onChange(async (unit) => {
+					// store unit on setting instance for access from text handler
+					(sFont as any).__unitValue = unit;
+					const num = (sFont as any).value || fontDefault.num;
+					const composed = `${num}${unit}`;
+					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
+					if (!valid) {
+						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+						fontText.inputEl.classList.add('tabflow-invalid-input');
+						return;
+					}
+					fontText.inputEl.classList.remove('tabflow-invalid-input');
+					plugin.settings.editorFontSize = composed;
+					await plugin.saveSettings();
+					document.documentElement.style.setProperty(
+						'--alphatex-editor-font-size',
+						composed
+					);
+					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
 				});
 			})
 			.addButton((btn) => {
@@ -111,15 +113,16 @@ export async function renderEditorTab(
 					.onClick(async () => {
 						const defaultVal = DEFAULT_SETTINGS.editorFontSize || '0.95rem';
 						const parsed = parseCssValue(defaultVal, '0.95', 'rem');
-						fontUnit = parsed.unit;
-						fontValue = parsed.num;
 						plugin.settings.editorFontSize = defaultVal;
 						await plugin.saveSettings();
-						setCssProps(document.documentElement, {
-							'--alphatex-editor-font-size': defaultVal,
-						});
+						document.documentElement.style.setProperty(
+							'--alphatex-editor-font-size',
+							defaultVal
+						);
+						// Update UI values
 						fontText.setValue(parsed.num);
 						fontDropdown.setValue(parsed.unit);
+						(sFont as any).__unitValue = parsed.unit;
 						new Notice(
 							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
 						);
@@ -143,56 +146,58 @@ export async function renderEditorTab(
 				)
 			);
 
-		let gapText: TextComponent;
-		let gapDropdown: DropdownComponent;
-		let gapUnit = gapDefault.unit;
-		let gapValue = gapDefault.num;
+		let gapText: any;
+		let gapDropdown: any;
 
 		sGap.addText((text) => {
 			gapText = text;
-			const inputEl = text.inputEl;
-			if (inputEl) {
-				inputEl.setAttribute('type', 'number');
-				inputEl.setAttribute('step', '1');
-				inputEl.setAttribute('min', '0');
+			try {
+				(text as any).inputEl.setAttribute('type', 'number');
+				(text as any).inputEl.setAttribute('step', '1');
+				(text as any).inputEl.setAttribute('min', '0');
+			} catch (e) {
+				// console.debug('set input attributes failed', e);
 			}
-			text.setValue(gapDefault.num).onChange((numStr) => {
-				void (async () => {
-					gapValue = numStr;
-					const composed = `${numStr}${gapUnit}`;
+			text.setValue(gapDefault.num).onChange(async (numStr) => {
+				const unit = (sGap as any).__unitValue || gapDefault.unit;
+				const composed = `${numStr}${unit}`;
+				const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
+				if (!valid) {
+					// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
+					gapText.inputEl.classList.add('tabflow-invalid-input');
+					return;
+				}
+				gapText.inputEl.classList.remove('tabflow-invalid-input');
+				plugin.settings.editorBottomGap = composed;
+				await plugin.saveSettings();
+				document.documentElement.style.setProperty(
+					'--alphatex-editor-bottom-gap',
+					composed
+				);
+				// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
+			});
+		})
+			.addDropdown((dd) => {
+				gapDropdown = dd;
+				unitsGap.forEach((u) => dd.addOption(u, u));
+				dd.setValue(gapDefault.unit).onChange(async (unit) => {
+					(sGap as any).__unitValue = unit;
+					const num = (sGap as any).value || gapDefault.num;
+					const composed = `${num}${unit}`;
 					const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
 					if (!valid) {
+						// new Notice(t('settings.editor.invalidCss', undefined, '非法 CSS 值'));
 						gapText.inputEl.classList.add('tabflow-invalid-input');
 						return;
 					}
 					gapText.inputEl.classList.remove('tabflow-invalid-input');
 					plugin.settings.editorBottomGap = composed;
 					await plugin.saveSettings();
-					setCssProps(document.documentElement, {
-						'--alphatex-editor-bottom-gap': composed,
-					});
-				})();
-			});
-		})
-			.addDropdown((dd) => {
-				gapDropdown = dd;
-				unitsGap.forEach((u) => dd.addOption(u, u));
-				dd.setValue(gapDefault.unit).onChange((unit) => {
-					void (async () => {
-						gapUnit = unit;
-						const composed = `${gapValue}${unit}`;
-						const valid = /^\d+(?:\.\d+)?(px|vh)$/.test(composed);
-						if (!valid) {
-							gapText.inputEl.classList.add('tabflow-invalid-input');
-							return;
-						}
-						gapText.inputEl.classList.remove('tabflow-invalid-input');
-						plugin.settings.editorBottomGap = composed;
-						await plugin.saveSettings();
-						setCssProps(document.documentElement, {
-							'--alphatex-editor-bottom-gap': composed,
-						});
-					})();
+					document.documentElement.style.setProperty(
+						'--alphatex-editor-bottom-gap',
+						composed
+					);
+					// new Notice(t('settings.editor.saved', undefined, '设置已保存'));
 				});
 			})
 			.addButton((btn) => {
@@ -201,15 +206,16 @@ export async function renderEditorTab(
 					.onClick(async () => {
 						const defaultVal = DEFAULT_SETTINGS.editorBottomGap || '40vh';
 						const parsed = parseCssValue(defaultVal, '40', 'vh');
-						gapUnit = parsed.unit;
-						gapValue = parsed.num;
 						plugin.settings.editorBottomGap = defaultVal;
 						await plugin.saveSettings();
-						setCssProps(document.documentElement, {
-							'--alphatex-editor-bottom-gap': defaultVal,
-						});
+						document.documentElement.style.setProperty(
+							'--alphatex-editor-bottom-gap',
+							defaultVal
+						);
+						// Update UI values
 						gapText.setValue(parsed.num);
 						gapDropdown.setValue(parsed.unit);
+						(sGap as any).__unitValue = parsed.unit;
 						new Notice(
 							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
 						);
@@ -259,17 +265,21 @@ export async function renderEditorTab(
 	// Custom Highlight settings (collapsible)
 	{
 		const details = tabContents.createEl('details', {
-			cls: 'tabflow-highlight-section',
+			attr: { style: 'margin-top: 12px;' },
 		});
 		details.createEl('summary', {
 			text: 'Custom Highlight',
-			cls: 'tabflow-highlight-section__summary',
+			attr: {
+				style: 'cursor: pointer; font-size: 0.9em; font-weight: 600; color: var(--text-accent);',
+			},
 		});
 
 		// Helper: render a compact preview for each highlight type using existing CSS classes
 		const renderHighlightPreview = (key: string): DocumentFragment => {
 			const wrap = document.createElement('div');
-			wrap.classList.add('cm-content', 'tabflow-highlight-preview');
+			wrap.className = 'cm-content';
+			wrap.style.cssText =
+				'display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center; padding:4px 6px; border-radius:4px; background: var(--background-secondary); font-family: var(--font-monospace); font-size: 0.9em;';
 
 			const span = (cls: string, text?: string) => {
 				const el = document.createElement('span');
@@ -433,7 +443,9 @@ export async function renderEditorTab(
 
 		// Markdown editor preview for highlight settings (syntax highlighting only)
 		const previewContainer = details.createDiv({
-			cls: 'tabflow-highlight-preview-container',
+			attr: {
+				style: 'margin-bottom: 12px; border: 1px solid var(--background-modifier-border); border-radius: 6px; padding: 8px;',
+			},
 		});
 
 		const sampleCode = `\\title "Sample Song"
@@ -451,7 +463,7 @@ export async function renderEditorTab(
 .
 `;
 
-		let currentEditorHandle: EmbeddableMarkdownEditor | null = null;
+		let currentEditorHandle: any = null;
 
 		const renderPreview = () => {
 			if (currentEditorHandle) {
@@ -459,7 +471,7 @@ export async function renderEditorTab(
 			}
 			previewContainer.empty();
 			const editorWrap = previewContainer.createDiv({
-				cls: 'tabflow-highlight-preview-editor',
+				attr: { style: 'height: 200px; overflow: auto; border-radius: 4px;' },
 			});
 			currentEditorHandle = createEmbeddableMarkdownEditor(app, editorWrap, {
 				value: sampleCode,
@@ -588,11 +600,11 @@ export async function renderEditorTab(
 		});
 
 	const cardsWrap = tabContents.createDiv({
-		cls: 'tabflow-card-list',
+		attr: { style: 'display:flex; flex-direction:column; gap:8px;' },
 	});
 
 	const meta: Array<{
-		key: keyof EditorBarComponentVisibility;
+		key: keyof EditorBarComponentVisibility | 'audioPlayer';
 		label: string;
 		icon: string;
 		desc?: string;
@@ -726,7 +738,7 @@ export async function renderEditorTab(
 				const newOrder = [...saved, ...missing];
 				if (plugin.settings.editorBar) {
 					plugin.settings.editorBar.order = newOrder;
-					void plugin.saveSettings();
+					plugin.saveSettings();
 				}
 				return newOrder;
 			}
@@ -740,43 +752,40 @@ export async function renderEditorTab(
 		const cards = cardsWrap.querySelectorAll('.tabflow-card');
 		cards.forEach((el) => {
 			el.classList.remove('insert-before', 'insert-after', 'swap-target');
+			(el as HTMLElement).style.background = '';
 		});
 	};
 
 	const renderCards = () => {
 		cardsWrap.empty();
-		const order = getOrder().filter((k): k is keyof EditorBarComponentVisibility =>
-			meta.some((m) => m.key === k)
-		);
-		const comp = plugin.settings.editorBar?.components;
+		const order = getOrder().filter((k) => meta.some((m) => m.key === (k as any)));
+		const comp = plugin.settings.editorBar?.components || ({} as any);
 		order.forEach((key) => {
-			const m = meta.find((x) => x.key === key);
+			const m = meta.find((x) => x.key === (key as any));
 			if (!m) return;
 			const card = cardsWrap.createDiv({
-				cls: ['tabflow-card', 'tabflow-card--draggable', 'tabflow-card--compact'],
+				cls: 'tabflow-card',
 				attr: {
 					draggable: 'true',
+					style: 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px; border:1px solid var(--background-modifier-border); border-radius:6px;',
 				},
 			});
 			card.dataset.key = String(key);
 			const left = card.createDiv({
-				cls: 'tabflow-card__left',
+				attr: { style: 'display:flex; align-items:center; gap:8px;' },
 			});
-			left.createSpan({
-				text: '⠿',
-				cls: 'tabflow-card__handle',
-			});
+			left.createSpan({ text: '⠿', attr: { style: 'cursor:grab; user-select:none;' } });
 			const iconEl = left.createSpan(); // Create the span element
 			setIcon(iconEl, m.icon); // Use the imported setIcon function
 			left.createEl('strong', { text: m.label });
 			if (m.desc)
 				left.createSpan({
 					text: ` - ${m.desc}`,
-					cls: 'tabflow-card__desc',
+					attr: { style: 'color:var(--text-muted);font-size:0.9em;' },
 				});
 
 			const right = card.createDiv({
-				cls: 'tabflow-card__right',
+				attr: { style: 'display:flex; align-items:center; gap:6px;' },
 			});
 			const upIcon = right.createSpan({
 				cls: 'icon-clickable',
@@ -798,24 +807,15 @@ export async function renderEditorTab(
 			setIcon(downIcon, 'lucide-arrow-down');
 
 			new Setting(right)
-				.addToggle((toggle) => {
-					const current = !!comp?.[key];
-					toggle.setValue(m.disabled ? false : current).onChange(async (value) => {
-						const editorBarSettings =
-							plugin.settings.editorBar ??
-							(plugin.settings.editorBar = {
-								components: JSON.parse(
-									JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
-								) as EditorBarComponentVisibility,
-								order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
-							});
-						const components =
-							editorBarSettings.components ??
-							(editorBarSettings.components = JSON.parse(
-								JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
-							) as EditorBarComponentVisibility);
-
-						components[key] = m.disabled ? false : value;
+				.addToggle((t) => {
+					const current = !!(comp as any)[key];
+					t.setValue(m.disabled ? false : current).onChange(async (v) => {
+						plugin.settings.editorBar = plugin.settings.editorBar || {
+							components: {} as any,
+						};
+						(plugin.settings.editorBar as any).components =
+							plugin.settings.editorBar?.components || {};
+						(plugin.settings.editorBar as any).components[key] = m.disabled ? false : v;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(
@@ -825,9 +825,10 @@ export async function renderEditorTab(
 							// Ignore workspace trigger errors
 						}
 					});
-					if (m.disabled) {
-						toggle.toggleEl?.querySelector('input')?.setAttribute('disabled', 'true');
-					}
+					if (m.disabled)
+						(t as any).toggleEl
+							.querySelector('input')
+							?.setAttribute('disabled', 'true');
 				})
 				.setClass('tabflow-no-border');
 
@@ -855,7 +856,9 @@ export async function renderEditorTab(
 				const oldRect = card.getBoundingClientRect();
 				const scrollContainer = getScrollContainer(card);
 				await Promise.resolve(update());
-				const newCard = cardsWrap.querySelector(`.tabflow-card[data-key="${rowKey}"]`);
+				const newCard = cardsWrap.querySelector(
+					`.tabflow-card[data-key="${rowKey}"]`
+				) as HTMLElement | null;
 				if (!newCard) return;
 				const newRect = newCard.getBoundingClientRect();
 				const delta = newRect.top - oldRect.top;
@@ -875,9 +878,9 @@ export async function renderEditorTab(
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
 						plugin.settings.editorBar = plugin.settings.editorBar || {
-							components: {} as EditorBarComponentVisibility,
+							components: {} as any,
 						};
-						plugin.settings.editorBar.order = cur;
+						(plugin.settings.editorBar as any).order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -898,9 +901,9 @@ export async function renderEditorTab(
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
 						plugin.settings.editorBar = plugin.settings.editorBar || {
-							components: {} as EditorBarComponentVisibility,
+							components: {} as any,
 						};
-						plugin.settings.editorBar.order = cur;
+						(plugin.settings.editorBar as any).order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -914,22 +917,18 @@ export async function renderEditorTab(
 				}
 			};
 
-			upIcon.addEventListener('click', () => {
-				void moveUp();
-			});
+			upIcon.addEventListener('click', () => moveUp());
 			upIcon.addEventListener('keydown', (e: KeyboardEvent) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					void moveUp();
+					moveUp();
 				}
 			});
-			downIcon.addEventListener('click', () => {
-				void moveDown();
-			});
+			downIcon.addEventListener('click', () => moveDown());
 			downIcon.addEventListener('keydown', (e: KeyboardEvent) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					void moveDown();
+					moveDown();
 				}
 			});
 
@@ -942,7 +941,7 @@ export async function renderEditorTab(
 				(e.dataTransfer as DataTransfer).dropEffect = 'move';
 				clearDndHighlights();
 				const rect = card.getBoundingClientRect();
-				const offsetY = e.clientY - rect.top;
+				const offsetY = (e as DragEvent).clientY - rect.top;
 				const ratio = offsetY / rect.height;
 				if (ratio < 0.33) {
 					card.classList.add('insert-before');
@@ -954,40 +953,34 @@ export async function renderEditorTab(
 			});
 			card.addEventListener('dragleave', () => clearDndHighlights());
 			card.addEventListener('dragend', () => clearDndHighlights());
-			card.addEventListener('drop', () => {
-				void (async () => {
-					const isInsertAfter = card.classList.contains('insert-after');
-					const isSwap = card.classList.contains('swap-target');
-					clearDndHighlights();
-					if (!draggingKey || draggingKey === key) return;
-					const list = getOrder();
-					const from = list.indexOf(String(draggingKey));
-					const to = list.indexOf(String(key));
-					if (from < 0 || to < 0) return;
-					const cur = list.slice();
-					if (isSwap) {
-						[cur[from], cur[to]] = [cur[to], cur[from]];
-					} else {
-						let insertIndex = to + (isInsertAfter ? 1 : 0);
-						const [moved] = cur.splice(from, 1);
-						if (from < insertIndex) insertIndex -= 1;
-						cur.splice(insertIndex, 0, moved);
-					}
-					plugin.settings.editorBar = plugin.settings.editorBar || {
-						components: {} as EditorBarComponentVisibility,
-					};
-					plugin.settings.editorBar.order = cur;
-					await plugin.saveSettings();
-					renderCards();
-					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:editorbar-components-changed'
-						);
-					} catch {
-						// Ignore workspace trigger errors
-					}
-					draggingKey = null;
-				})();
+			card.addEventListener('drop', async () => {
+				const isInsertAfter = card.classList.contains('insert-after');
+				const isSwap = card.classList.contains('swap-target');
+				clearDndHighlights();
+				if (!draggingKey || draggingKey === key) return;
+				const list = getOrder();
+				const from = list.indexOf(String(draggingKey));
+				const to = list.indexOf(String(key));
+				if (from < 0 || to < 0) return;
+				const cur = list.slice();
+				if (isSwap) {
+					[cur[from], cur[to]] = [cur[to], cur[from]];
+				} else {
+					let insertIndex = to + (isInsertAfter ? 1 : 0);
+					const [moved] = cur.splice(from, 1);
+					if (from < insertIndex) insertIndex -= 1;
+					cur.splice(insertIndex, 0, moved);
+				}
+				plugin.settings.editorBar = plugin.settings.editorBar || { components: {} as any };
+				(plugin.settings.editorBar as any).order = cur;
+				await plugin.saveSettings();
+				renderCards();
+				try {
+					/* @ts-ignore */ app.workspace.trigger('tabflow:editorbar-components-changed');
+				} catch {
+					// Ignore workspace trigger errors
+				}
+				draggingKey = null;
 			});
 		});
 	};
