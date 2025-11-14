@@ -50,7 +50,7 @@ function getNestedValue(obj: TranslationData, path: string): string | undefined 
  * @returns 是否支持新API
  */
 function isGetLanguageAPISupported(): boolean {
-	return typeof (window as unknown as { getLanguage?: () => string }).getLanguage === 'function';
+	return typeof Reflect.get(window, 'getLanguage') === 'function';
 }
 
 /**
@@ -60,9 +60,10 @@ function isGetLanguageAPISupported(): boolean {
 function getLanguageFromNewAPI(): string | null {
 	try {
 		if (isGetLanguageAPISupported()) {
-			const language = (window as unknown as { getLanguage: () => string }).getLanguage();
+			const getLanguage = Reflect.get(window, 'getLanguage') as (() => string) | undefined;
+			const language = getLanguage?.();
 			// console.debug(`[TabFlow i18n] Detected language via getLanguage API: ${language}`);
-			return language;
+			return language ?? null;
 		}
 	} catch (error) {
 		console.warn('[TabFlow i18n] Failed to get language from getLanguage API:', error);
@@ -76,9 +77,9 @@ function getLanguageFromNewAPI(): string | null {
  */
 function getLanguageFromMoment(): string | null {
 	try {
-		const momentWindow = window as unknown as { moment?: { locale: () => string } };
-		if (momentWindow.moment) {
-			const locale = momentWindow.moment.locale();
+		const momentGlobal = Reflect.get(window, 'moment') as { locale?: () => string } | undefined;
+		if (momentGlobal?.locale) {
+			const locale = momentGlobal.locale();
 			console.debug(`[TabFlow i18n] Detected language via moment.locale(): ${locale}`);
 			return locale;
 		}
@@ -253,7 +254,13 @@ export function t(key: string, params?: Record<string, unknown>, fallback?: stri
 		// 如果有参数，进行模板替换
 		if (params && typeof translation === 'string') {
 			translation = translation.replace(/\{\{(\w+)\}\}/g, (match, paramKey) => {
-				return params[paramKey] !== undefined ? String(params[paramKey]) : match;
+				const value = params[paramKey];
+				if (value === undefined || value === null) return match;
+				if (typeof value === 'string') return value;
+				if (typeof value === 'number' || typeof value === 'boolean') {
+					return String(value);
+				}
+				return match;
 			});
 		}
 

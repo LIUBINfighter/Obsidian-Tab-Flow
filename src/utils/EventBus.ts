@@ -1,6 +1,6 @@
 // src-refactor/utils/EventBus.ts
 // 简单的发布-订阅事件总线
-export type EventHandler = (payload?: any) => void;
+export type EventHandler = (payload?: unknown) => void;
 
 export class EventBus {
 	private handlers: Map<string, Set<EventHandler>> = new Map();
@@ -14,7 +14,7 @@ export class EventBus {
 		this.handlers.get(event)?.delete(handler);
 	}
 
-	publish(event: string, payload?: any) {
+	publish(event: string, payload?: unknown) {
 		this.handlers.get(event)?.forEach((fn) => fn(payload));
 	}
 }

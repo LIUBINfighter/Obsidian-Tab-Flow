@@ -46,7 +46,7 @@ export function normalizeColorToHex(
 				'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
 			).toLowerCase();
 		}
-	} catch (e) {
+	} catch (_) {
 		// fallthrough
 	}
 	return fallback;
@@ -75,7 +75,7 @@ export function computeExportBgColor(
 		if (exportBgMode === 'custom') {
 			return exportBgCustomColor || undefined;
 		} else if (exportBgMode === 'auto') {
-			const bgSource = (cardRoot || captureEl) as HTMLElement;
+			const bgSource = cardRoot || captureEl;
 			if (bgSource) {
 				const cs = getComputedStyle(bgSource);
 				const computedBg = cs && cs.backgroundColor ? cs.backgroundColor : undefined;
@@ -88,7 +88,7 @@ export function computeExportBgColor(
 		} else {
 			if (mime === 'image/jpeg') return '#fff';
 		}
-	} catch (e) {
+	} catch (_) {
 		return mime === 'image/jpeg' ? '#fff' : undefined;
 	}
 	return undefined;
@@ -107,7 +107,7 @@ export function measureCaptureDimensions(
 			restoreTransform = panWrapper.style.transform;
 			panWrapper.style.transform = 'none';
 		}
-		// force reflow
+		// Disable no-unused-expressions: Force browser reflow for accurate dimensions
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		captureEl.offsetHeight;
 		const rawW = captureEl.scrollWidth || captureEl.clientWidth;

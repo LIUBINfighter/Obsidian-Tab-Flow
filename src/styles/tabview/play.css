@@ -111,6 +111,11 @@
 	margin-bottom: calc(var(--status-bar-height) * 2 + 8px);
 }
 
+/* Hide status bar when TabView is open */
+.tabflow-hide-statusbar .status-bar {
+	display: none !important;
+}
+
 /* 播放栏控件图标样式 */
 .play-bar .speed-icon {
 	margin-right: 0.5em;

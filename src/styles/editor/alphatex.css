@@ -92,6 +92,100 @@
 	overflow: auto;
 }
 
+/* AlphaTex Editor View Styles */
+.alphatex-editor-layout {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.alphatex-editor-playbar {
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+}
+
+.alphatex-editor-toolbar {
+	display: flex;
+	gap: 8px;
+	padding: 8px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.alphatex-editor-toolbar .clickable-icon {
+	padding: 6px;
+	border-radius: 4px;
+	transition: background 0.15s ease;
+}
+
+.alphatex-editor-toolbar .clickable-icon:hover {
+	background: var(--background-modifier-hover);
+}
+
+.alphatex-editor-section,
+.alphatex-preview-section {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-section,
+.alphatex-editor-layout.is-vertical .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-layout.is-horizontal {
+	flex-direction: row;
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-section,
+.alphatex-editor-layout.is-horizontal .alphatex-preview-section {
+	flex: 1 1 50%;
+}
+
+.alphatex-editor-wrapper {
+	height: 100%;
+	padding: 12px;
+	background: var(--background-primary);
+	/* 注意：不要在 wrapper 上直接增加 padding-bottom，因为 CodeMirror
+	   的滚动容器位于内部，直接在 .cm-content 上添加伪元素可以
+	   增加真实的滚动高度，从而使 "最后一行" 在滚动到底部时显得更高。 */
+}
+
+/* 在实际的滚动内容末尾增加占位，以扩展滚动高度并保留底部空白。 */
+.alphatex-editor-wrapper .cm-content::after {
+	content: '';
+	display: block;
+	/* 默认留白为页面高度的一半，方便最后一行在滚动到底部时向上留出更多空间 */
+	height: var(--alphatex-editor-bottom-gap, 40vh);
+	width: 1px;
+	pointer-events: none;
+}
+
+/* 调整编辑器内部字体略小一些，避免占用过多垂直空间 */
+.alphatex-editor-wrapper .cm-content,
+.alphatex-editor-wrapper .cm-editor {
+	font-size: var(--alphatex-editor-font-size, 0.95rem);
+	line-height: 1.45;
+}
+
+.alphatex-editor-layout.is-horizontal .alphatex-editor-wrapper {
+	border-bottom: none;
+}
+
+.alphatex-editor-layout.is-vertical .alphatex-editor-wrapper {
+	border-right: none;
+}
+
+.alphatex-preview-section {
+	padding: 12px;
+	background: var(--background-primary);
+	overflow: auto;
+}
+
 .alphatex-block {
 	margin: 0.5rem 0 1rem 0;
 }
@@ -117,6 +211,47 @@
 	display: inline-flex;
 	gap: 0.25rem;
 	align-items: center;
+}
+
+/* Background for visible whitespace characters (spaces/tabs) in the editor. */
+:root {
+	--alphatex-space-bg: rgba(0, 0, 0, 0.03);
+}
+/* Style for visible whitespace characters decorated by whitespaceHighlightPlugin */
+.inmarkdown-editor-cm .cm-content .cm-whitespace,
+.cm-editor .cm-content .cm-whitespace,
+.cm-content .cm-whitespace {
+	/* use theme-aware hover modifier as whitespace background for better integration */
+	background: var(--background-modifier-hover, var(--alphatex-space-bg));
+	display: inline-block; /* allow padding/background to be visible */
+	border-radius: 2px;
+	padding: 0 2px;
+	line-height: 1;
+}
+
+/* Render regular ASCII space as a mid-dot, keep original editor background */
+.cm-content .cm-whitespace-space {
+	/* keep background transparent so original bg shows through */
+	background: transparent;
+	color: transparent; /* hide the real space */
+	position: relative;
+}
+.cm-content .cm-whitespace-space::before {
+	content: '·';
+	color: var(--text-muted);
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
+	pointer-events: none;
+}
+.cm-content .cm-surrounded {
+	/* use theme highlight background; fallback to light red */
+	background: var(--background-modifier-hover, rgba(220, 38, 38, 0.12));
+	border-radius: 3px;
+	border: 1px solid var(--background-modifier-border);
+	display: inline-block;
+	padding: 0 2px;
 }
 
 /* Background for visible whitespace characters (spaces/tabs) in the editor. */
@@ -435,4 +570,25 @@
 	font-weight: 700;
 	padding: 0 2px;
 	border-radius: 2px;
+}
+
+/* AlphaTab cursor and selection styles using CSS variables */
+.alphatex-block .at-cursor-bar {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	opacity: 0.2;
+}
+
+.alphatex-block .at-selection div {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	opacity: 0.4;
+}
+
+.alphatex-block .at-cursor-beat {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	width: 3px;
+}
+
+.alphatex-block .at-highlight * {
+	fill: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	stroke: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
 }

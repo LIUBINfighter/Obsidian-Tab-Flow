@@ -41,9 +41,12 @@ export class TrackStateStore {
 
 	constructor(plugin: TabFlowPlugin) {
 		this.plugin = plugin;
-		const existing: any = (plugin.settings as any).trackStates;
+		interface SettingsWithTrackStates {
+			trackStates?: PersistedTrackStatesV1;
+		}
+		const existing = (plugin.settings as SettingsWithTrackStates).trackStates;
 		if (existing && typeof existing === 'object' && existing.version === 1) {
-			this.data = existing as PersistedTrackStatesV1;
+			this.data = existing;
 		} else {
 			this.data = { version: 1, files: {} };
 		}
@@ -138,7 +141,10 @@ export class TrackStateStore {
 
 	/** 将当前内存写回插件 settings 并调用 saveData */
 	async flush() {
-		(this.plugin.settings as any).trackStates = this.data;
+		interface SettingsWithTrackStates {
+			trackStates?: PersistedTrackStatesV1;
+		}
+		(this.plugin.settings as SettingsWithTrackStates).trackStates = this.data;
 		await this.plugin.saveSettings();
 	}
 
@@ -158,12 +164,19 @@ export class TrackStateStore {
 		for (const track of api.score.tracks) {
 			const key = String(track.index);
 			if (!entry.trackSettings[key]) {
+				interface ExtendedPlaybackInfo {
+					isSolo?: boolean;
+					isMute?: boolean;
+					volume?: number;
+					transposeAudio?: number;
+				}
 				entry.trackSettings[key] = {
-					solo: (track.playbackInfo as any).isSolo ?? false,
-					mute: (track.playbackInfo as any).isMute ?? false,
-					volume: (track.playbackInfo as any).volume ?? 8,
+					solo: (track.playbackInfo as ExtendedPlaybackInfo).isSolo ?? false,
+					mute: (track.playbackInfo as ExtendedPlaybackInfo).isMute ?? false,
+					volume: (track.playbackInfo as ExtendedPlaybackInfo).volume ?? 8,
 					transpose: 0,
-					transposeAudio: (track.playbackInfo as any).transposeAudio ?? 0,
+					transposeAudio:
+						(track.playbackInfo as ExtendedPlaybackInfo).transposeAudio ?? 0,
 				};
 			}
 		}
