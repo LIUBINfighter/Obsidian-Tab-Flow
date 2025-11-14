@@ -3469,9 +3469,6 @@
 /* 针对特定插件设置项去除顶部边框，避免覆盖Obsidian原生样式 */
 .itabs-settings-contents .setting-item.tabflow-no-border {
 	border-top: none;
-/* 针对特定插件设置项去除顶部边框，避免覆盖Obsidian原生样式 */
-.itabs-settings-contents .setting-item.tabflow-no-border {
-	border-top: none;
 	padding: 0;
 }
 
