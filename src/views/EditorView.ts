@@ -1,8 +1,9 @@
-import { FileView, TFile, WorkspaceLeaf } from 'obsidian';
+import { FileView, TFile, WorkspaceLeaf, type EventRef } from 'obsidian';
 import {
 	createEmbeddableMarkdownEditor,
-	EmbeddableMarkdownEditor,
+	type EmbeddableMarkdownEditor,
 } from '../editor/EmbeddableMarkdownEditor';
+import type { ProgressBarElement } from '../components/ProgressBar.types';
 import {
 	createAlphaTexPlayground,
 	AlphaTexPlaygroundHandle,
@@ -34,7 +35,7 @@ export class EditorView extends FileView {
 		| 'single-bar' = 'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
 	private eventBus: EventBus;
-	private progressBar: any = null; // 保存进度条引用
+	private progressBar: ProgressBarElement | null = null; // 保存进度条引用
 	private lastSavedContent = '';
 	private pendingSaveTimer: number | null = null;
 
@@ -45,7 +46,7 @@ export class EditorView extends FileView {
 				this.pendingSaveTimer = null;
 				this.flushSave().catch(() => {});
 			}, delay);
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 	}
@@ -62,7 +63,7 @@ export class EditorView extends FileView {
 	private async flushSave(): Promise<void> {
 		try {
 			if (!this.file || !this.editor) return;
-			const content = (this.editor as EmbeddableMarkdownEditor).value;
+			const content = this.editor.value;
 			if (content === this.lastSavedContent) return;
 
 			// 使用 Vault.process 以防止在读取与写入之间发生外部更改导致的数据丢失
@@ -103,6 +104,21 @@ export class EditorView extends FileView {
 		super(leaf);
 		this.container = this.contentEl;
 		this.eventBus = new EventBus();
+		// 宽化 workspace.on 类型以订阅自定义事件
+		const workspaceWithEvents = this.app.workspace as {
+			on?: (name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => EventRef;
+		};
+		const workspaceOn = workspaceWithEvents.on;
+		if (typeof workspaceOn === 'function') {
+			const eventRef = workspaceOn.call(
+				this.app.workspace,
+				'tabflow:editorbar-components-changed',
+				() => {
+					this._remountEditorBar();
+				}
+			);
+			if (eventRef) this.registerEvent(eventRef);
+		}
 
 		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
@@ -131,12 +147,12 @@ export class EditorView extends FileView {
 						.then((latest) => {
 							if (!this.editor) {
 								// 如果编辑器不存在，做完整重载
-								this.reloadFile();
+								void this.reloadFile();
 								return;
 							}
 							// 无论是否有本地未保存更改，自动用磁盘最新内容覆盖编辑器视图（按需求自动更新）
-							if ((this.editor as EmbeddableMarkdownEditor).value !== latest) {
-								this.editor!.set(latest, false);
+							if (this.editor.value !== latest) {
+								this.editor.set(latest, false);
 								this.playground?.setValue(latest);
 								this.lastSavedContent = latest;
 								// new Notice(
@@ -158,17 +174,23 @@ export class EditorView extends FileView {
 			}
 		};
 
-		// 监听 EditorBar 设置变化事件，实现实时更新
-		this.registerEvent(
-			(this.app.workspace as any).on('tabflow:editorbar-components-changed', () => {
-				try {
-					console.debug('[EditorView] 检测到 EditorBar 设置变化，正在重新渲染...');
-					this._remountEditorBar();
-				} catch (e) {
-					console.warn('[EditorView] 重新渲染 EditorBar 失败:', e);
+		// 监听 EditorBar 设置变化事件，实现实时更新（向后兼容可能的插件广播接口）
+		const legacyOn = Reflect.get(this.app.workspace, 'on');
+		if (typeof legacyOn === 'function') {
+			const unsubscribe = legacyOn.call(
+				this.app.workspace,
+				'tabflow:editorbar-components-changed',
+				() => {
+					try {
+						console.debug('[EditorView] 检测到 EditorBar 设置变化，正在重新渲染...');
+						this._remountEditorBar();
+					} catch (e) {
+						console.warn('[EditorView] 重新渲染 EditorBar 失败:', e);
+					}
 				}
-			})
-		);
+			);
+			if (typeof unsubscribe === 'function') this.registerEvent(unsubscribe);
+		}
 	}
 
 	getViewType(): string {
@@ -205,7 +227,7 @@ export class EditorView extends FileView {
 			this.flushSave().catch(() => {
 				/* already handled inside flushSave */
 			});
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
@@ -227,7 +249,7 @@ export class EditorView extends FileView {
 				this.layoutToggleAction.remove();
 			}
 			this.layoutToggleAction = null;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
@@ -237,7 +259,7 @@ export class EditorView extends FileView {
 				this.settingsAction.remove();
 			}
 			this.settingsAction = null;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 
@@ -247,7 +269,7 @@ export class EditorView extends FileView {
 				this.newFileAction.remove();
 			}
 			this.newFileAction = null;
-		} catch (e) {
+		} catch (_) {
 			// ignore
 		}
 	}
@@ -310,15 +332,17 @@ export class EditorView extends FileView {
 		const currentState = this.leaf.getViewState();
 		if (currentState.state) {
 			currentState.state.layout = this.layout;
-			this.leaf.setViewState(currentState);
+			void this.leaf.setViewState(currentState);
 		}
 
 		// 创建嵌入式编辑器
 		const editorWrapper = editorContainer.createDiv({ cls: 'alphatex-editor-wrapper' });
 		// ensure global fallback for older code paths
 		try {
-			(window as any).__tabflow_settings__ =
-				(window as any).__tabflow_settings__ || this.plugin.settings;
+			const existingSettings = Reflect.get(window, '__tabflow_settings__');
+			if (!existingSettings) {
+				Reflect.set(window, '__tabflow_settings__', this.plugin.settings);
+			}
 		} catch {
 			// ignore
 		}
@@ -393,7 +417,7 @@ export class EditorView extends FileView {
 				const modal = new ShareCardModal(this.plugin);
 				modal.open();
 			});
-			this.newFileAction = newFileBtn as unknown as HTMLElement;
+			this.newFileAction = newFileBtn;
 
 			if (this.settingsAction && this.settingsAction.parentElement) {
 				this.settingsAction.remove();
@@ -411,8 +435,8 @@ export class EditorView extends FileView {
 					}
 				}
 			);
-			this.settingsAction = settingsBtn as unknown as HTMLElement;
-		} catch (e) {
+			this.settingsAction = settingsBtn;
+		} catch (_) {
 			// ignore
 		}
 
@@ -436,10 +460,10 @@ export class EditorView extends FileView {
 			};
 			const btn = this.addAction(iconMap[nextLayout], '切换布局', () => {
 				this.layout = nextLayout;
-				this.render();
+				void this.render();
 			});
-			this.layoutToggleAction = btn as unknown as HTMLElement;
-		} catch (e) {
+			this.layoutToggleAction = btn;
+		} catch (_) {
 			this.layoutToggleAction = null;
 		}
 	}
@@ -468,34 +492,47 @@ export class EditorView extends FileView {
 			initialPlaying: false,
 			getCurrentTime: () => {
 				const api = this.playground?.getApi();
-				return api ? (api as any).timePosition || 0 : 0;
+				if (!api || typeof api !== 'object') return 0;
+				const position = Reflect.get(api, 'timePosition');
+				return typeof position === 'number' ? position : 0;
 			},
 			getDuration: () => {
 				const api = this.playground?.getApi();
-				return api?.score
-					? (api.score as any).durationMillis || (api.score as any).duration || 0
-					: 0;
+				const score = api?.score as
+					| { durationMillis?: number; duration?: number }
+					| undefined;
+				if (!score) return 0;
+				return (
+					(typeof score.durationMillis === 'number' ? score.durationMillis : undefined) ??
+					(typeof score.duration === 'number' ? score.duration : 0)
+				);
 			},
 			seekTo: (ms: number) => {
 				const api = this.playground?.getApi();
-				if (api) {
-					(api as any).timePosition = ms;
+				if (api && typeof api === 'object') {
+					Reflect.set(api, 'timePosition', ms);
 				}
 			},
 			onAudioCreated: (audioEl: HTMLAudioElement) => {
 				// 编辑器视图可能不需要音频集成，暂时留空
 			},
 			getApi: () => this.playground?.getApi() || null,
-			onProgressBarCreated: (progressBar: any) => {
+			onProgressBarCreated: (progressBar: ProgressBarElement) => {
 				this.progressBar = progressBar;
 				// 推迟设置事件监听器，直到 API 可用
 				const setupProgressUpdate = () => {
 					const api = this.playground?.getApi();
 					if (api && api.playerPositionChanged) {
-						api.playerPositionChanged.on((args: any) => {
+						api.playerPositionChanged.on((args: unknown) => {
+							interface PlayerPositionArgs {
+								currentTime?: number;
+								endTime?: number;
+							}
+							const position = (args as PlayerPositionArgs).currentTime;
+							const duration = (args as PlayerPositionArgs).endTime;
 							if (this.progressBar && this.progressBar.updateProgress) {
 								// 更新进度条
-								this.progressBar.updateProgress(args.currentTime, args.endTime);
+								this.progressBar.updateProgress(position, duration);
 
 								// 同时更新时间显示元素
 								const editorBarContainer =
@@ -509,12 +546,8 @@ export class EditorView extends FileView {
 									) as HTMLSpanElement;
 
 									if (currentTimeDisplay && totalTimeDisplay) {
-										currentTimeDisplay.textContent = formatTime(
-											args.currentTime || 0
-										);
-										totalTimeDisplay.textContent = formatTime(
-											args.endTime || 0
-										);
+										currentTimeDisplay.textContent = formatTime(position || 0);
+										totalTimeDisplay.textContent = formatTime(duration || 0);
 									}
 								}
 							}

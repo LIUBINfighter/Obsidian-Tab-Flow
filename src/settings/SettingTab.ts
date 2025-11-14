@@ -2,6 +2,13 @@ import { App, PluginSettingTab } from 'obsidian';
 import TabFlowPlugin from '../main';
 import { t } from '../i18n';
 
+type AppWithSetting = App & {
+	setting?: {
+		open?: () => void;
+		openTabById?: (id: string) => void;
+	};
+};
+
 /**
  * 新的 SettingTab：将三个子页签的渲染逻辑委派给 tabs/* 下的模块。
  * 每个子页导出对应的 renderXTab(container, plugin, app)
@@ -9,77 +16,87 @@ import { t } from '../i18n';
 export class SettingTab extends PluginSettingTab {
 	plugin: TabFlowPlugin;
 	private _eventBound = false;
+	private forcedTab?: string;
 
 	constructor(app: App, plugin: TabFlowPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 
 		if (!this._eventBound) {
-			// 保留来自旧实现的事件：打开 plugin settings 的 player 子页签
-			// @ts-ignore
-			this.app.workspace.on('tabflow:open-plugin-settings-player', async () => {
-				try {
-					// 打开设置面板并定位到本插件设置页
-					// @ts-ignore
-					(this.app as any).setting?.open?.();
-					if ((this.app as any).setting?.openTabById) {
-						(this.app as any).setting.openTabById(this.plugin.manifest.id);
-					}
-					// 标记强制激活 player 子页签
-					(this as any)._forceActiveInnerTab = 'player';
-					try {
-						await this.display();
-					} catch {
-						// Ignore display errors
-					}
-				} catch {
-					// Ignore event binding errors
-				}
-			});
+			const workspaceOn = (this.app.workspace as { on?: unknown }).on as
+				| ((name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => unknown)
+				| undefined;
+			if (typeof workspaceOn === 'function') {
+				const playerRef = workspaceOn.call(
+					this.app.workspace,
+					'tabflow:open-plugin-settings-player',
+					async () => {
+						try {
+							const settingManager = (this.app as AppWithSetting).setting;
+							settingManager?.open?.();
+							const setting = settingManager;
+							if (setting?.openTabById) {
+								setting.openTabById(this.plugin.manifest.id);
+							}
+							// 标记强制激活 player 子页签
+							this.forcedTab = 'player';
+							try {
+								await this.display();
+							} catch {
+								// Ignore display errors
+							}
+						} catch {
+							// Ignore event binding errors
+						}
+					},
+					this
+				);
+				this.plugin.registerEvent(playerRef);
 
-			// 添加 editor 子页签的事件监听
-			// @ts-ignore
-			this.app.workspace.on('tabflow:open-plugin-settings-editor', async () => {
-				try {
-					// 打开设置面板并定位到本插件设置页
-					// @ts-ignore
-					(this.app as any).setting?.open?.();
-					if ((this.app as any).setting?.openTabById) {
-						(this.app as any).setting.openTabById(this.plugin.manifest.id);
-					}
-					// 标记强制激活 editor 子页签
-					(this as any)._forceActiveInnerTab = 'editor';
-					try {
-						await this.display();
-					} catch {
-						// Ignore display errors
-					}
-				} catch {
-					// Ignore event binding errors
-				}
-			});
+				const editorRef = workspaceOn.call(
+					this.app.workspace,
+					'tabflow:open-plugin-settings-editor',
+					async () => {
+						try {
+							const settingManager = (this.app as AppWithSetting).setting;
+							settingManager?.open?.();
+							settingManager?.openTabById?.(this.plugin.manifest.id);
+							this.forcedTab = 'editor';
+							try {
+								await this.display();
+							} catch {
+								// Ignore display errors
+							}
+						} catch {
+							// Ignore event binding errors
+						}
+					},
+					this
+				);
+				this.plugin.registerEvent(editorRef);
 
-			// 添加 about 子页签的事件监听
-			// @ts-ignore
-			this.app.workspace.on('tabflow:open-plugin-settings-about', async () => {
-				try {
-					// 打开设置面板并定位到本插件设置页
-					// @ts-ignore
-					(this.app as any).setting?.open?.();
-					if ((this.app as any).setting?.openTabById) {
-						(this.app as any).setting.openTabById(this.plugin.manifest.id);
-					}
-					// 标记强制激活 about 子页签
-					(this as any)._forceActiveInnerTab = 'about';
-					try {
-						await this.display();
-					} catch {
-						// Ignore display errors
-					}
-				} catch {
-					// Ignore event binding errors
-				}
-			});
+				const aboutRef = workspaceOn.call(
+					this.app.workspace,
+					'tabflow:open-plugin-settings-about',
+					async () => {
+						try {
+							const settingManager = (this.app as AppWithSetting).setting;
+							settingManager?.open?.();
+							settingManager?.openTabById?.(this.plugin.manifest.id);
+							this.forcedTab = 'about';
+							try {
+								await this.display();
+							} catch {
+								// Ignore display errors
+							}
+						} catch {
+							// Ignore event binding errors
+						}
+					},
+					this
+				);
+				this.plugin.registerEvent(aboutRef);
+			}
 			this._eventBound = true;
 		}
 	}
@@ -98,8 +115,8 @@ export class SettingTab extends PluginSettingTab {
 			{ id: 'about', name: t('settings.tabs.about') },
 		];
 
-		let activeTab = (this as any)._forceActiveInnerTab || 'general';
-		(this as any)._forceActiveInnerTab = undefined;
+		let activeTab = this.forcedTab || 'general';
+		this.forcedTab = undefined;
 
 		const renderTab = async (tabId: string) => {
 			contentsEl.empty();
@@ -123,11 +140,13 @@ export class SettingTab extends PluginSettingTab {
 				text: tab.name,
 				cls: ['itabs-settings-tab', tab.id === activeTab ? 'active' : ''],
 			});
-			tabEl.onclick = async () => {
-				tabsEl.querySelectorAll('button').forEach((b) => b.removeClass('active'));
-				tabEl.addClass('active');
-				activeTab = tab.id;
-				await renderTab(tab.id);
+			tabEl.onclick = () => {
+				void (async () => {
+					tabsEl.querySelectorAll('button').forEach((b) => b.removeClass('active'));
+					tabEl.addClass('active');
+					activeTab = tab.id;
+					await renderTab(tab.id);
+				})();
 			};
 		});
 

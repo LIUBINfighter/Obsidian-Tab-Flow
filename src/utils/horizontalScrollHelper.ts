@@ -12,10 +12,8 @@ export function setupHorizontalScroll(element: HTMLElement, api: alphaTab.AlphaT
 		if (e.ctrlKey || e.metaKey || e.altKey) return;
 
 		// 根据 alphaTab 的布局模式判断是否需要横向滚动
-		// TO FIX: 避免尽可能地转换为 any 类型
-		// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
 		const isHorizontalLayout =
-			api.settings?.display?.layoutMode === (alphaTab as any).LayoutMode?.Horizontal;
+			api.settings?.display?.layoutMode === alphaTab.LayoutMode?.Horizontal;
 		if (!isHorizontalLayout) return;
 
 		const target = element;
@@ -43,8 +41,6 @@ export function setupHorizontalScroll(element: HTMLElement, api: alphaTab.AlphaT
 	element.addEventListener('wheel', handler, { passive: false });
 
 	return () => {
-		// TO FIX: 避免尽可能地转换为 any 类型
-		// 原因: any 类型会绕过TypeScript的类型检查，可能导致运行时错误
-		element.removeEventListener('wheel', handler as any);
+		element.removeEventListener('wheel', handler);
 	};
 }
