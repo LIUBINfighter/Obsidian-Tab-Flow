@@ -1,40 +1,16 @@
 import { normalizeColorToHex } from '../utils/shareCardUtils';
-import { toggleHidden } from '../utils/styleUtils';
 
-interface BasicControlsInitial {
-	t: (key: string) => string;
-	cardWidth?: number;
-	resolution?: string;
-	format?: string;
-	exportBgMode?: string;
-	exportBgCustomColor?: string;
-	disableLazy?: boolean;
-}
-
-interface BasicControlsCallbacks {
-	onWidthChange?: (value: number) => void;
-	onResolutionChange?: (value: string) => void;
-	onFormatChange?: (value: string) => void;
-	onExportBgModeChange?: (value: string) => void;
-	onCustomColorChange?: (value: string) => void;
-	onLazyChange?: (value: boolean) => void;
-}
-
-export function createBasicControls(
-	parent: HTMLElement,
-	initial: BasicControlsInitial,
-	callbacks: BasicControlsCallbacks
-) {
+export function createBasicControls(parent: any, initial: any, callbacks: any) {
 	const basicCard = parent.createDiv({ cls: 'share-card-basic-grid' });
 	// 宽度
 	basicCard.createEl('div', { text: initial.t('shareCard.cardWidth'), cls: 'sc-label' });
-	const widthInput = basicCard.createEl('input');
+	const widthInput = basicCard.createEl('input') as HTMLInputElement;
 	widthInput.type = 'number';
 	widthInput.value = String(initial.cardWidth || 800);
 
 	// 分辨率
 	basicCard.createEl('div', { text: initial.t('shareCard.resolution'), cls: 'sc-label' });
-	const resSelect = basicCard.createEl('select');
+	const resSelect = basicCard.createEl('select') as HTMLSelectElement;
 	['1x', '2x', '3x'].forEach((r) => {
 		const opt = resSelect.createEl('option', { text: r });
 		opt.value = r;
@@ -43,7 +19,7 @@ export function createBasicControls(
 
 	// 格式
 	basicCard.createEl('div', { text: initial.t('shareCard.format'), cls: 'sc-label' });
-	const formatSelect = basicCard.createEl('select');
+	const formatSelect = basicCard.createEl('select') as HTMLSelectElement;
 	[
 		['png', 'png'],
 		['jpg', 'jpg'],
@@ -56,7 +32,7 @@ export function createBasicControls(
 
 	// 导出背景模式
 	basicCard.createEl('div', { text: initial.t('shareCard.exportBg.label'), cls: 'sc-label' });
-	const bgModeSelect = basicCard.createEl('select');
+	const bgModeSelect = basicCard.createEl('select') as HTMLSelectElement;
 	[
 		[initial.t('shareCard.exportBg.options.default'), 'default'],
 		[initial.t('shareCard.exportBg.options.auto'), 'auto'],
@@ -71,19 +47,19 @@ export function createBasicControls(
 		text: initial.t('shareCard.customColor'),
 		cls: 'sc-label',
 	});
-	const customColorInput = basicCard.createEl('input');
+	const customColorInput = basicCard.createEl('input') as HTMLInputElement;
 	customColorInput.type = 'color';
 	customColorInput.value = normalizeColorToHex(initial.exportBgCustomColor || '#ffffff');
-	toggleHidden(customColorLabel, initial.exportBgMode !== 'custom');
-	toggleHidden(customColorInput, initial.exportBgMode !== 'custom');
+	customColorInput.style.display = initial.exportBgMode === 'custom' ? '' : 'none';
 
 	// 禁用懒加载
 	basicCard.createEl('div', { text: initial.t('shareCard.disableLazyLabel'), cls: 'sc-label' });
 	const lazyWrapInner = basicCard.createDiv({ cls: 'share-card-field-checkbox' });
 	const lazyCb = lazyWrapInner.createEl('input', {
 		attr: { type: 'checkbox' },
-	});
-	lazyWrapInner.createEl('label', { text: initial.t('shareCard.disableLazy') });
+	}) as HTMLInputElement;
+	const lazyLabel = lazyWrapInner.createEl('label', { text: initial.t('shareCard.disableLazy') });
+	lazyLabel.style.marginLeft = '4px';
 	lazyCb.checked = !!initial.disableLazy;
 
 	// Attach events
@@ -121,7 +97,7 @@ export function createBasicControls(
 		customColorLabel,
 		customColorInput,
 		lazyCb,
-		setValues(values: Partial<BasicControlsInitial>) {
+		setValues(values: any) {
 			if (values.cardWidth !== undefined) widthInput.value = String(values.cardWidth);
 			if (values.resolution) resSelect.value = values.resolution;
 			if (values.format) formatSelect.value = values.format;
@@ -130,10 +106,7 @@ export function createBasicControls(
 				values.exportBgCustomColor || customColorInput.value
 			);
 			lazyCb.checked = !!values.disableLazy;
-			if (values.exportBgMode) {
-				toggleHidden(customColorLabel, values.exportBgMode !== 'custom');
-				toggleHidden(customColorInput, values.exportBgMode !== 'custom');
-			}
+			customColorInput.style.display = values.exportBgMode === 'custom' ? '' : 'none';
 		},
 	};
 }

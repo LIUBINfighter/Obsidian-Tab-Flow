@@ -40,10 +40,10 @@ export async function renderPlayerTab(
 		});
 
 	const cardsWrap = tabContents.createDiv({
-		cls: 'tabflow-card-list',
+		attr: { style: 'display:flex; flex-direction:column; gap:8px;' },
 	});
 	const meta: Array<{
-		key: keyof PlayBarComponentVisibility;
+		key: keyof PlayBarComponentVisibility | 'audioPlayer';
 		label: string;
 		icon: string;
 		desc?: string;
@@ -145,7 +145,7 @@ export async function renderPlayerTab(
 				const newOrder = [...saved, ...missing];
 				if (plugin.settings.playBar) {
 					plugin.settings.playBar.order = newOrder;
-					void plugin.saveSettings();
+					plugin.saveSettings();
 				}
 				return newOrder;
 			}
@@ -159,43 +159,40 @@ export async function renderPlayerTab(
 		const cards = cardsWrap.querySelectorAll('.tabflow-card');
 		cards.forEach((el) => {
 			el.classList.remove('insert-before', 'insert-after', 'swap-target');
+			(el as HTMLElement).style.background = '';
 		});
 	};
 
 	const renderCards = () => {
 		cardsWrap.empty();
-		const order = getOrder().filter((k): k is keyof PlayBarComponentVisibility =>
-			meta.some((m) => m.key === k)
-		);
-		const comp = plugin.settings.playBar?.components;
+		const order = getOrder().filter((k) => meta.some((m) => m.key === (k as any)));
+		const comp = plugin.settings.playBar?.components || ({} as any);
 		order.forEach((key) => {
-			const m = meta.find((x) => x.key === key);
+			const m = meta.find((x) => x.key === (key as any));
 			if (!m) return;
 			const card = cardsWrap.createDiv({
-				cls: ['tabflow-card', 'tabflow-card--draggable'],
+				cls: 'tabflow-card',
 				attr: {
 					draggable: 'true',
+					style: 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px; border:1px solid var(--background-modifier-border); border-radius:6px;',
 				},
 			});
 			card.dataset.key = String(key);
 			const left = card.createDiv({
-				cls: 'tabflow-card__left',
+				attr: { style: 'display:flex; align-items:center; gap:8px;' },
 			});
-			left.createSpan({
-				text: '⠿',
-				cls: 'tabflow-card__handle',
-			});
+			left.createSpan({ text: '⠿', attr: { style: 'cursor:grab; user-select:none;' } });
 			const iconEl = left.createSpan(); // Create the span element
 			setIcon(iconEl, m.icon); // Use the imported setIcon function
 			left.createEl('strong', { text: m.label });
 			if (m.desc)
 				left.createSpan({
 					text: ` - ${m.desc}`,
-					cls: 'tabflow-card__desc',
+					attr: { style: 'color:var(--text-muted);font-size:0.9em;' },
 				});
 
 			const right = card.createDiv({
-				cls: 'tabflow-card__right',
+				attr: { style: 'display:flex; align-items:center; gap:6px;' },
 			});
 			const upIcon = right.createSpan({
 				cls: 'icon-clickable',
@@ -213,24 +210,15 @@ export async function renderPlayerTab(
 			setIcon(downIcon, 'lucide-arrow-down');
 
 			new Setting(right)
-				.addToggle((toggle) => {
-					const current = !!comp?.[key];
-					toggle.setValue(m.disabled ? false : current).onChange(async (value) => {
-						const playBarSettings =
-							plugin.settings.playBar ??
-							(plugin.settings.playBar = {
-								components: JSON.parse(
-									JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})
-								) as PlayBarComponentVisibility,
-								order: (DEFAULT_SETTINGS.playBar?.order || []).slice(),
-							});
-						const components =
-							playBarSettings.components ??
-							(playBarSettings.components = JSON.parse(
-								JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})
-							) as PlayBarComponentVisibility);
-
-						components[key] = m.disabled ? false : value;
+				.addToggle((t) => {
+					const current = !!(comp as any)[key];
+					t.setValue(m.disabled ? false : current).onChange(async (v) => {
+						plugin.settings.playBar = plugin.settings.playBar || {
+							components: {} as any,
+						};
+						(plugin.settings.playBar as any).components =
+							plugin.settings.playBar?.components || {};
+						(plugin.settings.playBar as any).components[key] = m.disabled ? false : v;
 						await plugin.saveSettings();
 						try {
 							/* @ts-ignore */ app.workspace.trigger(
@@ -240,9 +228,10 @@ export async function renderPlayerTab(
 							// Ignore workspace trigger errors
 						}
 					});
-					if (m.disabled) {
-						toggle.toggleEl?.querySelector('input')?.setAttribute('disabled', 'true');
-					}
+					if (m.disabled)
+						(t as any).toggleEl
+							.querySelector('input')
+							?.setAttribute('disabled', 'true');
 				})
 				.setClass('tabflow-no-border');
 
@@ -270,7 +259,9 @@ export async function renderPlayerTab(
 				const oldRect = card.getBoundingClientRect();
 				const scrollContainer = getScrollContainer(card);
 				await Promise.resolve(update());
-				const newCard = cardsWrap.querySelector(`.tabflow-card[data-key="${rowKey}"]`);
+				const newCard = cardsWrap.querySelector(
+					`.tabflow-card[data-key="${rowKey}"]`
+				) as HTMLElement | null;
 				if (!newCard) return;
 				const newRect = newCard.getBoundingClientRect();
 				const delta = newRect.top - oldRect.top;
@@ -289,12 +280,10 @@ export async function renderPlayerTab(
 				if (i > 0) {
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i - 1], cur[i]] = [cur[i], cur[i - 1]];
-						if (!plugin.settings.playBar) {
-							plugin.settings.playBar = {
-								components: {} as PlayBarComponentVisibility,
-							};
-						}
-						plugin.settings.playBar.order = cur;
+						plugin.settings.playBar = plugin.settings.playBar || {
+							components: {} as any,
+						};
+						(plugin.settings.playBar as any).order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -314,12 +303,10 @@ export async function renderPlayerTab(
 				if (i >= 0 && i < cur.length - 1) {
 					await keepPointerOverRow(String(key), async () => {
 						[cur[i + 1], cur[i]] = [cur[i], cur[i + 1]];
-						if (!plugin.settings.playBar) {
-							plugin.settings.playBar = {
-								components: {} as PlayBarComponentVisibility,
-							};
-						}
-						plugin.settings.playBar.order = cur;
+						plugin.settings.playBar = plugin.settings.playBar || {
+							components: {} as any,
+						};
+						(plugin.settings.playBar as any).order = cur;
 						await plugin.saveSettings();
 						renderCards();
 					});
@@ -333,22 +320,18 @@ export async function renderPlayerTab(
 				}
 			};
 
-			upIcon.addEventListener('click', () => {
-				void moveUp();
-			});
+			upIcon.addEventListener('click', () => moveUp());
 			upIcon.addEventListener('keydown', (e: KeyboardEvent) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					void moveUp();
+					moveUp();
 				}
 			});
-			downIcon.addEventListener('click', () => {
-				void moveDown();
-			});
+			downIcon.addEventListener('click', () => moveDown());
 			downIcon.addEventListener('keydown', (e: KeyboardEvent) => {
 				if (e.key === 'Enter' || e.key === ' ') {
 					e.preventDefault();
-					void moveDown();
+					moveDown();
 				}
 			});
 
@@ -361,7 +344,7 @@ export async function renderPlayerTab(
 				(e.dataTransfer as DataTransfer).dropEffect = 'move';
 				clearDndHighlights();
 				const rect = card.getBoundingClientRect();
-				const offsetY = e.clientY - rect.top;
+				const offsetY = (e as DragEvent).clientY - rect.top;
 				const ratio = offsetY / rect.height;
 				if (ratio < 0.33) {
 					card.classList.add('insert-before');
@@ -373,44 +356,34 @@ export async function renderPlayerTab(
 			});
 			card.addEventListener('dragleave', () => clearDndHighlights());
 			card.addEventListener('dragend', () => clearDndHighlights());
-			card.addEventListener('drop', () => {
-				void (async () => {
-					const isInsertAfter = card.classList.contains('insert-after');
-					const isSwap = card.classList.contains('swap-target');
-					clearDndHighlights();
-					if (!draggingKey || draggingKey === key) return;
-					const list = getOrder();
-					const from = list.indexOf(String(draggingKey));
-					const to = list.indexOf(String(key));
-					if (from < 0 || to < 0) return;
-					const cur = list.slice();
-					if (isSwap) {
-						[cur[from], cur[to]] = [cur[to], cur[from]];
-					} else {
-						let insertIndex = to + (isInsertAfter ? 1 : 0);
-						const [moved] = cur.splice(from, 1);
-						if (from < insertIndex) insertIndex -= 1;
-						cur.splice(insertIndex, 0, moved);
-					}
-					plugin.settings.playBar = plugin.settings.playBar || {
-						components: {} as PlayBarComponentVisibility,
-					};
-					if (plugin.settings.playBar) {
-						if (plugin.settings.playBar) {
-							plugin.settings.playBar.order = cur;
-						}
-					}
-					await plugin.saveSettings();
-					renderCards();
-					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:playbar-components-changed'
-						);
-					} catch {
-						// Ignore workspace trigger errors
-					}
-					draggingKey = null;
-				})();
+			card.addEventListener('drop', async () => {
+				const isInsertAfter = card.classList.contains('insert-after');
+				const isSwap = card.classList.contains('swap-target');
+				clearDndHighlights();
+				if (!draggingKey || draggingKey === key) return;
+				const list = getOrder();
+				const from = list.indexOf(String(draggingKey));
+				const to = list.indexOf(String(key));
+				if (from < 0 || to < 0) return;
+				const cur = list.slice();
+				if (isSwap) {
+					[cur[from], cur[to]] = [cur[to], cur[from]];
+				} else {
+					let insertIndex = to + (isInsertAfter ? 1 : 0);
+					const [moved] = cur.splice(from, 1);
+					if (from < insertIndex) insertIndex -= 1;
+					cur.splice(insertIndex, 0, moved);
+				}
+				plugin.settings.playBar = plugin.settings.playBar || { components: {} as any };
+				(plugin.settings.playBar as any).order = cur;
+				await plugin.saveSettings();
+				renderCards();
+				try {
+					/* @ts-ignore */ app.workspace.trigger('tabflow:playbar-components-changed');
+				} catch {
+					// Ignore workspace trigger errors
+				}
+				draggingKey = null;
 			});
 		});
 	};

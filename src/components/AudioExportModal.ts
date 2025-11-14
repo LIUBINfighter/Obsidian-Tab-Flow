@@ -1,4 +1,4 @@
-import { Modal, App, Setting, Notice, requestUrl } from 'obsidian';
+import { Modal, App, Setting, Notice } from 'obsidian';
 import { t } from '../i18n';
 
 export class AudioExportModal extends Modal {
@@ -12,8 +12,8 @@ export class AudioExportModal extends Modal {
 
 	async copyToClipboard() {
 		try {
-			const response = await requestUrl({ url: this.audioUrl });
-			const blob = new Blob([response.arrayBuffer], { type: 'audio/wav' });
+			const response = await fetch(this.audioUrl);
+			const blob = await response.blob();
 			// ClipboardItem 需要 audio/wav 类型
 			// @ts-ignore
 			await navigator.clipboard.write([
@@ -34,7 +34,7 @@ export class AudioExportModal extends Modal {
 		const audio = document.createElement('audio');
 		audio.controls = true;
 		audio.src = this.audioUrl;
-		audio.classList.add('tabflow-audio-preview');
+		audio.style.width = '100%';
 		this.contentEl.appendChild(audio);
 
 		new Setting(this.contentEl).setName(t('export.saveToLocal')).addButton((btn) => {

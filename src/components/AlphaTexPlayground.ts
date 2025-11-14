@@ -1,5 +1,6 @@
 import type TabFlowPlugin from '../main';
 import { setIcon, normalizePath, TFile, Notice } from 'obsidian';
+import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEditor';
 import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
@@ -8,32 +9,6 @@ import type { AlphaTexMountHandle } from '../markdown/AlphaTexBlock';
 interface EventBus {
 	subscribe(event: string, callback: (...args: unknown[]) => void): void;
 }
-
-// Extend Window interface for global settings
-declare global {
-	interface Window {
-		__tabflow_settings__?: unknown;
-		alphaTab?: {
-			LayoutMode?: {
-				Page?: number;
-				Horizontal?: number;
-			};
-		};
-	}
-}
-
-// Type for alphaTab API settings with extended properties (using intersection types)
-type ExtendedDisplaySettings = alphaTab.DisplaySettings & {
-	staveProfile?: number;
-};
-
-type ExtendedPlayerSettings = alphaTab.PlayerSettings & {
-	scrollMode?: string | alphaTab.ScrollMode;
-};
-
-type ExtendedAlphaTabApi = alphaTab.AlphaTabApi & {
-	scrollToCursor?: () => void;
-};
 
 export interface AlphaTexPlaygroundOptions {
 	placeholder?: string;
@@ -136,7 +111,7 @@ export function createAlphaTexPlayground(
 			} else {
 				if (ch === '"' || ch === "'") {
 					inStr = true;
-					quote = ch;
+					quote = ch as '"' | "'";
 					i++;
 					continue;
 				}
@@ -183,7 +158,8 @@ export function createAlphaTexPlayground(
 		const editorContainer = editorWrap.createDiv({ cls: 'inmarkdown-editor-cm' });
 		// ensure global fallback for older code paths
 		try {
-			window.__tabflow_settings__ = window.__tabflow_settings__ || plugin.settings;
+			(window as any).__tabflow_settings__ =
+				(window as any).__tabflow_settings__ || plugin.settings;
 		} catch {
 			// ignore
 		}
@@ -208,31 +184,35 @@ export function createAlphaTexPlayground(
 		setIcon(iCopy, 'copy');
 		btnCopy.appendChild(iCopy);
 		btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
-		btnCopy.addEventListener(
-			'click',
-			() =>
-				void (async () => {
-					try {
-						if (embedded) await navigator.clipboard.writeText(embedded.value);
-					} catch {
-						// Clipboard API fallback failed, no further fallback available
-						// Modern browsers should support navigator.clipboard
-					}
-					// feedback: turn into green check briefly
-					try {
-						setIcon(iCopy, 'check');
-						btnCopy.classList.add('is-success');
-						btnCopy.setAttr('aria-label', t('playground.copied'));
-						setTimeout(() => {
-							setIcon(iCopy, 'copy');
-							btnCopy.classList.remove('is-success');
-							btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
-						}, 1200);
-					} catch {
-						// Ignore UI feedback errors
-					}
-				})()
-		);
+		btnCopy.addEventListener('click', async () => {
+			try {
+				if (embedded) await navigator.clipboard.writeText(embedded.value);
+			} catch {
+				try {
+					const ta = document.createElement('textarea');
+					ta.value = embedded ? embedded.value : currentValue;
+					document.body.appendChild(ta);
+					ta.select();
+					document.execCommand('copy');
+					ta.remove();
+				} catch {
+					// Ignore clipboard fallback errors
+				}
+			}
+			// feedback: turn into green check briefly
+			try {
+				setIcon(iCopy, 'check');
+				btnCopy.classList.add('is-success');
+				btnCopy.setAttr('aria-label', t('playground.copied'));
+				setTimeout(() => {
+					setIcon(iCopy, 'copy');
+					btnCopy.classList.remove('is-success');
+					btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
+				}, 1200);
+			} catch {
+				// Ignore UI feedback errors
+			}
+		});
 
 		const btnReset = toolbar.createEl('button', {
 			attr: { type: 'button' },
@@ -260,40 +240,36 @@ export function createAlphaTexPlayground(
 		setIcon(iNew, 'file-plus');
 		btnNewNote.appendChild(iNew);
 		btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
-		btnNewNote.addEventListener(
-			'click',
-			() =>
-				void (async () => {
-					try {
-						const now = new Date();
-						const pad = (n: number) => String(n).padStart(2, '0');
-						const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-						const folder = 'Alphatex Playground';
-						const baseName = `Playground-${stamp}.md`;
-						const filePath = normalizePath(`${folder}/${baseName}`);
-						// ensure folder
-						try {
-							if (!(await plugin.app.vault.adapter.exists(folder)))
-								await plugin.app.vault.createFolder(folder);
-						} catch {
-							// Ignore folder creation errors
-						}
-						const rawValue = embedded ? embedded.value : currentValue;
-						const escapedValue = rawValue.replace(/\\/g, '\\\\').replace(/`/g, '\\`'); // Escape backslash, then backtick
-						const content = `\`\`\`alphatex\n${escapedValue}\n\`\`\``;
-						// vault.create() 已经返回 Promise<TFile>，不需要类型转换
-						const file = await plugin.app.vault.create(filePath, content);
-						// 使用类型守卫确保是 TFile 实例
-						if (!(file instanceof TFile)) {
-							throw new Error('创建的文件不是有效的 TFile 实例');
-						}
-						const leaf = plugin.app.workspace.getLeaf(true);
-						await leaf.openFile(file);
-					} catch (e) {
-						console.warn('[Playground] 创建笔记失败', e);
-					}
-				})()
-		);
+		btnNewNote.addEventListener('click', async () => {
+			try {
+				const now = new Date();
+				const pad = (n: number) => String(n).padStart(2, '0');
+				const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+				const folder = 'Alphatex Playground';
+				const baseName = `Playground-${stamp}.md`;
+				const filePath = normalizePath(`${folder}/${baseName}`);
+				// ensure folder
+				try {
+					if (!(await plugin.app.vault.adapter.exists(folder)))
+						await plugin.app.vault.createFolder(folder);
+				} catch {
+					// Ignore folder creation errors
+				}
+				const rawValue = embedded ? embedded.value : currentValue;
+				const escapedValue = rawValue.replace(/\\/g, '\\\\').replace(/`/g, '\\`'); // Escape backslash, then backtick
+				const content = `\`\`\`alphatex\n${escapedValue}\n\`\`\``;
+				// vault.create() 已经返回 Promise<TFile>，不需要类型转换
+				const file = await plugin.app.vault.create(filePath, content);
+				// 使用类型守卫确保是 TFile 实例
+				if (!(file instanceof TFile)) {
+					throw new Error('创建的文件不是有效的 TFile 实例');
+				}
+				const leaf = plugin.app.workspace.getLeaf(true);
+				await leaf.openFile(file);
+			} catch (e) {
+				console.warn('[Playground] 创建笔记失败', e);
+			}
+		});
 
 		// Format init JSON button (使用顶层 formatInitHeader)
 		const btnFormat = toolbar.createEl('button', {
@@ -325,7 +301,7 @@ export function createAlphaTexPlayground(
 		if (readOnly) {
 			// 简单只读（利用 CodeMirror DOM 属性）
 			editorContainer.addClass('read-only');
-			const cmEl = editorContainer.querySelector('.cm-content');
+			const cmEl = editorContainer.querySelector('.cm-content') as HTMLElement | null;
 			if (cmEl) cmEl.setAttr('contenteditable', 'false');
 		}
 	}
@@ -345,8 +321,13 @@ export function createAlphaTexPlayground(
 	function scheduleRender() {
 		if (debounceTimer) window.clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
-			if (typeof window.requestIdleCallback === 'function')
-				window.requestIdleCallback(() => renderPreview());
+			const win = window as unknown as {
+				requestIdleCallback?: (
+					cb: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void
+				) => number;
+			};
+			if (typeof win.requestIdleCallback === 'function')
+				win.requestIdleCallback(() => renderPreview());
 			else renderPreview();
 		}, debounceMs);
 		onChange?.(currentValue);
@@ -356,7 +337,7 @@ export function createAlphaTexPlayground(
 		// 清理旧实例
 		try {
 			mounted?.destroy?.();
-		} catch (_) {
+		} catch (e) {
 			/* ignore */
 		}
 		previewWrap.empty();
@@ -367,36 +348,36 @@ export function createAlphaTexPlayground(
 			infoBar.createEl('span', { text: currentBarInfo });
 		}
 
-		const resources = plugin.resources;
-		if (!resources?.bravuraUri || !resources.alphaTabWorkerUri) {
+		const resources: AlphaTabResources | undefined = (
+			plugin as unknown as { resources?: AlphaTabResources }
+		).resources;
+		if (!resources || !resources.bravuraUri || !resources.alphaTabWorkerUri) {
 			const holder = previewWrap.createDiv({ cls: 'alphatex-block' });
 			holder.createEl('div', { text: t('playground.resourcesMissing') });
 			const btn = holder.createEl('button', { text: t('playground.downloadResources') });
-			btn.addEventListener(
-				'click',
-				() =>
-					void (async () => {
-						btn.setAttr('disabled', 'true');
-						btn.setText(t('playground.downloading'));
-						try {
-							const ok = await plugin.downloadAssets();
-							btn.removeAttribute('disabled');
-							btn.setText(
-								ok
-									? t('playground.downloadCompleted')
-									: t('playground.downloadFailed')
-							);
-						} catch (_) {
-							btn.removeAttribute('disabled');
-							btn.setText(t('playground.downloadFailed'));
-						}
-					})()
-			);
+			btn.addEventListener('click', async () => {
+				btn.setAttr('disabled', 'true');
+				btn.setText(t('playground.downloading'));
+				try {
+					interface Downloader {
+						downloadAssets?: () => Promise<boolean>;
+					}
+					const ok = await (plugin as unknown as Downloader).downloadAssets?.();
+					btn.removeAttribute('disabled');
+					btn.setText(
+						ok ? t('playground.downloadCompleted') : t('playground.downloadFailed')
+					);
+				} catch (e) {
+					btn.removeAttribute('disabled');
+					btn.setText(t('playground.downloadFailed'));
+				}
+			});
 			return;
 		}
 
-		// Dynamically import to avoid circular dependency and reduce initial bundle size
-		const { mountAlphaTexBlock } = await import('../markdown/AlphaTexBlock');
+		// 动态加载渲染函数
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const { mountAlphaTexBlock } = require('../markdown/AlphaTexBlock');
 		try {
 			mounted = mountAlphaTexBlock(previewWrap, currentValue, resources, {
 				scale: 1,
@@ -417,7 +398,7 @@ export function createAlphaTexPlayground(
 	}
 
 	// 初次渲染
-	void renderPreview();
+	renderPreview();
 
 	// 订阅事件
 	if (eventBus) {
@@ -439,7 +420,7 @@ export function createAlphaTexPlayground(
 		eventBus.subscribe('命令:设置谱表', (profile: number) => {
 			const api = mounted?.api;
 			if (api) {
-				(api.settings.display as ExtendedDisplaySettings).staveProfile = profile;
+				(api.settings.display as any).staveProfile = profile;
 				api.updateSettings();
 				api.render();
 			}
@@ -454,11 +435,10 @@ export function createAlphaTexPlayground(
 			}
 		});
 
-		eventBus.subscribe('命令:设置滚动模式', (mode: string | alphaTab.ScrollMode) => {
+		eventBus.subscribe('命令:设置滚动模式', (mode: string) => {
 			const api = mounted?.api;
 			if (api) {
-				(api.settings.player as ExtendedPlayerSettings).scrollMode =
-					mode as alphaTab.ScrollMode;
+				(api.settings.player as any).scrollMode = mode;
 				api.updateSettings();
 			}
 		});
@@ -482,11 +462,11 @@ export function createAlphaTexPlayground(
 
 		eventBus.subscribe('命令:滚动到光标', () => {
 			const api = mounted?.api;
-			if (api) (api as ExtendedAlphaTabApi).scrollToCursor?.();
+			if (api) (api as any).scrollToCursor?.();
 		});
 
 		eventBus.subscribe('命令:重新构造AlphaTabApi', () => {
-			void renderPreview();
+			renderPreview();
 		});
 	}
 
@@ -495,7 +475,7 @@ export function createAlphaTexPlayground(
 		if (!document.body.contains(wrapper)) {
 			try {
 				mounted?.destroy?.();
-			} catch (_) {
+			} catch (e) {
 				/* ignore */
 			}
 			observer.disconnect();
@@ -513,15 +493,13 @@ export function createAlphaTexPlayground(
 		destroy: () => {
 			try {
 				mounted?.destroy?.();
-			} catch (_) {
+			} catch (e) {
 				/* silent */
 			}
 			observer.disconnect();
 			wrapper.detach();
 		},
-		refresh: () => {
-			void renderPreview();
-		},
+		refresh: () => renderPreview(),
 		getApi: () => mounted?.api || null,
 		updateCurrentBarInfo: (info: string) => {
 			currentBarInfo = info;

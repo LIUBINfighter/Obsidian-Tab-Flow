@@ -7,9 +7,6 @@ export interface AlphaTexInitOptions {
 	// display
 	scale?: number; // 0.5 - 2.0
 	layoutMode?: number | string; // optional, numeric enum preferred
-	alphaTabOptions?: Record<string, unknown> & {
-		__disableLazyLoading?: boolean;
-	};
 	// player
 	speed?: number; // 0.5 - 2.0
 	metronome?: boolean;
@@ -24,10 +21,6 @@ export interface AlphaTexInitOptions {
 		override: { components?: Record<string, boolean>; order?: string[] | string } | null
 	) => void;
 	clearUiOverride?: () => void;
-	ui?: {
-		components?: Record<string, boolean>;
-		order?: string[] | string;
-	};
 }
 
 export interface AlphaTexMountHandle {
@@ -50,11 +43,13 @@ export function mountAlphaTexBlock(
 
 	// 自定义扩展：外层可通过 defaults 传入 alphaTabOptions.__disableLazyLoading
 	// 我们不在类型上正式暴露此字段，保持局部影响。
-	const disableLazyLoading = defaults?.alphaTabOptions?.__disableLazyLoading === true;
+	const disableLazyLoading = (defaults as any)?.alphaTabOptions?.__disableLazyLoading === true;
 
 	// extract optional UI override from init
 
-	const uiOverride = opts?.ui;
+	const uiOverride:
+		| { components?: Record<string, boolean>; order?: string[] | string }
+		| undefined = (opts as any)?.ui;
 	try {
 		if (uiOverride && defaults?.setUiOverride) defaults.setUiOverride(uiOverride);
 	} catch {
@@ -87,11 +82,8 @@ export function mountAlphaTexBlock(
 	const formatError = (err: unknown): string => {
 		try {
 			// Prefer message if present
-			interface ErrorLike {
-				message?: string;
-			}
-			const errorLike = err as ErrorLike;
-			if (errorLike && typeof errorLike.message === 'string') return errorLike.message;
+			const anyErr = err as any;
+			if (anyErr && typeof anyErr.message === 'string') return anyErr.message;
 			// Some AlphaTab errors might be plain strings
 			return String(err);
 		} catch {
@@ -110,36 +102,50 @@ export function mountAlphaTexBlock(
 		btn.appendChild(icon);
 		btn.setAttribute('aria-label', '复制错误与原文');
 		btn.title = '复制错误与原文';
-		btn.addEventListener(
-			'click',
-			() =>
-				void (async () => {
-					const mergedText = [
-						'---- AlphaTex Source ----',
-						source,
-						'',
-						'---- Errors ----',
-						...errorMessages.map((e) => `- ${e}`),
-						'',
-					].join('\n');
+		btn.addEventListener('click', async () => {
+			const mergedText = [
+				'---- AlphaTex Source ----',
+				source,
+				'',
+				'---- Errors ----',
+				...errorMessages.map((e) => `- ${e}`),
+				'',
+			].join('\n');
+			try {
+				await navigator.clipboard.writeText(mergedText);
+				try {
+					setIcon(icon, 'check');
+					btn.classList.add('is-success');
+					setTimeout(() => {
+						setIcon(icon, 'copy');
+						btn.classList.remove('is-success');
+					}, 1200);
+				} catch {
+					// Ignore icon update errors
+				}
+			} catch {
+				try {
+					const ta = document.createElement('textarea');
+					ta.value = mergedText;
+					document.body.appendChild(ta);
+					ta.select();
+					document.execCommand('copy');
+					ta.remove();
 					try {
-						await navigator.clipboard.writeText(mergedText);
-						try {
-							setIcon(icon, 'check');
-							btn.classList.add('is-success');
-							setTimeout(() => {
-								setIcon(icon, 'copy');
-								btn.classList.remove('is-success');
-							}, 1200);
-						} catch {
-							// Ignore icon update errors
-						}
+						setIcon(icon, 'check');
+						btn.classList.add('is-success');
+						setTimeout(() => {
+							setIcon(icon, 'copy');
+							btn.classList.remove('is-success');
+						}, 1200);
 					} catch {
-						// Clipboard API fallback failed, no further fallback available
-						// Modern browsers should support navigator.clipboard
+						// Ignore icon update errors
 					}
-				})()
-		);
+				} catch {
+					// Ignore clipboard fallback errors
+				}
+			}
+		});
 		// place button at the top of messages
 		messagesEl.appendChild(btn);
 	};
@@ -210,7 +216,19 @@ export function mountAlphaTexBlock(
 	const scoreInfoColor = mainGlyphColor;
 
 	// 字体由全局注入一次（main.ts），此处不再重复注入，减少样式计算与回流
-	// 光标和高亮样式已移至 alphatex.css，使用 CSS 变量，无需动态创建
+
+	// Cursor and highlight styles (aligned with TabView)
+	const accent = `hsl(var(--accent-h),var(--accent-s),var(--accent-l))`;
+	const runtimeStyle = document.createElement('style');
+
+	const styleContent = `
+		.alphatex-block .at-cursor-bar { background: ${accent}; opacity: 0.2; }
+		.alphatex-block .at-selection div { background: ${accent}; opacity: 0.4; }
+		.alphatex-block .at-cursor-beat { background: ${accent}; width: 3px; }
+		.alphatex-block .at-highlight * { fill: ${accent}; stroke: ${accent}; }
+	`;
+	runtimeStyle.appendChild(document.createTextNode(styleContent));
+	document.head.appendChild(runtimeStyle);
 
 	const playerEnabled = String(merged.player || 'enable').toLowerCase() !== 'disable';
 	let destroyed = false;
@@ -232,24 +250,17 @@ export function mountAlphaTexBlock(
 
 	const heavyInit = () => {
 		if (destroyed) return;
-		// Initialize AlphaTab API with configuration
 		api = new alphaTab.AlphaTabApi(scoreEl, {
 			core: {
 				scriptFile: resources.alphaTabWorkerUri || '',
-				smuflFontSources: resources.bravuraUri
-					? new Map<number, string>([
+				smuflFontSources: (resources.bravuraUri
+					? new Map([
 							[
-								(
-									alphaTab as {
-										rendering?: {
-											glyphs?: { FontFileFormat?: { Woff2?: number } };
-										};
-									}
-								).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
+								(alphaTab as any).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
 								resources.bravuraUri,
 							],
 						])
-					: new Map<number, string>(),
+					: new Map()) as unknown as Map<number, string>,
 				fontDirectory: '',
 				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
 				// @ts-ignore
@@ -294,12 +305,7 @@ export function mountAlphaTexBlock(
 			}
 		};
 		try {
-			type AlphaTabApiWithError = alphaTab.AlphaTabApi & {
-				error?: {
-					on?: (callback: (e: unknown) => void) => void;
-				};
-			};
-			(api as AlphaTabApiWithError).error?.on?.(onApiError);
+			(api as any).error?.on?.(onApiError);
 		} catch {
 			// Ignore error event subscription errors
 		}
@@ -314,11 +320,7 @@ export function mountAlphaTexBlock(
 
 		// scope scroll container to this wrapper only
 		try {
-			type PlayerSettingsWithScrollElement = alphaTab.PlayerSettings & {
-				scrollElement?: HTMLElement;
-			};
-			const playerSettings = api.settings.player as PlayerSettingsWithScrollElement;
-			playerSettings.scrollElement = wrapper;
+			(api.settings.player as any).scrollElement = wrapper as unknown as HTMLElement;
 			api.updateSettings();
 		} catch {
 			// Ignore scroll element setup errors
@@ -340,37 +342,20 @@ export function mountAlphaTexBlock(
 			errorMessages = [];
 			errorIndex.clear();
 			try {
-				type AlphaTabApiWithTex = alphaTab.AlphaTabApi & {
-					tex?: (text: string) => void | Promise<void>;
-				};
-				const apiWithTex = api as AlphaTabApiWithTex;
-				if (typeof apiWithTex.tex === 'function') {
-					apiWithTex.tex(body);
+				if (typeof (api as any).tex === 'function') {
+					(api as any).tex(body);
 					return;
 				}
-				type AlphaTabWithImporter = {
-					importer?: {
-						AlphaTexImporter?: new () => {
-							logErrors?: boolean;
-							initFromString?: (text: string, settings: unknown) => void;
-							readScore?: () => unknown;
-							errors?: unknown[];
-							_errors?: unknown[];
-						};
-					};
-				};
-				const Importer = (alphaTab as AlphaTabWithImporter).importer?.AlphaTexImporter;
+				const Importer: any = (alphaTab as any).importer?.AlphaTexImporter;
 				if (Importer) {
 					const imp = new Importer();
-					if (imp.logErrors !== undefined) imp.logErrors = true;
-					imp.initFromString?.(body, api!.settings);
-					const score = imp.readScore?.();
-					if (score) {
-						api!.renderScore(score as alphaTab.model.Score);
-					}
+					imp.logErrors = true;
+					imp.initFromString(body, api!.settings);
+					const score = imp.readScore();
+					api!.renderScore(score);
 					// Best-effort: surface importer-reported errors if available
 					try {
-						const errs = imp.errors || imp._errors;
+						const errs = (imp as any)?.errors || (imp as any)?._errors;
 						if (Array.isArray(errs) && errs.length > 0) {
 							errs.forEach((er: unknown) => appendError(formatError(er)));
 						}
@@ -386,29 +371,19 @@ export function mountAlphaTexBlock(
 
 		// Apply track filtering after score loaded if requested
 		try {
-			type AlphaTabApiWithScoreLoaded = alphaTab.AlphaTabApi & {
-				scoreLoaded?: {
-					on?: (callback: () => void) => void;
-				};
-				score?: {
-					tracks?: Array<{ index?: number }>;
-				};
-				renderTracks?: (tracks: unknown[]) => void;
-			};
-			(api as AlphaTabApiWithScoreLoaded).scoreLoaded?.on?.(() => {
+			(api as any).scoreLoaded?.on?.(() => {
 				try {
 					const tracksRequest = merged.tracks;
 					if (!Array.isArray(tracksRequest) || tracksRequest.length === 0) return;
 					if (tracksRequest.includes(-1)) return;
-					const apiWithScore = api as AlphaTabApiWithScoreLoaded;
-					const allTracks = apiWithScore.score?.tracks;
+					const allTracks = (api as any).score?.tracks as any[] | undefined;
 					if (!allTracks || allTracks.length === 0) return;
 					const wanted = new Set<number>(tracksRequest);
 					const selected = allTracks.filter(
 						(t) => typeof t?.index === 'number' && wanted.has(t.index)
 					);
 					if (selected.length > 0) {
-						apiWithScore.renderTracks?.(selected);
+						(api as any).renderTracks(selected);
 					}
 				} catch {
 					// Ignore track filtering errors
@@ -529,10 +504,7 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '滚动到光标');
 					btn.onclick = () => {
 						try {
-							type AlphaTabApiWithScrollToCursor = alphaTab.AlphaTabApi & {
-								scrollToCursor?: () => void;
-							};
-							(api as AlphaTabApiWithScrollToCursor).scrollToCursor?.();
+							(api as any).scrollToCursor?.();
 						} catch {
 							// Ignore scroll to cursor errors
 						}
@@ -544,45 +516,31 @@ export function mountAlphaTexBlock(
 					btn.className = 'clickable-icon';
 					btn.setAttribute('type', 'button');
 					const icon = document.createElement('span');
-					type DisplaySettingsWithLayoutMode = alphaTab.DisplaySettings & {
-						layoutMode?: number;
-					};
-					type AlphaTabWithLayoutMode = {
-						LayoutMode?: {
-							Horizontal?: number;
-							Page?: number;
-						};
-					};
 					const isHorizontal =
-						(api!.settings?.display as DisplaySettingsWithLayoutMode)?.layoutMode ===
-						(alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal;
+						(api!.settings?.display as any)?.layoutMode ===
+						(alphaTab as any).LayoutMode?.Horizontal;
 					setIcon(icon, isHorizontal ? 'lucide-panels-top-left' : 'lucide-layout');
 					btn.appendChild(icon);
 					btn.setAttribute('aria-label', isHorizontal ? '布局: 横向' : '布局: 页面');
 					btn.onclick = () => {
 						try {
-							const displaySettings = api!.settings
-								?.display as DisplaySettingsWithLayoutMode;
-							const alphaTabLayout = alphaTab as AlphaTabWithLayoutMode;
-							const current = displaySettings?.layoutMode;
+							const current = (api!.settings?.display as any)?.layoutMode;
 							const next =
-								current === alphaTabLayout.LayoutMode?.Page
-									? alphaTabLayout.LayoutMode?.Horizontal
-									: alphaTabLayout.LayoutMode?.Page;
-							if (displaySettings && next !== undefined) {
-								displaySettings.layoutMode = next;
-							}
+								current === (alphaTab as any).LayoutMode?.Page
+									? (alphaTab as any).LayoutMode?.Horizontal
+									: (alphaTab as any).LayoutMode?.Page;
+							(api!.settings.display as any).layoutMode = next;
 							api!.updateSettings();
 							api!.render();
 							setIcon(
 								icon,
-								next === (alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal
+								next === (alphaTab as any).LayoutMode?.Horizontal
 									? 'lucide-panels-top-left'
 									: 'lucide-layout'
 							);
 							btn.setAttribute(
 								'aria-label',
-								next === (alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal
+								next === (alphaTab as any).LayoutMode?.Horizontal
 									? '布局: 横向'
 									: '布局: 页面'
 							);
@@ -602,13 +560,8 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '回到顶部');
 					btn.onclick = () => {
 						try {
-							type AlphaTabApiWithTickPosition = alphaTab.AlphaTabApi & {
-								tickPosition?: number;
-								scrollToCursor?: () => void;
-							};
-							const apiWithPosition = api as AlphaTabApiWithTickPosition;
-							apiWithPosition.tickPosition = 0;
-							apiWithPosition.scrollToCursor?.();
+							(api as any).tickPosition = 0;
+							(api as any).scrollToCursor?.();
 						} catch {
 							// Ignore scroll to top errors
 						}
@@ -625,24 +578,13 @@ export function mountAlphaTexBlock(
 					btn.setAttribute('aria-label', '回到底部');
 					btn.onclick = () => {
 						try {
-							type AlphaTabApiWithScore = alphaTab.AlphaTabApi & {
-								score?: {
-									masterBars?: Array<{
-										start?: number;
-										calculateDuration?: () => number;
-									}>;
-								};
-								tickPosition?: number;
-								scrollToCursor?: () => void;
-							};
-							const apiWithScore = api as AlphaTabApiWithScore;
-							const score = apiWithScore.score;
+							const score: any = (api as any).score;
 							const masterBars = score?.masterBars || [];
 							if (!masterBars.length) return;
 							const last = masterBars[masterBars.length - 1];
-							const endTick = (last.start ?? 0) + (last.calculateDuration?.() ?? 0);
-							apiWithScore.tickPosition = endTick;
-							apiWithScore.scrollToCursor?.();
+							const endTick = last.start + last.calculateDuration();
+							(api as any).tickPosition = endTick;
+							(api as any).scrollToCursor?.();
 						} catch {
 							// Ignore scroll to end errors
 						}
@@ -736,6 +678,11 @@ export function mountAlphaTexBlock(
 				}
 			} catch {
 				// Ignore DOM cleanup errors
+			}
+			try {
+				runtimeStyle.remove();
+			} catch {
+				// Ignore style removal errors
 			}
 			// clear runtime UI override when this block unmounts
 			try {

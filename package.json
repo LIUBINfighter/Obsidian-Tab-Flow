@@ -20,7 +20,8 @@
 		"lint:fix": "eslint src --ext .ts,.js,.md,.json --fix",
 		"format": "prettier --write \"src/**/*.{ts,js,json,css,md}\"",
 		"format:check": "prettier --check \"src/**/*.{ts,js,json,css,md}\"",
-		"check": "npm run clean && npm run lint && npm run lint:fix && npm run format && npm run format:check && npm run build && echo ======================================= && echo ' All checks passed successfully!'"
+		"scan":"node ./scripts/scan-codeql.js",
+		"check": "npm run clean && npm run lint && npm run lint:fix && npm run format && npm run format:check && npm run build  && npm run scan && echo ======================================= && echo ' All checks passed successfully!'"
 	},
 	"keywords": [],
 	"author": "Jay Bridge",
@@ -29,19 +30,18 @@
 		"@testing-library/jest-dom": "^6.6.3",
 		"@types/jest": "^29.5.14",
 		"@types/node": "^18.0.0",
-		"@typescript-eslint/eslint-plugin": "^8.46.0",
-		"@typescript-eslint/parser": "^8.46.0",
+		"@typescript-eslint/eslint-plugin": "5.29.0",
+		"@typescript-eslint/parser": "5.29.0",
 		"@vitest/coverage-v8": "^1.6.0",
 		"@vitest/ui": "^1.6.0",
 		"builtin-modules": "3.3.0",
 		"esbuild": "0.17.3",
 		"eslint": "^8.57.0",
-		"eslint-plugin-obsidianmd": "^0.1.8",
 		"jsdom": "^25.0.1",
 		"obsidian": "latest",
 		"prettier": "^3.3.3",
 		"tslib": "2.4.0",
-		"typescript": "^5.6.3",
+		"typescript": "4.7.4",
 		"vitest": "^1.6.0"
 	},
 	"dependencies": {
@@ -54,10 +54,9 @@
 		"@codemirror/view": "^6.26.3",
 		"@coderline/alphatab": "^1.6.0",
 		"@types/mime-types": "^3.0.0",
-		"dom-to-image-more": "^2.9.0",
 		"jszip": "^3.10.1",
 		"mime-types": "^3.0.1",
-		"monkey-around": "^3.0.0",
-		"color-convert": "^2.0.1"
+		"dom-to-image-more": "^2.9.0",
+		"monkey-around": "^3.0.0"
 	}
 }

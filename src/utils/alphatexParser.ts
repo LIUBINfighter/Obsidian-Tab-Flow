@@ -30,7 +30,7 @@ export function parseInlineInit(source: string): { opts: AlphaTexInitOptions; bo
 		}
 		if (ch === '"' || ch === "'") {
 			inString = true;
-			quote = ch;
+			quote = ch as '"' | "'";
 			i++;
 			continue;
 		}
@@ -75,19 +75,12 @@ export function toScrollMode(value: number | string | undefined): number | undef
 	if (value == null) return undefined;
 	if (typeof value === 'number') return value;
 	const key = String(value).toLowerCase();
-	const scrollModeRaw = Reflect.get(alphaTab, 'ScrollMode');
-	const scrollModeModule: Record<string, number> = {};
-	if (typeof scrollModeRaw === 'object' && scrollModeRaw !== null) {
-		for (const [key, value] of Object.entries(scrollModeRaw as Record<string, unknown>)) {
-			if (typeof value === 'number') {
-				scrollModeModule[key] = value;
-			}
-		}
-	}
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const ScrollMode: any = (alphaTab as any).ScrollMode || {};
 	const mapping: Record<string, number | undefined> = {
-		continuous: scrollModeModule['Continuous'],
-		singlepage: scrollModeModule['SinglePage'],
-		page: scrollModeModule['Page'],
+		continuous: ScrollMode.Continuous,
+		singlepage: ScrollMode.SinglePage,
+		page: ScrollMode.Page,
 	};
 	return mapping[key];
 }

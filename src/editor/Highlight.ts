@@ -1,11 +1,6 @@
 import { ViewPlugin, Decoration, WidgetType, EditorView, ViewUpdate } from '@codemirror/view';
 import { RangeSetBuilder, RangeSet } from '@codemirror/state';
 
-// CodeMirror plugin value interface
-interface PluginValue {
-	decorations: RangeSet<Decoration>;
-}
-
 // Plugin to highlight dot symbols ('.') in the visible ranges
 export function dotHighlightPlugin() {
 	return ViewPlugin.fromClass(
@@ -35,7 +30,7 @@ export function dotHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -102,7 +97,7 @@ export function barHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -136,7 +131,7 @@ export function bracketHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -170,7 +165,7 @@ export function metaHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -208,7 +203,7 @@ export function commentHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -399,7 +394,7 @@ export function debugHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -444,7 +439,7 @@ export function whitespaceHighlightPlugin() {
 				return builder.finish();
 			}
 		},
-		{ decorations: (value: PluginValue) => value.decorations }
+		{ decorations: (v: any) => v.decorations }
 	);
 }
 
@@ -550,7 +545,7 @@ export function surroundedHighlightPlugin() {
 				return builder.finish();
 			}
 		},
-		{ decorations: (value: PluginValue) => value.decorations }
+		{ decorations: (v: any) => v.decorations }
 	);
 }
 
@@ -583,7 +578,7 @@ export function durationHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -627,7 +622,7 @@ export function effectHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -667,7 +662,7 @@ export function tuningHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -701,7 +696,7 @@ export function booleanHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }
@@ -739,7 +734,7 @@ export function chordHighlightPlugin() {
 			}
 		},
 		{
-			decorations: (value: PluginValue) => value.decorations,
+			decorations: (value: any) => value.decorations,
 		}
 	);
 }

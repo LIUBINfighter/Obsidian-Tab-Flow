@@ -98,10 +98,7 @@ export class ExternalMediaService {
 				// 当 alphaTab 状态改变时，同步外部媒体
 				if (this.mediaElement) {
 					// PlayerState: 1 通常表示 Playing
-					interface PlayerStateChangedArgs {
-						state?: number;
-					}
-					if ((args as PlayerStateChangedArgs).state === 1) {
+					if ((args as any).state === 1) {
 						this.mediaElement.play().catch((err) => {
 							console.error('[ExternalMediaService] 播放外部媒体失败:', err);
 						});

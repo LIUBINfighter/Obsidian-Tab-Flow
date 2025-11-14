@@ -59,7 +59,7 @@ export class ShareCardPresetService {
 					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
 				).toLowerCase();
 			}
-		} catch (_) {
+		} catch (e) {
 			// ignore
 		}
 		return fallback;
@@ -199,30 +199,7 @@ export class ShareCardPresetService {
 	}
 
 	/** 将预设应用到 modal 实例字段（不含文件名） */
-	applyToModal(
-		modal: {
-			exportBgMode?: string;
-			exportBgCustomColor?: string;
-			showAuthor?: boolean;
-			authorName?: string;
-			authorRemark?: string;
-			showAvatar?: boolean;
-			avatarDataUrl?: string | null;
-			authorPosition?: string;
-			authorBg?: string;
-			authorTextColor?: string;
-			authorFontSize?: number;
-			authorAlign?: string;
-			__applyShareCardDimension?: (width: number) => void;
-			__applyShareCardFormat?: (
-				format: string,
-				resolution: string,
-				disableLazy: boolean
-			) => void;
-			renderAuthorBlock?: () => void;
-		},
-		preset: ShareCardPresetV1
-	): void {
+	applyToModal(modal: any, preset: ShareCardPresetV1): void {
 		// 直接映射：确保字段名保持一致
 		modal.exportBgMode = preset.exportBgMode;
 		modal.exportBgCustomColor = this.normalizeColorToHex(
@@ -252,40 +229,25 @@ export class ShareCardPresetService {
 	}
 
 	/** 从 modal 收集当前值生成一个预设对象（不含 id 等） */
-	collectFromModal(modal: {
-		__shareCardCurrentResolution?: '1x' | '2x' | '3x';
-		__shareCardCurrentFormat?: 'png' | 'jpg' | 'webp';
-		__shareCardDisableLazy?: boolean;
-		cardRoot?: HTMLElement | null;
-		exportBgMode?: 'default' | 'auto' | 'custom';
-		exportBgCustomColor?: string;
-		showAuthor?: boolean;
-		authorName?: string;
-		authorRemark?: string;
-		showAvatar?: boolean;
-		avatarDataUrl?: string | null;
-		authorPosition?: 'top' | 'bottom';
-		authorBg?: string;
-		authorTextColor?: string;
-		authorFontSize?: number;
-		authorAlign?: 'left' | 'center' | 'right';
-	}): Omit<ShareCardPresetV1, 'id' | 'version' | 'createdAt' | 'updatedAt'> {
+	collectFromModal(
+		modal: any
+	): Omit<ShareCardPresetV1, 'id' | 'version' | 'createdAt' | 'updatedAt'> {
 		return {
 			name: '未命名',
 			cardWidth: Number(modal?.cardRoot?.style?.width?.replace('px', '')) || 800,
 			resolution: modal.__shareCardCurrentResolution || '2x',
 			format: modal.__shareCardCurrentFormat || 'png',
 			disableLazy: !!modal.__shareCardDisableLazy,
-			exportBgMode: modal.exportBgMode || 'default',
-			exportBgCustomColor: this.normalizeColorToHex(modal.exportBgCustomColor || '#ffffff'),
-			showAuthor: modal.showAuthor ?? false,
-			authorName: modal.authorName || '',
-			authorRemark: modal.authorRemark || '',
-			showAvatar: modal.showAvatar ?? true,
+			exportBgMode: modal.exportBgMode,
+			exportBgCustomColor: this.normalizeColorToHex(modal.exportBgCustomColor),
+			showAuthor: modal.showAuthor,
+			authorName: modal.authorName,
+			authorRemark: modal.authorRemark,
+			showAvatar: modal.showAvatar,
 			avatarSource: modal.avatarDataUrl
 				? { type: 'data-url', data: modal.avatarDataUrl }
 				: null,
-			authorPosition: modal.authorPosition || 'bottom',
+			authorPosition: modal.authorPosition,
 			authorBg: modal.authorBg || '#ffffff',
 			authorTextColor: modal.authorTextColor || '#000000',
 			authorFontSize: modal.authorFontSize || 13,

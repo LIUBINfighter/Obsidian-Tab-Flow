@@ -139,7 +139,6 @@
 	top: 0;
 	left: 0;
 	transform-origin: top left;
-	transform: var(--share-card-pan-transform, translate(0px, 0px) scale(1));
 }
 .share-card-root {
 	box-sizing: border-box;
@@ -150,7 +149,6 @@
 	overflow: hidden;
 	/* little elevation on the inner card to visually separate controls */
 	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
-	width: var(--share-card-width, auto);
 }
 
 /* Playground 内容容器（与作者信息分离） */
@@ -166,13 +164,6 @@
 	align-items: center;
 	gap: 8px;
 	margin-top: 8px;
-	justify-content: var(--share-card-author-justify, flex-start);
-	background: var(--share-card-author-background, transparent);
-	color: var(--share-card-author-text-color, inherit);
-	font-size: var(--share-card-author-font-size, 13px);
-	padding: 8px;
-	position: relative;
-	z-index: 10;
 }
 .share-card-author-container:first-child {
 	/* 顶部模式时去掉上 margin */
@@ -184,26 +175,12 @@
 	box-shadow:
 		0 0 0 1px rgba(255, 255, 255, 0.08),
 		0 2px 4px rgba(0, 0, 0, 0.25);
-	width: var(--share-card-author-avatar-size, 40px);
-	height: var(--share-card-author-avatar-size, 40px);
-	background-image: var(--share-card-author-avatar-image, none);
-	background-size: var(--share-card-author-avatar-size-mode, cover);
-	background-position: center;
-	border-radius: 6px;
 }
 .share-card-author-name {
 	font-weight: 600;
 }
 .share-card-author-remark {
-	opacity: var(--share-card-author-remark-opacity, 0.85);
-	font-size: var(--share-card-author-remark-font-size, 12px);
-}
-
-.share-card-author-text {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-	line-height: 1.1;
+	opacity: 0.85;
 }
 
 /* Two-column compact form grid for author settings */
@@ -307,22 +284,6 @@
 /* 在文件末尾添加（隐藏滚动条，Chrome/Safari/Edge） */
 .share-card-left::-webkit-scrollbar {
 	display: none;
-}
-
-.share-card-modal select,
-.share-card-modal input[type='text'],
-.share-card-modal input[type='number'],
-.share-card-modal input[type='color'],
-.share-card-modal textarea {
-	width: 100%;
-}
-
-.is-hidden {
-	display: none !important;
-}
-
-.share-card-field-checkbox label {
-	margin-left: 4px;
 }
 
 /* --- TrackModal.css --- */
@@ -850,27 +811,6 @@
 	border-radius: 2px;
 }
 
-/* AlphaTab cursor and selection styles using CSS variables */
-.alphatex-block .at-cursor-bar {
-	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
-	opacity: 0.2;
-}
-
-.alphatex-block .at-selection div {
-	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
-	opacity: 0.4;
-}
-
-.alphatex-block .at-cursor-beat {
-	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
-	width: 3px;
-}
-
-.alphatex-block .at-highlight * {
-	fill: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
-	stroke: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
-}
-
 /* --- debug.css --- */
 /* .debug-bar {
 	display: none !important;
@@ -893,25 +833,9 @@
 	margin-left: 1em;
 }
 
-.debug-bar .control-label--tight {
-	margin-left: 0.5em;
-}
-
 .debug-bar .audio-status {
 	margin-left: 1em;
 	font-size: 0.9em;
-}
-
-.debug-bar .audio-status.is-error {
-	color: var(--text-error, #e74c3c);
-}
-
-.debug-bar .audio-status.is-success {
-	color: var(--text-success, #2ecc71);
-}
-
-.debug-bar .audio-status.is-warning {
-	color: var(--text-warning, #e67e22);
 }
 
 .debug-bar .scroll-separator {
@@ -951,10 +875,6 @@
 	gap: 8px;
 	justify-content: flex-end;
 	align-items: center;
-}
-
-.tabflow-doc-header__icon {
-	vertical-align: middle;
 }
 
 /* Two-column layout: left sidebar (navigation) + main content */
@@ -1404,29 +1324,6 @@
 	background-color: var(--background-modifier-active);
 }
 
-/* --- exportChooser.css --- */
-.tabflow-export-chooser__name-row {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	margin-bottom: 8px;
-}
-
-.tabflow-export-chooser__name-input {
-	width: 260px;
-	flex: 0 0 auto;
-}
-
-.tabflow-export-chooser__actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-}
-
-.tabflow-audio-preview {
-	width: 100%;
-}
-
 /* --- play.css --- */
 /* 播放栏自定义按钮样式 */
 .play-bar {
@@ -1615,11 +1512,6 @@
 	margin-bottom: calc(var(--status-bar-height) * 2 + 8px);
 }
 
-/* Hide status bar when TabView is open */
-.tabflow-hide-statusbar .status-bar {
-	display: none !important;
-}
-
 /* 播放栏控件图标样式 */
 .play-bar .speed-icon {
 	margin-right: 0.5em;
@@ -1691,42 +1583,6 @@
 }
 
 /* 组件卡片细节样式 */
-.tabflow-card {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 8px;
-	padding: 8px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	background: var(--background-primary);
-}
-
-.tabflow-card--compact {
-	padding: 4px;
-}
-
-.tabflow-card__left,
-.tabflow-card__right {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-}
-
-.tabflow-card__right {
-	gap: 6px;
-}
-
-.tabflow-card__handle {
-	cursor: grab;
-	user-select: none;
-}
-
-.tabflow-card__desc {
-	color: var(--text-muted);
-	font-size: 0.9em;
-}
-
 .tabflow-card button {
 	border: 1px solid var(--background-modifier-border);
 	background: var(--background-secondary);
@@ -1737,12 +1593,6 @@
 
 .tabflow-card button:hover {
 	background: var(--background-secondary-alt);
-}
-
-.tabflow-card-list {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
 }
 
 /* Clickable icon style to replace buttons for order controls */
@@ -1865,90 +1715,5 @@ ul.tabflow-setting-description li {
 	font-size: 0.85em;
 }
 
-.tabflow-highlight-section {
-	margin-top: 12px;
-}
-
-.tabflow-highlight-section__summary {
-	cursor: pointer;
-	font-size: 0.9em;
-	font-weight: 600;
-	color: var(--text-accent);
-}
-
-.tabflow-highlight-preview {
-	display: inline-flex;
-	gap: 6px;
-	flex-wrap: wrap;
-	align-items: center;
-	padding: 4px 6px;
-	border-radius: 4px;
-	background: var(--background-secondary);
-	font-family: var(--font-monospace);
-	font-size: 0.9em;
-}
-
-.tabflow-highlight-preview-container {
-	margin-bottom: 12px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 6px;
-	padding: 8px;
-}
-
-.tabflow-highlight-preview-editor {
-	height: 200px;
-	overflow: auto;
-	border-radius: 4px;
-}
-
 /* reset styling intentionally uses existing setting-item styles to match other reset buttons */
-
-.tabflow-assets-status {
-	margin-bottom: 1em;
-	padding: 10px;
-	border-radius: 5px;
-	background-color: var(--background-secondary);
-}
-
-.tabflow-assets-status__summary {
-	font-weight: bold;
-	margin-bottom: 10px;
-}
-
-.tabflow-assets-status__summary.is-success,
-.tabflow-assets-status__file.is-success,
-.tabflow-assets-status__state.is-success {
-	color: var(--text-success);
-}
-
-.tabflow-assets-status__summary.is-error,
-.tabflow-assets-status__file.is-error,
-.tabflow-assets-status__state.is-error {
-	color: var(--text-error);
-}
-
-.tabflow-assets-status__list {
-	margin: 0;
-	padding-left: 20px;
-}
-
-.tabflow-assets-status__state {
-	font-style: italic;
-}
-
-.tabflow-assets-structure-heading {
-	margin-top: 20px;
-	font-weight: bold;
-}
-
-.tabflow-assets-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
-	align-items: center;
-}
-
-.tabflow-assets-actions__restart {
-	display: inline-block;
-}
 

@@ -3,9 +3,11 @@ let currentInits = 0;
 const initQueue: Array<() => void> = [];
 
 export function requestIdle(fn: () => void) {
-	// requestIdleCallback is available in modern browsers
-	if (typeof window.requestIdleCallback === 'function') {
-		window.requestIdleCallback(() => fn());
+	const ric = (window as any).requestIdleCallback as
+		| undefined
+		| ((cb: (deadline: any) => void) => number);
+	if (typeof ric === 'function') {
+		ric(() => fn());
 	} else {
 		setTimeout(fn, 0);
 	}
