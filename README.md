@@ -28,6 +28,7 @@ Play and create your guitar tabs in Obsidian!
   - gp export
   - pdf(wip)
   - png card
+- Built-in doc for you to learn and enjoy alphaTex.
 
 ### Customed Play experience
 
