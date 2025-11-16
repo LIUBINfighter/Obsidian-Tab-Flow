@@ -568,6 +568,9 @@ export class PlayerController {
 				// ✅ 恢复音轨配置
 				this.restoreTrackConfigs(score);
 
+				// ✅ 设置吉他音轨的默认显示选项（仅六线谱）
+				this.applyDefaultStaffDisplay(score);
+
 				// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
 				// 那才是考虑了速度等因素的实际播放时长
 
@@ -836,6 +839,38 @@ export class PlayerController {
 			enableCursor: this.api.settings.player.enableCursor,
 			nativeBrowserSmoothScroll: this.api.settings.player.nativeBrowserSmoothScroll,
 		});
+	}
+
+	/**
+	 * ✅ 设置吉他音轨的默认显示选项
+	 * 在曲谱加载后调用，为吉他类乐器设置默认显示为仅六线谱
+	 */
+	private applyDefaultStaffDisplay(score: alphaTab.model.Score): void {
+		console.log(`[PlayerController #${this.instanceId}] Applying default staff display for guitar tracks`);
+
+		for (const track of score.tracks) {
+			// 检查是否为弦乐器（吉他、贝斯等）
+			// AlphaTab 中 track.playbackInfo.program 表示 MIDI 乐器编号
+			// 24-31: 吉他类乐器
+			// 32-39: 贝斯类乐器
+			const program = track.playbackInfo.program;
+			const isGuitarFamily = (program >= 24 && program <= 31) || (program >= 32 && program <= 39);
+
+			if (isGuitarFamily) {
+				// 为每个 Staff 设置默认显示选项
+				for (const staff of track.staves) {
+					// 默认：仅显示六线谱
+					staff.showStandardNotation = false;
+					staff.showTablature = true;
+					staff.showSlash = false;
+					staff.showNumbered = false;
+
+					console.log(
+						`[PlayerController #${this.instanceId}] Set guitar track ${track.index} staff ${staff.index} to tab-only`
+					);
+				}
+			}
+		}
 	}
 
 	/**
