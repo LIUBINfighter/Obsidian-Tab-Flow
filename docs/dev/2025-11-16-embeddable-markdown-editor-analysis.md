@@ -1,6 +1,6 @@
 ---
 title: EmbeddableMarkdownEditor 使用情况分析与重构建议
-date: 2025-01-27
+date: 2025-11-16
 tags: [refactoring, editor, architecture]
 status: analysis
 ---
