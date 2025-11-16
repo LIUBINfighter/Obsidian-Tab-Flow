@@ -650,26 +650,39 @@ export class TabView extends FileView {
 	 * 配置 Obsidian 环境的滚动容器，并设置横向滚轮转写。
 	 */
 	private configureScrollElement(): void {
-		const selectors = [
-			'.workspace-leaf-content.mod-active',
-			'.view-content',
-			'.workspace-leaf-content',
-		];
-
+		// 优先在当前视图的容器范围内查找滚动元素，避免命中其他 pane
 		let scrollElement: HTMLElement | null = null;
-		for (const selector of selectors) {
-			scrollElement = document.querySelector(selector) as HTMLElement;
-			if (scrollElement) {
-				break;
+		const leafRoot = this.containerEl.closest(
+			'.workspace-leaf-content, .mod-root, .view-content'
+		);
+		if (leafRoot && leafRoot instanceof HTMLElement) {
+			// 在当前 leaf/view 内优先寻找 view-content
+			const viewContent = leafRoot.querySelector('.view-content');
+			scrollElement = (viewContent instanceof HTMLElement ? viewContent : null) ?? leafRoot;
+		}
+
+		if (!scrollElement) {
+			// 回退到原来的全局选择逻辑，保证在极端主题/布局下仍然可用
+			const selectors = [
+				'.workspace-leaf-content.mod-active',
+				'.view-content',
+				'.workspace-leaf-content',
+			];
+			for (const selector of selectors) {
+				const found = document.querySelector(selector);
+				if (found && found instanceof HTMLElement) {
+					scrollElement = found;
+					break;
+				}
 			}
 		}
 
 		if (scrollElement) {
 			this._api.settings.player.scrollElement = scrollElement;
-			// console.debug('[TabView] 设置滚动容器:', scrollElement.className);
+			console.debug('[TabView] 设置滚动容器:', scrollElement.className, scrollElement);
 		} else {
 			this._api.settings.player.scrollElement = 'html,body';
-			// console.debug('[TabView] 使用默认滚动容器');
+			console.debug('[TabView] 使用默认滚动容器: html,body');
 		}
 
 		this._api.updateSettings();
@@ -677,26 +690,24 @@ export class TabView extends FileView {
 		// 延迟应用滚动模式及智能阈值设置
 		setTimeout(() => {
 			if (this._api.settings.player) {
-				// 根据用户设置选择滚动模式
-				const mode = this.plugin.settings?.scrollMode || 'continuous';
-				let sm: alphaTab.ScrollMode;
-				switch (mode) {
-					case 'continuous':
-						sm = alphaTab.ScrollMode.Continuous;
-						break;
-					case 'offScreen':
-						sm = alphaTab.ScrollMode.OffScreen;
-						break;
-					case 'off':
-						sm = alphaTab.ScrollMode.Off;
-						break;
-					default:
-						sm = alphaTab.ScrollMode.Continuous;
-				}
-				this._api.settings.player.scrollMode = sm;
+				// 强制使用连续滚动模式进行调试（排除设置问题）
+				this._api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
+
+				// 关闭浏览器原生平滑滚动,使用 alphaTab 自己的滚动控制
+				this._api.settings.player.nativeBrowserSmoothScroll = false;
+				this._api.settings.player.scrollSpeed = 300;
+
+				// 确保启用光标
 				this._api.settings.player.enableCursor = true;
+
 				this._api.updateSettings();
-				// console.debug(`[TabView] 应用滚动模式: ${mode}`);
+				console.debug(
+					'[TabView] 滚动配置:',
+					'mode=Continuous',
+					'nativeBrowserSmoothScroll=false',
+					'scrollSpeed=300',
+					'enableCursor=true'
+				);
 			}
 		}, 100);
 

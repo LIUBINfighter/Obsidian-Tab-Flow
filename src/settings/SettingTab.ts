@@ -111,8 +111,7 @@ export class SettingTab extends PluginSettingTab {
 		const tabList = [
 			{ id: 'general', name: t('settings.tabs.general') },
 			{ id: 'player', name: t('settings.tabs.player') },
-			// 暂时取消 editor 标签页的挂载，避免重复挂载问题
-			// { id: 'editor', name: t('settings.tabs.editor') },
+			{ id: 'editor', name: t('settings.tabs.editor') },
 			{ id: 'about', name: t('settings.tabs.about') },
 		];
 

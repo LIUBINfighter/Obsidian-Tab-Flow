@@ -1,0 +1,73 @@
+# Dependabot configuration for automatic dependency updates
+
+# See: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+
+updates:
+  # npm dependencies (production + dev)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 5
+    # Separate PRs by dependency type for easier review
+    groups:
+      # Group patch updates together
+      patch-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+      # Group minor updates together
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+    # Prefix commit messages
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    # Reviewers (optional - uncomment and add your team members)
+    # reviewers:
+    #   - "username"
+    # assignees:
+    #   - "username"
+    # Labels for PRs
+    labels:
+      - "dependencies"
+      - "automated"
+    # Ignore specific dependencies (if needed)
+    # ignore:
+    #   - dependency-name: "package-name"
+    #     versions: ["x.x.x"]
+    # Allow both direct and indirect dependency updates
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    # Rebase strategy
+    rebase-strategy: "auto"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Shanghai"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "github-actions"
+      - "dependencies"
+      - "automated"
+    rebase-strategy: "auto"
+
