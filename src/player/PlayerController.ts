@@ -846,7 +846,9 @@ export class PlayerController {
 	 * 在曲谱加载后调用，为吉他类乐器设置默认显示为仅六线谱
 	 */
 	private applyDefaultStaffDisplay(score: alphaTab.model.Score): void {
-		console.log(`[PlayerController #${this.instanceId}] Applying default staff display for guitar tracks`);
+		console.log(
+			`[PlayerController #${this.instanceId}] Applying default staff display for guitar tracks`
+		);
 
 		for (const track of score.tracks) {
 			// 检查是否为弦乐器（吉他、贝斯等）
@@ -854,7 +856,8 @@ export class PlayerController {
 			// 24-31: 吉他类乐器
 			// 32-39: 贝斯类乐器
 			const program = track.playbackInfo.program;
-			const isGuitarFamily = (program >= 24 && program <= 31) || (program >= 32 && program <= 39);
+			const isGuitarFamily =
+				(program >= 24 && program <= 31) || (program >= 32 && program <= 39);
 
 			if (isGuitarFamily) {
 				// 为每个 Staff 设置默认显示选项
