@@ -654,10 +654,10 @@ export class TabView extends FileView {
 		let scrollElement: HTMLElement | null = null;
 		const leafRoot = this.containerEl.closest(
 			'.workspace-leaf-content, .mod-root, .view-content'
-		);
+		) as HTMLElement | null;
 		if (leafRoot) {
 			// 在当前 leaf/view 内优先寻找 view-content
-			scrollElement = leafRoot.querySelector('.view-content') ?? leafRoot;
+			scrollElement = (leafRoot.querySelector('.view-content') as HTMLElement | null) ?? leafRoot;
 		}
 
 		if (!scrollElement) {
@@ -668,7 +668,7 @@ export class TabView extends FileView {
 				'.workspace-leaf-content',
 			];
 			for (const selector of selectors) {
-				const found = document.querySelector(selector);
+				const found = document.querySelector(selector) as HTMLElement | null;
 				if (found) {
 					scrollElement = found;
 					break;
