@@ -654,10 +654,10 @@ export class TabView extends FileView {
 		let scrollElement: HTMLElement | null = null;
 		const leafRoot = this.containerEl.closest(
 			'.workspace-leaf-content, .mod-root, .view-content'
-		) as HTMLElement | null;
+		);
 		if (leafRoot) {
 			// 在当前 leaf/view 内优先寻找 view-content
-			scrollElement = (leafRoot.querySelector('.view-content') as HTMLElement | null) ?? leafRoot;
+			scrollElement = leafRoot.querySelector('.view-content') ?? leafRoot;
 		}
 
 		if (!scrollElement) {
@@ -668,7 +668,7 @@ export class TabView extends FileView {
 				'.workspace-leaf-content',
 			];
 			for (const selector of selectors) {
-				const found = document.querySelector(selector) as HTMLElement | null;
+				const found = document.querySelector(selector);
 				if (found) {
 					scrollElement = found;
 					break;
@@ -691,14 +691,14 @@ export class TabView extends FileView {
 			if (this._api.settings.player) {
 				// 强制使用连续滚动模式进行调试（排除设置问题）
 				this._api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
-				
+
 				// 关闭浏览器原生平滑滚动,使用 alphaTab 自己的滚动控制
 				this._api.settings.player.nativeBrowserSmoothScroll = false;
 				this._api.settings.player.scrollSpeed = 300;
-				
+
 				// 确保启用光标
 				this._api.settings.player.enableCursor = true;
-				
+
 				this._api.updateSettings();
 				console.debug(
 					'[TabView] 滚动配置:',
