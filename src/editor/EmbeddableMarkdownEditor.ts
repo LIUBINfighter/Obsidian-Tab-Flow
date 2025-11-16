@@ -75,6 +75,7 @@ export class EmbeddableMarkdownEditor {
 	private initialValue: string;
 	private scope: Scope;
 	private editor?: InternalMarkdownEditor;
+	private isDestroyed = false;
 
 	/**
 	 * Hard-coded configuration to control whether to set activeEditor.
@@ -319,11 +320,31 @@ export class EmbeddableMarkdownEditor {
 				setActiveLeaf:
 					(oldMethod: unknown) =>
 					(leaf: WorkspaceLeaf, ...args: unknown[]) => {
-						if (!this.activeCM?.hasFocus) {
-							interface OldMethod {
-								call?: (thisArg: unknown, ...args: unknown[]) => void;
-							}
+						interface OldMethod {
+							call?: (thisArg: unknown, ...args: unknown[]) => void;
+						}
+						const callOriginal = () => {
 							(oldMethod as OldMethod).call?.(app.workspace, leaf, ...args);
+						};
+						// 如果实例已经被销毁，直接回退到原始行为
+						if (this.isDestroyed) {
+							callOriginal();
+							return;
+						}
+						// 避免通过 getter 触发 requireEditor 抛错
+						let hasFocus = false;
+						try {
+							const currentEditor = this.editor;
+							if (currentEditor?.activeCM) {
+								hasFocus = currentEditor.activeCM.hasFocus;
+							}
+						} catch {
+							// 任何异常都回退到原始 setActiveLeaf
+							callOriginal();
+							return;
+						}
+						if (!hasFocus) {
+							callOriginal();
 						}
 					},
 			})
@@ -389,6 +410,7 @@ export class EmbeddableMarkdownEditor {
 		this.activeCM?.focus();
 	}
 	destroy(): void {
+		this.isDestroyed = true;
 		const editorInstance = this.editor;
 		if (editorInstance && this.loaded && typeof editorInstance.unload === 'function') {
 			editorInstance.unload();

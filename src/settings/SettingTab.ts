@@ -112,7 +112,6 @@ export class SettingTab extends PluginSettingTab {
 			{ id: 'general', name: t('settings.tabs.general') },
 			{ id: 'player', name: t('settings.tabs.player') },
 			{ id: 'editor', name: t('settings.tabs.editor') },
-			{ id: 'editor', name: t('settings.tabs.editor') },
 			{ id: 'about', name: t('settings.tabs.about') },
 		];
 
