@@ -240,8 +240,14 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 				{/* 第二行：五线谱显示选项 */}
 				<div className="tabflow-track-header-row-2">
-					{track.staves.map((staff) => (
-						<StaffItem key={staff.index} api={api} staff={staff} isCompact={true} />
+					{track.staves.map((staff, staffArrayIndex) => (
+						<div
+							key={`staff-${track.index}-${staff.index}-${staffArrayIndex}`}
+							className="tabflow-staff-group"
+						>
+							<span className="tabflow-staff-label">谱表 {staffArrayIndex + 1}</span>
+							<StaffItem api={api} staff={staff} isCompact={true} />
+						</div>
 					))}
 				</div>
 			</div>

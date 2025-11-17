@@ -138,9 +138,9 @@ export const TracksPanel: React.FC<TracksPanelProps> = ({ controller, isOpen, on
 						<p>No tracks available in current score</p>
 					</div>
 				) : (
-					score.tracks.map((track) => (
+					score.tracks.map((track, arrayIndex) => (
 						<TrackItem
-							key={track.index}
+							key={`track-${track.index}-${arrayIndex}-${track.name}`}
 							api={api}
 							track={track}
 							isSelected={selectedTracks.has(track.index)}

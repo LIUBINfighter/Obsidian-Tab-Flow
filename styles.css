@@ -3633,10 +3633,28 @@
 
 .tabflow-track-header-row-2 {
 	display: flex;
-	align-items: center;
-	gap: 4px;
-	justify-content: flex-start;
+	flex-direction: column;
+	gap: 8px;
 	width: 100%;
+}
+
+/* 谱表分组容器 */
+.tabflow-staff-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+}
+
+.tabflow-staff-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	font-weight: 500;
+	min-width: 50px;
+	flex-shrink: 0;
 }
 
 .tabflow-track-info {
