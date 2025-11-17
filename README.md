@@ -173,3 +173,5 @@ Copyright (c) 2025 Jay Bridge and other contributors. All rights reserved.
 Licensed under the MPL 2.0 License.
 
 
+![Alt](https://repobeats.axiom.co/api/embed/a6982277492396e03c0cae7308592c2be2d0feb2.svg "Repobeats analytics image")
+
