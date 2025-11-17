@@ -247,7 +247,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({
 			{customComponents?.bottomBar ? (
 				<customComponents.bottomBar controller={controller} />
 			) : showPlayBar ? (
-				<PlayBar controller={controller} />
+				<PlayBar controller={controller} onTracksClick={handleToggleTracks} />
 			) : null}
 			{/* MediaSync Panel - 底部媒体同步面板（浮动） */}
 			{showMediaSync && (

@@ -1,11 +1,13 @@
 import React from 'react';
 import type { PlayerController } from '../PlayerController';
 import { PlayControls } from './PlayControls';
+import { TracksToggle } from './TracksToggle';
 import { TimeDisplay } from './TimeDisplay';
 import { ProgressBar } from './ProgressBar';
 
 interface PlayBarProps {
 	controller: PlayerController;
+	onTracksClick?: () => void;
 }
 
 /**
@@ -25,7 +27,7 @@ interface PlayBarProps {
  * - 音量控制
  * - 等等...
  */
-export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
+export const PlayBar: React.FC<PlayBarProps> = ({ controller, onTracksClick }) => {
 	// 使用 controller 的实例 store
 	const runtimeStore = controller.getRuntimeStore();
 
@@ -41,6 +43,10 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller }) => {
 
 	return (
 		<div className="tab-flow-play-bar">
+			{/* 音轨管理按钮（如果提供回调） */}
+			{onTracksClick && (
+				<TracksToggle controller={controller} onClick={onTracksClick} />
+			)}
 			{/* 播放控制组件 */}
 			<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
 
