@@ -8,7 +8,7 @@
 }
 
 /* 统一的"页面"框线样式 - 确保编辑器和预览区域完全一致 */
-.alphatex-editor-wrapper,
+.alphatex-editor-section,
 .alphatex-preview-section {
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
@@ -49,11 +49,7 @@
 
 /* 为编辑器区域添加 padding，为边框留出空间，避免被 overflow: hidden 裁剪 */
 .alphatex-editor-section {
-	/* 保持 overflow: hidden 用于布局控制，但添加 padding 为边框留出空间 */
-	padding: 1px;
-	box-sizing: border-box;
-	/* 确保编辑器区域的背景色与预览区域一致 */
-	background: var(--background-primary);
+	overflow: hidden;
 }
 
 /* 确保主布局容器背景色正确 */
