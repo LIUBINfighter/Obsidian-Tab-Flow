@@ -22,6 +22,8 @@ type SettingManager = {
 	openTabById?: (id: string) => void;
 };
 
+import { registerCommands } from './commands';
+
 // AssetStatus moved to src/types/assets.ts
 
 export default class TabFlowPlugin extends Plugin {
@@ -356,49 +358,8 @@ export default class TabFlowPlugin extends Plugin {
 		// 注册 AlphaTex 编辑器视图
 		this.registerView(VIEW_TYPE_ALPHATEX_EDITOR, (leaf) => new EditorView(leaf, this));
 
-		this.addCommand({
-			id: 'open-tabflow-doc-view',
-			name: t('commands.openDocumentation', undefined, 'Open AlphaTex Documentation'),
-			callback: async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_TABFLOW_DOC,
-					active: true,
-				});
-				this.app.workspace.revealLeaf(leaf);
-			},
-		});
-
-		this.addCommand({
-			id: 'open-alphatex-editor',
-			name: t('commands.openEditor', undefined, 'Open AlphaTex Editor'),
-			callback: async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_ALPHATEX_EDITOR,
-					active: true,
-				});
-				this.app.workspace.revealLeaf(leaf);
-			},
-		});
-
-		this.addCommand({
-			id: 'open-alphatex-editor-horizontal',
-			name: t(
-				'commands.openEditorHorizontal',
-				undefined,
-				'Open AlphaTex Editor (Horizontal)'
-			),
-			callback: async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_ALPHATEX_EDITOR,
-					active: true,
-					state: { layout: 'horizontal' },
-				});
-				this.app.workspace.revealLeaf(leaf);
-			},
-		});
+		// 注册所有命令
+		registerCommands(this);
 
 		// 使用 ResourceLoaderService 加载资源
 		const resourceLoader = new ResourceLoaderService(this.app);
@@ -547,15 +508,15 @@ export default class TabFlowPlugin extends Plugin {
 		// 注册文件扩展名 - 根据设置决定是否自动打开
 		if (this.settings.autoOpenAlphaTexFiles) {
 			this.registerExtensions(
-				['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7', 'alphatab', 'alphatex'],
-				VIEW_TYPE_REACT
+				['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7', 'atex'],
+				VIEW_TYPE_TAB
 			);
 		} else {
 			this.registerExtensions(['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7'], VIEW_TYPE_REACT);
 		}
 
 		// 注册 AlphaTex 编辑器文件扩展名
-		this.registerExtensions(['alphatex', 'alphatab'], VIEW_TYPE_ALPHATEX_EDITOR);
+		this.registerExtensions(['alphatex', 'atex'], VIEW_TYPE_ALPHATEX_EDITOR);
 
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
@@ -577,14 +538,14 @@ export default class TabFlowPlugin extends Plugin {
 								undefined,
 								'New guitar tab'
 							);
-							let filename = `${baseName}.alphatab`;
+							let filename = `${baseName}.atex`;
 							let i = 1;
 							const parentPath =
 								parent && 'path' in parent ? (parent as { path: string }).path : '';
 							while (
 								await this.app.vault.adapter.exists(path.join(parentPath, filename))
 							) {
-								filename = `${baseName} ${i}.alphatab`;
+								filename = `${baseName} ${i}.atex`;
 								i++;
 							}
 							const newFilePath = path.join(parentPath, filename);

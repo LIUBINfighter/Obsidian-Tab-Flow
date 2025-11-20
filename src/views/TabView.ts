@@ -630,7 +630,7 @@ export class TabView extends FileView {
 			// console.debug(`[TabView] Loading file: ${file.name}`);
 
 			// 使用 AlphaTabService 加载文件
-			if (file.extension && ['alphatab', 'alphatex'].includes(file.extension.toLowerCase())) {
+			if (file.extension && ['atex', 'alphatex'].includes(file.extension.toLowerCase())) {
 				const textContent = await this.app.vault.read(file);
 				await this.alphaTabService.loadAlphaTexScore(textContent);
 			} else {
@@ -738,7 +738,7 @@ export class TabView extends FileView {
 		try {
 			if (
 				this.currentFile.extension &&
-				['alphatab', 'alphatex'].includes(this.currentFile.extension.toLowerCase())
+				['atex', 'alphatex'].includes(this.currentFile.extension.toLowerCase())
 			) {
 				const textContent = await this.app.vault.read(this.currentFile);
 				await this.alphaTabService.loadAlphaTexScore(textContent);
