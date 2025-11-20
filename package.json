@@ -28,7 +28,7 @@
 	"devDependencies": {
 		"@testing-library/jest-dom": "^6.9.1",
 		"@types/jest": "^30.0.0",
-		"@types/node": "^18.0.0",
+		"@types/node": "^24.10.1",
 		"@typescript-eslint/eslint-plugin": "^8.46.0",
 		"@typescript-eslint/parser": "^8.46.0",
 		"@vitest/coverage-v8": "^1.6.0",
