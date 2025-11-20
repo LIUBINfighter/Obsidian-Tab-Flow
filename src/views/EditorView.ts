@@ -6,6 +6,7 @@ import {
 	type AlphaTexCodeMirrorEditor,
 } from '../editor/AlphaTexCodeMirrorEditor';
 import ShareCardModal from '../components/ShareCardModal';
+import { DocumentModal } from '../components/DocumentModal';
 import {
 	getBarAtOffset,
 	extractInitHeader,
@@ -98,6 +99,7 @@ export class EditorView extends FileView {
 	}
 	private layoutToggleAction: HTMLElement | null = null;
 	private newFileAction: HTMLElement | null = null;
+	private documentAction: HTMLElement | null = null;
 	private settingsAction: HTMLElement | null = null;
 	private switchToPlayerAction: HTMLElement | null = null;
 
@@ -237,6 +239,16 @@ export class EditorView extends FileView {
 				this.newFileAction.remove();
 			}
 			this.newFileAction = null;
+		} catch (_) {
+			// ignore
+		}
+
+		// 清理文档按钮
+		try {
+			if (this.documentAction && this.documentAction.parentElement) {
+				this.documentAction.remove();
+			}
+			this.documentAction = null;
 		} catch (_) {
 			// ignore
 		}
@@ -385,11 +397,22 @@ export class EditorView extends FileView {
 				this.newFileAction.remove();
 				this.newFileAction = null;
 			}
-			const newFileBtn = this.addAction('document', '新建文件', () => {
+			const newFileBtn = this.addAction('image-up', '分享卡片', () => {
 				const modal = new ShareCardModal(this.plugin);
 				modal.open();
 			});
 			this.newFileAction = newFileBtn;
+
+			// 添加"文档"按钮
+			if (this.documentAction && this.documentAction.parentElement) {
+				this.documentAction.remove();
+				this.documentAction = null;
+			}
+			const docBtn = this.addAction('document', '文档', () => {
+				const modal = new DocumentModal(this.app, this.plugin);
+				modal.open();
+			});
+			this.documentAction = docBtn;
 
 			if (this.settingsAction && this.settingsAction.parentElement) {
 				this.settingsAction.remove();
