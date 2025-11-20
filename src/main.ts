@@ -536,7 +536,7 @@ export default class TabFlowPlugin extends Plugin {
 		// 注册文件扩展名 - 根据设置决定是否自动打开
 		if (this.settings.autoOpenAlphaTexFiles) {
 			this.registerExtensions(
-				['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7', 'alphatab', 'alphatex'],
+				['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7', 'atex', 'alphatex'],
 				VIEW_TYPE_TAB
 			);
 		} else {
@@ -544,7 +544,7 @@ export default class TabFlowPlugin extends Plugin {
 		}
 
 		// 注册 AlphaTex 编辑器文件扩展名
-		this.registerExtensions(['alphatex', 'alphatab'], VIEW_TYPE_ALPHATEX_EDITOR);
+		this.registerExtensions(['alphatex', 'atex'], VIEW_TYPE_ALPHATEX_EDITOR);
 
 		this.registerEvent(
 			this.app.workspace.on('file-menu', (menu, file) => {
@@ -566,14 +566,14 @@ export default class TabFlowPlugin extends Plugin {
 								undefined,
 								'New guitar tab'
 							);
-							let filename = `${baseName}.alphatab`;
+							let filename = `${baseName}.atex`;
 							let i = 1;
 							const parentPath =
 								parent && 'path' in parent ? (parent as { path: string }).path : '';
 							while (
 								await this.app.vault.adapter.exists(path.join(parentPath, filename))
 							) {
-								filename = `${baseName} ${i}.alphatab`;
+								filename = `${baseName} ${i}.atex`;
 								i++;
 							}
 							const newFilePath = path.join(parentPath, filename);

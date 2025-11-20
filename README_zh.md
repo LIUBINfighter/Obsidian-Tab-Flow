@@ -6,7 +6,7 @@
 
 ## 功能
 
-使用 AlphaTab 播放和创作吉他谱。现代乐谱字体与音效！（支持 .alphatab, .gp, .gp3, .gp4, .gp5, .gpx 格式）
+使用 AlphaTab 播放和创作吉他谱。现代乐谱字体与音效！（支持 .atex, .gp, .gp3, .gp4, .gp5, .gpx 格式）
 
 ## 路线图
 
