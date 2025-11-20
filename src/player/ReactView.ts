@@ -186,7 +186,7 @@ export class ReactView extends FileView {
 		// 检查文件扩展名
 		if (!this.currentFile) return;
 		const extension = this.currentFile.extension?.toLowerCase();
-		if (!extension || !['alphatab', 'alphatex'].includes(extension)) {
+		if (!extension || !['alphatab', 'alphatex', 'atex'].includes(extension)) {
 			return;
 		}
 
