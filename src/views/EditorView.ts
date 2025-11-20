@@ -365,7 +365,7 @@ export class EditorView extends FileView {
 				this.switchToPlayerAction.remove();
 				this.switchToPlayerAction = null;
 			}
-			const switchToPlayerBtn = this.addAction('play', '切换到播放器视图', () => {
+			const switchToPlayerBtn = this.addAction('list-music', '切换到播放器视图', () => {
 				if (!this.file) return;
 				// 先保存当前编辑器的内容，确保切换到播放器视图时文件是最新的
 				const file = this.file; // 保存文件引用，避免在异步函数中 this.file 可能为 null
