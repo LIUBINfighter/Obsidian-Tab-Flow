@@ -509,7 +509,7 @@ export default class TabFlowPlugin extends Plugin {
 		if (this.settings.autoOpenAlphaTexFiles) {
 			this.registerExtensions(
 				['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7', 'atex'],
-				VIEW_TYPE_TAB
+				VIEW_TYPE_REACT
 			);
 		} else {
 			this.registerExtensions(['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7'], VIEW_TYPE_REACT);
