@@ -21,6 +21,8 @@ type SettingManager = {
 	openTabById?: (id: string) => void;
 };
 
+import { registerCommands } from './commands';
+
 // AssetStatus moved to src/types/assets.ts
 
 export default class TabFlowPlugin extends Plugin {
@@ -355,83 +357,8 @@ export default class TabFlowPlugin extends Plugin {
 		// 注册 AlphaTex 编辑器视图
 		this.registerView(VIEW_TYPE_ALPHATEX_EDITOR, (leaf) => new EditorView(leaf, this));
 
-		this.addCommand({
-			id: 'open-tabflow-doc-view',
-			name: t('commands.openDocumentation', undefined, 'Open AlphaTex Documentation'),
-			callback: async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_TABFLOW_DOC,
-					active: true,
-				});
-				this.app.workspace.revealLeaf(leaf);
-			},
-		});
-
-		this.addCommand({
-			id: 'open-alphatex-editor',
-			name: t('commands.openEditor', undefined, 'Open AlphaTex Editor'),
-			callback: async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_ALPHATEX_EDITOR,
-					active: true,
-				});
-				this.app.workspace.revealLeaf(leaf);
-			},
-		});
-
-		this.addCommand({
-			id: 'open-alphatex-editor-horizontal',
-			name: t(
-				'commands.openEditorHorizontal',
-				undefined,
-				'Open AlphaTex Editor (Horizontal)'
-			),
-			callback: async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_ALPHATEX_EDITOR,
-					active: true,
-					state: { layout: 'horizontal' },
-				});
-				this.app.workspace.revealLeaf(leaf);
-			},
-		});
-
-		this.addCommand({
-			id: 'migrate-alphatab-to-atex',
-			name: t('commands.migrateToAtex', undefined, 'Migrate .alphatab files to .atex'),
-			callback: async () => {
-				const files = this.app.vault.getFiles();
-				let count = 0;
-				for (const file of files) {
-					if (file.extension === 'alphatab') {
-						const newPath = file.path.replace(/\.alphatab$/, '.atex');
-						try {
-							await this.app.fileManager.renameFile(file, newPath);
-							count++;
-						} catch (error) {
-							console.error(`Failed to rename ${file.path}:`, error);
-							new Notice(`Failed to rename ${file.path}`);
-						}
-					}
-				}
-				if (count > 0) {
-					new Notice(
-						t(
-							'commands.migrationComplete',
-							{ count },
-							`Successfully migrated ${count} files to .atex`
-						)
-					);
-				} else {
-					new Notice(
-						t('commands.noFilesToMigrate', undefined, 'No .alphatab files found')
-					);
-				}
-			},
-		});
+		// 注册所有命令
+		registerCommands(this);
 
 		// 使用 ResourceLoaderService 加载资源
 		const resourceLoader = new ResourceLoaderService(this.app);
