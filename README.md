@@ -23,7 +23,7 @@ Play and create your guitar tabs in Obsidian!
   - Darkmode
   - auto-scroll
   - Control components (tracks control, save settings, Layout, Zoom, Speed, CountIn, Metronome)
-- Write scores in `alphaTex` (.alphatab or `alphaTex` codeblock in .md) and share it.
+- Write scores in `alphaTex` (.atex or `alphaTex` codeblock in .md) and share it.
   - Highlight syntax (codemirror plugin)
   - gp export
   - pdf(wip)
@@ -38,7 +38,7 @@ Play and create your guitar tabs in Obsidian!
 
 ### Write Guitar Tabs like Markdown
 
-`.alphatab`
+`.atex`
 
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/e3a86a1a-3a85-469f-aa07-bda97faaf891" />
 
@@ -174,4 +174,3 @@ Licensed under the MPL 2.0 License.
 
 
 ![Alt](https://repobeats.axiom.co/api/embed/a6982277492396e03c0cae7308592c2be2d0feb2.svg "Repobeats analytics image")
-

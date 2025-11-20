@@ -76,6 +76,7 @@ export class EmbeddableMarkdownEditor {
 	private scope: Scope;
 	private editor?: InternalMarkdownEditor;
 	private isDestroyed = false;
+	private uninstaller: (() => void) | null = null;
 
 	/**
 	 * Hard-coded configuration to control whether to set activeEditor.
@@ -107,7 +108,7 @@ export class EmbeddableMarkdownEditor {
 		// Disable no-this-alias: Need stable reference for monkey-patching hooks
 		// eslint-disable-next-line @typescript-eslint/no-this-alias
 		const selfRef = this; // capture instance for function-based hooks
-		const uninstaller = around(EditorClass.prototype, {
+		const rawUninstaller = around(EditorClass.prototype, {
 			buildLocalExtensions: (originalMethod: (this: InternalMarkdownEditor) => unknown[]) =>
 				function (this: InternalMarkdownEditor) {
 					const extensions = originalMethod.call(this) || [];
@@ -304,6 +305,15 @@ export class EmbeddableMarkdownEditor {
 				},
 		});
 
+		// Ensure uninstaller is only called once
+		let uninstalled = false;
+		const safeUninstaller = () => {
+			if (uninstalled) return;
+			uninstalled = true;
+			rawUninstaller();
+		};
+		this.uninstaller = safeUninstaller;
+
 		this.editor = new EditorClass(app, container, {
 			app,
 			onMarkdownScroll: () => {},
@@ -313,7 +323,7 @@ export class EmbeddableMarkdownEditor {
 		if (!editorInstance) {
 			throw new Error('Failed to initialise editor instance');
 		}
-		editorInstance.register?.(uninstaller);
+		editorInstance.register?.(safeUninstaller);
 		this.set(this.initialValue, false);
 		editorInstance.register?.(
 			around(app.workspace, {
@@ -411,6 +421,8 @@ export class EmbeddableMarkdownEditor {
 	}
 	destroy(): void {
 		this.isDestroyed = true;
+		this.uninstaller?.();
+		this.uninstaller = null;
 		const editorInstance = this.editor;
 		if (editorInstance && this.loaded && typeof editorInstance.unload === 'function') {
 			editorInstance.unload();
