@@ -131,7 +131,7 @@ export class PrintPreviewView extends FileView {
 			this.setupIframeContent(iframe);
 		};
 
-		// Initialize iframe document
+		// Initialize iframe document（仅负责布局，不在此处加载 Bravura 字体）
 		const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
 		if (iframeDoc) {
 			iframeDoc.open();
@@ -205,7 +205,7 @@ export class PrintPreviewView extends FileView {
 							position: relative;
 						}
 						
-						/* 确保 AlphaTab 容器正确显示 */
+						/* 确保 AlphaTab 容器正确显示（字体由 AlphaTab 自己加载） */
 						.alphaTab {
 							width: 100%;
 							position: relative;
@@ -288,6 +288,25 @@ export class PrintPreviewView extends FileView {
 		console.log('[PrintPreview] Iframe height adjusted to:', height);
 	}
 
+	/**
+	 * 在 iframe 环境中给 AlphaTab 一点初始化时间
+	 * 不再主动通过 document.fonts 拉取字体，由 AlphaTab 自己加载 Bravura
+	 */
+	private async ensureFontsReady(): Promise<void> {
+		if (!this.iframe) return;
+		const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow?.document;
+		if (!iframeDoc) return;
+
+		try {
+			console.log('[PrintPreview] ensureFontsReady: start');
+			// 基础等待：给 AlphaTab 和布局引擎一点时间
+			await new Promise((resolve) => setTimeout(resolve, 150));
+			console.log('[PrintPreview] ensureFontsReady: done');
+		} catch (e) {
+			console.warn('[PrintPreview] ensureFontsReady error:', e);
+		}
+	}
+
 	private async renderScore(type: 'alphatex' | 'binary', content: string | Uint8Array) {
 		if (!this.previewContainer) return;
 
@@ -295,6 +314,7 @@ export class PrintPreviewView extends FileView {
 
 		// 检查资源是否可用
 		const resources = this.plugin.resources;
+		console.log('[PrintPreview] renderScore resources snapshot:', resources);
 		if (!resources?.bravuraUri || !resources.alphaTabWorkerUri || !resources.soundFontUri) {
 			const errorDiv = this.previewContainer.createDiv({ cls: 'print-error' });
 			errorDiv.setText(t('playground.resourcesMissing'));
@@ -303,6 +323,9 @@ export class PrintPreviewView extends FileView {
 		}
 
 		try {
+			// 在创建 AlphaTab 之前，尽量等 iframe 内字体准备好
+			await this.ensureFontsReady();
+
 			// 销毁旧的 API 实例
 			if (this.api) {
 				try {
@@ -368,6 +391,13 @@ export class PrintPreviewView extends FileView {
 		alphaTabWorkerUri: string;
 		soundFontUri: string;
 	}): alphaTab.Settings {
+		// 为打印视图单独构造一个带时间戳的 Bravura 字体 URL，避免与其他视图共享缓存
+		// 这样每次打开 PrintPreview，浏览器都会认为是一个"新"的字体请求，
+		// 有助于稳定触发一次完整的字体加载流程，降低首开豆腐块概率。
+		const ts = Date.now();
+		const sep = resources.bravuraUri.includes('?') ? '&' : '?';
+		const bravuraWithTs = `${resources.bravuraUri}${sep}_print_ts=${ts}`;
+
 		const settingsJson = {
 			core: {
 				engine: 'svg' as const,
@@ -401,10 +431,10 @@ export class PrintPreviewView extends FileView {
 		const settings = new alphaTab.Settings();
 		settings.fillFromJson(settingsJson);
 
-		// 配置字体
+		// 配置字体：使用带时间戳的 Bravura URL，强制 PrintPreview 每次打开都触发一次字体加载
 		if (resources.bravuraUri) {
 			settings.core.smuflFontSources = new Map([
-				[alphaTab.FontFileFormat.Woff2, resources.bravuraUri],
+				[alphaTab.FontFileFormat.Woff2, bravuraWithTs],
 			]);
 		}
 
@@ -427,7 +457,7 @@ export class PrintPreviewView extends FileView {
 
 		try {
 			console.log('[PrintPreview] Triggering print dialog...');
-			
+
 			// 确保 iframe 内容已完全加载
 			const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
 			if (!iframeDoc) {
@@ -438,10 +468,10 @@ export class PrintPreviewView extends FileView {
 			// 打印前确保所有 SVG 元素可见
 			const svgElements = iframeDoc.querySelectorAll('svg');
 			console.log('[PrintPreview] Found SVG elements:', svgElements.length);
-			
+
 			// 聚焦 iframe 窗口并触发打印
 			this.iframe.contentWindow.focus();
-			
+
 			// 使用 setTimeout 确保 focus 生效
 			setTimeout(() => {
 				if (this.iframe?.contentWindow) {

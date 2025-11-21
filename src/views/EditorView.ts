@@ -410,14 +410,14 @@ export class EditorView extends FileView {
 			}
 			const docBtn = this.addAction('printer', '打印预览', async () => {
 				if (!this.file) return;
-				
+
 				// 确保当前编辑器内容已保存
 				await this.flushSave();
-				
+
 				// 1. 先在新标签页打开文件
 				const leaf = this.app.workspace.getLeaf('tab');
 				await leaf.openFile(this.file);
-				
+
 				// 2. 然后切换视图到 PrintPreviewView
 				await leaf.setViewState({
 					type: VIEW_TYPE_PRINT_PREVIEW,
