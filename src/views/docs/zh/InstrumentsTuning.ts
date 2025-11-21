@@ -21,7 +21,7 @@ export default {
 	title: '乐器与调音',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: '乐器与调音（Instrument & Tuning）' });
+		container.createEl('h3', { text: '乐器与调音（Instrument & tuning）' });
 		container.createEl('p', {
 			text: '在 AlphaTex 中，可以通过 \\instrument 指定播放音色，使用 \\tuning 指定每根弦的音高（从最底弦开始）。如果只设置了 \\instrument 而未设置 \\tuning，AlphaTab 会根据乐器类型尝试应用默认调弦。',
 		});

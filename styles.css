@@ -1562,6 +1562,20 @@
 	width: 100%;
 }
 
+/* --- fonts.css --- */
+/* Font face declarations and related CSS variables */
+:root {
+	--tabflow-bravura-font-src: local('alphaTab');
+}
+
+@font-face {
+	font-family: 'alphaTab';
+	src: var(--tabflow-bravura-font-src, local('alphaTab'));
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+}
+
 /* --- play.css --- */
 /* 播放栏自定义按钮样式 */
 .play-bar {
@@ -1753,6 +1767,26 @@
 /* Hide status bar when TabView is open */
 .tabflow-hide-statusbar .status-bar {
 	display: none !important;
+}
+
+.tabflow-tabview-root .at-cursor-bar {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	opacity: 0.2;
+}
+
+.tabflow-tabview-root .at-selection div {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	opacity: 0.4;
+}
+
+.tabflow-tabview-root .at-cursor-beat {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	width: 3px;
+}
+
+.tabflow-tabview-root .at-highlight * {
+	fill: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	stroke: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
 }
 
 /* 播放栏控件图标样式 */

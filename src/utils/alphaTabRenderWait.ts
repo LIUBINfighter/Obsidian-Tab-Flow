@@ -39,7 +39,9 @@ interface ListenerContainer {
 function onceFontReady(debug?: boolean): Promise<void> {
 	const fonts = Reflect.get(document, 'fonts') as FontFaceSet | undefined;
 	if (!fonts || typeof fonts.ready?.then !== 'function') {
-		debug && console.debug('[AlphaTabWait] Font API not supported; skip');
+		if (debug) {
+			console.debug('[AlphaTabWait] Font API not supported; skip');
+		}
 		return Promise.resolve();
 	}
 	return fonts.ready.then(() => undefined).catch(() => undefined);
@@ -105,7 +107,9 @@ export async function waitAlphaTabFullRender(
 
 	// preRender clears previous state
 	add(renderer, 'preRender', () => {
-		debug && console.debug('[AlphaTabWait] preRender');
+		if (debug) {
+			console.debug('[AlphaTabWait] preRender');
+		}
 		partialIds = new Set();
 		renderedPartials = new Set();
 		layoutFinished = false;
@@ -146,12 +150,13 @@ export async function waitAlphaTabFullRender(
 		const result = r as RenderResult;
 		totalWidth = result.totalWidth ?? 0;
 		totalHeight = result.totalHeight ?? 0;
-		debug &&
+		if (debug) {
 			console.debug(
 				'[AlphaTabWait] renderFinished layout complete',
 				result.totalWidth,
 				result.totalHeight
 			);
+		}
 	});
 
 	const cleanup = () => {
@@ -171,10 +176,11 @@ export async function waitAlphaTabFullRender(
 			if (performance.now() - start > timeoutMs) throw new Error('timeout');
 			await new Promise((r) => setTimeout(r, 50));
 		}
-		debug &&
+		if (debug) {
 			console.debug(
 				`[AlphaTabWait] condition satisfied: ${label} in ${Math.round(performance.now() - pollStart)}ms`
 			);
+		}
 	};
 
 	try {

@@ -4,7 +4,7 @@ import { setIcon } from 'obsidian';
 import { DEFAULT_SETTINGS, PlayBarComponentVisibility } from '../defaults';
 import { t } from '../../i18n';
 
-export async function renderPlayerTab(
+export function renderPlayerTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
 	app: App
@@ -452,4 +452,6 @@ export async function renderPlayerTab(
 				);
 			});
 		});
+
+	return Promise.resolve();
 }

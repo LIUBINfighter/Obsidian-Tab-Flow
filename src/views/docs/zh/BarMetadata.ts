@@ -30,25 +30,25 @@ const SAMPLE_SIMILE = `3.3*4 | \\simile simple | 3.3*4 | 4.3*4 | \\simile firsto
 
 export default {
 	id: 'bar-metadata',
-	title: 'Bar Metadata 小节元数据',
+	title: 'Bar metadata 小节元数据',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Bar Metadata（小节元数据）' });
+		container.createEl('h3', { text: 'Bar metadata（小节元数据）' });
 		container.createEl('p', {
 			text: '演示拍号、反复与结尾、调号、谱号/八度、小节内变速、三连感、弱起、分段、双小节线、Simile 等。',
 		});
 
 		const sections: Array<[string, string]> = [
-			['拍号（Time Signatures）', SAMPLE_TS],
+			['拍号（Time signatures）', SAMPLE_TS],
 			['反复（Repeats）', SAMPLE_REPEATS],
-			['可选结尾（Alternate Endings）', SAMPLE_ALT_ENDINGS],
-			['调号（Key Signatures）', SAMPLE_KEYS],
-			['谱号与八度（Clef & Ottava）', SAMPLE_CLEF_OTTAVA],
-			['小节内速度变更（Tempo in Bars）', SAMPLE_TEMPO_IN_BARS],
-			['三连感（Triplet Feel）', SAMPLE_TRIPLET_FEEL],
+			['可选结尾（Alternate endings）', SAMPLE_ALT_ENDINGS],
+			['调号（Key signatures）', SAMPLE_KEYS],
+			['谱号与八度（Clef & ottava）', SAMPLE_CLEF_OTTAVA],
+			['小节内速度变更（Tempo in bars）', SAMPLE_TEMPO_IN_BARS],
+			['三连感（Triplet feel）', SAMPLE_TRIPLET_FEEL],
 			['弱起（Anacrusis）', SAMPLE_ANACRUSIS],
 			['分段（Sections）', SAMPLE_SECTION],
-			['双小节线（Double Bar）', SAMPLE_DOUBLE_BAR],
+			['双小节线（Double bar）', SAMPLE_DOUBLE_BAR],
 			['Simile 标记', SAMPLE_SIMILE],
 		];
 

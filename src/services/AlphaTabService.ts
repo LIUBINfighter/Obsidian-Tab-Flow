@@ -302,7 +302,10 @@ export class AlphaTabService {
 	}
 
 	public async loadScore(fileData: Uint8Array) {
-		await this.api.load(fileData);
+		const maybePromise = this.api.load(fileData) as unknown;
+		if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
+			await (maybePromise as PromiseLike<void>);
+		}
 	}
 
 	public async loadAlphaTexScore(textContent: string) {

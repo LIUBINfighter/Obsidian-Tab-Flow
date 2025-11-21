@@ -53,10 +53,10 @@ const SAMPLE_SLUR = `(3.3 {slur s1} 4.4).4 7.3.8 8.3.8 10.3 {slur s1} .8`;
 
 export default {
 	id: 'note-effects',
-	title: 'Note Effects',
+	title: 'Note effects',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Note Effects' });
+		container.createEl('h3', { text: 'Note effects' });
 		container.createEl('p', {
 			text: 'Demonstrates harmonics, trill/slide/hammer-on, ghost/dead notes, accents/staccato, palm mute/let ring, fingering, ornaments, bends, ties, visibility, slurs, etc.',
 		});
@@ -66,19 +66,19 @@ export default {
 			['Trill', SAMPLE_TRILL],
 			['Vibrato', SAMPLE_VIBRATO],
 			['Slides', SAMPLE_SLIDE],
-			['Hammer-On / Pull-Off', SAMPLE_HO_PO],
-			['Left Hand Tapping', SAMPLE_LHT],
-			['Ghost / Dead Notes', `${SAMPLE_GHOST} | ${SAMPLE_DEAD}`],
-			['Accents / Staccato', `${SAMPLE_ACCENT} | ${SAMPLE_STACCATO}`],
-			['Palm Mute / Let Ring', `${SAMPLE_PM} | ${SAMPLE_LET_RING}`],
+			['Hammer-on / pull-off', SAMPLE_HO_PO],
+			['Left hand tapping', SAMPLE_LHT],
+			['Ghost / dead notes', `${SAMPLE_GHOST} | ${SAMPLE_DEAD}`],
+			['Accents / staccato', `${SAMPLE_ACCENT} | ${SAMPLE_STACCATO}`],
+			['Palm mute / let ring', `${SAMPLE_PM} | ${SAMPLE_LET_RING}`],
 			['Fingering', SAMPLE_FINGERING],
 			['Ornaments', SAMPLE_ORNAMENTS],
-			['Show String Numbers', SAMPLE_SHOW_STRINGS],
+			['Show string numbers', SAMPLE_SHOW_STRINGS],
 			['Bends', SAMPLE_BENDS],
-			['Bends Exact (be)', SAMPLE_BENDS_EXACT],
-			['Tied Notes - Stringed', SAMPLE_TIED_STRINGED],
-			['Tied Notes - Non-stringed', SAMPLE_TIED_NON_STRINGED],
-			['Invisible Notes', SAMPLE_INVISIBLE],
+			['Bends exact (be)', SAMPLE_BENDS_EXACT],
+			['Tied notes - stringed', SAMPLE_TIED_STRINGED],
+			['Tied notes - non-stringed', SAMPLE_TIED_NON_STRINGED],
+			['Invisible notes', SAMPLE_INVISIBLE],
 			['Slurs', SAMPLE_SLUR],
 		];
 

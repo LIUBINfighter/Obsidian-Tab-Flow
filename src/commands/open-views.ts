@@ -13,7 +13,7 @@ export function registerOpenViewCommands(plugin: Plugin) {
 				type: VIEW_TYPE_TABFLOW_DOC,
 				active: true,
 			});
-			plugin.app.workspace.revealLeaf(leaf);
+			await plugin.app.workspace.revealLeaf(leaf);
 		},
 	});
 
@@ -26,7 +26,7 @@ export function registerOpenViewCommands(plugin: Plugin) {
 				type: VIEW_TYPE_ALPHATEX_EDITOR,
 				active: true,
 			});
-			plugin.app.workspace.revealLeaf(leaf);
+			await plugin.app.workspace.revealLeaf(leaf);
 		},
 	});
 
@@ -40,7 +40,7 @@ export function registerOpenViewCommands(plugin: Plugin) {
 				active: true,
 				state: { layout: 'horizontal' },
 			});
-			plugin.app.workspace.revealLeaf(leaf);
+			await plugin.app.workspace.revealLeaf(leaf);
 		},
 	});
 }

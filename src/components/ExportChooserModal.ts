@@ -46,7 +46,7 @@ export class ExportChooserModal extends Modal {
 		// 音频导出（触发事件，由服务层导出并在状态回调时呼出音频播放器）
 		const audioBtn = row.createEl('button', { text: '导出音频(WAV)', cls: 'mod-cta' });
 		audioBtn.onclick = () => {
-			void (async () => {
+			void (() => {
 				try {
 					const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
 					const onOk = async (url?: string) => {
