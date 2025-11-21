@@ -60,7 +60,10 @@
 		"exportStartFailed": "导出启动失败",
 		"midiExportFailed": "MIDI导出失败",
 		"pdfExportFailed": "PDF导出失败",
-		"gpExportFailed": "GP导出失败"
+		"gpExportFailed": "GP导出失败",
+		"audioExportFailed": "音频导出失败",
+		"audioExportFailedWithError": "音频导出失败: {{error}}",
+		"openAudioPlayerFailed": "打开音频播放器失败"
 	},
 	"settings": {
 		"openSettings": "打开设置",
@@ -86,6 +89,7 @@
 		"scrollOffScreen": "超出时",
 		"scrollSpeed": "速度:",
 		"yOffset": "Y偏移:",
+		"xOffset": "X偏移:",
 		"nativeScroll": "原生滚动:",
 		"useNativeBrowserSmoothScroll": "使用浏览器原生平滑滚动",
 		"scrollMode": "滚动模式",
@@ -96,6 +100,12 @@
 			"off": "不滚动"
 		},
 		"scrollModeUpdated": "滚动模式已更新",
+		"scrollSettingUpdated": "滚动设置已更新: {{property}}",
+		"scrollToCursor": "滚动到光标",
+		"scrollToCursorTitle": "手动触发滚动到当前播放位置",
+		"audioStatus": "音频：未加载",
+		"audioStatusNotLoaded": "音频：未加载",
+		"audioStatusLoaded": "音频：已加载",
 		"tabs": {
 			"general": "资产管理",
 			"player": "播放器配置",
