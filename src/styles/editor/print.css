@@ -23,6 +23,124 @@
 	background: white;
 }
 
+/* 左侧打印 Track/Staff 面板 */
+.tabflow-print-preview-view .tabflow-print-sidebar {
+	width: 280px;
+	min-width: 220px;
+	max-width: 320px;
+	border-right: 1px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-panel {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 8px 12px;
+	gap: 8px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-title {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-actions {
+	display: flex;
+	gap: 4px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-list {
+	flex: 1;
+	overflow: auto;
+	padding: 4px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-footer {
+	font-size: 11px;
+	opacity: 0.8;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-empty {
+	opacity: 0.7;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-item {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px 0;
+	border-radius: 4px;
+	cursor: default;
+}
+
+.tabflow-print-preview-view .tabflow-print-track-row {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 6px;
+	margin-left: 0;
+	padding-left: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-icon {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-label {
+	flex: 1;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-meta {
+	font-size: 11px;
+	opacity: 0.7;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-left: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-empty {
+	opacity: 0.6;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-label {
+	font-size: 11px;
+	opacity: 0.8;
+	min-width: 56px;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-buttons {
+	display: flex;
+	gap: 2px;
+}
+
 /* 物理分页容器：在 iframe 内由 PrintPreviewView 注入 */
 .tabflow-print-preview-view .tabflow-print-pages {
 	display: flex;

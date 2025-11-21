@@ -2,6 +2,7 @@ import { FileView, WorkspaceLeaf, ButtonComponent, TFile } from 'obsidian';
 import type TabFlowPlugin from '../main';
 import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
+import { PrintTracksPanelDom } from '../player/components/PrintTracksPanel';
 
 export const VIEW_TYPE_PRINT_PREVIEW = 'tab-flow-print-preview';
 
@@ -10,6 +11,9 @@ export class PrintPreviewView extends FileView {
 	private iframe: HTMLIFrameElement | null = null;
 	private previewContainer: HTMLElement | null = null;
 	private api: alphaTab.AlphaTabApi | null = null;
+	private sidebarEl: HTMLElement | null = null;
+	private tracksPanel: PrintTracksPanelDom | null = null;
+	private isSidebarCollapsed = false;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
 		super(leaf);
@@ -109,10 +113,23 @@ export class PrintPreviewView extends FileView {
 		toolbar.style.gap = '10px';
 		toolbar.style.padding = '10px';
 		toolbar.style.borderBottom = '1px solid var(--background-modifier-border)';
-		toolbar.style.justifyContent = 'flex-end';
+		toolbar.style.justifyContent = 'space-between';
 		toolbar.style.flexShrink = '0';
 
-		new ButtonComponent(toolbar)
+		const leftToolbar = toolbar.createDiv();
+		leftToolbar.style.display = 'flex';
+		leftToolbar.style.gap = '8px';
+
+		const rightToolbar = toolbar.createDiv();
+		rightToolbar.style.display = 'flex';
+		rightToolbar.style.gap = '8px';
+
+		new ButtonComponent(leftToolbar)
+			.setIcon('layout-sidebar-left')
+			.setTooltip(t('printPreview.toggleTrackPanel', undefined, 'Toggle track panel'))
+			.onClick(() => this.toggleSidebar());
+
+		new ButtonComponent(rightToolbar)
 			.setButtonText(t('common.print', undefined, 'Print'))
 			.setIcon('printer')
 			.setCta()
@@ -120,18 +137,28 @@ export class PrintPreviewView extends FileView {
 				this.handlePrint();
 			});
 
-		// 2. Preview Area (with iframe)
+		// 2. Body: 左侧轨道面板 + 右侧预览
 		const body = container.createDiv({ cls: 'print-preview-body' });
 		body.style.flex = '1';
-		body.style.overflow = 'auto';
-		body.style.padding = '20px';
 		body.style.display = 'flex';
-		body.style.justifyContent = 'center';
-		body.style.alignItems = 'flex-start';
-		body.style.backgroundColor = 'var(--background-secondary)';
+		body.style.flexDirection = 'row';
+		body.style.minHeight = '0';
+
+		// 左侧：打印用 Track/Staff 面板
+		this.sidebarEl = body.createDiv('tabflow-print-sidebar');
+
+		// 右侧：iframe 预览区域
+		const previewWrapper = body.createDiv('tabflow-print-preview-wrapper');
+		previewWrapper.style.flex = '1';
+		previewWrapper.style.overflow = 'auto';
+		previewWrapper.style.padding = '20px';
+		previewWrapper.style.display = 'flex';
+		previewWrapper.style.justifyContent = 'center';
+		previewWrapper.style.alignItems = 'flex-start';
+		previewWrapper.style.backgroundColor = 'var(--background-secondary)';
 
 		// Create iframe for print preview（宽度贴近 A4，内部不再二次添加水平 padding）
-		const iframe = body.createEl('iframe', {
+		const iframe = previewWrapper.createEl('iframe', {
 			cls: 'print-preview-iframe',
 		});
 		iframe.style.width = '210mm';
@@ -244,10 +271,46 @@ export class PrintPreviewView extends FileView {
 		// 设置自动高度调整
 		this.setupAutoResize(iframe);
 
+		// 如果已经有 AlphaTab API，建立与轨道面板的连接
+		if (this.api && this.sidebarEl) {
+			this.ensureTracksPanel();
+			this.tracksPanel?.setApi(this.api);
+		}
+
 		// 如果已经有文件，加载它
 		if (this.file) {
 			void this.onLoadFile(this.file);
 		}
+	}
+
+	/**
+	 * 懒创建左侧 Track/Staff 打印面板
+	 */
+	private ensureTracksPanel() {
+		if (!this.sidebarEl) return;
+		if (!this.tracksPanel) {
+			this.tracksPanel = new PrintTracksPanelDom({
+				container: this.sidebarEl,
+				api: this.api,
+				// 右侧渲染变化时，重新调整 iframe 高度
+				onConfigChanged: () => {
+					this.adjustIframeHeight();
+				},
+			});
+		} else if (this.api) {
+			this.tracksPanel.setApi(this.api);
+		}
+	}
+
+	private toggleSidebar() {
+		if (!this.sidebarEl) return;
+		this.isSidebarCollapsed = !this.isSidebarCollapsed;
+		if (this.isSidebarCollapsed) {
+			this.sidebarEl.style.display = 'none';
+		} else {
+			this.sidebarEl.style.display = 'flex';
+		}
+		this.adjustIframeHeight();
 	}
 
 	/**
@@ -351,6 +414,11 @@ export class PrintPreviewView extends FileView {
 			// 创建 AlphaTab API 实例
 			console.log('[PrintPreview] Creating AlphaTab API with print-optimized settings');
 			this.api = new alphaTab.AlphaTabApi(this.previewContainer, settings);
+
+			// 初始化或更新左侧 Track/Staff 面板
+			if (this.sidebarEl) {
+				this.ensureTracksPanel();
+			}
 
 			// 监听渲染完成事件
 			this.api.renderFinished.on(() => {

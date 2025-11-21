@@ -6,6 +6,7 @@ import { PlayerController, type PlayerControllerResources } from './PlayerContro
 import { StoreFactory, type StoreCollection } from './store/StoreFactory';
 import type TabFlowPlugin from '../main';
 import { VIEW_TYPE_ALPHATEX_EDITOR } from '../views/EditorView';
+import { VIEW_TYPE_PRINT_PREVIEW } from '../views/PrintPreviewView';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
@@ -28,6 +29,8 @@ export class ReactView extends FileView {
 
 	// 切换到编辑器视图的按钮
 	private switchToEditorAction: HTMLElement | null = null;
+	// 打印预览按钮
+	private printPreviewAction: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin, resources: PlayerControllerResources) {
 		super(leaf);
@@ -106,8 +109,9 @@ export class ReactView extends FileView {
 		// 注意: 不移除全局字体样式,因为可能有其他实例在使用
 		// 字体样式会在插件卸载时自动清理
 
-		// 清理切换到编辑器视图的按钮
+		// 清理视图 action 按钮
 		this.cleanupSwitchToEditorButton();
+		this.cleanupPrintPreviewButton();
 
 		// 1. 清理 React root
 		if (this.root) {
@@ -157,11 +161,14 @@ export class ReactView extends FileView {
 
 		// 如果是 .alphatab 或 .alphatex 文件，添加切换到编辑器视图的按钮
 		this.updateSwitchToEditorButton();
+		// 针对可打印谱面类型，添加打印预览按钮
+		this.updatePrintPreviewButton();
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {
-		// 清理切换到编辑器视图的按钮
+		// 清理视图 action 按钮
 		this.cleanupSwitchToEditorButton();
+		this.cleanupPrintPreviewButton();
 		this.currentFile = null;
 		await super.onUnloadFile(file);
 	}
@@ -215,6 +222,48 @@ export class ReactView extends FileView {
 			this.switchToEditorAction = null;
 		} catch (error) {
 			console.warn('[ReactView] Failed to cleanup switch to editor button:', error);
+		}
+	}
+
+	// 更新打印预览按钮：支持常见乐谱格式（gp/gpx/gp3-7/alphatex/alphatab/atex）
+	private updatePrintPreviewButton(): void {
+		this.cleanupPrintPreviewButton();
+		if (!this.currentFile) return;
+
+		const extension = this.currentFile.extension?.toLowerCase();
+		if (!extension) return;
+
+		const printable = ['gp', 'gp3', 'gp4', 'gp5', 'gpx', 'gp7', 'alphatab', 'alphatex', 'atex'];
+		if (!printable.includes(extension)) return;
+
+		try {
+			this.printPreviewAction = this.addAction('printer', '打开打印预览', () => {
+				if (!this.currentFile) return;
+				// 在新 leaf 中打开当前文件的打印预览视图
+				const leaf = this.app.workspace.getLeaf('tab');
+				void leaf.openFile(this.currentFile).then(() => {
+					void leaf.setViewState({
+						type: VIEW_TYPE_PRINT_PREVIEW,
+						state: { file: this.currentFile!.path },
+					});
+				});
+			});
+		} catch (error) {
+			console.warn('[ReactView] Failed to add print preview button:', error);
+		}
+	}
+
+	/**
+	 * 清理打印预览按钮
+	 */
+	private cleanupPrintPreviewButton(): void {
+		try {
+			if (this.printPreviewAction && this.printPreviewAction.parentElement) {
+				this.printPreviewAction.remove();
+			}
+			this.printPreviewAction = null;
+		} catch (error) {
+			console.warn('[ReactView] Failed to cleanup print preview button:', error);
 		}
 	}
 }
