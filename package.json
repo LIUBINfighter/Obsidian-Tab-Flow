@@ -58,6 +58,7 @@
 		"jszip": "^3.10.1",
 		"lucide-react": "^0.545.0",
 		"mime-types": "^3.0.2",
+		"jspdf": "^2.5.1",
 		"monkey-around": "^3.0.0",
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",

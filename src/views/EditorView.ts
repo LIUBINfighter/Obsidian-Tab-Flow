@@ -18,6 +18,7 @@ import { PlayerController, type PlayerControllerResources } from '../player/Play
 import { StoreFactory, type StoreCollection } from '../player/store/StoreFactory';
 import { TablatureView } from '../player/components/TablatureView';
 import { VIEW_TYPE_REACT } from '../player/ReactView';
+import { VIEW_TYPE_PRINT } from './PrintView';
 
 export const VIEW_TYPE_ALPHATEX_EDITOR = 'alphatex-editor-view';
 
@@ -379,6 +380,22 @@ export class EditorView extends FileView {
 				})();
 			});
 			this.switchToPlayerAction = switchToPlayerBtn;
+
+			// 添加打印预览按钮
+			const printBtn = this.addAction('printer', '打印预览 / 导出 PDF', () => {
+				if (!this.file) return;
+				const file = this.file;
+				void (async () => {
+					await this.flushSave();
+					if (!file) return;
+					const leaf = this.app.workspace.getLeaf(true);
+					await leaf.setViewState({
+						type: VIEW_TYPE_PRINT,
+						state: { file: file.path },
+					});
+					this.app.workspace.revealLeaf(leaf);
+				})();
+			});
 
 			// 添加"新建文件"按钮
 			if (this.newFileAction && this.newFileAction.parentElement) {
