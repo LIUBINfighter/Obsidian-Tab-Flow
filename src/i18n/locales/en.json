@@ -60,7 +60,10 @@
 		"exportStartFailed": "Export start failed",
 		"midiExportFailed": "MIDI export failed",
 		"pdfExportFailed": "PDF export failed",
-		"gpExportFailed": "GP export failed"
+		"gpExportFailed": "GP export failed",
+		"audioExportFailed": "Audio export failed",
+		"audioExportFailedWithError": "Audio export failed: {{error}}",
+		"openAudioPlayerFailed": "Failed to open audio player"
 	},
 	"settings": {
 		"openSettings": "Open Settings",
@@ -86,6 +89,7 @@
 		"scrollOffScreen": "Off Screen",
 		"scrollSpeed": "Speed:",
 		"yOffset": "Y Offset:",
+		"xOffset": "X Offset:",
 		"nativeScroll": "Native Scroll:",
 		"useNativeBrowserSmoothScroll": "Use browser native smooth scroll",
 		"scrollMode": "Scroll Mode",
@@ -96,6 +100,12 @@
 			"off": "No Scroll"
 		},
 		"scrollModeUpdated": "Scroll mode updated",
+		"scrollSettingUpdated": "Scroll setting updated: {{property}}",
+		"scrollToCursor": "Scroll to Cursor",
+		"scrollToCursorTitle": "Manually trigger scroll to current playback position",
+		"audioStatus": "Audio: Not loaded",
+		"audioStatusNotLoaded": "Audio: Not loaded",
+		"audioStatusLoaded": "Audio: Loaded",
 		"tabs": {
 			"general": "Asset Management",
 			"player": "Player Settings",
