@@ -180,7 +180,7 @@ export class DocView extends ItemView {
 			},
 			cls: 'mod-cta',
 		});
-		alphaTabBtn.innerText = 'alphaTab.js';
+		alphaTabBtn.innerText = 'AlphaTab.js';
 
 		// 使用视图 action 注入设置按钮，统一管理生命周期
 		try {
@@ -217,7 +217,7 @@ export class DocView extends ItemView {
 				}
 			});
 			this.settingsAction = btn;
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 		// Layout wrapper
@@ -269,7 +269,7 @@ export class DocView extends ItemView {
 			// let panel render into the container; pass plugin so panels can access resources
 			try {
 				active.render(contentWrap, this.plugin);
-			} catch (_) {
+			} catch {
 				contentWrap.setText(t('docView.renderError'));
 			}
 		}

@@ -745,9 +745,9 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		updateProgress();
 	}
 
-	const originalRemove = bar.remove;
+	const originalRemove = bar.remove.bind(bar);
 	bar.remove = function (this: void) {
-		originalRemove.call(bar);
+		originalRemove();
 	};
 
 	return bar;

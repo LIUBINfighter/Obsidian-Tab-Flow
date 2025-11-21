@@ -78,7 +78,20 @@ export class ExportChooserModal extends Modal {
 						}
 					};
 					const failHandler = (err?: unknown) => {
-						const errMsg = err instanceof Error ? err.message : err ? String(err) : '';
+						let errMsg = '';
+						if (err instanceof Error) {
+							errMsg = err.message;
+						} else if (err) {
+							if (typeof err === 'string') {
+								errMsg = err;
+							} else {
+								try {
+									errMsg = JSON.stringify(err);
+								} catch {
+									errMsg = String(err);
+								}
+							}
+						}
 						if (errMsg) {
 							new Notice(t('export.audioExportFailedWithError', { error: errMsg }));
 						} else {

@@ -275,7 +275,7 @@ export class TabView extends FileView {
 		if (this.currentFile) {
 			return this.currentFile.basename;
 		}
-		return 'alphaTab';
+		return 'AlphaTab';
 	}
 
 	public getScoreTitle(): string {
@@ -283,7 +283,7 @@ export class TabView extends FileView {
 			return this.scoreTitle;
 		}
 		if (this.currentFile) return this.currentFile.basename;
-		return 'alphaTab';
+		return 'AlphaTab';
 	}
 
 	/**
@@ -560,7 +560,7 @@ export class TabView extends FileView {
 				this.settingsAction.remove();
 			}
 			this.settingsAction = null;
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 

@@ -314,7 +314,7 @@ export default class TabFlowPlugin extends Plugin {
 				'--alphatex-editor-font-size': this.settings.editorFontSize || '0.95rem',
 				'--alphatex-editor-bottom-gap': this.settings.editorBottomGap || '40vh',
 			});
-		} catch (_) {
+		} catch {
 			// ignore environments without DOM
 		}
 
