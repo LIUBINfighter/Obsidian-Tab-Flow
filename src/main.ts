@@ -607,11 +607,10 @@ export default class TabFlowPlugin extends Plugin {
 							t('fileMenu.openEditorAndPreview', undefined, 'Open editor & Preview')
 						)
 							.setIcon('columns')
-							.onClick(() => {
-								void (async () => {
-									// 在左栏打开默认编辑器
-									const leftLeaf = this.app.workspace.getLeaf(false);
-									await leftLeaf.openFile(file);
+							.onClick(async () => {
+								// 在左栏打开默认编辑器
+								const leftLeaf = this.app.workspace.getLeaf(false);
+								await leftLeaf.openFile(file);
 
 								// 在右栏打开 ReactView 预览
 								const rightLeaf = this.app.workspace.getLeaf('split', 'vertical');

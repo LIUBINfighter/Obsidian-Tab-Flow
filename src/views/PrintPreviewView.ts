@@ -10,6 +10,8 @@ export class PrintPreviewView extends FileView {
 	private iframe: HTMLIFrameElement | null = null;
 	private previewContainer: HTMLElement | null = null;
 	private api: alphaTab.AlphaTabApi | null = null;
+	// 物理分页容器（iframe 内部的页面根节点）
+	private pageRoot: HTMLElement | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
 		super(leaf);
@@ -112,9 +114,10 @@ export class PrintPreviewView extends FileView {
 		body.style.padding = '20px';
 		body.style.display = 'flex';
 		body.style.justifyContent = 'center';
+		body.style.alignItems = 'flex-start';
 		body.style.backgroundColor = 'var(--background-secondary)';
 
-		// Create iframe for print preview
+		// Create iframe for print preview（宽度贴近 A4，内部不再二次添加水平 padding）
 		const iframe = body.createEl('iframe', {
 			cls: 'print-preview-iframe',
 		});
@@ -158,11 +161,11 @@ export class PrintPreviewView extends FileView {
 							font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 							background: white;
 							color: black;
-							padding: 10mm;
 						}
 						
-						/* A4 page settings - 移除 size 设置，让 AlphaTab 处理分页 */
+						/* A4 page settings：交给打印引擎控制纸张与统一边距 */
 						@page {
+							size: A4;
 							margin: 10mm;
 						}
 						
@@ -174,13 +177,8 @@ export class PrintPreviewView extends FileView {
 								background: white !important;
 							}
 							
-							body {
-								padding: 0;
-								margin: 0;
-							}
-							
 							.content-area {
-								/* 打印时移除额外边距 */
+								/* 打印时让 AlphaTab 的 page 布局直接贴边由 @page 控制可打印区域 */
 								margin: 0;
 								padding: 0;
 							}
@@ -193,14 +191,8 @@ export class PrintPreviewView extends FileView {
 							}
 						}
 						
-						@media screen {
-							body {
-								padding: 10mm;
-							}
-						}
-						
 						.content-area {
-							/* Content will auto-expand */
+							/* Content will auto-expand; AlphaTab page 布局负责分页 */
 							width: 100%;
 							position: relative;
 						}
@@ -231,7 +223,16 @@ export class PrintPreviewView extends FileView {
 		if (!contentArea) return;
 
 		// Store reference for later use
-		this.previewContainer = contentArea;
+		this.pageRoot = contentArea;
+
+		// 内部实际渲染容器：单页或多页会挂在这里
+		let preview = contentArea.querySelector<HTMLElement>('.tabflow-print-pages');
+		if (!preview) {
+			preview = iframeDoc.createElement('div');
+			preview.className = 'tabflow-print-pages';
+			contentArea.appendChild(preview);
+		}
+		this.previewContainer = preview;
 
 		// 保存 iframe 引用
 		this.iframe = iframe;
@@ -281,8 +282,15 @@ export class PrintPreviewView extends FileView {
 		const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow?.document;
 		if (!iframeDoc?.body) return;
 
-		// 获取 body 的实际高度
-		const height = iframeDoc.body.scrollHeight;
+		// 物理分页后，优先用页面根节点高度；否则退回 body
+		let height = iframeDoc.body.scrollHeight;
+		const pageRoot = this.pageRoot;
+		if (pageRoot) {
+			const rect = pageRoot.getBoundingClientRect();
+			if (rect.height > 0) {
+				height = rect.height;
+			}
+		}
 		this.iframe.style.height = height + 'px';
 
 		console.log('[PrintPreview] Iframe height adjusted to:', height);
@@ -350,7 +358,8 @@ export class PrintPreviewView extends FileView {
 			// 监听渲染完成事件
 			this.api.renderFinished.on(() => {
 				console.log('[PrintPreview] Render finished');
-				// 渲染完成后，调整 iframe 高度
+				// 渲染完成后进行物理分页，再调整 iframe 高度
+				this.applyPhysicalPagination();
 				this.adjustIframeHeight();
 			});
 
@@ -415,10 +424,11 @@ export class PrintPreviewView extends FileView {
 				soundFont: resources.soundFontUri,
 			},
 			display: {
-				// ✅ 打印优化：使用原始尺寸，避免分页错位
-				scale: 1.0,
-				// ✅ 打印优化：不压缩拉伸力
-				stretchForce: 1.0,
+				// ✅ 打印优化：稍微缩小比例，给分页留出安全边距
+				// 这里不追求像素级“填满整页”，而是尽量减少跨页抖动
+				scale: 0.95,
+				// ✅ 轻微降低拉伸力，避免行间过度压缩导致分页临界
+				stretchForce: 0.9,
 				// 使用页面布局（A4 纵向）
 				layoutMode: alphaTab.LayoutMode.Page,
 				// 从第一小节开始
@@ -481,6 +491,94 @@ export class PrintPreviewView extends FileView {
 		} catch (e) {
 			console.error('[PrintPreview] Print failed:', e);
 		}
+	}
+
+	/**
+	 * 将 AlphaTab 渲染结果拆分为接近物理纸张高度的多页容器。
+	 *
+	 * 设计原则：
+	 * - 不去理解 AlphaTab 内部结构，只按块级行/系统高度做近似分页；
+	 * - 仅在 print-preview iframe 内生效，不影响其它视图；
+	 * - 分页结果通过 .tabflow-print-page + CSS 的 page-break-after 控制打印分页。
+	 */
+	private applyPhysicalPagination(): void {
+		if (!this.previewContainer) return;
+		if (!this.iframe) return;
+
+		const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow?.document;
+		if (!iframeDoc) return;
+
+		// root is intentionally unused; pagination is scoped to `alphaRoot` below.
+
+		// 找到 AlphaTab 渲染的主容器（通常为第一个 .alphaTab 或其父级）
+		const alphaRoot =
+			this.previewContainer.querySelector<HTMLElement>('.alphaTab') ?? this.previewContainer;
+		if (!alphaRoot) return;
+
+		// 收集要参与分页的块级元素：AlphaTab 通常按行/系统输出 div 或 svg 容器
+		const allChildren = Array.from(alphaRoot.children) as HTMLElement[];
+		if (!allChildren.length) return;
+
+		// 估算单页可用高度（以 A4 210x297mm、10mm 边距为参考）。
+		// 这里转成像素：使用 iframe 内 body 的高度和可视宽度来推算比例，不求精准，只求稳定。
+		const body = iframeDoc.body;
+		const viewportHeight =
+			this.iframe.getBoundingClientRect().height || body.getBoundingClientRect().height;
+		// 如果视口高度很小（首次渲染未扩展），退回一个经验值
+		const fallbackPageHeight = 1122; // 297mm @ 96dpi ≈ 1122px
+		const estimatedPageHeight = viewportHeight > 0 ? viewportHeight : fallbackPageHeight;
+
+		// 留一点安全边距，避免元素刚好压在分页边缘
+		const pageHeight = estimatedPageHeight * 0.95;
+
+		// 创建新的分页容器
+		const pagesContainer = iframeDoc.createElement('div');
+		pagesContainer.className = 'tabflow-print-pages';
+
+		let currentPage = iframeDoc.createElement('div');
+		currentPage.className = 'tabflow-print-page';
+		pagesContainer.appendChild(currentPage);
+
+		let currentHeight = 0;
+
+		for (const child of allChildren) {
+			// 跳过不可见元素
+			const style = iframeDoc.defaultView?.getComputedStyle(child);
+			if (style && (style.display === 'none' || style.visibility === 'hidden')) {
+				continue;
+			}
+
+			const rect = child.getBoundingClientRect();
+			const blockHeight = rect.height;
+			if (!blockHeight || !isFinite(blockHeight)) {
+				currentPage.appendChild(child);
+				continue;
+			}
+
+			// 如果当前页放不下，开启新页
+			if (currentHeight + blockHeight > pageHeight && currentPage.childElementCount > 0) {
+				currentPage = iframeDoc.createElement('div');
+				currentPage.className = 'tabflow-print-page';
+				pagesContainer.appendChild(currentPage);
+				currentHeight = 0;
+			}
+
+			currentPage.appendChild(child);
+			currentHeight += blockHeight;
+		}
+
+		// 用新的分页结构替换旧容器内容
+		alphaRoot.innerHTML = '';
+		alphaRoot.appendChild(pagesContainer);
+
+		// 记录 pageRoot，供高度计算使用
+		this.pageRoot = pagesContainer;
+
+		console.log(
+			'[PrintPreview] Physical pagination applied:',
+			pagesContainer.childElementCount,
+			'pages'
+		);
 	}
 
 	async onClose() {
