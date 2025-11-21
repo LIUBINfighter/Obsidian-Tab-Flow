@@ -19,7 +19,7 @@ export function createShareCardPreview(parent: HTMLElement, initialWidth: string
 			try {
 				// attempt to remove nodes safely
 				if (previewWrap && previewWrap.remove) previewWrap.remove();
-			} catch (_) {
+			} catch {
 				/* ignore */
 			}
 		},
