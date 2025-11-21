@@ -3,6 +3,7 @@ import { Plugin, TFile, Notice, requestUrl, MarkdownRenderChild } from 'obsidian
 import { ReactView, VIEW_TYPE_REACT } from './player/ReactView';
 import { DocView, VIEW_TYPE_TABFLOW_DOC } from './views/DocView';
 import { EditorView, VIEW_TYPE_ALPHATEX_EDITOR } from './views/EditorView';
+import { PrintPreviewView, VIEW_TYPE_PRINT_PREVIEW } from './views/PrintPreviewView';
 import {
 	ResourceLoaderService,
 	ASSET_FILES,
@@ -357,6 +358,9 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 注册 AlphaTex 编辑器视图
 		this.registerView(VIEW_TYPE_ALPHATEX_EDITOR, (leaf) => new EditorView(leaf, this));
+
+		// 注册打印预览视图
+		this.registerView(VIEW_TYPE_PRINT_PREVIEW, (leaf) => new PrintPreviewView(leaf, this));
 
 		// 注册所有命令
 		registerCommands(this);

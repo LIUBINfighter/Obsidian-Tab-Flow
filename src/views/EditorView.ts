@@ -6,7 +6,6 @@ import {
 	type AlphaTexCodeMirrorEditor,
 } from '../editor/AlphaTexCodeMirrorEditor';
 import ShareCardModal from '../components/ShareCardModal';
-import { DocumentModal } from '../components/DocumentModal';
 import {
 	getBarAtOffset,
 	extractInitHeader,
@@ -19,6 +18,7 @@ import { PlayerController, type PlayerControllerResources } from '../player/Play
 import { StoreFactory, type StoreCollection } from '../player/store/StoreFactory';
 import { TablatureView } from '../player/components/TablatureView';
 import { VIEW_TYPE_REACT } from '../player/ReactView';
+import { VIEW_TYPE_PRINT_PREVIEW } from './PrintPreviewView';
 
 export const VIEW_TYPE_ALPHATEX_EDITOR = 'alphatex-editor-view';
 
@@ -403,14 +403,26 @@ export class EditorView extends FileView {
 			});
 			this.newFileAction = newFileBtn;
 
-			// 添加"文档"按钮
+			// 添加"打印预览"按钮
 			if (this.documentAction && this.documentAction.parentElement) {
 				this.documentAction.remove();
 				this.documentAction = null;
 			}
-			const docBtn = this.addAction('document', '文档', () => {
-				const modal = new DocumentModal(this.app, this.plugin);
-				modal.open();
+			const docBtn = this.addAction('printer', '打印预览', async () => {
+				if (!this.file) return;
+				
+				// 确保当前编辑器内容已保存
+				await this.flushSave();
+				
+				// 1. 先在新标签页打开文件
+				const leaf = this.app.workspace.getLeaf('tab');
+				await leaf.openFile(this.file);
+				
+				// 2. 然后切换视图到 PrintPreviewView
+				await leaf.setViewState({
+					type: VIEW_TYPE_PRINT_PREVIEW,
+					state: { file: this.file.path },
+				});
 			});
 			this.documentAction = docBtn;
 
