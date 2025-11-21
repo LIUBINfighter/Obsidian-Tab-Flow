@@ -52,7 +52,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	let playing = initialPlaying;
 	let metronomeOn = false;
 	let countInOn = false;
-	let layoutMode: number = alphaTab.LayoutMode.Page;
+	let layoutMode: alphaTab.LayoutMode = alphaTab.LayoutMode.Page;
 
 	const bar = document.createElement('div');
 	bar.className = 'play-bar nav-buttons-container';
@@ -608,7 +608,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	}
 
 	const originalRemove = bar.remove;
-	bar.remove = function () {
+	bar.remove = function (this: void) {
 		originalRemove.call(bar);
 	};
 

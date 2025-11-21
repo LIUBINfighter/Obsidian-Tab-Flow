@@ -48,7 +48,7 @@ export default {
 			text: 'The examples below demonstrate show/hide dynamics, system separators and tuning display control, track name policies, etc.',
 		});
 
-		container.createEl('h4', { text: 'Show/Hide Dynamics' });
+		container.createEl('h4', { text: 'Show/hide dynamics' });
 		if (plugin) {
 			const host1 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host1, SAMPLE_SHOW_HIDE_DYNAMICS, {
@@ -61,7 +61,7 @@ export default {
 		}
 
 		container.createEl('h4', {
-			text: 'System Sign Separator',
+			text: 'System sign separator',
 		});
 		if (plugin) {
 			const host3 = container.createDiv({ cls: 'doc-playground-host' });
@@ -71,7 +71,7 @@ export default {
 		}
 
 		container.createEl('h4', {
-			text: 'Show Tuning per Track',
+			text: 'Show tuning per track',
 		});
 		if (plugin) {
 			const host4 = container.createDiv({ cls: 'doc-playground-host' });
@@ -84,7 +84,7 @@ export default {
 			});
 		}
 
-		container.createEl('h4', { text: 'Track Name Display Policies' });
+		container.createEl('h4', { text: 'Track name display policies' });
 		if (plugin) {
 			const host6 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host6, SAMPLE_TRACK_NAMES, {

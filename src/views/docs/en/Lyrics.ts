@@ -21,9 +21,9 @@ export default {
 		});
 
 		const sections: Array<[string, string]> = [
-			['Basic Lyrics', SAMPLE_SIMPLE],
-			['Combine Syllables (+)', SAMPLE_COMBINE],
-			['Delayed Start (StartBar)', SAMPLE_START_LATER],
+			['Basic lyrics', SAMPLE_SIMPLE],
+			['Combine syllables (+)', SAMPLE_COMBINE],
+			['Delayed start (StartBar)', SAMPLE_START_LATER],
 			['Comments ([comment])', SAMPLE_COMMENT],
 		];
 

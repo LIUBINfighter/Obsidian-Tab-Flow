@@ -46,10 +46,10 @@ const SAMPLE_ACCIDENTALS = `\\track
 
 export default {
 	id: 'notes',
-	title: 'Notes - Writing Notes',
+	title: 'Notes - writing notes',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Notes - Writing Notes' });
+		container.createEl('h3', { text: 'Notes - writing notes' });
 		container.createEl('p', {
 			text: 'The examples below demonstrate how to write general notes in AlphaTex. Multiple bars are separated by vertical lines |. Each bar corresponds to a section on the score.',
 		});
@@ -74,8 +74,8 @@ export default {
 			createAlphaTexPlayground(plugin, host2, SAMPLE_CHORDS, {});
 		}
 
-		// Duration Ranges
-		container.createEl('h4', { text: 'Duration Ranges' });
+		// Duration ranges
+		container.createEl('h4', { text: 'Duration ranges' });
 		container.createEl('p', {
 			text: 'Use :duration to start a duration range, subsequent notes share that duration; AlphaTex also remembers the last explicitly set duration.',
 		});

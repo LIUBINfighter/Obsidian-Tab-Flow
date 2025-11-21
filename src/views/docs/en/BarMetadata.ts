@@ -30,26 +30,26 @@ const SAMPLE_SIMILE = `3.3*4 | \\simile simple | 3.3*4 | 4.3*4 | \\simile firsto
 
 export default {
 	id: 'bar-metadata',
-	title: 'Bar Metadata',
+	title: 'Bar metadata',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Bar Metadata' });
+		container.createEl('h3', { text: 'Bar metadata' });
 		container.createEl('p', {
 			text: 'Demonstrates time signatures, repeats and endings, key signatures, clef/ottava, tempo changes within bars, triplet feel, anacrusis, sections, double bar lines, simile marks, etc.',
 		});
 
 		const sections: Array<[string, string]> = [
-			['Time Signatures', SAMPLE_TS],
+			['Time signatures', SAMPLE_TS],
 			['Repeats', SAMPLE_REPEATS],
-			['Alternate Endings', SAMPLE_ALT_ENDINGS],
-			['Key Signatures', SAMPLE_KEYS],
-			['Clef & Ottava', SAMPLE_CLEF_OTTAVA],
-			['Tempo Changes in Bars', SAMPLE_TEMPO_IN_BARS],
-			['Triplet Feel', SAMPLE_TRIPLET_FEEL],
+			['Alternate endings', SAMPLE_ALT_ENDINGS],
+			['Key signatures', SAMPLE_KEYS],
+			['Clef & ottava', SAMPLE_CLEF_OTTAVA],
+			['Tempo changes in bars', SAMPLE_TEMPO_IN_BARS],
+			['Triplet feel', SAMPLE_TRIPLET_FEEL],
 			['Anacrusis', SAMPLE_ANACRUSIS],
 			['Sections', SAMPLE_SECTION],
-			['Double Bar', SAMPLE_DOUBLE_BAR],
-			['Simile Marks', SAMPLE_SIMILE],
+			['Double bar', SAMPLE_DOUBLE_BAR],
+			['Simile marks', SAMPLE_SIMILE],
 		];
 
 		for (const [title, sample] of sections) {

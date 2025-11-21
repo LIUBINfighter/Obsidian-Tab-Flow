@@ -292,7 +292,11 @@ export class ShareCardModal extends Modal {
 		this.plugin = plugin;
 	}
 
-	async onOpen() {
+	onOpen(): void {
+		void this.buildModalContent();
+	}
+
+	private async buildModalContent() {
 		const { contentEl } = this;
 		contentEl.empty();
 		this.titleEl.setText(t('shareCard.title'));
@@ -427,7 +431,7 @@ export class ShareCardModal extends Modal {
 		btnPresetSave.addEventListener(
 			'click',
 			() =>
-				void (async () => {
+				void (() => {
 					this.stateManager?.commit('manual');
 					rebuildPresetOptions();
 					new Notice(t('shareCard.notice.presetSaved'));

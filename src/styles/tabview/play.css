@@ -116,6 +116,26 @@
 	display: none !important;
 }
 
+.tabflow-tabview-root .at-cursor-bar {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	opacity: 0.2;
+}
+
+.tabflow-tabview-root .at-selection div {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	opacity: 0.4;
+}
+
+.tabflow-tabview-root .at-cursor-beat {
+	background: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	width: 3px;
+}
+
+.tabflow-tabview-root .at-highlight * {
+	fill: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+	stroke: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+}
+
 /* 播放栏控件图标样式 */
 .play-bar .speed-icon {
 	margin-right: 0.5em;

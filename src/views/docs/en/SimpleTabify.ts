@@ -2,7 +2,7 @@ import { DocPanel } from '../index';
 
 const SimpleTabifyPanel: DocPanel = {
 	id: 'simple-tabify',
-	title: 'SimpleTabify Service Introduction',
+	title: 'SimpleTabify service introduction',
 	render(container: HTMLElement) {
 		// 清空容器
 		while (container.firstChild) {
@@ -11,7 +11,7 @@ const SimpleTabifyPanel: DocPanel = {
 
 		// 创建标题
 		const h2 = document.createElement('h2');
-		h2.textContent = 'SimpleTabify Service';
+		h2.textContent = 'SimpleTabify service';
 		container.appendChild(h2);
 
 		// 创建描述段落

@@ -1,0 +1,12 @@
+/* Font face declarations and related CSS variables */
+:root {
+	--tabflow-bravura-font-src: local('alphaTab');
+}
+
+@font-face {
+	font-family: 'alphaTab';
+	src: var(--tabflow-bravura-font-src, local('alphaTab'));
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+}

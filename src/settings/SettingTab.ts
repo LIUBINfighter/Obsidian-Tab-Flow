@@ -41,7 +41,7 @@ export class SettingTab extends PluginSettingTab {
 							// 标记强制激活 player 子页签
 							this.forcedTab = 'player';
 							try {
-								await this.display();
+								await this.renderDisplay();
 							} catch {
 								// Ignore display errors
 							}
@@ -63,7 +63,7 @@ export class SettingTab extends PluginSettingTab {
 							settingManager?.openTabById?.(this.plugin.manifest.id);
 							this.forcedTab = 'editor';
 							try {
-								await this.display();
+								await this.renderDisplay();
 							} catch {
 								// Ignore display errors
 							}
@@ -85,7 +85,7 @@ export class SettingTab extends PluginSettingTab {
 							settingManager?.openTabById?.(this.plugin.manifest.id);
 							this.forcedTab = 'about';
 							try {
-								await this.display();
+								await this.renderDisplay();
 							} catch {
 								// Ignore display errors
 							}
@@ -101,7 +101,11 @@ export class SettingTab extends PluginSettingTab {
 		}
 	}
 
-	async display(): Promise<void> {
+	display(): void {
+		void this.renderDisplay();
+	}
+
+	private async renderDisplay(): Promise<void> {
 		const { containerEl } = this;
 		containerEl.empty();
 

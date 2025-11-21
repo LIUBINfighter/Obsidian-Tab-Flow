@@ -1,4 +1,5 @@
 import { App, Modal, Notice } from 'obsidian';
+import { t } from '../i18n';
 
 export interface ExportChooserOptions {
 	app: App;
@@ -25,13 +26,13 @@ export class ExportChooserModal extends Modal {
 		contentEl.empty();
 		contentEl.addClass('tabflow-export-chooser');
 
-		contentEl.createEl('h3', { text: '导出' });
+		contentEl.createEl('h3', { text: t('export.export') });
 
 		// 文件名编辑框
 		const nameWrap = contentEl.createDiv({
 			cls: 'tabflow-export-chooser__name-row',
 		});
-		nameWrap.createEl('label', { text: '文件名:' });
+		nameWrap.createEl('label', { text: t('export.fileName') });
 		const nameInput = nameWrap.createEl('input', {
 			type: 'text',
 			cls: 'tabflow-export-chooser__name-input',
@@ -44,9 +45,9 @@ export class ExportChooserModal extends Modal {
 		});
 
 		// 音频导出（触发事件，由服务层导出并在状态回调时呼出音频播放器）
-		const audioBtn = row.createEl('button', { text: '导出音频(WAV)', cls: 'mod-cta' });
+		const audioBtn = row.createEl('button', { text: t('export.audioWav'), cls: 'mod-cta' });
 		audioBtn.onclick = () => {
-			void (async () => {
+			void (() => {
 				try {
 					const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
 					const onOk = async (url?: string) => {
@@ -55,9 +56,12 @@ export class ExportChooserModal extends Modal {
 							const { AudioExportModal } = await import('./AudioExportModal');
 							const fileName = chosenName + '.wav';
 							new AudioExportModal(this.app, url || '', fileName).open();
-							new Notice('音频导出完成，已弹出播放器');
+							new Notice(t('export.audioExportCompleted'));
 						} catch (e) {
-							console.error('[ExportChooserModal] 打开音频播放器失败', e);
+							console.error(
+								'[ExportChooserModal] ' + t('export.openAudioPlayerFailed'),
+								e
+							);
 						}
 					};
 					const okHandler = (url?: string) => {
@@ -74,7 +78,12 @@ export class ExportChooserModal extends Modal {
 						}
 					};
 					const failHandler = (err?: unknown) => {
-						new Notice('音频导出失败' + (err ? ': ' + String(err) : ''));
+						const errMsg = err instanceof Error ? err.message : err ? String(err) : '';
+						if (errMsg) {
+							new Notice(t('export.audioExportFailedWithError', { error: errMsg }));
+						} else {
+							new Notice(t('export.audioExportFailed'));
+						}
 						try {
 							this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
 						} catch {
@@ -91,44 +100,44 @@ export class ExportChooserModal extends Modal {
 					this.eventBus.publish('命令:导出音频', { fileName: chosenName });
 					this.close();
 				} catch (e) {
-					new Notice('导出启动失败: ' + e);
+					new Notice(t('export.exportStartFailed') + ': ' + e);
 				}
 			})();
 		};
 
 		// MIDI
-		const midiBtn = row.createEl('button', { text: '导出 MIDI' });
+		const midiBtn = row.createEl('button', { text: t('export.exportMidi') });
 		midiBtn.onclick = () => {
 			try {
 				const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
 				this.eventBus.publish('命令:导出MIDI', { fileName: chosenName });
 				this.close();
 			} catch (e) {
-				new Notice('导出 MIDI 失败: ' + e);
+				new Notice(t('export.midiExportFailed') + ': ' + e);
 			}
 		};
 
 		// PDF
-		const pdfBtn = row.createEl('button', { text: '导出 PDF' });
+		const pdfBtn = row.createEl('button', { text: t('export.exportPdf') });
 		pdfBtn.onclick = () => {
 			try {
 				const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
 				this.eventBus.publish('命令:导出PDF', { fileName: chosenName });
 				this.close();
 			} catch (e) {
-				new Notice('导出 PDF 失败: ' + e);
+				new Notice(t('export.pdfExportFailed') + ': ' + e);
 			}
 		};
 
 		// GP
-		const gpBtn = row.createEl('button', { text: '导出 GP' });
+		const gpBtn = row.createEl('button', { text: t('export.exportGp') });
 		gpBtn.onclick = () => {
 			try {
 				const chosenName = (nameInput.value || 'Untitled').trim() || 'Untitled';
 				this.eventBus.publish('命令:导出GP', { fileName: chosenName });
 				this.close();
 			} catch (e) {
-				new Notice('导出 GP 失败: ' + e);
+				new Notice(t('export.gpExportFailed') + ': ' + e);
 			}
 		};
 	}

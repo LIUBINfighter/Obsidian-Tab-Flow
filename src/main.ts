@@ -349,7 +349,7 @@ export default class TabFlowPlugin extends Plugin {
 					type: VIEW_TYPE_TABFLOW_DOC,
 					active: true,
 				});
-				this.app.workspace.revealLeaf(leaf);
+				await this.app.workspace.revealLeaf(leaf);
 			}
 		);
 
@@ -381,13 +381,12 @@ export default class TabFlowPlugin extends Plugin {
 			);
 		}
 
-		// 全局注入一次 @font-face，避免每块重复注入
+		// 配置字体资源路径（在 styles.css 中通过 CSS 变量引用）
 		try {
 			if (this.resources.bravuraUri) {
-				const style = document.createElement('style');
-				style.id = 'tabflow-global-alphatab-font';
-				style.textContent = `@font-face { font-family: 'alphaTab'; src: url(${this.resources.bravuraUri}); }`;
-				if (!document.getElementById(style.id)) document.head.appendChild(style);
+				setCssProps(document.documentElement, {
+					'--tabflow-bravura-font-src': `url(${this.resources.bravuraUri}) format('woff2')`,
+				});
 			}
 		} catch {
 			// Ignore font loading errors
@@ -418,7 +417,7 @@ export default class TabFlowPlugin extends Plugin {
 			try {
 				// Dynamically import to avoid circular dependency in test environment
 				const { mountAlphaTexBlock } = await import('./markdown/AlphaTexBlock');
-				this.registerMarkdownCodeBlockProcessor('alphatex', async (source, el, ctx) => {
+				this.registerMarkdownCodeBlockProcessor('alphatex', (source, el, ctx) => {
 					// 资源缺失：在块内提示并提供下载按钮
 					if (!this.resources.bravuraUri || !this.resources.alphaTabWorkerUri) {
 						const holder = el.createEl('div');
@@ -459,17 +458,14 @@ export default class TabFlowPlugin extends Plugin {
 						return;
 					}
 
-					// remove legacy two-way binding to init line (UI options now runtime-only)
-					const onUpdateInit = async (_partial: Partial<Record<string, boolean>>) => {
-						/* no-op by design */
-					};
-
 					const block = mountAlphaTexBlock(el, source, this.resources, {
 						scale: 1.0,
 						speed: 1.0,
 						scrollMode: 'Continuous',
 						metronome: false,
-						onUpdateInit,
+						onUpdateInit: (_partial: Partial<Record<string, boolean>>) => {
+							/* no-op by design */
+						},
 						setUiOverride: (
 							override: {
 								components?: Record<string, boolean>;
@@ -532,33 +528,41 @@ export default class TabFlowPlugin extends Plugin {
 						t('fileMenu.createNewAlphaTab', undefined, 'Create a new AlphaTab file')
 					)
 						.setIcon('plus')
-						.onClick(async () => {
-							const parent =
-								file instanceof TFile
-									? this.app.vault.getAbstractFileByPath(path.dirname(file.path))
-									: file;
-							const baseName = t(
-								'fileMenu.newFileBaseName',
-								undefined,
-								'New guitar tab'
-							);
-							let filename = `${baseName}.atex`;
-							let i = 1;
-							const parentPath =
-								parent && 'path' in parent ? (parent as { path: string }).path : '';
-							while (
-								await this.app.vault.adapter.exists(path.join(parentPath, filename))
-							) {
-								filename = `${baseName} ${i}.atex`;
-								i++;
-							}
-							const newFilePath = path.join(parentPath, filename);
-							await this.app.vault.create(newFilePath, '');
-							const newFile = this.app.vault.getAbstractFileByPath(newFilePath);
-							if (newFile instanceof TFile) {
-								const leaf = this.app.workspace.getLeaf(false);
-								await leaf.openFile(newFile);
-							}
+						.onClick(() => {
+							void (async () => {
+								const parent =
+									file instanceof TFile
+										? this.app.vault.getAbstractFileByPath(
+												path.dirname(file.path)
+											)
+										: file;
+								const baseName = t(
+									'fileMenu.newFileBaseName',
+									undefined,
+									'New guitar tab'
+								);
+								let filename = `${baseName}.atex`;
+								let i = 1;
+								const parentPath =
+									parent && 'path' in parent
+										? (parent as { path: string }).path
+										: '';
+								while (
+									await this.app.vault.adapter.exists(
+										path.join(parentPath, filename)
+									)
+								) {
+									filename = `${baseName} ${i}.atex`;
+									i++;
+								}
+								const newFilePath = path.join(parentPath, filename);
+								await this.app.vault.create(newFilePath, '');
+								const newFile = this.app.vault.getAbstractFileByPath(newFilePath);
+								if (newFile instanceof TFile) {
+									const leaf = this.app.workspace.getLeaf(false);
+									await leaf.openFile(newFile);
+								}
+							})();
 						});
 				});
 
@@ -567,13 +571,15 @@ export default class TabFlowPlugin extends Plugin {
 					menu.addItem((item) => {
 						item.setTitle(t('fileMenu.openInEditor', undefined, 'Open in Editor'))
 							.setIcon('edit')
-							.onClick(async () => {
-								const leaf = this.app.workspace.getLeaf(false);
-								await leaf.setViewState({
-									type: VIEW_TYPE_ALPHATEX_EDITOR,
-									state: { file: file.path },
-								});
-								this.app.workspace.revealLeaf(leaf);
+							.onClick(() => {
+								void (async () => {
+									const leaf = this.app.workspace.getLeaf(false);
+									await leaf.setViewState({
+										type: VIEW_TYPE_ALPHATEX_EDITOR,
+										state: { file: file.path },
+									});
+									await this.app.workspace.revealLeaf(leaf);
+								})();
 							});
 					});
 				}
@@ -601,10 +607,11 @@ export default class TabFlowPlugin extends Plugin {
 							t('fileMenu.openEditorAndPreview', undefined, 'Open editor & Preview')
 						)
 							.setIcon('columns')
-							.onClick(async () => {
-								// 在左栏打开默认编辑器
-								const leftLeaf = this.app.workspace.getLeaf(false);
-								await leftLeaf.openFile(file);
+							.onClick(() => {
+								void (async () => {
+									// 在左栏打开默认编辑器
+									const leftLeaf = this.app.workspace.getLeaf(false);
+									await leftLeaf.openFile(file);
 
 								// 在右栏打开 ReactView 预览
 								const rightLeaf = this.app.workspace.getLeaf('split', 'vertical');
@@ -671,6 +678,11 @@ export default class TabFlowPlugin extends Plugin {
 		}
 
 		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
+		try {
+			document.documentElement.style.removeProperty('--tabflow-bravura-font-src');
+		} catch {
+			// ignore removal errors
+		}
 		// 不再在 onunload 时主动 detach leaves，避免插件更新导致视图位置丢失
 		console.debug('AlphaTab Plugin Unloaded');
 	}

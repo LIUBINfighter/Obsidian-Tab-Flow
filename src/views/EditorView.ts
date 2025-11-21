@@ -190,18 +190,25 @@ export class EditorView extends FileView {
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {
-		this.cleanup();
+		try {
+			await this.flushSave();
+		} catch {
+			// flushSave already logs internally
+		}
+		this.cleanup({ skipFlush: true });
 	}
 
-	private cleanup(): void {
+	private cleanup(options?: { skipFlush?: boolean }): void {
 		// 在清理时触发一次立即保存（flush）
-		try {
-			// fire-and-forget：确保不会阻塞清理流程
-			this.flushSave().catch(() => {
-				/* already handled inside flushSave */
-			});
-		} catch (_) {
-			// ignore
+		if (!options?.skipFlush) {
+			try {
+				// fire-and-forget：确保不会阻塞清理流程
+				this.flushSave().catch(() => {
+					/* already handled inside flushSave */
+				});
+			} catch (_) {
+				// ignore
+			}
 		}
 
 		// 清除挂起的自动保存计时器

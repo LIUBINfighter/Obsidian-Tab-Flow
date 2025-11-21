@@ -1,3 +1,5 @@
+import { setCssProps } from './styleUtils';
+
 // Utility helpers extracted from ShareCardModal to keep modal file smaller.
 export function normalizeColorToHex(
 	color: string | undefined | null,
@@ -105,10 +107,9 @@ export function measureCaptureDimensions(
 	try {
 		if (panWrapper && panWrapper.style.transform) {
 			restoreTransform = panWrapper.style.transform;
-			panWrapper.style.transform = 'none';
+			setCssProps(panWrapper, { transform: 'none' });
 		}
-		// Disable no-unused-expressions: Force browser reflow for accurate dimensions
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- trigger reflow for accurate dimensions
 		captureEl.offsetHeight;
 		const rawW = captureEl.scrollWidth || captureEl.clientWidth;
 		const rawH = captureEl.scrollHeight || captureEl.clientHeight;
@@ -121,7 +122,9 @@ export function measureCaptureDimensions(
 		}
 	} finally {
 		if (restoreTransform !== null && panWrapper) {
-			panWrapper.style.transform = restoreTransform;
+			setCssProps(panWrapper, { transform: restoreTransform });
+		} else if (panWrapper && restoreTransform === null) {
+			panWrapper.style.removeProperty('transform');
 		}
 	}
 	return { width, height };

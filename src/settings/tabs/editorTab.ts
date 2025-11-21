@@ -9,7 +9,7 @@ import {
 } from '../../editor/EmbeddableMarkdownEditor';
 import { setCssProps } from '../../utils/styleUtils';
 
-export async function renderEditorTab(
+export function renderEditorTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
 	app: App
@@ -68,25 +68,29 @@ export async function renderEditorTab(
 					inputEl.setAttribute('step', '0.01');
 					inputEl.setAttribute('min', '0');
 				}
-				text.setValue(fontDefault.num).onChange(async (numStr) => {
-					fontValue = numStr;
-					const composed = `${numStr}${fontUnit}`;
-					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
-					if (!valid) {
-						fontText.inputEl.classList.add('tabflow-invalid-input');
-						return;
-					}
-					fontText.inputEl.classList.remove('tabflow-invalid-input');
-					plugin.settings.editorFontSize = composed;
-					await plugin.saveSettings();
-					setCssProps(document.documentElement, {
-						'--alphatex-editor-font-size': composed,
-					});
+				text.setValue(fontDefault.num).onChange((numStr) => {
+					void (async () => {
+						fontValue = numStr;
+						const composed = `${numStr}${fontUnit}`;
+						const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
+						if (!valid) {
+							fontText.inputEl.classList.add('tabflow-invalid-input');
+							return;
+						}
+						fontText.inputEl.classList.remove('tabflow-invalid-input');
+						plugin.settings.editorFontSize = composed;
+						await plugin.saveSettings();
+						setCssProps(document.documentElement, {
+							'--alphatex-editor-font-size': composed,
+						});
+					})();
 				});
 			})
 			.addDropdown((dd) => {
 				fontDropdown = dd;
-				unitsFont.forEach((u) => dd.addOption(u, u));
+				unitsFont.forEach((u) => {
+					dd.addOption(u, u);
+				});
 				dd.setValue(fontDefault.unit).onChange((unit) => {
 					void (async () => {
 						fontUnit = unit;
@@ -176,7 +180,9 @@ export async function renderEditorTab(
 		})
 			.addDropdown((dd) => {
 				gapDropdown = dd;
-				unitsGap.forEach((u) => dd.addOption(u, u));
+				unitsGap.forEach((u) => {
+					dd.addOption(u, u);
+				});
 				dd.setValue(gapDefault.unit).onChange((unit) => {
 					void (async () => {
 						gapUnit = unit;
@@ -262,7 +268,7 @@ export async function renderEditorTab(
 			cls: 'tabflow-highlight-section',
 		});
 		details.createEl('summary', {
-			text: 'Custom Highlight',
+			text: 'Custom highlight',
 			cls: 'tabflow-highlight-section__summary',
 		});
 
@@ -281,7 +287,7 @@ export async function renderEditorTab(
 			switch (key) {
 				case 'dot': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('highlighted-dot', '.'),
 						span('', ' • '),
 						span('highlighted-dot', '.')
@@ -290,7 +296,7 @@ export async function renderEditorTab(
 				}
 				case 'bar': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('highlighted-bar', '|'),
 						span('bar-number', '12')
 					);
@@ -298,7 +304,7 @@ export async function renderEditorTab(
 				}
 				case 'bracket': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-bracket', '('),
 						span('cm-bracket', ')')
 					);
@@ -306,19 +312,19 @@ export async function renderEditorTab(
 				}
 				case 'meta': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-metadata', '\\tempo'),
 						span('', '120')
 					);
 					break;
 				}
 				case 'comment': {
-					wrap.append(span('', 'Example:'), span('cm-comment', '// comment 注释'));
+					wrap.append(span('', 'Example: '), span('cm-comment', '// comment 注释'));
 					break;
 				}
 				case 'debug': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-debug-meta', '\\title'),
 						span('cm-debug-number', '120'),
 						span('cm-debug-effect-key', 'tr'),
@@ -337,12 +343,12 @@ export async function renderEditorTab(
 					const space = span('cm-whitespace-space', ' '); // render visible dot via ::before
 					const b = document.createElement('span');
 					b.textContent = 'b';
-					wrap.append(span('', 'Example:'), a, space, b);
+					wrap.append(span('', 'Example: '), a, space, b);
 					break;
 				}
 				case 'surrounded': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('', '('),
 						span('cm-surrounded', 'abc'),
 						span('', ')'),
@@ -354,24 +360,24 @@ export async function renderEditorTab(
 					break;
 				}
 				case 'duration': {
-					wrap.append(span('', 'Example:'), span('cm-duration', ':4'));
+					wrap.append(span('', 'Example: '), span('cm-duration', ':4'));
 					break;
 				}
 				case 'effect': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-effect-beat', 'tempo'),
 						span('cm-effect-note', 'tr')
 					);
 					break;
 				}
 				case 'tuning': {
-					wrap.append(span('', 'Example:'), span('cm-tuning', 'A4'));
+					wrap.append(span('', 'Example: '), span('cm-tuning', 'A4'));
 					break;
 				}
 				case 'boolean': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-boolean', 'true'),
 						span('', '/'),
 						span('cm-boolean', 'false')
@@ -439,7 +445,7 @@ export async function renderEditorTab(
 		const sampleCode = `\\title "Sample Song"
 \\tempo 120
 .
-// TO DO 完善这里的示例
+// To do: 完善这里的示例
 \\chord "Bm/D" 2 3 4 0 x x
 \\chord "Cadd9" 0 3 0 2 3 x
 \\chord "G/B" x 3 0 0 2 x
@@ -526,13 +532,15 @@ export async function renderEditorTab(
 							plugin.settings.editorHighlights &&
 							plugin.settings.editorHighlights[h.key]
 						);
-						t.setValue(enabled).onChange(async (v) => {
-							plugin.settings.editorHighlights =
-								plugin.settings.editorHighlights || {};
-							plugin.settings.editorHighlights[h.key] = v;
-							await plugin.saveSettings();
-							// Refresh markdown editor preview to apply new highlight settings
-							renderPreview();
+						t.setValue(enabled).onChange((v) => {
+							void (async () => {
+								plugin.settings.editorHighlights =
+									plugin.settings.editorHighlights || {};
+								plugin.settings.editorHighlights[h.key] = v;
+								await plugin.saveSettings();
+								// Refresh markdown editor preview to apply new highlight settings
+								renderPreview();
+							})();
 						});
 					})
 					.setClass('tabflow-no-border');
@@ -800,30 +808,32 @@ export async function renderEditorTab(
 			new Setting(right)
 				.addToggle((toggle) => {
 					const current = !!comp?.[key];
-					toggle.setValue(m.disabled ? false : current).onChange(async (value) => {
-						const editorBarSettings =
-							plugin.settings.editorBar ??
-							(plugin.settings.editorBar = {
-								components: JSON.parse(
+					toggle.setValue(m.disabled ? false : current).onChange((value) => {
+						void (async () => {
+							const editorBarSettings =
+								plugin.settings.editorBar ??
+								(plugin.settings.editorBar = {
+									components: JSON.parse(
+										JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
+									) as EditorBarComponentVisibility,
+									order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
+								});
+							const components =
+								editorBarSettings.components ??
+								(editorBarSettings.components = JSON.parse(
 									JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
-								) as EditorBarComponentVisibility,
-								order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
-							});
-						const components =
-							editorBarSettings.components ??
-							(editorBarSettings.components = JSON.parse(
-								JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
-							) as EditorBarComponentVisibility);
+								) as EditorBarComponentVisibility);
 
-						components[key] = m.disabled ? false : value;
-						await plugin.saveSettings();
-						try {
-							/* @ts-ignore */ app.workspace.trigger(
-								'tabflow:editorbar-components-changed'
-							);
-						} catch {
-							// Ignore workspace trigger errors
-						}
+							components[key] = m.disabled ? false : value;
+							await plugin.saveSettings();
+							try {
+								/* @ts-ignore */ app.workspace.trigger(
+									'tabflow:editorbar-components-changed'
+								);
+							} catch {
+								// Ignore workspace trigger errors
+							}
+						})();
 					});
 					if (m.disabled) {
 						toggle.toggleEl?.querySelector('input')?.setAttribute('disabled', 'true');
@@ -992,4 +1002,6 @@ export async function renderEditorTab(
 		});
 	};
 	renderCards();
+
+	return Promise.resolve();
 }
