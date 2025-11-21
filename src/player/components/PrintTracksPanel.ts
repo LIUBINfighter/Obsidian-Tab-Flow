@@ -15,8 +15,16 @@ interface StaffDisplayOptions {
 	showNumbered: boolean;
 }
 
+type StaffWithFlags = alphaTab.model.Staff & {
+	showStandardNotation?: boolean;
+	showTablature?: boolean;
+	showSlash?: boolean;
+	showNumbered?: boolean;
+	isPercussion?: boolean;
+};
+
 type TrackModel = alphaTab.model.Track & {
-	staves?: alphaTab.model.Staff[];
+	staves?: StaffWithFlags[];
 };
 
 /**
@@ -71,11 +79,12 @@ export class PrintTracksPanelDom {
 
 			for (const staff of model.staves ?? []) {
 				const key = this.getStaffKey(track.index, staff.index);
+				const s = staff as StaffWithFlags;
 				this.staffOptions.set(key, {
-					showStandardNotation: (staff as any).showStandardNotation ?? true,
-					showTablature: (staff as any).showTablature ?? true,
-					showSlash: (staff as any).showSlash ?? false,
-					showNumbered: (staff as any).showNumbered ?? false,
+					showStandardNotation: s.showStandardNotation ?? true,
+					showTablature: s.showTablature ?? true,
+					showSlash: s.showSlash ?? false,
+					showNumbered: s.showNumbered ?? false,
 				});
 			}
 		}
@@ -169,7 +178,7 @@ export class PrintTracksPanelDom {
 
 				const buttons = staffRow.createDiv('tabflow-print-staff-buttons');
 				const key = this.getStaffKey(track.index, staff.index);
-				const disabled = (staff as any).isPercussion as boolean | undefined;
+				const disabled = (staff as StaffWithFlags).isPercussion as boolean | undefined;
 
 				const makeToggle = (opts: {
 					field: keyof StaffDisplayOptions;
@@ -188,7 +197,7 @@ export class PrintTracksPanelDom {
 					btn.disabled = !!disabled;
 
 					const applyActive = () => {
-						const latest = this.getStaffOptions(key, staff);
+						const latest = this.getStaffOptions(key, staff as StaffWithFlags);
 						if (latest[opts.field]) {
 							btn.addClass('is-active');
 						} else {
@@ -247,14 +256,14 @@ export class PrintTracksPanelDom {
 		return this.trackVisible.get(trackIndex) ?? true;
 	}
 
-	private getStaffOptions(key: string, staff: alphaTab.model.Staff): StaffDisplayOptions {
+	private getStaffOptions(key: string, staff: StaffWithFlags): StaffDisplayOptions {
 		let options = this.staffOptions.get(key);
 		if (!options) {
 			options = {
-				showStandardNotation: (staff as any).showStandardNotation ?? true,
-				showTablature: (staff as any).showTablature ?? true,
-				showSlash: (staff as any).showSlash ?? false,
-				showNumbered: (staff as any).showNumbered ?? false,
+				showStandardNotation: staff.showStandardNotation ?? true,
+				showTablature: staff.showTablature ?? true,
+				showSlash: staff.showSlash ?? false,
+				showNumbered: staff.showNumbered ?? false,
 			};
 			this.staffOptions.set(key, options);
 		}
@@ -288,7 +297,7 @@ export class PrintTracksPanelDom {
 		const firstTrackIndex = firstTrack?.index ?? 0;
 
 		for (const track of score.tracks) {
-			const anyTrack = track as unknown as { staves?: alphaTab.model.Staff[] };
+			const anyTrack = track as unknown as { staves?: StaffWithFlags[] };
 			const staves = anyTrack.staves ?? [];
 			const isFirst = track.index === firstTrackIndex;
 			this.trackVisible.set(track.index, isFirst);
@@ -303,11 +312,12 @@ export class PrintTracksPanelDom {
 						showNumbered: false,
 					});
 				} else {
+					const s = staff;
 					this.staffOptions.set(key, {
-						showStandardNotation: (staff as any).showStandardNotation ?? true,
-						showTablature: (staff as any).showTablature ?? true,
-						showSlash: (staff as any).showSlash ?? false,
-						showNumbered: (staff as any).showNumbered ?? false,
+						showStandardNotation: s.showStandardNotation ?? true,
+						showTablature: s.showTablature ?? true,
+						showSlash: s.showSlash ?? false,
+						showNumbered: s.showNumbered ?? false,
 					});
 				}
 			}
@@ -330,16 +340,16 @@ export class PrintTracksPanelDom {
 
 		for (const track of this.api.score.tracks) {
 			const isVisible = this.getTrackVisible(track.index);
-			const anyTrack = track as unknown as { staves?: alphaTab.model.Staff[] };
+			const anyTrack = track as unknown as { staves?: StaffWithFlags[] };
 			const staves = anyTrack.staves ?? [];
 
 			for (const staff of staves) {
 				const key = this.getStaffKey(track.index, staff.index);
 				const options = this.getStaffOptions(key, staff);
-				(staff as any).showStandardNotation = options.showStandardNotation;
-				(staff as any).showTablature = options.showTablature;
-				(staff as any).showSlash = options.showSlash;
-				(staff as any).showNumbered = options.showNumbered;
+				staff.showStandardNotation = options.showStandardNotation;
+				staff.showTablature = options.showTablature;
+				staff.showSlash = options.showSlash;
+				staff.showNumbered = options.showNumbered;
 			}
 
 			if (isVisible) {
