@@ -494,12 +494,13 @@ export class PrintPreviewView extends FileView {
 	}
 
 	/**
-	 * 将 AlphaTab 渲染结果拆分为接近物理纸张高度的多页容器。
+	 * 将 AlphaTab 渲染结果分页为多个“视窗”，每个视窗对应一张纸。
 	 *
-	 * 设计原则：
-	 * - 不去理解 AlphaTab 内部结构，只按块级行/系统高度做近似分页；
-	 * - 仅在 print-preview iframe 内生效，不影响其它视图；
-	 * - 分页结果通过 .tabflow-print-page + CSS 的 page-break-after 控制打印分页。
+	 * 关键点：
+	 * - 不再搬动 AlphaTab 内部的元素，而是把整块内容当作一张“长画布”；
+	 * - 每个 .tabflow-print-page 只是一个固定高度的窗口，通过 overflow: hidden
+	 *   和 translateY 来裁切出不同的纵向区间；
+	 * - 打印时，依然通过 page-break-after: always 保证每个窗口独立成页。
 	 */
 	private applyPhysicalPagination(): void {
 		if (!this.previewContainer) return;
@@ -508,77 +509,57 @@ export class PrintPreviewView extends FileView {
 		const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow?.document;
 		if (!iframeDoc) return;
 
-		// root is intentionally unused; pagination is scoped to `alphaRoot` below.
-
-		// 找到 AlphaTab 渲染的主容器（通常为第一个 .alphaTab 或其父级）
+		// 找到 AlphaTab 渲染的主容器（通常为第一个 .alphaTab）
 		const alphaRoot =
 			this.previewContainer.querySelector<HTMLElement>('.alphaTab') ?? this.previewContainer;
 		if (!alphaRoot) return;
 
-		// 收集要参与分页的块级元素：AlphaTab 通常按行/系统输出 div 或 svg 容器
-		const allChildren = Array.from(alphaRoot.children) as HTMLElement[];
-		if (!allChildren.length) return;
+		// 计算整张“长画布”的高度
+		const contentRect = alphaRoot.getBoundingClientRect();
+		if (!contentRect || !contentRect.height || !isFinite(contentRect.height)) {
+			return;
+		}
+		const contentHeight = contentRect.height;
 
-		// 估算单页可用高度（以 A4 210x297mm、10mm 边距为参考）。
-		// 这里转成像素：使用 iframe 内 body 的高度和可视宽度来推算比例，不求精准，只求稳定。
-		const body = iframeDoc.body;
-		const viewportHeight =
-			this.iframe.getBoundingClientRect().height || body.getBoundingClientRect().height;
-		// 如果视口高度很小（首次渲染未扩展），退回一个经验值
-		const fallbackPageHeight = 1122; // 297mm @ 96dpi ≈ 1122px
-		const estimatedPageHeight = viewportHeight > 0 ? viewportHeight : fallbackPageHeight;
+		// 设定每页可视高度（像素）。这里取接近 A4 高度的经验值，并稍微缩小一点避免边缘裁切。
+		const FALLBACK_PAGE_HEIGHT = 1122; // 297mm @ 96dpi ≈ 1122px
+		const pageHeight = FALLBACK_PAGE_HEIGHT * 0.95;
 
-		// 留一点安全边距，避免元素刚好压在分页边缘
-		const pageHeight = estimatedPageHeight * 0.95;
+		// 需要的页数
+		const pageCount = Math.max(1, Math.ceil(contentHeight / pageHeight));
 
-		// 创建新的分页容器
+		// 外层分页容器
 		const pagesContainer = iframeDoc.createElement('div');
 		pagesContainer.className = 'tabflow-print-pages';
 
-		let currentPage = iframeDoc.createElement('div');
-		currentPage.className = 'tabflow-print-page';
-		pagesContainer.appendChild(currentPage);
+		for (let i = 0; i < pageCount; i++) {
+			const page = iframeDoc.createElement('div');
+			page.className = 'tabflow-print-page';
 
-		let currentHeight = 0;
+			// 为每一页创建一个视窗包裹同一个 alphaRoot 的克隆
+			const viewport = iframeDoc.createElement('div');
+			viewport.className = 'tabflow-print-viewport';
+			viewport.style.overflow = 'hidden';
+			viewport.style.height = `${pageHeight}px`;
 
-		for (const child of allChildren) {
-			// 跳过不可见元素
-			const style = iframeDoc.defaultView?.getComputedStyle(child);
-			if (style && (style.display === 'none' || style.visibility === 'hidden')) {
-				continue;
-			}
+			const clone = alphaRoot.cloneNode(true) as HTMLElement;
+			clone.style.transform = `translateY(-${i * pageHeight}px)`;
+			clone.style.transformOrigin = 'top left';
 
-			const rect = child.getBoundingClientRect();
-			const blockHeight = rect.height;
-			if (!blockHeight || !isFinite(blockHeight)) {
-				currentPage.appendChild(child);
-				continue;
-			}
-
-			// 如果当前页放不下，开启新页
-			if (currentHeight + blockHeight > pageHeight && currentPage.childElementCount > 0) {
-				currentPage = iframeDoc.createElement('div');
-				currentPage.className = 'tabflow-print-page';
-				pagesContainer.appendChild(currentPage);
-				currentHeight = 0;
-			}
-
-			currentPage.appendChild(child);
-			currentHeight += blockHeight;
+			viewport.appendChild(clone);
+			page.appendChild(viewport);
+			pagesContainer.appendChild(page);
 		}
 
-		// 用新的分页结构替换旧容器内容
-		alphaRoot.innerHTML = '';
-		alphaRoot.appendChild(pagesContainer);
+		// 用分页视窗替换原始内容
+		if (alphaRoot.parentElement) {
+			alphaRoot.parentElement.innerHTML = '';
+			alphaRoot.parentElement.appendChild(pagesContainer);
+		}
 
-		// 记录 pageRoot，供高度计算使用
 		this.pageRoot = pagesContainer;
 
-		console.log(
-			'[PrintPreview] Physical pagination applied:',
-			pagesContainer.childElementCount,
-			'pages'
-		);
+		console.log('[PrintPreview] Physical window pagination applied:', pageCount, 'pages');
 	}
 
 	async onClose() {

@@ -1848,6 +1848,8 @@
 	width: 100%;
 	box-sizing: border-box;
 	padding: 0;
+	/* 只负责承载视窗，本身不滚动 */
+	overflow: visible;
 }
 
 @media print {
