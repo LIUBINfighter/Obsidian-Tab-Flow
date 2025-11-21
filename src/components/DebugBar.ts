@@ -262,7 +262,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	audioBtn.innerText = '导出音频';
 	audioBtn.onclick = () => {
 		void (async () => {
-			(await ensureExportHandlers()).exportAudio();
+			await (await ensureExportHandlers()).exportAudio();
 		})();
 	};
 	debugBar.appendChild(audioBtn);
@@ -272,7 +272,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	midiBtn.innerText = '导出MIDI';
 	midiBtn.onclick = () => {
 		void (async () => {
-			(await ensureExportHandlers()).exportMidi();
+			await (await ensureExportHandlers()).exportMidi();
 		})();
 	};
 	debugBar.appendChild(midiBtn);
@@ -282,7 +282,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	gpBtn.innerText = '导出GP';
 	gpBtn.onclick = () => {
 		void (async () => {
-			(await ensureExportHandlers()).exportGp();
+			await (await ensureExportHandlers()).exportGp();
 		})();
 	};
 	debugBar.appendChild(gpBtn);
@@ -292,7 +292,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	pdfBtn.innerText = '打印PDF';
 	pdfBtn.onclick = () => {
 		void (async () => {
-			(await ensureExportHandlers()).exportPdf();
+			await (await ensureExportHandlers()).exportPdf();
 		})();
 	};
 	debugBar.appendChild(pdfBtn);

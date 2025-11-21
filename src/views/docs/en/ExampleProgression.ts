@@ -31,10 +31,10 @@ r.4 * 3 0.1.8 2.1.8 |
 
 export default {
 	id: 'example-progression',
-	title: 'Castle in the Sky - Fingerstyle',
+	title: 'Castle in the Sky - fingerstyle',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Castle in the Sky - Fingerstyle' });
+		container.createEl('h3', { text: 'Castle in the Sky - fingerstyle' });
 		container.createEl('p', {
 			text: 'This page shows an AlphaTex fragment with global chord definitions, time signature settings, and several bars. You can directly edit the code below to try modifying chords or notes.',
 		});

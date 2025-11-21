@@ -12,7 +12,7 @@ const SAMPLE = `%%{init: {"scale":1,"speed":2,"scrollMode":"Continuous","metrono
 
 export default {
 	id: 'in-markdown',
-	title: 'Text & Score Preview',
+	title: 'Text & score preview',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
 

@@ -18,10 +18,10 @@ const SAMPLE2 = `\\title "Instrument & Tuning (Piano)"
 
 export default {
 	id: 'instruments-tuning',
-	title: 'Instruments & Tuning',
+	title: 'Instruments & tuning',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Instruments & Tuning' });
+		container.createEl('h3', { text: 'Instruments & tuning' });
 		container.createEl('p', {
 			text: 'In AlphaTex, you can specify playback timbre with \\instrument and set the pitch of each string with \\tuning (starting from the lowest string). If only \\instrument is set without \\tuning, AlphaTab will attempt to apply default tuning based on the instrument type.',
 		});
@@ -38,13 +38,13 @@ export default {
 
 		if (plugin) {
 			container.createEl('h4', {
-				text: 'Example 1: Electric Guitar (Standard 6-string tuning)',
+				text: 'Example 1: electric guitar (standard 6-string tuning)',
 			});
 			const playgroundHost1 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, playgroundHost1, SAMPLE, {});
 
 			container.createEl('h4', {
-				text: 'Example 2: Piano (Non-stringed, note names and octaves)',
+				text: 'Example 2: piano (non-stringed, note names and octaves)',
 			});
 			const playgroundHost2 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, playgroundHost2, SAMPLE2, {});

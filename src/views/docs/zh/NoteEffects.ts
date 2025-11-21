@@ -53,10 +53,10 @@ const SAMPLE_SLUR = `(3.3 {slur s1} 4.4).4 7.3.8 8.3.8 10.3 {slur s1} .8`;
 
 export default {
 	id: 'note-effects',
-	title: 'Note Effects 音符效果',
+	title: 'Note effects 音符效果',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Note Effects（音符效果）' });
+		container.createEl('h3', { text: 'Note effects（音符效果）' });
 		container.createEl('p', {
 			text: '演示泛音、颤音/滑音/击勾弦、鬼音/闷音、重音/断奏、连音线、指法、装饰音、弯音、连音、可见性等。',
 		});
@@ -66,19 +66,19 @@ export default {
 			['Trill（颤音）', SAMPLE_TRILL],
 			['Vibrato（颤音指法）', SAMPLE_VIBRATO],
 			['Slides（滑音）', SAMPLE_SLIDE],
-			['Hammer-On / Pull-Off（击勾弦）', SAMPLE_HO_PO],
-			['Left Hand Tapping', SAMPLE_LHT],
-			['Ghost / Dead Notes', `${SAMPLE_GHOST} | ${SAMPLE_DEAD}`],
-			['Accentuations / Staccato', `${SAMPLE_ACCENT} | ${SAMPLE_STACCATO}`],
-			['Palm Mute / Let Ring', `${SAMPLE_PM} | ${SAMPLE_LET_RING}`],
+			['Hammer-on / pull-off（击勾弦）', SAMPLE_HO_PO],
+			['Left hand tapping', SAMPLE_LHT],
+			['Ghost / dead notes', `${SAMPLE_GHOST} | ${SAMPLE_DEAD}`],
+			['Accentuations / staccato', `${SAMPLE_ACCENT} | ${SAMPLE_STACCATO}`],
+			['Palm mute / let ring', `${SAMPLE_PM} | ${SAMPLE_LET_RING}`],
 			['Fingering（左右手指法）', SAMPLE_FINGERING],
 			['Ornaments（装饰音）', SAMPLE_ORNAMENTS],
-			['Show String Numbers（弦序号）', SAMPLE_SHOW_STRINGS],
+			['Show string numbers（弦序号）', SAMPLE_SHOW_STRINGS],
 			['Bends（弯音）', SAMPLE_BENDS],
 			['Bends 精确（be）', SAMPLE_BENDS_EXACT],
-			['Tied Notes（连音）- 弦乐', SAMPLE_TIED_STRINGED],
-			['Tied Notes（连音）- 非弦乐', SAMPLE_TIED_NON_STRINGED],
-			['Invisible Notes（隐藏音）', SAMPLE_INVISIBLE],
+			['Tied notes（连音）- 弦乐', SAMPLE_TIED_STRINGED],
+			['Tied notes（连音）- 非弦乐', SAMPLE_TIED_NON_STRINGED],
+			['Invisible notes（隐藏音）', SAMPLE_INVISIBLE],
 			['Slurs（连线）', SAMPLE_SLUR],
 		];
 

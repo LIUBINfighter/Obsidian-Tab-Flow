@@ -348,8 +348,10 @@ export function createAlphaTexPlayground(
 		if (debounceTimer) window.clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
 			if (typeof window.requestIdleCallback === 'function')
-				window.requestIdleCallback(() => renderPreview());
-			else renderPreview();
+				window.requestIdleCallback(() => {
+					void renderPreview();
+				});
+			else void renderPreview();
 		}, debounceMs);
 		onChange?.(currentValue);
 	}

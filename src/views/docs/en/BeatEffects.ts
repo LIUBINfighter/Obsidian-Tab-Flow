@@ -40,25 +40,25 @@ const SAMPLE_BEAMING = `:8 3.3{ beam invert } 3.3 | 3.1{ beam up } 3.1 | 3.6{ be
 
 export default {
 	id: 'beat-effects',
-	title: 'Beat Effects',
+	title: 'Beat effects',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Beat Effects' });
+		container.createEl('h3', { text: 'Beat effects' });
 		container.createEl('p', {
 			text: 'Demonstrates common beat effects, dynamics, hammer-on/pull-off/tremolo picking, brush/arpeggio chords, timer, sustain/wah pedals, ottava, beaming control, etc.',
 		});
 
 		const sections: Array<[string, string]> = [
-			['Common Effects (Overview)', SAMPLE_SIMPLE],
+			['Common effects (overview)', SAMPLE_SIMPLE],
 			['Dynamics', SAMPLE_DYNAMICS],
-			['Tuplet Range', SAMPLE_TUPLET_RANGE],
-			['Tremolo / Whammy Bar', SAMPLE_TREMOLO_WB],
-			['Whammy Exact Mode', SAMPLE_TREMOLO_WB_EXACT],
-			['Brush/Arpeggio Chords', SAMPLE_BRUSH_ARP],
-			['Chord Labels (ch)', SAMPLE_CHORDS],
+			['Tuplet range', SAMPLE_TUPLET_RANGE],
+			['Tremolo / whammy bar', SAMPLE_TREMOLO_WB],
+			['Whammy exact mode', SAMPLE_TREMOLO_WB_EXACT],
+			['Brush/arpeggio chords', SAMPLE_BRUSH_ARP],
+			['Chord labels (ch)', SAMPLE_CHORDS],
 			['Timer', SAMPLE_TIMER],
-			['Sustain & Wah Pedals', SAMPLE_SUSTAIN_WAH],
-			['Barré & Ottava', SAMPLE_BARRE_OTTAVA],
+			['Sustain & wah pedals', SAMPLE_SUSTAIN_WAH],
+			['Barré & ottava', SAMPLE_BARRE_OTTAVA],
 			['Beaming', SAMPLE_BEAMING],
 		];
 
