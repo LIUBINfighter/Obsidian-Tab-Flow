@@ -126,7 +126,7 @@ export class DocView extends ItemView {
 		return Promise.resolve();
 	}
 
-	private async render() {
+	private render(): Promise<void> {
 		const container = this.contentEl;
 		container.empty();
 
@@ -240,14 +240,21 @@ export class DocView extends ItemView {
 		// Left column (tabs)
 		const leftCol = layout.createDiv({ cls: 'tabflow-doc-left' });
 		const nav = leftCol.createDiv({ cls: 'tabflow-doc-nav' });
+		const rerenderAndScroll = async () => {
+			try {
+				await this.render();
+				this.scrollToContentAfterRender();
+			} catch (error) {
+				console.warn('[DocView] Failed to rerender documentation view', error);
+			}
+		};
+
 		this.panels.forEach((panel) => {
 			const tabEl = nav.createDiv({ cls: 'tabflow-doc-tab' });
 			tabEl.setText(panel.title);
 			tabEl.addEventListener('click', () => {
 				this.activeId = panel.id;
-				this.render().then(() => {
-					this.scrollToContentAfterRender();
-				});
+				void rerenderAndScroll();
 			});
 			if (panel.id === this.activeId) tabEl.addClass('active');
 		});
@@ -292,16 +299,12 @@ export class DocView extends ItemView {
 				prev.setAttr('aria-label', `${t('navigation.previous')}：${prevPanel.title}`);
 				prev.addEventListener('click', () => {
 					this.activeId = prevPanel.id;
-					this.render().then(() => {
-						this.scrollToContentAfterRender();
-					});
+					void rerenderAndScroll();
 				});
 				prev.addEventListener('keypress', (e) => {
 					if (e.key === 'Enter') {
 						this.activeId = prevPanel.id;
-						this.render().then(() => {
-							this.scrollToContentAfterRender();
-						});
+						void rerenderAndScroll();
 					}
 				});
 			}
@@ -316,16 +319,12 @@ export class DocView extends ItemView {
 				next.setAttr('aria-label', `${t('navigation.next')}：${nextPanel.title}`);
 				next.addEventListener('click', () => {
 					this.activeId = nextPanel.id;
-					this.render().then(() => {
-						this.scrollToContentAfterRender();
-					});
+					void rerenderAndScroll();
 				});
 				next.addEventListener('keypress', (e) => {
 					if (e.key === 'Enter') {
 						this.activeId = nextPanel.id;
-						this.render().then(() => {
-							this.scrollToContentAfterRender();
-						});
+						void rerenderAndScroll();
 					}
 				});
 			}
@@ -369,11 +368,10 @@ export class DocView extends ItemView {
 					// 阻止默认行为，避免与其他键盘导航冲突
 					e.preventDefault();
 					this.activeId = this.panels[newIndex].id;
-					this.render().then(() => {
-						this.scrollToContentAfterRender();
-					});
+					void rerenderAndScroll();
 				}
 			}
 		});
+		return Promise.resolve();
 	}
 }

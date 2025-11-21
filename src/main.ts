@@ -347,7 +347,7 @@ export default class TabFlowPlugin extends Plugin {
 					type: VIEW_TYPE_TABFLOW_DOC,
 					active: true,
 				});
-				this.app.workspace.revealLeaf(leaf);
+				await this.app.workspace.revealLeaf(leaf);
 			}
 		);
 
@@ -376,13 +376,12 @@ export default class TabFlowPlugin extends Plugin {
 			);
 		}
 
-		// 全局注入一次 @font-face，避免每块重复注入
+		// 配置字体资源路径（在 styles.css 中通过 CSS 变量引用）
 		try {
 			if (this.resources.bravuraUri) {
-				const style = document.createElement('style');
-				style.id = 'tabflow-global-alphatab-font';
-				style.textContent = `@font-face { font-family: 'alphaTab'; src: url(${this.resources.bravuraUri}); }`;
-				if (!document.getElementById(style.id)) document.head.appendChild(style);
+				setCssProps(document.documentElement, {
+					'--tabflow-bravura-font-src': `url(${this.resources.bravuraUri}) format('woff2')`,
+				});
 			}
 		} catch {
 			// Ignore font loading errors
@@ -403,7 +402,7 @@ export default class TabFlowPlugin extends Plugin {
 			try {
 				// Dynamically import to avoid circular dependency in test environment
 				const { mountAlphaTexBlock } = await import('./markdown/AlphaTexBlock');
-				this.registerMarkdownCodeBlockProcessor('alphatex', async (source, el, ctx) => {
+				this.registerMarkdownCodeBlockProcessor('alphatex', (source, el, ctx) => {
 					// 资源缺失：在块内提示并提供下载按钮
 					if (!this.resources.bravuraUri || !this.resources.alphaTabWorkerUri) {
 						const holder = el.createEl('div');
@@ -444,17 +443,14 @@ export default class TabFlowPlugin extends Plugin {
 						return;
 					}
 
-					// remove legacy two-way binding to init line (UI options now runtime-only)
-					const onUpdateInit = async (_partial: Partial<Record<string, boolean>>) => {
-						/* no-op by design */
-					};
-
 					const block = mountAlphaTexBlock(el, source, this.resources, {
 						scale: 1.0,
 						speed: 1.0,
 						scrollMode: 'Continuous',
 						metronome: false,
-						onUpdateInit,
+						onUpdateInit: (_partial: Partial<Record<string, boolean>>) => {
+							/* no-op by design */
+						},
 						setUiOverride: (
 							override: {
 								components?: Record<string, boolean>;
@@ -558,7 +554,7 @@ export default class TabFlowPlugin extends Plugin {
 									type: VIEW_TYPE_ALPHATEX_EDITOR,
 									state: { file: file.path },
 								});
-								this.app.workspace.revealLeaf(leaf);
+								await this.app.workspace.revealLeaf(leaf);
 							});
 					});
 				}
@@ -574,7 +570,7 @@ export default class TabFlowPlugin extends Plugin {
 									type: VIEW_TYPE_TAB,
 									state: { file: file.path },
 								});
-								this.app.workspace.revealLeaf(leaf);
+								await this.app.workspace.revealLeaf(leaf);
 							});
 					});
 				}
@@ -597,7 +593,7 @@ export default class TabFlowPlugin extends Plugin {
 									type: VIEW_TYPE_TAB,
 									state: { file: file.path },
 								});
-								this.app.workspace.revealLeaf(rightLeaf);
+								await this.app.workspace.revealLeaf(rightLeaf);
 
 								// 手动触发刷新事件，确保 TabView 正确加载
 								setTimeout(() => {
@@ -659,6 +655,11 @@ export default class TabFlowPlugin extends Plugin {
 		}
 
 		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
+		try {
+			document.documentElement.style.removeProperty('--tabflow-bravura-font-src');
+		} catch {
+			// ignore removal errors
+		}
 		// 不再在 onunload 时主动 detach leaves，避免插件更新导致视图位置丢失
 		console.debug('AlphaTab Plugin Unloaded');
 	}

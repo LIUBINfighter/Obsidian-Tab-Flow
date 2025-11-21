@@ -42,18 +42,18 @@ export function renderAboutTab(
 							if (!res) {
 								const leaf = app.workspace.getLeaf(true);
 								await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
-								app.workspace.revealLeaf(leaf);
+								await app.workspace.revealLeaf(leaf);
 							}
 						} else {
 							const leaf = app.workspace.getLeaf(true);
 							await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
-							app.workspace.revealLeaf(leaf);
+							await app.workspace.revealLeaf(leaf);
 						}
 					} catch (innerErr) {
 						console.error('[SettingTab.about] executeCommandById error', innerErr);
 						const leaf = app.workspace.getLeaf(true);
 						await leaf.setViewState({ type: 'tabflow-doc-view', active: true });
-						app.workspace.revealLeaf(leaf);
+						await app.workspace.revealLeaf(leaf);
 					}
 
 					// 尝试关闭设置面板以便文档视图可见

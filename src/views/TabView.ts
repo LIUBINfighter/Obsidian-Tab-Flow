@@ -56,8 +56,6 @@ interface ITabViewPersistedState extends Record<string, unknown> {
 }
 
 export class TabView extends FileView {
-	private static instanceId = 0;
-	private _styles: HTMLStyleElement;
 	private currentFile: TFile | null = null;
 	private fileModifyHandler: (file: TFile) => void;
 	public eventBus: EventBus; // Public for external interaction
@@ -492,32 +490,6 @@ export class TabView extends FileView {
 	async onOpen(): Promise<void> {
 		// 字体注入已由 main.ts 全局处理，此处不再重复注入
 
-		const cls = `alphatab-${TabView.instanceId++}`;
-		const styles = this.containerEl.createEl('style');
-
-		// 动态样式：为每个实例创建独立的作用域，避免多实例间的样式冲突
-		// 使用 CSS 变量确保主题一致性
-		const styleContent = `
-		.${cls} .at-cursor-bar {
-			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-			opacity: 0.2
-		}
-		.${cls} .at-selection div {
-			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-			opacity: 0.4
-		}
-		.${cls} .at-cursor-beat {
-			background: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-			width: 3px;
-		}
-		.${cls} .at-highlight * {
-			fill: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-			stroke: hsl(var(--accent-h),var(--accent-s),var(--accent-l));
-		}
-		`;
-		styles.appendChild(document.createTextNode(styleContent));
-		this._styles = styles;
-
 		// 添加标记类以隐藏状态栏
 		document.body.classList.add('tabflow-hide-statusbar');
 
@@ -525,7 +497,7 @@ export class TabView extends FileView {
 		this.registerFileWatcher();
 
 		// 创建主内容容器和样式
-		const element = this.contentEl.createDiv({ cls: cls });
+		const element = this.contentEl.createDiv({ cls: 'tabflow-tabview-root' });
 		this.alphaTabService = new AlphaTabService(
 			this.app,
 			element,
@@ -580,10 +552,6 @@ export class TabView extends FileView {
 			} catch (error) {
 				console.error('[TabView] Error destroying AlphaTab API:', error);
 			}
-		}
-
-		if (this._styles) {
-			this._styles.remove();
 		}
 
 		// 清理右上角设置按钮

@@ -9,7 +9,7 @@ import {
 } from '../../editor/EmbeddableMarkdownEditor';
 import { setCssProps } from '../../utils/styleUtils';
 
-export async function renderEditorTab(
+export function renderEditorTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
 	app: App
@@ -68,20 +68,22 @@ export async function renderEditorTab(
 					inputEl.setAttribute('step', '0.01');
 					inputEl.setAttribute('min', '0');
 				}
-				text.setValue(fontDefault.num).onChange(async (numStr) => {
-					fontValue = numStr;
-					const composed = `${numStr}${fontUnit}`;
-					const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
-					if (!valid) {
-						fontText.inputEl.classList.add('tabflow-invalid-input');
-						return;
-					}
-					fontText.inputEl.classList.remove('tabflow-invalid-input');
-					plugin.settings.editorFontSize = composed;
-					await plugin.saveSettings();
-					setCssProps(document.documentElement, {
-						'--alphatex-editor-font-size': composed,
-					});
+				text.setValue(fontDefault.num).onChange((numStr) => {
+					void (async () => {
+						fontValue = numStr;
+						const composed = `${numStr}${fontUnit}`;
+						const valid = /^\d+(?:\.\d+)?(px|rem)$/.test(composed);
+						if (!valid) {
+							fontText.inputEl.classList.add('tabflow-invalid-input');
+							return;
+						}
+						fontText.inputEl.classList.remove('tabflow-invalid-input');
+						plugin.settings.editorFontSize = composed;
+						await plugin.saveSettings();
+						setCssProps(document.documentElement, {
+							'--alphatex-editor-font-size': composed,
+						});
+					})();
 				});
 			})
 			.addDropdown((dd) => {
@@ -526,13 +528,15 @@ export async function renderEditorTab(
 							plugin.settings.editorHighlights &&
 							plugin.settings.editorHighlights[h.key]
 						);
-						t.setValue(enabled).onChange(async (v) => {
-							plugin.settings.editorHighlights =
-								plugin.settings.editorHighlights || {};
-							plugin.settings.editorHighlights[h.key] = v;
-							await plugin.saveSettings();
-							// Refresh markdown editor preview to apply new highlight settings
-							renderPreview();
+						t.setValue(enabled).onChange((v) => {
+							void (async () => {
+								plugin.settings.editorHighlights =
+									plugin.settings.editorHighlights || {};
+								plugin.settings.editorHighlights[h.key] = v;
+								await plugin.saveSettings();
+								// Refresh markdown editor preview to apply new highlight settings
+								renderPreview();
+							})();
 						});
 					})
 					.setClass('tabflow-no-border');
@@ -800,30 +804,32 @@ export async function renderEditorTab(
 			new Setting(right)
 				.addToggle((toggle) => {
 					const current = !!comp?.[key];
-					toggle.setValue(m.disabled ? false : current).onChange(async (value) => {
-						const editorBarSettings =
-							plugin.settings.editorBar ??
-							(plugin.settings.editorBar = {
-								components: JSON.parse(
+					toggle.setValue(m.disabled ? false : current).onChange((value) => {
+						void (async () => {
+							const editorBarSettings =
+								plugin.settings.editorBar ??
+								(plugin.settings.editorBar = {
+									components: JSON.parse(
+										JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
+									) as EditorBarComponentVisibility,
+									order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
+								});
+							const components =
+								editorBarSettings.components ??
+								(editorBarSettings.components = JSON.parse(
 									JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
-								) as EditorBarComponentVisibility,
-								order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
-							});
-						const components =
-							editorBarSettings.components ??
-							(editorBarSettings.components = JSON.parse(
-								JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
-							) as EditorBarComponentVisibility);
+								) as EditorBarComponentVisibility);
 
-						components[key] = m.disabled ? false : value;
-						await plugin.saveSettings();
-						try {
-							/* @ts-ignore */ app.workspace.trigger(
-								'tabflow:editorbar-components-changed'
-							);
-						} catch {
-							// Ignore workspace trigger errors
-						}
+							components[key] = m.disabled ? false : value;
+							await plugin.saveSettings();
+							try {
+								/* @ts-ignore */ app.workspace.trigger(
+									'tabflow:editorbar-components-changed'
+								);
+							} catch {
+								// Ignore workspace trigger errors
+							}
+						})();
 					});
 					if (m.disabled) {
 						toggle.toggleEl?.querySelector('input')?.setAttribute('disabled', 'true');
@@ -992,4 +998,6 @@ export async function renderEditorTab(
 		});
 	};
 	renderCards();
+
+	return Promise.resolve();
 }

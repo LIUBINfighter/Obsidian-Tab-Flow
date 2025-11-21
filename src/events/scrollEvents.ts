@@ -169,14 +169,17 @@ export class ScrollEventManager {
 		// 由于 alphaTab 的滚动是内部触发的，我们可以通过监听相关事件来实现
 
 		// 检测滚动开始
-		const originalScrollToCursor = this._api.scrollToCursor;
+		const originalScrollToCursor =
+			typeof this._api.scrollToCursor === 'function'
+				? this._api.scrollToCursor.bind(this._api)
+				: undefined;
 		if (originalScrollToCursor) {
 			this._api.scrollToCursor = () => {
 				if (this._handlers.onScrollStart) {
 					this._handlers.onScrollStart();
 				}
 
-				originalScrollToCursor.call(this._api);
+				originalScrollToCursor();
 
 				// 检测滚动结束（简单的延时检测）
 				if (this._scrollTimeout) {

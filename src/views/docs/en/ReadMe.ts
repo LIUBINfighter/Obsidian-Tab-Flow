@@ -1,10 +1,10 @@
 // 示例面板：ReadMe
 export default {
 	id: 'readme',
-	title: 'ReadMe',
+	title: 'Readme',
 	render(container: HTMLElement, _plugin?: unknown) {
 		container.empty();
-		container.createEl('h3', { text: 'ReadMe Panel' });
+		container.createEl('h3', { text: 'Readme panel' });
 
 		const paragraphs: string[] = [
 			'Welcome to TabFlow! This is your interactive workspace in Obsidian for "writing tabs + listening + managing creative inspiration".',

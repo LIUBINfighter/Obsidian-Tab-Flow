@@ -33,7 +33,7 @@ export default {
 	title: 'Metadata',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Metadata (Song Information & Global Settings)' });
+		container.createEl('h3', { text: 'Metadata (song information & global settings)' });
 		container.createEl('p', {
 			text: 'Metadata uses the format \\tag value and is generally written at the beginning of the score. It specifies global information (title, artist, tempo, etc.) and performance-related settings (instrument, capo, tuning). If metadata is included, the section must end with a dot (.).',
 		});

@@ -25,11 +25,11 @@ export default {
 			text: 'AlphaTex 是 AlphaTab 的文本谱写格式。它通常包含（可选）元数据、（必需）乐谱内容，以及（可选）用于外部音频/视频同步的 Sync Points。各段之间使用一个点号（.）分隔。',
 		});
 		const list = container.createEl('ul');
-		list.createEl('li', { text: 'Song Metadata：曲目全局信息，如标题、作者、速度。' });
+		list.createEl('li', { text: 'Song metadata：曲目全局信息，如标题、作者、速度。' });
 		list.createEl('li', {
-			text: 'Song Contents：乐谱主体（轨道、谱表、小节、节拍、音符），小节用 | 分隔。',
+			text: 'Song contents：乐谱主体（轨道、谱表、小节、节拍、音符），小节用 | 分隔。',
 		});
-		list.createEl('li', { text: 'Sync Points：与外部媒体的时间对齐点（进阶，可选）。' });
+		list.createEl('li', { text: 'Sync points：与外部媒体的时间对齐点（进阶，可选）。' });
 		container.createEl('p', {
 			text: '下面给出一个示例片段（Canon Rock）。可直接修改文本，预览会自动刷新。',
 		});

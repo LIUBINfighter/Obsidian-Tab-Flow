@@ -69,7 +69,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	let playing = initialPlaying;
 	let metronomeOn = false;
 	let countInOn = false;
-	let layoutMode: number = alphaTab.LayoutMode.Page;
+	let layoutMode: alphaTab.LayoutMode = alphaTab.LayoutMode.Page;
 
 	const bar = document.createElement('div');
 	bar.className = 'play-bar nav-buttons-container';
@@ -746,7 +746,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	}
 
 	const originalRemove = bar.remove;
-	bar.remove = function () {
+	bar.remove = () => {
 		originalRemove.call(bar);
 	};
 

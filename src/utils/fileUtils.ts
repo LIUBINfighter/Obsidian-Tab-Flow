@@ -1,6 +1,6 @@
 type AdapterLike = {
 	exists?: (p: string) => Promise<boolean>;
-	read?: (p: string) => Promise<string | ArrayBuffer | Uint8Array | unknown>;
+	read?: (p: string) => Promise<string | ArrayBuffer | Uint8Array>;
 };
 
 /**

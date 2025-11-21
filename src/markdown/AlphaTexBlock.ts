@@ -217,8 +217,32 @@ export function mountAlphaTexBlock(
 	let api: alphaTab.AlphaTabApi | null = null;
 	const ERROR_STOP_THRESHOLD = 50;
 	let errorEventsCount = 0;
-	// eslint-disable-next-line prefer-const
-	let handle: AlphaTexMountHandle;
+	const handle: AlphaTexMountHandle = {
+		destroy: () => {
+			if (destroyed) return;
+			destroyed = true;
+			try {
+				api?.destroy();
+			} catch {
+				// Ignore API destroy errors
+			}
+
+			try {
+				while (rootEl.firstChild) {
+					rootEl.removeChild(rootEl.firstChild);
+				}
+			} catch {
+				// Ignore DOM cleanup errors
+			}
+			// clear runtime UI override when this block unmounts
+			try {
+				defaults?.clearUiOverride?.();
+			} catch {
+				// Ignore UI override clear errors
+			}
+		},
+		api: null,
+	};
 	const stopAlphaEngine = (reason?: string) => {
 		if (!api) return;
 		try {
@@ -719,33 +743,6 @@ export function mountAlphaTexBlock(
 
 	// 推迟并限制初始化
 	scheduleInit(heavyInit);
-
-	handle = {
-		destroy: () => {
-			if (destroyed) return;
-			destroyed = true;
-			try {
-				api?.destroy();
-			} catch {
-				// Ignore API destroy errors
-			}
-
-			try {
-				while (rootEl.firstChild) {
-					rootEl.removeChild(rootEl.firstChild);
-				}
-			} catch {
-				// Ignore DOM cleanup errors
-			}
-			// clear runtime UI override when this block unmounts
-			try {
-				defaults?.clearUiOverride?.();
-			} catch {
-				// Ignore UI override clear errors
-			}
-		},
-		api: api,
-	};
 
 	return handle;
 }
