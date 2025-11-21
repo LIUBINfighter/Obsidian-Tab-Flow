@@ -58,7 +58,10 @@ export class ExportChooserModal extends Modal {
 							new AudioExportModal(this.app, url || '', fileName).open();
 							new Notice(t('export.audioExportCompleted'));
 						} catch (e) {
-							console.error('[ExportChooserModal] ' + t('export.openAudioPlayerFailed'), e);
+							console.error(
+								'[ExportChooserModal] ' + t('export.openAudioPlayerFailed'),
+								e
+							);
 						}
 					};
 					const okHandler = (url?: string) => {

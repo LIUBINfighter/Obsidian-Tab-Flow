@@ -52,7 +52,10 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	const layoutSelect = document.createElement('select');
 	const layoutModes = [
 		{ name: t('settings.pageLayout'), value: window.alphaTab?.LayoutMode?.Page ?? 0 },
-		{ name: t('settings.horizontalLayout'), value: window.alphaTab?.LayoutMode?.Horizontal ?? 1 },
+		{
+			name: t('settings.horizontalLayout'),
+			value: window.alphaTab?.LayoutMode?.Horizontal ?? 1,
+		},
 	];
 	layoutModes.forEach((item, idx) => {
 		const opt = document.createElement('option');
@@ -238,7 +241,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 					// console.debug(`[Export] 开始导出: ${type}`);
 					// console.debug(`[Export] 开始导出: ${type}`);
 				},
-					onExportFinish: (type: string, success: boolean, msg?: string) => {
+				onExportFinish: (type: string, success: boolean, msg?: string) => {
 					if (type === 'audio' && success && msg) {
 						// 弹出 Obsidian 原生 Modal
 						const fileName = (getScoreTitle?.() || 'audio') + '.wav';
