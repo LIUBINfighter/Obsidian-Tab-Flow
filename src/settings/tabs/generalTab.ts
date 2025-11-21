@@ -48,7 +48,9 @@ export async function renderGeneralTab(
 	app: App,
 	renderTab: (id: string) => Promise<void>
 ): Promise<void> {
-	tabContents.createEl('h3', { text: t('assetManagement.assetFileManagement') });
+	new Setting(tabContents)
+		.setName(t('assetManagement.assetFileManagement'))
+		.setHeading();
 
 	const assetsStatusContainer = tabContents.createDiv({
 		cls: 'tabflow-setting-description tabflow-assets-status',
