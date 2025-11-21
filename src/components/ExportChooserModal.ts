@@ -74,7 +74,8 @@ export class ExportChooserModal extends Modal {
 						}
 					};
 					const failHandler = (err?: unknown) => {
-						new Notice('音频导出失败' + (err ? ': ' + String(err) : ''));
+						const errMsg = err instanceof Error ? err.message : err ? String(err) : '';
+						new Notice('音频导出失败' + (errMsg ? ': ' + errMsg : ''));
 						try {
 							this.eventBus.unsubscribe?.('状态:音频导出完成', okHandler);
 						} catch {

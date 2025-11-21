@@ -88,7 +88,9 @@ export function renderEditorTab(
 			})
 			.addDropdown((dd) => {
 				fontDropdown = dd;
-				unitsFont.forEach((u) => dd.addOption(u, u));
+				unitsFont.forEach((u) => {
+					dd.addOption(u, u);
+				});
 				dd.setValue(fontDefault.unit).onChange((unit) => {
 					void (async () => {
 						fontUnit = unit;
@@ -178,7 +180,9 @@ export function renderEditorTab(
 		})
 			.addDropdown((dd) => {
 				gapDropdown = dd;
-				unitsGap.forEach((u) => dd.addOption(u, u));
+				unitsGap.forEach((u) => {
+					dd.addOption(u, u);
+				});
 				dd.setValue(gapDefault.unit).onChange((unit) => {
 					void (async () => {
 						gapUnit = unit;
@@ -264,7 +268,7 @@ export function renderEditorTab(
 			cls: 'tabflow-highlight-section',
 		});
 		details.createEl('summary', {
-			text: 'Custom Highlight',
+			text: 'Custom highlight',
 			cls: 'tabflow-highlight-section__summary',
 		});
 
@@ -283,7 +287,7 @@ export function renderEditorTab(
 			switch (key) {
 				case 'dot': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('highlighted-dot', '.'),
 						span('', ' • '),
 						span('highlighted-dot', '.')
@@ -292,7 +296,7 @@ export function renderEditorTab(
 				}
 				case 'bar': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('highlighted-bar', '|'),
 						span('bar-number', '12')
 					);
@@ -300,7 +304,7 @@ export function renderEditorTab(
 				}
 				case 'bracket': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-bracket', '('),
 						span('cm-bracket', ')')
 					);
@@ -308,19 +312,19 @@ export function renderEditorTab(
 				}
 				case 'meta': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-metadata', '\\tempo'),
 						span('', '120')
 					);
 					break;
 				}
 				case 'comment': {
-					wrap.append(span('', 'Example:'), span('cm-comment', '// comment 注释'));
+					wrap.append(span('', 'Example: '), span('cm-comment', '// comment 注释'));
 					break;
 				}
 				case 'debug': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-debug-meta', '\\title'),
 						span('cm-debug-number', '120'),
 						span('cm-debug-effect-key', 'tr'),
@@ -339,12 +343,12 @@ export function renderEditorTab(
 					const space = span('cm-whitespace-space', ' '); // render visible dot via ::before
 					const b = document.createElement('span');
 					b.textContent = 'b';
-					wrap.append(span('', 'Example:'), a, space, b);
+					wrap.append(span('', 'Example: '), a, space, b);
 					break;
 				}
 				case 'surrounded': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('', '('),
 						span('cm-surrounded', 'abc'),
 						span('', ')'),
@@ -356,24 +360,24 @@ export function renderEditorTab(
 					break;
 				}
 				case 'duration': {
-					wrap.append(span('', 'Example:'), span('cm-duration', ':4'));
+					wrap.append(span('', 'Example: '), span('cm-duration', ':4'));
 					break;
 				}
 				case 'effect': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-effect-beat', 'tempo'),
 						span('cm-effect-note', 'tr')
 					);
 					break;
 				}
 				case 'tuning': {
-					wrap.append(span('', 'Example:'), span('cm-tuning', 'A4'));
+					wrap.append(span('', 'Example: '), span('cm-tuning', 'A4'));
 					break;
 				}
 				case 'boolean': {
 					wrap.append(
-						span('', 'Example:'),
+						span('', 'Example: '),
 						span('cm-boolean', 'true'),
 						span('', '/'),
 						span('cm-boolean', 'false')
@@ -441,7 +445,7 @@ export function renderEditorTab(
 		const sampleCode = `\\title "Sample Song"
 \\tempo 120
 .
-// TO DO 完善这里的示例
+// To do: 完善这里的示例
 \\chord "Bm/D" 2 3 4 0 x x
 \\chord "Cadd9" 0 3 0 2 3 x
 \\chord "G/B" x 3 0 0 2 x

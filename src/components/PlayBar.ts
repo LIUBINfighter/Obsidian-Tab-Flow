@@ -608,7 +608,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	}
 
 	const originalRemove = bar.remove;
-	bar.remove = () => {
+	bar.remove = function (this: void) {
 		originalRemove.call(bar);
 	};
 

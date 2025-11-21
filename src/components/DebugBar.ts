@@ -46,7 +46,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	// 布局模式切换按钮
 	const layoutLabel = document.createElement('label');
 	layoutLabel.className = 'control-label';
-	layoutLabel.innerText = '布局:';
+	layoutLabel.innerText = '布局：';
 	debugBar.appendChild(layoutLabel);
 	const layoutSelect = document.createElement('select');
 	const layoutModes = [
@@ -109,7 +109,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 速度选择
 	const speedLabel = document.createElement('label');
-	speedLabel.innerText = '速度:';
+	speedLabel.innerText = '速度：';
 	speedLabel.classList.add('control-label');
 	debugBar.appendChild(speedLabel);
 	const speedSelect = document.createElement('select');
@@ -131,7 +131,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 谱表模式切换
 	const staveLabel = document.createElement('label');
-	staveLabel.innerText = '谱表:';
+	staveLabel.innerText = '谱表：';
 	staveLabel.classList.add('control-label');
 	debugBar.appendChild(staveLabel);
 	const staveSelect = document.createElement('select');
@@ -157,7 +157,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// Metronome 节拍器开关
 	const metronomeLabel = document.createElement('label');
-	metronomeLabel.innerText = '节拍器:';
+	metronomeLabel.innerText = '节拍器：';
 	metronomeLabel.classList.add('control-label');
 	debugBar.appendChild(metronomeLabel);
 	const metronomeToggle = document.createElement('input');
@@ -173,7 +173,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// Count-in 预备拍开关
 	const countInLabel = document.createElement('label');
-	countInLabel.innerText = '预备拍:';
+	countInLabel.innerText = '预备拍：';
 	countInLabel.classList.add('control-label');
 	debugBar.appendChild(countInLabel);
 	const countInToggle = document.createElement('input');
@@ -189,7 +189,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// Zoom 缩放滑块
 	const zoomLabel = document.createElement('label');
-	zoomLabel.innerText = '缩放:';
+	zoomLabel.innerText = '缩放：';
 	zoomLabel.classList.add('control-label');
 	debugBar.appendChild(zoomLabel);
 	const zoomSlider = document.createElement('input');
@@ -207,7 +207,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 导出相关按钮
 	const exportLabel = document.createElement('label');
-	exportLabel.innerText = '导出:';
+	exportLabel.innerText = '导出：';
 	exportLabel.classList.add('control-label');
 	debugBar.appendChild(exportLabel);
 
@@ -269,30 +269,30 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// MIDI 导出按钮
 	const midiBtn = document.createElement('button');
-	midiBtn.innerText = '导出MIDI';
+	midiBtn.innerText = '导出 MIDI';
 	midiBtn.onclick = () => {
 		void (async () => {
-			await (await ensureExportHandlers()).exportMidi();
+			(await ensureExportHandlers()).exportMidi();
 		})();
 	};
 	debugBar.appendChild(midiBtn);
 
 	// GP 导出按钮
 	const gpBtn = document.createElement('button');
-	gpBtn.innerText = '导出GP';
+	gpBtn.innerText = '导出 GP';
 	gpBtn.onclick = () => {
 		void (async () => {
-			await (await ensureExportHandlers()).exportGp();
+			(await ensureExportHandlers()).exportGp();
 		})();
 	};
 	debugBar.appendChild(gpBtn);
 
 	// PDF 打印按钮
 	const pdfBtn = document.createElement('button');
-	pdfBtn.innerText = '打印PDF';
+	pdfBtn.innerText = '打印 PDF';
 	pdfBtn.onclick = () => {
 		void (async () => {
-			await (await ensureExportHandlers()).exportPdf();
+			(await ensureExportHandlers()).exportPdf();
 		})();
 	};
 	debugBar.appendChild(pdfBtn);
@@ -315,7 +315,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 滚动模式选择
 	const scrollModeLabel = document.createElement('label');
-	scrollModeLabel.innerText = '滚动:';
+	scrollModeLabel.innerText = '滚动：';
 	scrollModeLabel.classList.add('control-label--tight');
 	debugBar.appendChild(scrollModeLabel);
 
@@ -341,7 +341,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 滚动速度控制
 	const scrollSpeedLabel = document.createElement('label');
-	scrollSpeedLabel.innerText = '速度:';
+	scrollSpeedLabel.innerText = '速度：';
 	scrollSpeedLabel.classList.add('control-label--tight');
 	debugBar.appendChild(scrollSpeedLabel);
 
@@ -356,13 +356,13 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	scrollSpeedSlider.oninput = () => {
 		const speed = parseInt(scrollSpeedSlider.value);
 		scrollManager.setScrollSpeed(speed);
-		scrollSpeedLabel.innerText = `速度:${speed}ms`;
+		scrollSpeedLabel.innerText = `速度：${speed}ms`;
 	};
 	debugBar.appendChild(scrollSpeedSlider);
 
 	// Y轴偏移控制
 	const offsetYLabel = document.createElement('label');
-	offsetYLabel.innerText = 'Y偏移:';
+	offsetYLabel.innerText = 'Y 偏移：';
 	offsetYLabel.classList.add('control-label--tight');
 	debugBar.appendChild(offsetYLabel);
 
@@ -376,13 +376,13 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	offsetYSlider.oninput = () => {
 		const offset = parseInt(offsetYSlider.value);
 		scrollManager.setScrollOffsetY(offset);
-		offsetYLabel.innerText = `Y偏移:${offset}`;
+		offsetYLabel.innerText = `Y 偏移：${offset}`;
 	};
 	debugBar.appendChild(offsetYSlider);
 
 	// X轴偏移控制
 	const offsetXLabel = document.createElement('label');
-	offsetXLabel.innerText = 'X偏移:';
+	offsetXLabel.innerText = 'X 偏移：';
 	offsetXLabel.classList.add('control-label--tight');
 	debugBar.appendChild(offsetXLabel);
 
@@ -396,13 +396,13 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	offsetXSlider.oninput = () => {
 		const offset = parseInt(offsetXSlider.value);
 		scrollManager.setScrollOffsetX(offset);
-		offsetXLabel.innerText = `X偏移:${offset}`;
+		offsetXLabel.innerText = `X 偏移：${offset}`;
 	};
 	debugBar.appendChild(offsetXSlider);
 
 	// 原生滚动开关
 	const nativeScrollLabel = document.createElement('label');
-	nativeScrollLabel.innerText = '原生滚动:';
+	nativeScrollLabel.innerText = '原生滚动：';
 	nativeScrollLabel.classList.add('control-label--tight');
 	debugBar.appendChild(nativeScrollLabel);
 
