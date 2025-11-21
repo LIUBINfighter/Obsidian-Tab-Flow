@@ -1,0 +1,191 @@
+/* Print-preview specific styles for AlphaTab page layout.
+ *
+ * 目标：
+ * - 尽量还原 AlphaTab 自己的 Page 分页结果；
+ * - 让浏览器打印时只负责“按 A4 裁纸 + 统一边距”，不再二次分页；
+ * - 仅作用于 PrintPreview 视图（通过外层类名限定）。
+ */
+
+/* 预览区域外观：灰底 + 居中白纸，仅影响屏幕预览 */
+.tabflow-print-preview-view .print-preview-body {
+	background-color: var(--background-secondary);
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 20px;
+}
+
+.tabflow-print-preview-view .print-preview-iframe {
+	/* A4 纸宽度，阴影只在屏幕预览时可见 */
+	width: 210mm;
+	border: none;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+	background: white;
+}
+
+/* 左侧打印 Track/Staff 面板 */
+.tabflow-print-preview-view .tabflow-print-sidebar {
+	width: 280px;
+	min-width: 220px;
+	max-width: 320px;
+	border-right: 1px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-panel {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 8px 12px;
+	gap: 8px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-title {
+	font-weight: 600;
+	font-size: 13px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-actions {
+	display: flex;
+	gap: 4px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-list {
+	flex: 1;
+	overflow: auto;
+	padding: 4px 0;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-footer {
+	font-size: 11px;
+	opacity: 0.8;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-empty {
+	opacity: 0.7;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-item {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 4px 0;
+	border-radius: 4px;
+	cursor: default;
+}
+
+.tabflow-print-preview-view .tabflow-print-track-row {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 6px;
+	margin-left: 0;
+	padding-left: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-icon {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-label {
+	flex: 1;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.tabflow-print-preview-view .tabflow-print-tracks-meta {
+	font-size: 11px;
+	opacity: 0.7;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-list {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-left: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-empty {
+	opacity: 0.6;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-label {
+	font-size: 11px;
+	opacity: 0.8;
+	min-width: 56px;
+}
+
+.tabflow-print-preview-view .tabflow-print-staff-buttons {
+	display: flex;
+	gap: 2px;
+}
+
+/* 物理分页容器：在 iframe 内由 PrintPreviewView 注入 */
+.tabflow-print-preview-view .tabflow-print-pages {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.tabflow-print-preview-view .tabflow-print-page {
+	background: white;
+	margin: 0 auto;
+	/* 让每一页宽度继承 iframe（210mm），高度由内容撑开 */
+	width: 100%;
+	box-sizing: border-box;
+	padding: 0;
+	/* 只负责承载视窗，本身不滚动 */
+	overflow: visible;
+}
+
+@media print {
+	/* 打印时移除阴影/背景，只保留纸张本身 */
+	.tabflow-print-preview-view .print-preview-body {
+		background: transparent !important;
+		padding: 0;
+	}
+
+	.tabflow-print-preview-view .print-preview-iframe {
+		box-shadow: none !important;
+		width: 100%;
+	}
+
+	/* 打印时每个 .tabflow-print-page 独立成页，禁止中间断开 */
+	.tabflow-print-preview-view .tabflow-print-page {
+		page-break-after: always;
+		break-inside: avoid;
+	}
+
+	/* 避免分页容器本身再被拆分 */
+	.tabflow-print-preview-view .tabflow-print-pages {
+		break-inside: avoid;
+	}
+}
+
+/* 说明：
+ *
+ * - 真正的 A4 纸张尺寸与边距交由浏览器打印设置和 AlphaTab 的 Page 布局共同决定；
+ * - 这里不再添加额外的 @page 规则，以避免与 AlphaTab 内部假设发生冲突；
+ * - iframe 内部仍然保持尽量简单的布局，仅负责承载 AlphaTab 渲染结果。
+ */

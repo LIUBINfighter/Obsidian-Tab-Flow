@@ -1,0 +1,351 @@
+/* CodeMirror Editor Styles - Obsidian Integration */
+
+/* ===== Base Editor Container ===== */
+.alphatex-editor-wrapper .cm-editor {
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-family: var(--font-text, var(--font-monospace));
+	font-size: var(--font-text-size, 15px);
+	line-height: var(--line-height-normal, 1.6);
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.alphatex-editor-wrapper .cm-scroller {
+	font-family: var(--font-monospace);
+	font-size: var(--font-text-size, 15px);
+	line-height: var(--line-height-normal, 1.6);
+	overflow: auto;
+	flex: 1;
+	/* Ensure scroller properly calculates height for line numbers */
+	position: relative;
+}
+
+.alphatex-editor-wrapper .cm-content {
+	padding: 12px 16px;
+	min-height: 100%;
+	caret-color: var(--text-normal);
+}
+
+/* ===== Line Numbers ===== */
+.alphatex-editor-wrapper .cm-lineNumbers {
+	background: var(--background-primary);
+	border-right: none;
+	padding: 12px 4px; /* Match content padding-top (12px) and bottom */
+	color: var(--text-muted);
+	font-size: var(--font-text-size, 15px);
+	font-family: var(--font-monospace);
+	line-height: var(--line-height-normal, 1.6);
+	min-width: 2.5ch;
+}
+
+/* Ensure line number gutter syncs with content height */
+.alphatex-editor-wrapper .cm-gutters {
+	/* Force gutters to match content height - critical for line numbers */
+	position: relative;
+	/* Ensure gutters extend to full content height */
+	min-height: 100%;
+}
+
+/* Ensure line numbers container matches content height */
+.alphatex-editor-wrapper .cm-lineNumbers {
+	position: relative;
+	/* Force line numbers to extend to full document height */
+	min-height: 100%;
+	/* Ensure line numbers render for all lines, not just visible ones */
+	height: auto !important;
+}
+
+.alphatex-editor-wrapper .cm-lineNumbers .cm-gutterElement {
+	padding: 0 2px;
+	text-align: right;
+	margin-top: 0 !important; /* Override CodeMirror's default margin-top for first element */
+	display: block; /* Force line numbers to render for all lines */
+}
+
+/* ===== Selection ===== */
+.alphatex-editor-wrapper .cm-selectionBackground {
+	background: var(--text-selection);
+}
+
+.alphatex-editor-wrapper .cm-selectionMatch {
+	background: var(--text-selection);
+}
+
+/* ===== Focus State ===== */
+.alphatex-editor-wrapper .cm-editor.cm-focused {
+	outline: none;
+}
+
+.alphatex-editor-wrapper .cm-editor.cm-focused .cm-content {
+	outline: none;
+}
+
+/* ===== Cursor ===== */
+.alphatex-editor-wrapper .cm-cursor {
+	border-left: 2px solid var(--text-normal);
+	margin-left: -1px;
+}
+
+.alphatex-editor-wrapper .cm-cursor.cm-cursor-blink {
+	animation: cm-blink 1.06s steps(1) infinite;
+}
+
+@keyframes cm-blink {
+	0%,
+	50% {
+		opacity: 1;
+	}
+	51%,
+	100% {
+		opacity: 0;
+	}
+}
+
+/* ===== Active Line ===== */
+.alphatex-editor-wrapper .cm-activeLine {
+	background: var(--background-modifier-hover);
+}
+
+.alphatex-editor-wrapper .cm-activeLineGutter {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+	font-weight: 600;
+}
+
+/* ===== Scrollbar ===== */
+.alphatex-editor-wrapper .cm-scroller::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+.alphatex-editor-wrapper .cm-scroller::-webkit-scrollbar-track {
+	background: var(--background-secondary);
+}
+
+.alphatex-editor-wrapper .cm-scroller::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 5px;
+	border: 2px solid var(--background-secondary);
+}
+
+.alphatex-editor-wrapper .cm-scroller::-webkit-scrollbar-thumb:hover {
+	background: var(--background-modifier-border-hover);
+}
+
+/* ===== Syntax Highlighting - AlphaTex Tokens ===== */
+
+/* Metadata (e.g., \title, \tempo) */
+.alphatex-editor-wrapper .cm-metadata,
+.alphatex-editor-wrapper .cm-content .cm-metadata {
+	color: var(--text-accent, var(--color-accent));
+	font-weight: 600;
+}
+
+/* Comments */
+.alphatex-editor-wrapper .cm-comment,
+.alphatex-editor-wrapper .cm-content .cm-comment {
+	color: var(--text-muted);
+	opacity: 0.8;
+	font-style: italic;
+}
+
+/* Strings */
+.alphatex-editor-wrapper .cm-string,
+.alphatex-editor-wrapper .cm-content .cm-string {
+	color: var(--text-accent);
+}
+
+/* Numbers */
+.alphatex-editor-wrapper .cm-number,
+.alphatex-editor-wrapper .cm-content .cm-number {
+	color: var(--text-accent);
+}
+
+/* Keywords */
+.alphatex-editor-wrapper .cm-keyword,
+.alphatex-editor-wrapper .cm-content .cm-keyword {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+/* Brackets */
+.alphatex-editor-wrapper .cm-bracket,
+.alphatex-editor-wrapper .cm-content .cm-bracket {
+	color: var(--color-accent, var(--text-accent));
+	font-weight: 700;
+}
+
+/* ===== Custom AlphaTex Highlights ===== */
+
+/* Dot highlight */
+.alphatex-editor-wrapper .cm-content .highlighted-dot {
+	color: var(--text-accent, var(--color-accent));
+	background: transparent;
+	font-weight: 700;
+	padding: 0 1px;
+}
+
+/* Bar highlight */
+.alphatex-editor-wrapper .cm-content .highlighted-bar {
+	background-color: var(--color-accent, var(--text-accent));
+	opacity: 0.3;
+	border-radius: 2px;
+}
+
+/* Bar number widget */
+.alphatex-editor-wrapper .cm-content .bar-number {
+	display: inline-block;
+	margin-left: 2px;
+	padding: 0 4px;
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+	font-size: 0.85em;
+	border-radius: 3px;
+	font-weight: 600;
+	vertical-align: baseline;
+}
+
+/* Duration (e.g., :4) */
+.alphatex-editor-wrapper .cm-content .cm-duration {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+/* Effect keywords */
+.alphatex-editor-wrapper .cm-content .cm-effect-beat {
+	color: var(--text-accent);
+	font-weight: 500;
+}
+
+.alphatex-editor-wrapper .cm-content .cm-effect-note {
+	color: var(--text-accent);
+	font-weight: 500;
+}
+
+/* Tuning/Chord */
+.alphatex-editor-wrapper .cm-content .cm-tuning {
+	color: var(--text-accent);
+	font-weight: 500;
+}
+
+.alphatex-editor-wrapper .cm-content .cm-chord {
+	color: var(--text-accent);
+	font-weight: 500;
+}
+
+/* Boolean */
+.alphatex-editor-wrapper .cm-content .cm-boolean {
+	color: var(--text-accent);
+	font-weight: 600;
+}
+
+/* Surrounded */
+.alphatex-editor-wrapper .cm-content .cm-surrounded {
+	background: var(--background-modifier-hover, rgba(220, 38, 38, 0.12));
+	border-radius: 3px;
+	border: 1px solid var(--background-modifier-border);
+	display: inline-block;
+	padding: 0 2px;
+}
+
+/* Whitespace */
+.alphatex-editor-wrapper .cm-content .cm-whitespace {
+	background: var(--background-modifier-hover, rgba(0, 0, 0, 0.03));
+	display: inline-block;
+	border-radius: 2px;
+	padding: 0 2px;
+	line-height: 1;
+}
+
+.alphatex-editor-wrapper .cm-content .cm-whitespace-space {
+	background: transparent;
+	color: transparent;
+	position: relative;
+}
+
+.alphatex-editor-wrapper .cm-content .cm-whitespace-space::before {
+	content: '·';
+	color: var(--text-muted);
+	position: absolute;
+	left: 0;
+	right: 0;
+	text-align: center;
+	pointer-events: none;
+}
+
+/* ===== Placeholder ===== */
+.alphatex-editor-wrapper .cm-placeholder {
+	color: var(--text-muted);
+	opacity: 0.6;
+}
+
+/* ===== Matching Brackets ===== */
+.alphatex-editor-wrapper .cm-matchingBracket {
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--color-accent);
+	border-radius: 2px;
+}
+
+.alphatex-editor-wrapper .cm-nonmatchingBracket {
+	background: var(--background-modifier-error);
+	border: 1px solid var(--text-error);
+	border-radius: 2px;
+}
+
+/* ===== Search Highlights ===== */
+.alphatex-editor-wrapper .cm-searchMatch {
+	background: var(--text-selection);
+	border-radius: 2px;
+}
+
+.alphatex-editor-wrapper .cm-searchMatch.cm-searchMatch-selected {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+/* ===== Fold Gutter (Disabled for AlphaTex - not needed) ===== */
+.alphatex-editor-wrapper .cm-foldGutter {
+	display: none;
+}
+
+/* ===== Line Wrapping ===== */
+.alphatex-editor-wrapper .cm-lineWrapping {
+	word-break: break-word;
+	white-space: pre-wrap;
+}
+
+/* Disable horizontal scrolling when line wrapping is enabled */
+.alphatex-editor-wrapper .cm-scroller {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+/* ===== Dark Theme Adjustments ===== */
+.theme-dark .alphatex-editor-wrapper .cm-editor {
+	background: var(--background-primary);
+}
+
+.theme-dark .alphatex-editor-wrapper .cm-lineNumbers {
+	background: var(--background-secondary);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+	.alphatex-editor-wrapper .cm-content {
+		padding: 8px 12px;
+		font-size: 14px;
+	}
+
+	.alphatex-editor-wrapper .cm-lineNumbers {
+		padding: 8px 4px;
+		font-size: 14px;
+		min-width: 2.5ch;
+	}
+}
+
+/* ===== Focus Ring (Disabled - removed to avoid visual disruption) ===== */
+.alphatex-editor-wrapper .cm-editor:focus-within {
+	/* box-shadow removed - no focus highlight */
+}

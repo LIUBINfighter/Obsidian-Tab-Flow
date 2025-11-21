@@ -1,0 +1,347 @@
+/* TracksPanel - 音轨管理侧边栏样式 */
+
+.tracks-panel {
+	position: fixed;
+	top: 0;
+	right: -400px; /* 从右侧滑入，与 SettingsPanel 一致 */
+	width: 400px;
+	height: 100vh;
+	background-color: var(--background-primary);
+	border-left: 1px solid var(--background-modifier-border);
+	box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+	display: flex;
+	flex-direction: column;
+	z-index: 1000;
+	transition: right 0.3s ease;
+	overflow: hidden;
+}
+
+.tracks-panel-open {
+	right: 0;
+}
+
+/* Header */
+.tracks-panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.tracks-panel-header h3 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+
+.tracks-panel-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.tracks-panel-button {
+	padding: 6px 12px;
+	font-size: 12px;
+	background-color: var(--interactive-normal);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-normal);
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.tracks-panel-button:hover {
+	background-color: var(--interactive-hover);
+	border-color: var(--interactive-accent);
+}
+
+.tracks-panel-button-sm {
+	padding: 4px 8px;
+	font-size: 11px;
+}
+
+.tracks-panel-close {
+	background: transparent;
+	border: none;
+	font-size: 20px;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 4px 8px;
+	border-radius: 4px;
+	transition: all 0.2s;
+}
+
+.tracks-panel-close:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+/* Content */
+.tracks-panel-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px;
+}
+
+.tracks-panel-empty {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	color: var(--text-muted);
+	font-size: 14px;
+}
+
+/* Track Item 样式（与 TracksModal 保持一致，但做一些优化） */
+.tabflow-track-item {
+	background-color: var(--background-primary-alt);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	padding: 12px;
+	margin-bottom: 12px;
+	transition: all 0.2s;
+}
+
+.tabflow-track-item:hover {
+	border-color: var(--background-modifier-border-hover);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tabflow-track-header {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.tabflow-track-header-row-1 {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	width: 100%;
+}
+
+.tabflow-track-header-row-2 {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: 100%;
+}
+
+/* 谱表分组容器 */
+.tabflow-staff-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+}
+
+.tabflow-staff-label {
+	font-size: 11px;
+	color: var(--text-muted);
+	font-weight: 500;
+	min-width: 50px;
+	flex-shrink: 0;
+}
+
+.tabflow-track-info {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	flex: 1;
+}
+
+.tabflow-track-name {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: visible;
+	flex: 1;
+	min-width: 0;
+}
+
+.tabflow-track-controls {
+	display: flex;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.tabflow-btn {
+	padding: 6px 10px;
+	background-color: var(--interactive-normal);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: all 0.2s;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.tabflow-btn:hover {
+	background-color: var(--interactive-hover);
+	color: var(--text-normal);
+}
+
+.tabflow-btn-icon {
+	padding: 6px;
+}
+
+.tabflow-btn-notation {
+	padding: 6px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+/* 紧凑模式下的谱表按钮 - 与 icon 按钮统一风格 */
+.tabflow-btn-icon.tabflow-btn-notation {
+	padding: 6px;
+	font-size: 11px;
+}
+
+.tabflow-notation-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 14px;
+	line-height: 1;
+}
+
+.tabflow-btn.is-active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.tabflow-btn.is-muted {
+	background-color: var(--background-modifier-error);
+	color: var(--text-error);
+	border-color: var(--background-modifier-error-border);
+}
+
+/* Track Settings */
+.tabflow-track-setting {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 0;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.tabflow-track-setting:first-of-type {
+	border-top: none;
+	padding-top: 0;
+}
+
+.tabflow-setting-label {
+	font-size: 12px;
+	color: var(--text-muted);
+	min-width: 80px;
+	flex-shrink: 0;
+}
+
+.tabflow-setting-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 1;
+	min-width: 0;
+}
+
+.tabflow-slider {
+	flex: 1;
+	height: 4px;
+	background: var(--background-modifier-border);
+	border-radius: 2px;
+	outline: none;
+	appearance: none;
+	-webkit-appearance: none;
+}
+
+.tabflow-slider::-webkit-slider-thumb {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 14px;
+	height: 14px;
+	background: var(--interactive-accent);
+	border-radius: 50%;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.tabflow-slider::-webkit-slider-thumb:hover {
+	transform: scale(1.2);
+}
+
+.tabflow-slider::-moz-range-thumb {
+	width: 14px;
+	height: 14px;
+	background: var(--interactive-accent);
+	border: none;
+	border-radius: 50%;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.tabflow-slider::-moz-range-thumb:hover {
+	transform: scale(1.2);
+}
+
+.tabflow-setting-value {
+	font-size: 11px;
+	color: var(--text-muted);
+	min-width: 40px;
+	text-align: right;
+}
+
+/* Footer */
+.tracks-panel-footer {
+	padding: 12px 16px;
+	border-top: 1px solid var(--background-modifier-border);
+	background-color: var(--background-secondary);
+}
+
+.tracks-panel-info {
+	font-size: 12px;
+	color: var(--text-muted);
+	text-align: center;
+}
+
+/* Scrollbar */
+.tracks-panel-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+.tracks-panel-content::-webkit-scrollbar-track {
+	background: var(--background-primary);
+}
+
+.tracks-panel-content::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.tracks-panel-content::-webkit-scrollbar-thumb:hover {
+	background: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+	.tracks-panel {
+		width: 100vw;
+		right: -100vw;
+	}
+}
