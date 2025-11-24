@@ -23,7 +23,7 @@
 	"license": "MPL-2.0",
 	"devDependencies": {
 		"@types/node": "^24.10.1",
-		"@typescript-eslint/eslint-plugin": "^8.46.0",
+		"@typescript-eslint/eslint-plugin": "^8.47.0",
 		"@typescript-eslint/parser": "^8.47.0",
 		"builtin-modules": "5.0.0",
 		"esbuild": "0.27.0",
