@@ -15,9 +15,9 @@ export function renderEditorTab(
 	app: App
 ): Promise<void> {
 	// Editor View Settings
-	tabContents.createEl('h4', {
-		text: t('settings.editor.viewTitle', undefined, '编辑器视图设置'),
-	});
+	new Setting(tabContents)
+		.setName(t('settings.editor.viewTitle', undefined, '编辑器视图设置'))
+		.setHeading();
 
 	// Editor display preferences: font size and bottom gap (number input + unit dropdown)
 	{
@@ -552,8 +552,9 @@ export function renderEditorTab(
 	}
 
 	// Editor Bar Settings
-	tabContents.createEl('h4', { text: t('settings.editor.barTitle', undefined, '编辑器栏设置') });
-
+	new Setting(tabContents)
+		.setName(t('settings.editor.barTitle', undefined, '编辑器栏设置'))
+		.setHeading();
 	new Setting(tabContents)
 		.setName(t('settings.editor.resetToDefault', undefined, '重置为默认'))
 		.setDesc(

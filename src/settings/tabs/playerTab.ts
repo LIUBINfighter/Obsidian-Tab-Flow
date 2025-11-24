@@ -9,8 +9,7 @@ export function renderPlayerTab(
 	plugin: TabFlowPlugin,
 	app: App
 ): Promise<void> {
-	tabContents.createEl('h4', { text: t('settings.player.visualEditorTitle') });
-
+	new Setting(tabContents).setName(t('settings.player.visualEditorTitle')).setHeading();
 	new Setting(tabContents)
 		.setName(t('settings.player.resetToDefault'))
 		.setDesc(t('settings.player.resetToDefaultDesc'))
@@ -424,7 +423,7 @@ export function renderPlayerTab(
 	renderCards();
 
 	// Debug Bar section
-	tabContents.createEl('h3', { text: t('settings.player.debugBar.title') });
+	new Setting(tabContents).setName(t('settings.player.debugBar.title')).setHeading();
 	tabContents.createEl('div', {
 		text: t('settings.player.debugBar.description'),
 		cls: 'tabflow-setting-description',
