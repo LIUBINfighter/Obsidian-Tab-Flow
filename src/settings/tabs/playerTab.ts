@@ -3,6 +3,7 @@ import TabFlowPlugin from '../../main';
 import { setIcon } from 'obsidian';
 import { DEFAULT_SETTINGS, PlayBarComponentVisibility } from '../defaults';
 import { t } from '../../i18n';
+import { formatError } from '../../utils/errorUtils';
 
 export function renderPlayerTab(
 	tabContents: HTMLElement,
@@ -34,7 +35,7 @@ export function renderPlayerTab(
 					}
 					new Notice(t('settings.player.resetToDefaultSuccess'));
 				} catch (e) {
-					new Notice(t('settings.player.resetToDefaultFailed') + ': ' + e);
+					new Notice(t('settings.player.resetToDefaultFailed') + ': ' + formatError(e));
 				}
 			});
 		});

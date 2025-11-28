@@ -4,6 +4,7 @@ import { ASSET_FILES } from '../../services/ResourceLoaderService';
 import { vaultPath } from '../../utils';
 import { AssetStatus } from '../../types/assets';
 import { t } from '../../i18n';
+import { formatError } from '../../utils/errorUtils';
 import path from 'path';
 // @ts-ignore
 import { shell } from 'electron';
@@ -177,7 +178,7 @@ export async function renderGeneralTab(
 			// @ts-ignore
 			shell.showItemInFolder(mainJsPath);
 		} catch (e) {
-			new Notice(t('assetManagement.openDirFailed') + e);
+			new Notice(t('assetManagement.openDirFailed') + ': ' + formatError(e));
 		}
 	};
 
