@@ -120,6 +120,10 @@ export class SettingTab extends PluginSettingTab {
 		];
 
 		let activeTab = this.forcedTab || 'general';
+		// 如果强制激活的标签页是 editor，但 editor 标签页已暂时取消挂载，则回退到 general
+		if (activeTab === 'editor') {
+			activeTab = 'general';
+		}
 		this.forcedTab = undefined;
 
 		const renderTab = async (tabId: string) => {
@@ -131,8 +135,12 @@ export class SettingTab extends PluginSettingTab {
 				const mod = await import('./tabs/playerTab');
 				await mod.renderPlayerTab(contentsEl, this.plugin, this.app);
 			} else if (tabId === 'editor') {
-				const mod = await import('./tabs/editorTab');
-				await mod.renderEditorTab(contentsEl, this.plugin, this.app);
+				// 暂时取消 editor 标签页的挂载，避免重复挂载问题
+				// const mod = await import('./tabs/editorTab');
+				// await mod.renderEditorTab(contentsEl, this.plugin, this.app);
+				// 如果尝试访问 editor 标签页，回退到 general
+				const mod = await import('./tabs/generalTab');
+				await mod.renderGeneralTab(contentsEl, this.plugin, this.app, renderTab);
 			} else if (tabId === 'about') {
 				const mod = await import('./tabs/aboutTab');
 				await mod.renderAboutTab(contentsEl, this.plugin, this.app);
