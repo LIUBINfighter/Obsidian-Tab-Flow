@@ -2,6 +2,7 @@ import { App, Notice, Setting, TextComponent, DropdownComponent } from 'obsidian
 import { setIcon } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
+import { formatError } from '../../utils/errorUtils';
 import { DEFAULT_SETTINGS, EditorBarComponentVisibility } from '../defaults';
 import {
 	createEmbeddableMarkdownEditor,
@@ -511,7 +512,7 @@ export function renderEditorTab(
 								'settings.editor.resetHighlightToDefaultFailed',
 								undefined,
 								'重置失败: '
-							) + e
+							) + formatError(e)
 						);
 					}
 				});
@@ -589,7 +590,8 @@ export function renderEditorTab(
 						);
 					} catch (e) {
 						new Notice(
-							t('settings.editor.resetToDefaultFailed', undefined, '重置失败: ') + e
+							t('settings.editor.resetToDefaultFailed', undefined, '重置失败: ') +
+								formatError(e)
 						);
 					}
 				}

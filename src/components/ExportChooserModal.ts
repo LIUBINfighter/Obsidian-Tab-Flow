@@ -1,5 +1,6 @@
 import { App, Modal, Notice } from 'obsidian';
 import { t } from '../i18n';
+import { formatError } from '../utils/errorUtils';
 
 export interface ExportChooserOptions {
 	app: App;
@@ -78,20 +79,7 @@ export class ExportChooserModal extends Modal {
 						}
 					};
 					const failHandler = (err?: unknown) => {
-						let errMsg = '';
-						if (err instanceof Error) {
-							errMsg = err.message;
-						} else if (err) {
-							if (typeof err === 'string') {
-								errMsg = err;
-							} else {
-								try {
-									errMsg = JSON.stringify(err);
-								} catch {
-									errMsg = String(err);
-								}
-							}
-						}
+						const errMsg = formatError(err);
 						if (errMsg) {
 							new Notice(t('export.audioExportFailedWithError', { error: errMsg }));
 						} else {
@@ -113,7 +101,7 @@ export class ExportChooserModal extends Modal {
 					this.eventBus.publish('命令:导出音频', { fileName: chosenName });
 					this.close();
 				} catch (e) {
-					new Notice(t('export.exportStartFailed') + ': ' + e);
+					new Notice(t('export.exportStartFailed') + ': ' + formatError(e));
 				}
 			})();
 		};
@@ -126,7 +114,7 @@ export class ExportChooserModal extends Modal {
 				this.eventBus.publish('命令:导出MIDI', { fileName: chosenName });
 				this.close();
 			} catch (e) {
-				new Notice(t('export.midiExportFailed') + ': ' + e);
+				new Notice(t('export.midiExportFailed') + ': ' + formatError(e));
 			}
 		};
 
@@ -138,7 +126,7 @@ export class ExportChooserModal extends Modal {
 				this.eventBus.publish('命令:导出PDF', { fileName: chosenName });
 				this.close();
 			} catch (e) {
-				new Notice(t('export.pdfExportFailed') + ': ' + e);
+				new Notice(t('export.pdfExportFailed') + ': ' + formatError(e));
 			}
 		};
 
@@ -150,7 +138,7 @@ export class ExportChooserModal extends Modal {
 				this.eventBus.publish('命令:导出GP', { fileName: chosenName });
 				this.close();
 			} catch (e) {
-				new Notice(t('export.gpExportFailed') + ': ' + e);
+				new Notice(t('export.gpExportFailed') + ': ' + formatError(e));
 			}
 		};
 	}
