@@ -746,7 +746,9 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	}
 
 	const originalRemove = bar.remove.bind(bar);
-	bar.remove = function (this: void) {
+	// Use arrow function to avoid unintentional `this` scoping when the method
+	// is referenced separately from the element.
+	bar.remove = () => {
 		originalRemove();
 	};
 
