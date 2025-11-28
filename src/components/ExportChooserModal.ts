@@ -100,9 +100,9 @@ export class ExportChooserModal extends Modal {
 					this.eventBus.subscribe('状态:音频导出失败', failHandler);
 					this.eventBus.publish('命令:导出音频', { fileName: chosenName });
 					this.close();
-					} catch (e) {
-						new Notice(t('export.exportStartFailed') + ': ' + formatError(e));
-					}
+				} catch (e) {
+					new Notice(t('export.exportStartFailed') + ': ' + formatError(e));
+				}
 			})();
 		};
 

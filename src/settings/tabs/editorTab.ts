@@ -590,7 +590,8 @@ export function renderEditorTab(
 						);
 					} catch (e) {
 						new Notice(
-							t('settings.editor.resetToDefaultFailed', undefined, '重置失败: ') + formatError(e)
+							t('settings.editor.resetToDefaultFailed', undefined, '重置失败: ') +
+								formatError(e)
 						);
 					}
 				}
