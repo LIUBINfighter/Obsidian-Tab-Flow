@@ -35,7 +35,7 @@
 		"typescript": "^5.6.3"
 	},
 	"dependencies": {
-		"@codemirror/commands": "^6.8.1",
+		"@codemirror/commands": "^6.10.0",
 		"@codemirror/highlight": "^0.19.8",
 		"@codemirror/language": "^6.11.3",
 		"@codemirror/rangeset": "^0.19.2",
