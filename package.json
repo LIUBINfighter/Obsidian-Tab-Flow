@@ -41,7 +41,7 @@
 		"@codemirror/rangeset": "^0.19.2",
 		"@codemirror/state": "^6.4.1",
 		"@codemirror/stream-parser": "^0.19.9",
-		"@codemirror/view": "^6.26.3",
+		"@codemirror/view": "^6.39.4",
 		"@coderline/alphatab": "^1.6.3",
 		"@types/mime-types": "^3.0.1",
 		"dom-to-image-more": "^3.7.2",
