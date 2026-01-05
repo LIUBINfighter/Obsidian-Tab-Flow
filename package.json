@@ -26,7 +26,7 @@
 		"@typescript-eslint/eslint-plugin": "^8.48.1",
 		"@typescript-eslint/parser": "^8.48.0",
 		"builtin-modules": "5.0.0",
-		"esbuild": "0.27.0",
+		"esbuild": "0.27.2",
 		"eslint": "^8.57.0",
 		"eslint-plugin-obsidianmd": "^0.1.9",
 		"obsidian": "latest",
@@ -35,11 +35,11 @@
 		"typescript": "^5.6.3"
 	},
 	"dependencies": {
-		"@codemirror/commands": "^6.10.0",
+		"@codemirror/commands": "^6.10.1",
 		"@codemirror/highlight": "^0.19.8",
 		"@codemirror/language": "^6.11.3",
 		"@codemirror/rangeset": "^0.19.2",
-		"@codemirror/state": "^6.4.1",
+		"@codemirror/state": "^6.5.3",
 		"@codemirror/stream-parser": "^0.19.9",
 		"@codemirror/view": "^6.26.3",
 		"@coderline/alphatab": "^1.6.3",
