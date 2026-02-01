@@ -98,3 +98,8 @@ Copyright (c) 2025 Jay Bridge 及其他贡献者。保留所有权利。
 <!-- ## 开发环境 -->
 
 <!-- VSCode -->
+
+## Special Thanks to
+
+![alphaTab 徽标](assets/alphaTab.svg)
+
