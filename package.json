@@ -24,8 +24,8 @@
 	"license": "MPL-2.0",
 	"devDependencies": {
 		"@types/node": "^24.10.1",
-		"@typescript-eslint/eslint-plugin": "^8.46.0",
-		"@typescript-eslint/parser": "^8.47.0",
+		"@typescript-eslint/eslint-plugin": "^8.48.1",
+		"@typescript-eslint/parser": "^8.48.0",
 		"builtin-modules": "5.0.0",
 		"esbuild": "0.27.0",
 		"eslint": "^8.57.0",
@@ -62,5 +62,6 @@
 		"react": "^19.2.0",
 		"react-dom": "^19.2.0",
 		"zustand": "^5.0.8"
+		"color-convert": "^3.1.3"
 	}
 }
