@@ -1,81 +1,81 @@
 name: CI
 
 on:
-  push:
-    branches: [ master, dev ]
-  pull_request:
-    branches: [ master, dev ]
-  workflow_dispatch:
+    push:
+        branches: [master, dev]
+    pull_request:
+        branches: [master, dev]
+    workflow_dispatch:
 
 jobs:
-  lint-and-build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    lint-and-build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          persist-credentials: true
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+                  persist-credentials: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
+            - name: Setup Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '20'
+                  cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+            - name: Install dependencies
+              run: npm ci
 
-      - name: Run lint
-        run: npm run lint
+            - name: Run lint
+              run: npm run lint
 
-      - name: Run formatting
-        run: npm run format
-      - name: Commit and push formatted code
-        if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git diff --quiet || (git add . && git commit -m "chore: format code" && git push)
+            - name: Run formatting
+              run: npm run format
+            - name: Commit and push formatted code
+              if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') }}
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git diff --quiet || (git add . && git commit -m "chore: format code" && git push)
 
-      - name: Build project
-        run: npm run build
+            - name: Build project
+              run: npm run build
 
-  codeql-analysis:
-    name: CodeQL Analysis
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      actions: read
-      security-events: write
+    codeql-analysis:
+        name: CodeQL Analysis
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            actions: read
+            security-events: write
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: javascript
-          # include custom queries
-          queries: ./.github/codeql-custom-queries
+            - name: Initialize CodeQL
+              uses: github/codeql-action/init@v4
+              with:
+                  languages: javascript
+                  # include custom queries
+                  queries: ./.github/codeql-custom-queries
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+            - name: Autobuild
+              uses: github/codeql-action/autobuild@v4
 
-      - name: Run CodeQL database analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "security-and-quality"
+            - name: Run CodeQL database analysis
+              uses: github/codeql-action/analyze@v4
+              with:
+                  category: 'security-and-quality'
 
-    #   - name: Upload build artifacts
-    #     uses: actions/upload-artifact@v4
-    #     with:
-    #       name: build-files
-    #       path: |
-    #         main.js
-    #         manifest.json
-    #         styles.css
+        #   - name: Upload build artifacts
+        #     uses: actions/upload-artifact@v4
+        #     with:
+        #       name: build-files
+        #       path: |
+        #         main.js
+        #         manifest.json
+        #         styles.css

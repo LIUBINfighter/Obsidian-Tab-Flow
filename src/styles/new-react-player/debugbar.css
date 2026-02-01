@@ -1,0 +1,291 @@
+/* PlayBar - 播放控制栏样式 (参考 DebugBar 设计) */
+
+/* ============================================
+   主容器 - 圆角边框 + flex-wrap 布局
+   ============================================ */
+.tab-flow-play-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+	padding: 0.5em;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	margin: 0.5em 0;
+	flex-shrink: 0;
+	user-select: none;
+}
+
+/* ============================================
+   按钮样式 - 参考 clickable-icon 风格
+   ============================================ */
+.tab-flow-play-bar .play-bar-button,
+.tab-flow-play-bar .play-bar-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	padding: 6px 8px;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: all 0.15s ease;
+	font-size: 13px;
+	line-height: 1;
+	min-height: 28px;
+}
+
+.tab-flow-play-bar .play-bar-button:hover:not(:disabled),
+.tab-flow-play-bar .play-bar-btn:hover:not(:disabled) {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.tab-flow-play-bar .play-bar-button:active:not(:disabled),
+.tab-flow-play-bar .play-bar-btn:active:not(:disabled) {
+	background: var(--background-modifier-active-hover);
+	transform: scale(0.98);
+}
+
+.tab-flow-play-bar .play-bar-button:disabled,
+.tab-flow-play-bar .play-bar-btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+/* 激活状态 */
+.tab-flow-play-bar .play-bar-button.active,
+.tab-flow-play-bar .play-bar-btn.active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+}
+
+.tab-flow-play-bar .play-bar-button.active:hover:not(:disabled),
+.tab-flow-play-bar .play-bar-btn.active:hover:not(:disabled) {
+	background: var(--interactive-accent-hover);
+}
+
+/* SVG 图标样式 */
+.tab-flow-play-bar .play-bar-button svg,
+.tab-flow-play-bar .play-bar-btn svg {
+	width: 16px;
+	height: 16px;
+	stroke-width: 2;
+	flex-shrink: 0;
+}
+
+/* 按钮文本 */
+.tab-flow-play-bar .play-bar-button-text {
+	font-size: 12px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+/* 音轨计数 */
+.tab-flow-play-bar .track-count {
+	font-size: 11px;
+	font-weight: 600;
+	background: var(--background-modifier-border);
+	padding: 1px 4px;
+	border-radius: var(--radius-xs);
+	min-width: 24px;
+	text-align: center;
+}
+
+/* ============================================
+   按钮组容器
+   ============================================ */
+.tab-flow-play-bar .play-bar-group {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.tab-flow-play-bar .play-bar-button-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.tab-flow-play-bar .play-bar-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+/* ============================================
+   控制器 - 图标 + 下拉菜单
+   ============================================ */
+.tab-flow-play-bar .play-bar-control {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0;
+	border-radius: 0;
+	background: transparent;
+	transition: none;
+}
+
+.tab-flow-play-bar .play-bar-control:hover {
+	background: transparent;
+}
+
+.tab-flow-play-bar .play-bar-control-icon {
+	color: var(--text-muted);
+	flex-shrink: 0;
+	width: 16px;
+	height: 16px;
+	stroke-width: 2;
+}
+
+.tab-flow-play-bar .play-bar-control-select {
+	padding: 4px 8px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	background: var(--background-primary-alt);
+	color: var(--text-normal);
+	font-size: 12px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	font-weight: 500;
+	white-space: nowrap;
+	min-width: 80px;
+}
+
+.tab-flow-play-bar .play-bar-control-select:hover {
+	border-color: var(--background-modifier-border-hover);
+}
+
+.tab-flow-play-bar .play-bar-control-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+	background: var(--background-primary-alt);
+}
+
+/* ============================================
+   时间显示
+   ============================================ */
+.play-bar-time {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-family: var(--font-monospace);
+	font-size: 13px;
+	color: var(--text-normal);
+	font-variant-numeric: tabular-nums;
+	min-width: 90px;
+	margin-left: 0.5em;
+}
+
+.time-current {
+	color: var(--interactive-accent);
+	font-weight: 500;
+}
+
+.time-separator {
+	color: var(--text-muted);
+}
+
+.time-total {
+	color: var(--text-muted);
+}
+
+/* ============================================
+   状态指示器
+   ============================================ */
+.play-bar-status {
+	margin-left: auto;
+	font-size: 12px;
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+/* ============================================
+   响应式设计 - 小屏幕优化
+   ============================================ */
+@media (max-width: 768px) {
+	.tab-flow-play-bar {
+		gap: 0.4em;
+		padding: 0.4em;
+	}
+
+	.tab-flow-play-bar .play-bar-button,
+	.tab-flow-play-bar .play-bar-btn {
+		padding: 4px 6px;
+		min-height: 24px;
+		font-size: 12px;
+	}
+
+	.tab-flow-play-bar .play-bar-button svg,
+	.tab-flow-play-bar .play-bar-btn svg {
+		width: 14px;
+		height: 14px;
+	}
+
+	.tab-flow-play-bar .play-bar-button-text {
+		font-size: 11px;
+	}
+
+	.tab-flow-play-bar .track-count {
+		font-size: 10px;
+		padding: 1px 3px;
+		min-width: 20px;
+	}
+
+	.play-bar-time {
+		font-size: 12px;
+		min-width: 80px;
+	}
+
+	.speed-select,
+	.speed-label,
+	.metronome-label {
+		font-size: 12px;
+	}
+}
+
+/* ============================================
+   深色/浅色模式优化
+   ============================================ */
+.theme-dark .tab-flow-play-bar {
+	background: var(--background-primary-alt);
+}
+
+.theme-light .tab-flow-play-bar {
+	background: var(--background-secondary);
+}
+
+/* ============================================
+   聚焦样式 - 键盘导航
+   ============================================ */
+.play-bar-btn:focus-visible,
+.speed-select:focus-visible {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: 2px;
+}
+
+/* ============================================
+   加载状态
+   ============================================ */
+.play-bar-btn.loading {
+	pointer-events: none;
+	opacity: 0.6;
+}
+
+.play-bar-btn.loading svg {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}

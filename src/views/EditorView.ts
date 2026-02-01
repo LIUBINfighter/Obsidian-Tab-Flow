@@ -1,16 +1,10 @@
-import { FileView, TFile, WorkspaceLeaf, type EventRef } from 'obsidian';
+import { FileView, TFile, WorkspaceLeaf } from 'obsidian';
+import React from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import {
-	createEmbeddableMarkdownEditor,
-	type EmbeddableMarkdownEditor,
-} from '../editor/EmbeddableMarkdownEditor';
-import type { ProgressBarElement } from '../components/ProgressBar.types';
-import {
-	createAlphaTexPlayground,
-	AlphaTexPlaygroundHandle,
-} from '../components/AlphaTexPlayground';
-import { createEditorBar } from '../components/EditorBar';
-import { EventBus } from '../utils/EventBus';
-import { formatTime } from '../utils';
+	createAlphaTexEditor,
+	type AlphaTexCodeMirrorEditor,
+} from '../editor/AlphaTexCodeMirrorEditor';
 import ShareCardModal from '../components/ShareCardModal';
 import {
 	getBarAtOffset,
@@ -20,12 +14,16 @@ import {
 } from '../utils/alphatexParser';
 import { t } from '../i18n';
 import TabFlowPlugin from '../main';
+import { PlayerController, type PlayerControllerResources } from '../player/PlayerController';
+import { StoreFactory, type StoreCollection } from '../player/store/StoreFactory';
+import { TablatureView } from '../player/components/TablatureView';
+import { VIEW_TYPE_REACT } from '../player/ReactView';
+import { VIEW_TYPE_PRINT_PREVIEW } from './PrintPreviewView';
 
 export const VIEW_TYPE_ALPHATEX_EDITOR = 'alphatex-editor-view';
 
 export class EditorView extends FileView {
-	private editor: EmbeddableMarkdownEditor | null = null;
-	private playground: AlphaTexPlaygroundHandle | null = null;
+	private editor: AlphaTexCodeMirrorEditor | null = null;
 	private container: HTMLElement;
 	private layout:
 		| 'horizontal'
@@ -34,8 +32,14 @@ export class EditorView extends FileView {
 		| 'vertical-swapped'
 		| 'single-bar' = 'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
-	private eventBus: EventBus;
-	private progressBar: ProgressBarElement | null = null; // 保存进度条引用
+	private playerStoreFactory: StoreFactory;
+	private playerStores: StoreCollection | null = null;
+	private playerController: PlayerController | null = null;
+	private playerRoot: Root | null = null;
+	private playerContainer: HTMLDivElement | null = null;
+	private playerApiReadyUnsubscribe: (() => void) | null = null;
+	private pendingPlayerTex: string | null = null;
+	private currentBarInfoEl: HTMLDivElement | null = null;
 	private lastSavedContent = '';
 	private pendingSaveTimer: number | null = null;
 
@@ -95,7 +99,9 @@ export class EditorView extends FileView {
 	}
 	private layoutToggleAction: HTMLElement | null = null;
 	private newFileAction: HTMLElement | null = null;
+	private documentAction: HTMLElement | null = null;
 	private settingsAction: HTMLElement | null = null;
+	private switchToPlayerAction: HTMLElement | null = null;
 
 	constructor(
 		leaf: WorkspaceLeaf,
@@ -103,22 +109,7 @@ export class EditorView extends FileView {
 	) {
 		super(leaf);
 		this.container = this.contentEl;
-		this.eventBus = new EventBus();
-		// 宽化 workspace.on 类型以订阅自定义事件
-		const workspaceWithEvents = this.app.workspace as {
-			on?: (name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => EventRef;
-		};
-		const workspaceOn = workspaceWithEvents.on;
-		if (typeof workspaceOn === 'function') {
-			const eventRef = workspaceOn.call(
-				this.app.workspace,
-				'tabflow:editorbar-components-changed',
-				() => {
-					this._remountEditorBar();
-				}
-			);
-			if (eventRef) this.registerEvent(eventRef);
-		}
+		this.playerStoreFactory = new StoreFactory(plugin);
 
 		// 从视图状态中读取布局参数，如果没有则使用插件默认设置
 		const state = leaf.getViewState();
@@ -153,7 +144,7 @@ export class EditorView extends FileView {
 							// 无论是否有本地未保存更改，自动用磁盘最新内容覆盖编辑器视图（按需求自动更新）
 							if (this.editor.value !== latest) {
 								this.editor.set(latest, false);
-								this.playground?.setValue(latest);
+								this.updatePlayerWithEditorValue();
 								this.lastSavedContent = latest;
 								// new Notice(
 								// 	t(
@@ -173,24 +164,6 @@ export class EditorView extends FileView {
 				}
 			}
 		};
-
-		// 监听 EditorBar 设置变化事件，实现实时更新（向后兼容可能的插件广播接口）
-		const legacyOn = Reflect.get(this.app.workspace, 'on');
-		if (typeof legacyOn === 'function') {
-			const unsubscribe = legacyOn.call(
-				this.app.workspace,
-				'tabflow:editorbar-components-changed',
-				() => {
-					try {
-						console.debug('[EditorView] 检测到 EditorBar 设置变化，正在重新渲染...');
-						this._remountEditorBar();
-					} catch (e) {
-						console.warn('[EditorView] 重新渲染 EditorBar 失败:', e);
-					}
-				}
-			);
-			if (typeof unsubscribe === 'function') this.registerEvent(unsubscribe);
-		}
 	}
 
 	getViewType(): string {
@@ -241,10 +214,7 @@ export class EditorView extends FileView {
 		// 清除挂起的自动保存计时器
 		this.clearPendingSave();
 
-		if (this.playground) {
-			this.playground.destroy();
-			this.playground = null;
-		}
+		this.disposeReactPlayer();
 		if (this.editor) {
 			this.editor.destroy();
 			this.editor = null;
@@ -277,6 +247,26 @@ export class EditorView extends FileView {
 			}
 			this.newFileAction = null;
 		} catch {
+			// ignore
+		}
+
+		// 清理文档按钮
+		try {
+			if (this.documentAction && this.documentAction.parentElement) {
+				this.documentAction.remove();
+			}
+			this.documentAction = null;
+		} catch (_) {
+			// ignore
+		}
+
+		// 清理切换到播放器按钮
+		try {
+			if (this.switchToPlayerAction && this.switchToPlayerAction.parentElement) {
+				this.switchToPlayerAction.remove();
+			}
+			this.switchToPlayerAction = null;
+		} catch (_) {
 			// ignore
 		}
 	}
@@ -354,60 +344,34 @@ export class EditorView extends FileView {
 			// ignore
 		}
 
-		this.editor = createEmbeddableMarkdownEditor(this.app, editorWrapper, {
+		this.editor = createAlphaTexEditor(editorWrapper, {
 			value: content,
 			placeholder: t('alphatex.editor.placeholder', undefined, '输入 AlphaTex 内容...'),
 			onChange: (update) => {
-				// 当编辑器内容变化时，更新预览并触发防抖自动保存
-				if (this.playground && this.editor) {
-					this.playground.setValue(this.editor.value);
-				}
-				this.scheduleSave(1000);
-
-				// 在单小节模式下处理光标变化
-				if (this.layout === 'single-bar' && update.view) {
+				// 确保编辑器已完全初始化后再访问
+				if (!this.editor || !this.editor.loaded) return;
+				try {
 					const cursorPos = update.view.state.selection.main.head;
-					this.handleCursorChange(cursorPos);
+					this.updatePlayerWithEditorValue(cursorPos);
+					this.scheduleSave(1000);
+				} catch (error) {
+					// 静默处理编辑器未就绪时的错误
+					console.debug('[EditorView] onChange callback skipped:', error);
 				}
 			},
 			highlightSettings: this.plugin.settings.editorHighlights || {},
 		});
 
-		// 创建 playground 预览
+		// 创建 React 播放器预览
 		let initialPreviewContent = content;
 		let currentBarInfo = '';
 		if (this.layout === 'single-bar') {
-			// 在单小节模式下，初始显示第一个小节
 			initialPreviewContent = this.generateFocusedContent(content, 0);
 			const barNumber = getBarNumberAtOffset(content, 0);
 			currentBarInfo =
 				barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
 		}
-		this.playground = createAlphaTexPlayground(
-			this.plugin,
-			previewContainer,
-			initialPreviewContent,
-			{
-				layout: this.layout,
-				readOnly: true, // 预览模式为只读
-				showEditor: false, // 不显示编辑区
-				eventBus: this.eventBus, // 传递 eventBus
-				currentBarInfo,
-				// 当处于 single-bar 模式时，预览不应写回编辑器（仅单向：编辑器 -> 预览）
-				onChange:
-					this.layout === 'single-bar'
-						? undefined
-						: (value: string) => {
-								// 预览内容变化时，同步到编辑器（仅在非 single-bar 模式）
-								if (this.editor && this.editor.value !== value) {
-									this.editor.set(value, false);
-								}
-							},
-			}
-		);
-
-		// 创建编辑器栏（EditorBar）
-		this._mountEditorBar();
+		this.mountReactPlayer(previewContainer, initialPreviewContent, currentBarInfo);
 
 		// 添加统一的设置按钮（右上角 view-action） -> 跳转到 SettingTab 的 editor 子页签
 		// NOTE:
@@ -415,16 +379,59 @@ export class EditorView extends FileView {
 		// 新添加的 action 会出现在已有 action 的左侧（即插入顺序决定从右到左的可视顺序）。
 		// 因此若希望某个按钮出现在最右侧（视觉上靠右），需要先添加该按钮，再添加其它按钮。
 		try {
-			// 先添加“新建文件”按钮，使其显示在最右侧
+			// 先添加"切换到播放器"按钮，使其显示在最右侧
+			if (this.switchToPlayerAction && this.switchToPlayerAction.parentElement) {
+				this.switchToPlayerAction.remove();
+				this.switchToPlayerAction = null;
+			}
+			const switchToPlayerBtn = this.addAction('list-music', '切换到播放器视图', () => {
+				if (!this.file) return;
+				// 先保存当前编辑器的内容，确保切换到播放器视图时文件是最新的
+				const file = this.file; // 保存文件引用，避免在异步函数中 this.file 可能为 null
+				void (async () => {
+					await this.flushSave();
+					if (!file) return; // 再次检查，确保文件仍然存在
+					await this.leaf.setViewState({
+						type: VIEW_TYPE_REACT,
+						state: { file: file.path },
+					});
+				})();
+			});
+			this.switchToPlayerAction = switchToPlayerBtn;
+
+			// 添加"新建文件"按钮
 			if (this.newFileAction && this.newFileAction.parentElement) {
 				this.newFileAction.remove();
 				this.newFileAction = null;
 			}
-			const newFileBtn = this.addAction('document', '新建文件', () => {
+			const newFileBtn = this.addAction('image-up', '分享卡片', () => {
 				const modal = new ShareCardModal(this.plugin);
 				modal.open();
 			});
 			this.newFileAction = newFileBtn;
+
+			// 添加"打印预览"按钮
+			if (this.documentAction && this.documentAction.parentElement) {
+				this.documentAction.remove();
+				this.documentAction = null;
+			}
+			const docBtn = this.addAction('printer', '打印预览', async () => {
+				if (!this.file) return;
+
+				// 确保当前编辑器内容已保存
+				await this.flushSave();
+
+				// 1. 先在新标签页打开文件
+				const leaf = this.app.workspace.getLeaf('tab');
+				await leaf.openFile(this.file);
+
+				// 2. 然后切换视图到 PrintPreviewView
+				await leaf.setViewState({
+					type: VIEW_TYPE_PRINT_PREVIEW,
+					state: { file: this.file.path },
+				});
+			});
+			this.documentAction = docBtn;
 
 			if (this.settingsAction && this.settingsAction.parentElement) {
 				this.settingsAction.remove();
@@ -481,122 +488,170 @@ export class EditorView extends FileView {
 		}
 	}
 
-	/**
-	 * 挂载或重新挂载 EditorBar
-	 */
-	private _mountEditorBar(): void {
-		// 移除现有的 EditorBar
-		const existingBar = this.container.querySelector('.alphatex-editor-bar');
-		if (existingBar) {
-			existingBar.remove();
+	private getPlayerResources(): PlayerControllerResources | null {
+		const resources = this.plugin.resources;
+		if (!resources?.bravuraUri || !resources.alphaTabWorkerUri) {
+			return null;
 		}
-
-		// 创建新的 EditorBar 容器
-		const editorBarContainer = this.container.createDiv({ cls: 'alphatex-editor-bar' });
-		const editorBar = createEditorBar({
-			app: this.app,
-			eventBus: this.eventBus,
-			initialPlaying: false,
-			getCurrentTime: () => {
-				const api = this.playground?.getApi();
-				if (!api || typeof api !== 'object') return 0;
-				const position = Reflect.get(api, 'timePosition');
-				return typeof position === 'number' ? position : 0;
-			},
-			getDuration: () => {
-				const api = this.playground?.getApi();
-				const score = api?.score as
-					| { durationMillis?: number; duration?: number }
-					| undefined;
-				if (!score) return 0;
-				return (
-					(typeof score.durationMillis === 'number' ? score.durationMillis : undefined) ??
-					(typeof score.duration === 'number' ? score.duration : 0)
-				);
-			},
-			seekTo: (ms: number) => {
-				const api = this.playground?.getApi();
-				if (api && typeof api === 'object') {
-					Reflect.set(api, 'timePosition', ms);
-				}
-			},
-			onAudioCreated: (audioEl: HTMLAudioElement) => {
-				// 编辑器视图可能不需要音频集成，暂时留空
-			},
-			getApi: () => this.playground?.getApi() || null,
-			onProgressBarCreated: (progressBar: ProgressBarElement) => {
-				this.progressBar = progressBar;
-				// 推迟设置事件监听器，直到 API 可用
-				const setupProgressUpdate = () => {
-					const api = this.playground?.getApi();
-					if (api && api.playerPositionChanged) {
-						api.playerPositionChanged.on((args: unknown) => {
-							interface PlayerPositionArgs {
-								currentTime?: number;
-								endTime?: number;
-							}
-							const position = (args as PlayerPositionArgs).currentTime;
-							const duration = (args as PlayerPositionArgs).endTime;
-							if (this.progressBar && this.progressBar.updateProgress) {
-								// 更新进度条
-								this.progressBar.updateProgress(position, duration);
-
-								// 同时更新时间显示元素
-								const editorBarContainer =
-									this.containerEl.querySelector('.alphatex-editor-bar');
-								if (editorBarContainer) {
-									const currentTimeDisplay = editorBarContainer.querySelector(
-										'.play-time.current-time'
-									) as HTMLSpanElement;
-									const totalTimeDisplay = editorBarContainer.querySelector(
-										'.play-time.total-time'
-									) as HTMLSpanElement;
-
-									if (currentTimeDisplay && totalTimeDisplay) {
-										currentTimeDisplay.textContent = formatTime(position || 0);
-										totalTimeDisplay.textContent = formatTime(duration || 0);
-									}
-								}
-							}
-						});
-						// console.log('[EditorView] 进度条事件监听器已设置');
-					} else {
-						// 如果 API 还不可用，稍后重试
-						setTimeout(setupProgressUpdate, 100);
-					}
-				};
-				setupProgressUpdate();
-			},
-		});
-		editorBarContainer.appendChild(editorBar);
+		return {
+			bravuraUri: resources.bravuraUri || '',
+			alphaTabWorkerUri: resources.alphaTabWorkerUri || '',
+			soundFontUri: resources.soundFontUri || '',
+		};
 	}
 
-	/**
-	 * 重新挂载 EditorBar（用于设置变化时的实时更新）
-	 */
-	private _remountEditorBar(): void {
-		this._mountEditorBar();
+	private mountReactPlayer(
+		previewContainer: HTMLElement,
+		initialContent: string,
+		currentBarInfo: string
+	): void {
+		const resources = this.getPlayerResources();
+		if (!resources) {
+			const holder = previewContainer.createDiv({ cls: 'alphatex-block' });
+			holder.createEl('div', { text: t('playground.resourcesMissing') });
+			const btn = holder.createEl('button', { text: t('playground.downloadResources') });
+			btn.addEventListener(
+				'click',
+				() =>
+					void (async () => {
+						btn.setAttr('disabled', 'true');
+						btn.setText(t('playground.downloading'));
+						try {
+							const ok = await this.plugin.downloadAssets();
+							btn.removeAttribute('disabled');
+							btn.setText(
+								ok
+									? t('playground.downloadCompleted')
+									: t('playground.downloadFailed')
+							);
+						} catch {
+							btn.removeAttribute('disabled');
+							btn.setText(t('playground.downloadFailed'));
+						}
+					})()
+			);
+			return;
+		}
+
+		if (this.layout === 'single-bar') {
+			this.currentBarInfoEl = previewContainer.createDiv({ cls: 'alphatex-bar-info' });
+			this.setCurrentBarInfo(currentBarInfo);
+		}
+
+		this.playerStores = this.playerStoreFactory.createStores(this);
+		this.playerController = new PlayerController(this.plugin, resources, this.playerStores);
+		this.playerContainer = previewContainer.createDiv({
+			cls: 'react-tab-view-container',
+			attr: {
+				style: 'width: 100%; height: 100%; position: relative;',
+			},
+		});
+		this.playerRoot = createRoot(this.playerContainer);
+		// 在 EditorView 中不显示 DebugBar，使用更简洁的界面
+		this.playerRoot.render(
+			React.createElement(TablatureView, {
+				controller: this.playerController,
+				options: {
+					showDebugBar: false, // EditorView 中不显示 DebugBar
+					showPlayBar: true,
+					showSettingsPanel: true,
+					showTracksPanel: true,
+					showMediaSync: true,
+				},
+			})
+		);
+
+		const runtimeStore = this.playerController.getRuntimeStore();
+		let lastApiReady = runtimeStore.getState().apiReady;
+		if (lastApiReady) {
+			this.flushPendingPlayerTex();
+		}
+		this.playerApiReadyUnsubscribe = runtimeStore.subscribe((state) => {
+			if (state.apiReady && !lastApiReady) {
+				this.flushPendingPlayerTex();
+			}
+			lastApiReady = state.apiReady;
+		});
+
+		this.queuePlayerRender(initialContent);
+	}
+
+	private disposeReactPlayer(): void {
+		if (this.playerApiReadyUnsubscribe) {
+			this.playerApiReadyUnsubscribe();
+			this.playerApiReadyUnsubscribe = null;
+		}
+		if (this.playerRoot) {
+			this.playerRoot.unmount();
+			this.playerRoot = null;
+		}
+		if (this.playerController) {
+			this.playerController.destroy();
+			this.playerController = null;
+		}
+		if (this.playerStores) {
+			this.playerStoreFactory.destroyStores(this.playerStores);
+			this.playerStores = null;
+		}
+		if (this.playerContainer) {
+			this.playerContainer.remove();
+			this.playerContainer = null;
+		}
+		if (this.currentBarInfoEl) {
+			this.currentBarInfoEl.remove();
+			this.currentBarInfoEl = null;
+		}
+		this.pendingPlayerTex = null;
+	}
+
+	private queuePlayerRender(tex: string): void {
+		if (!this.playerController) return;
+		this.pendingPlayerTex = tex;
+		const runtimeStore = this.playerController.getRuntimeStore();
+		if (runtimeStore.getState().apiReady) {
+			this.flushPendingPlayerTex();
+		}
+	}
+
+	private flushPendingPlayerTex(): void {
+		if (!this.playerController || this.pendingPlayerTex === null) {
+			return;
+		}
+		const tex = this.pendingPlayerTex;
+		this.pendingPlayerTex = null;
+		this.playerController.loadScoreFromAlphaTex(tex).catch((error) => {
+			console.error('[EditorView] Failed to render preview:', error);
+		});
+	}
+
+	private setCurrentBarInfo(info: string): void {
+		if (!this.currentBarInfoEl) return;
+		this.currentBarInfoEl.empty();
+		this.currentBarInfoEl.createEl('span', { text: info });
+	}
+
+	private updatePlayerWithEditorValue(cursorPos?: number): void {
+		if (!this.editor) return;
+		const content = this.editor.value;
+		if (this.layout === 'single-bar') {
+			const position = cursorPos ?? 0;
+			const focusedContent = this.generateFocusedContent(content, position);
+			this.queuePlayerRender(focusedContent);
+			const barNumber = getBarNumberAtOffset(content, position);
+			const info =
+				barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
+			this.setCurrentBarInfo(info);
+		} else {
+			this.queuePlayerRender(content);
+		}
 	}
 
 	/**
 	 * 处理光标变化事件（用于单小节模式）
 	 */
 	private handleCursorChange(cursorPos: number): void {
-		if (this.layout !== 'single-bar' || !this.playground || !this.editor) return;
-
-		try {
-			const content = this.editor.value;
-			const focusedContent = this.generateFocusedContent(content, cursorPos);
-			this.playground.setValue(focusedContent);
-
-			// 更新当前小节信息
-			const barNumber = getBarNumberAtOffset(content, cursorPos);
-			const currentBarInfo =
-				barNumber !== null ? t('alphatex.currentBar', { number: barNumber + 1 }) : '';
-			this.playground.updateCurrentBarInfo(currentBarInfo);
-		} catch (error) {
-			console.warn('[EditorView] 处理光标变化失败:', error);
-		}
+		if (this.layout !== 'single-bar') return;
+		this.updatePlayerWithEditorValue(cursorPos);
 	}
 
 	/**
