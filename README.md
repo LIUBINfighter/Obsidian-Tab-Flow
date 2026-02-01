@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/993982366.svg)](https://doi.org/10.5281/zenodo.18446852)
 [![CI](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/actions/workflows/ci.yml)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/LIUBINfighter/Obsidian-Tab-Flow)](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/releases/latest)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LIUBINfighter/obsidian-tab-flow)
