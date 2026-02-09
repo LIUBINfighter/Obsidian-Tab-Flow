@@ -1,4 +1,9 @@
-# Obsidian 交互式吉他谱插件
+[![DOI](https://zenodo.org/badge/993982366.svg)](https://doi.org/10.5281/zenodo.18446852)
+[![CI](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/actions/workflows/ci.yml/badge.svg)](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/actions/workflows/ci.yml)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/LIUBINfighter/Obsidian-Tab-Flow)](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/releases/latest)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LIUBINfighter/obsidian-tab-flow)
+
+# Obsidian 交互式吉他谱插件 Tab Flow
 
 在 Obsidian 中演奏和创作你的吉他谱！
 
@@ -98,3 +103,8 @@ Copyright (c) 2025 Jay Bridge 及其他贡献者。保留所有权利。
 <!-- ## 开发环境 -->
 
 <!-- VSCode -->
+
+## Special Thanks to
+
+![alphaTab 徽标](assets/alphaTab.svg)
+

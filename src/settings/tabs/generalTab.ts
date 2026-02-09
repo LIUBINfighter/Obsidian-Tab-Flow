@@ -4,6 +4,7 @@ import { ASSET_FILES } from '../../services/ResourceLoaderService';
 import { vaultPath } from '../../utils';
 import { AssetStatus } from '../../types/assets';
 import { t } from '../../i18n';
+import { formatError } from '../../utils/errorUtils';
 import path from 'path';
 // @ts-ignore
 import { shell } from 'electron';
@@ -48,7 +49,7 @@ export async function renderGeneralTab(
 	app: App,
 	renderTab: (id: string) => Promise<void>
 ): Promise<void> {
-	tabContents.createEl('h3', { text: t('assetManagement.assetFileManagement') });
+	new Setting(tabContents).setName(t('assetManagement.assetFileManagement')).setHeading();
 
 	const assetsStatusContainer = tabContents.createDiv({
 		cls: 'tabflow-setting-description tabflow-assets-status',
@@ -177,7 +178,7 @@ export async function renderGeneralTab(
 			// @ts-ignore
 			shell.showItemInFolder(mainJsPath);
 		} catch (e) {
-			new Notice(t('assetManagement.openDirFailed') + e);
+			new Notice(t('assetManagement.openDirFailed') + ': ' + formatError(e));
 		}
 	};
 

@@ -59,7 +59,7 @@ export class ShareCardPresetService {
 					'#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('')
 				).toLowerCase();
 			}
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 		return fallback;

@@ -360,7 +360,7 @@ export function createAlphaTexPlayground(
 		// 清理旧实例
 		try {
 			mounted?.destroy?.();
-		} catch (_) {
+		} catch {
 			/* ignore */
 		}
 		previewWrap.empty();
@@ -390,7 +390,7 @@ export function createAlphaTexPlayground(
 									? t('playground.downloadCompleted')
 									: t('playground.downloadFailed')
 							);
-						} catch (_) {
+						} catch {
 							btn.removeAttribute('disabled');
 							btn.setText(t('playground.downloadFailed'));
 						}
@@ -499,7 +499,7 @@ export function createAlphaTexPlayground(
 		if (!document.body.contains(wrapper)) {
 			try {
 				mounted?.destroy?.();
-			} catch (_) {
+			} catch {
 				/* ignore */
 			}
 			observer.disconnect();
@@ -517,7 +517,7 @@ export function createAlphaTexPlayground(
 		destroy: () => {
 			try {
 				mounted?.destroy?.();
-			} catch (_) {
+			} catch {
 				/* silent */
 			}
 			observer.disconnect();

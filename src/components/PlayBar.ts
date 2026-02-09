@@ -607,9 +607,12 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 		updateProgress();
 	}
 
-	const originalRemove = bar.remove;
-	bar.remove = function (this: void) {
-		originalRemove.call(bar);
+	const originalRemove = bar.remove.bind(bar);
+	// Use arrow function to avoid unintentional `this` scoping when the method
+	// is referenced separately from the element. Arrow functions capture lexical
+	// `this` and do not create their own `this` context.
+	bar.remove = () => {
+		originalRemove();
 	};
 
 	return bar;

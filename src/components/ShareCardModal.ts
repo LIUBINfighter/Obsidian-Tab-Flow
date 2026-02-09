@@ -553,7 +553,7 @@ export class ShareCardModal extends Modal {
 					if (this.cardRoot) this.setCardWidth(w);
 					try {
 						this.playgroundHandle?.refresh();
-					} catch (_) {
+					} catch {
 						/* ignore refresh errors */
 					}
 					this.renderAuthorBlock();
@@ -727,7 +727,7 @@ export class ShareCardModal extends Modal {
 				if (!this.modalEl.contains(target)) {
 					this.close();
 				}
-			} catch (_) {
+			} catch {
 				// 忽略任何异常
 			}
 		};
@@ -759,7 +759,7 @@ export class ShareCardModal extends Modal {
 			previewWrap.classList.remove('panning');
 			try {
 				previewWrap.releasePointerCapture(e.pointerId);
-			} catch (_) {
+			} catch {
 				/* ignore */
 			}
 		};
@@ -1059,12 +1059,12 @@ export class ShareCardModal extends Modal {
 				this.plugin.settings.shareCardLastUsedPresetId = this.currentPresetId;
 				void this.plugin.saveSettings();
 			}
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 		try {
 			this.playgroundHandle?.destroy();
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 
@@ -1074,7 +1074,7 @@ export class ShareCardModal extends Modal {
 				document.removeEventListener('pointerdown', this.outsidePointerDownHandler);
 				this.outsidePointerDownHandler = null;
 			}
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 		this.playgroundHandle = null;

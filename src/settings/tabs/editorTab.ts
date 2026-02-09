@@ -2,6 +2,7 @@ import { App, Notice, Setting, TextComponent, DropdownComponent } from 'obsidian
 import { setIcon } from 'obsidian';
 import TabFlowPlugin from '../../main';
 import { t } from '../../i18n';
+import { formatError } from '../../utils/errorUtils';
 import { DEFAULT_SETTINGS, EditorBarComponentVisibility } from '../defaults';
 import {
 	createEmbeddableMarkdownEditor,
@@ -15,9 +16,9 @@ export function renderEditorTab(
 	app: App
 ): Promise<void> {
 	// Editor View Settings
-	tabContents.createEl('h4', {
-		text: t('settings.editor.viewTitle', undefined, '编辑器视图设置'),
-	});
+	new Setting(tabContents)
+		.setName(t('settings.editor.viewTitle', undefined, '编辑器视图设置'))
+		.setHeading();
 
 	// Editor display preferences: font size and bottom gap (number input + unit dropdown)
 	{
@@ -511,7 +512,7 @@ export function renderEditorTab(
 								'settings.editor.resetHighlightToDefaultFailed',
 								undefined,
 								'重置失败: '
-							) + e
+							) + formatError(e)
 						);
 					}
 				});
@@ -552,8 +553,9 @@ export function renderEditorTab(
 	}
 
 	// Editor Bar Settings
-	tabContents.createEl('h4', { text: t('settings.editor.barTitle', undefined, '编辑器栏设置') });
-
+	new Setting(tabContents)
+		.setName(t('settings.editor.barTitle', undefined, '编辑器栏设置'))
+		.setHeading();
 	new Setting(tabContents)
 		.setName(t('settings.editor.resetToDefault', undefined, '重置为默认'))
 		.setDesc(
@@ -588,7 +590,8 @@ export function renderEditorTab(
 						);
 					} catch (e) {
 						new Notice(
-							t('settings.editor.resetToDefaultFailed', undefined, '重置失败: ') + e
+							t('settings.editor.resetToDefaultFailed', undefined, '重置失败: ') +
+								formatError(e)
 						);
 					}
 				}

@@ -1,66 +1,66 @@
 name: Release Obsidian plugin tab-flow
 
 on:
-  push:
-    tags:
-      - "*"
+    push:
+        tags:
+            - '*'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+    build:
+        runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v5
+        steps:
+            - uses: actions/checkout@v6
 
-      - name: Use Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "18.x"
+            - name: Use Node.js
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '18.x'
 
-      - name: Build plugin
-        run: |
-          npm ci
-          npm run build
+            - name: Build plugin
+              run: |
+                  npm ci
+                  npm run build
 
-      - name: Package plugin
-        run: |
-          mkdir -p tab-flow/assets
-          cp main.js manifest.json styles.css tab-flow/
-          cp assets/alphaTab.min.js tab-flow/assets/
-          cp assets/Bravura.woff2 tab-flow/assets/
-          cp assets/sonivox.sf3 tab-flow/assets/
-          zip -r tab-flow.zip tab-flow/
+            - name: Package plugin
+              run: |
+                  mkdir -p tab-flow/assets
+                  cp main.js manifest.json styles.css tab-flow/
+                  cp assets/alphaTab.min.js tab-flow/assets/
+                  cp assets/Bravura.woff2 tab-flow/assets/
+                  cp assets/sonivox.sf3 tab-flow/assets/
+                  zip -r tab-flow.zip tab-flow/
 
-      - name: Package assets
-        run: |
-          # 创建资产目录结构
-          mkdir -p assets-package/assets/font
-          mkdir -p assets-package/assets/soundfont
+            - name: Package assets
+              run: |
+                  # 创建资产目录结构
+                  mkdir -p assets-package/assets/font
+                  mkdir -p assets-package/assets/soundfont
 
-          # 复制必要资产文件（按实际 assets 目录结构）
-          cp assets/alphaTab.min.js assets-package/assets/
-          cp assets/Bravura.woff2 assets-package/assets/font/
-          cp assets/sonivox.sf3 assets-package/assets/soundfont/
+                  # 复制必要资产文件（按实际 assets 目录结构）
+                  cp assets/alphaTab.min.js assets-package/assets/
+                  cp assets/Bravura.woff2 assets-package/assets/font/
+                  cp assets/sonivox.sf3 assets-package/assets/soundfont/
 
-          # 如有其他字体或元数据文件可补充
-          # cp assets/Bravura.woff assets-package/assets/font/
-          # cp assets/bravura_metadata.json assets-package/assets/font/
+                  # 如有其他字体或元数据文件可补充
+                  # cp assets/Bravura.woff assets-package/assets/font/
+                  # cp assets/bravura_metadata.json assets-package/assets/font/
 
-          # 创建资产压缩包
-          cd assets-package
-          zip -r ../assets.zip .
-          cd ..
+                  # 创建资产压缩包
+                  cd assets-package
+                  zip -r ../assets.zip .
+                  cd ..
 
-      - name: Create release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag="${GITHUB_REF#refs/tags/}"
+            - name: Create release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  tag="${GITHUB_REF#refs/tags/}"
 
-          gh release create "$tag" \
-            --title="$tag" \
-            --draft \
-            main.js manifest.json styles.css tab-flow.zip assets.zip \
-            assets/alphaTab.min.js \
-            assets/Bravura.woff2 \
-            assets/sonivox.sf3
+                  gh release create "$tag" \
+                    --title="$tag" \
+                    --draft \
+                    main.js manifest.json styles.css tab-flow.zip assets.zip \
+                    assets/alphaTab.min.js \
+                    assets/Bravura.woff2 \
+                    assets/sonivox.sf3

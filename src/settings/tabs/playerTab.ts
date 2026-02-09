@@ -3,14 +3,14 @@ import TabFlowPlugin from '../../main';
 import { setIcon } from 'obsidian';
 import { DEFAULT_SETTINGS, PlayBarComponentVisibility } from '../defaults';
 import { t } from '../../i18n';
+import { formatError } from '../../utils/errorUtils';
 
 export function renderPlayerTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
 	app: App
 ): Promise<void> {
-	tabContents.createEl('h4', { text: t('settings.player.visualEditorTitle') });
-
+	new Setting(tabContents).setName(t('settings.player.visualEditorTitle')).setHeading();
 	new Setting(tabContents)
 		.setName(t('settings.player.resetToDefault'))
 		.setDesc(t('settings.player.resetToDefaultDesc'))
@@ -35,7 +35,7 @@ export function renderPlayerTab(
 					}
 					new Notice(t('settings.player.resetToDefaultSuccess'));
 				} catch (e) {
-					new Notice(t('settings.player.resetToDefaultFailed') + ': ' + e);
+					new Notice(t('settings.player.resetToDefaultFailed') + ': ' + formatError(e));
 				}
 			});
 		});
@@ -424,7 +424,7 @@ export function renderPlayerTab(
 	renderCards();
 
 	// Debug Bar section
-	tabContents.createEl('h3', { text: t('settings.player.debugBar.title') });
+	new Setting(tabContents).setName(t('settings.player.debugBar.title')).setHeading();
 	tabContents.createEl('div', {
 		text: t('settings.player.debugBar.description'),
 		cls: 'tabflow-setting-description',

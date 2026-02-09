@@ -1,0 +1,172 @@
+/* ============================================
+   AlphaTab 播放器光标样式
+   符合 Obsidian 主题的播放指示器
+   ============================================ */
+
+/* 
+ * 1. 小节光标 - 当前播放小节的背景高亮
+ * 使用半透明的主题色调，不遮挡乐谱内容
+ */
+.at-cursor-bar {
+	background: var(--interactive-accent, #7c3aed);
+	opacity: 0.08;
+	transition: opacity 0.1s ease;
+	z-index: 900; /*  Panel (z-index: 1000) */
+	position: relative;
+}
+
+/* 深色模式下调整透明度 */
+.theme-dark .at-cursor-bar {
+	opacity: 0.12;
+}
+
+/* 
+ * 2. 拍子光标 - 当前拍的竖线指示器
+ * 使用主题色的垂直线条，清晰指示播放位置
+ */
+.at-cursor-beat {
+	background: var(--interactive-accent, #7c3aed);
+	opacity: 0.75;
+	width: 3px;
+	border-radius: 1px;
+	transition: opacity 0.1s ease;
+	z-index: 900; /*  Panel (z-index: 1000) */
+	position: relative;
+}
+
+/* 深色模式下增强可见度 */
+.theme-dark .at-cursor-beat {
+	opacity: 0.85;
+}
+
+/* 
+ * 3. 选择范围背景 - 用户选择的播放范围
+ * 使用主题色的淡背景,区分选择区域
+ */
+.at-selection div {
+	background: var(--interactive-accent, #7c3aed);
+	opacity: 0.1;
+	transition: opacity 0.15s ease;
+	z-index: 900; /*  Panel (z-index: 1000) */
+	position: relative;
+}
+
+/* 悬停时增强反馈 */
+.at-selection div:hover {
+	opacity: 0.15;
+}
+
+/* 深色模式下的选择范围 */
+.theme-dark .at-selection div {
+	opacity: 0.15;
+}
+
+.theme-dark .at-selection div:hover {
+	opacity: 0.2;
+}
+
+/* 
+ * 4. 音符高亮 - 正在播放的音符着色
+ * 使用主题色填充和描边，SVG 元素着色
+ */
+.at-highlight * {
+	fill: var(--interactive-accent, #7c3aed) !important;
+	stroke: var(--interactive-accent, #7c3aed) !important;
+	opacity: 0.9;
+	transition:
+		fill 0.1s ease,
+		stroke 0.1s ease;
+}
+
+/* 深色模式下使用更亮的颜色 */
+.theme-dark .at-highlight * {
+	fill: var(--interactive-accent-hover, #8b5cf6) !important;
+	stroke: var(--interactive-accent-hover, #8b5cf6) !important;
+	opacity: 1;
+}
+
+/* 
+ * 5. 性能优化 - 使用 GPU 加速
+ * 确保光标移动流畅
+ */
+.at-cursor-bar,
+.at-cursor-beat,
+.at-selection div,
+.at-highlight {
+	will-change: transform, opacity;
+	z-index: 900; /*  Panel (z-index: 1000) */
+}
+
+/* 
+ * 6. 可访问性增强 - 高对比度模式
+ * 在系统高对比度模式下提供更清晰的指示器
+ */
+@media (prefers-contrast: high) {
+	.at-cursor-bar {
+		opacity: 0.2;
+		outline: 2px solid var(--interactive-accent);
+	}
+
+	.at-cursor-beat {
+		width: 4px;
+		opacity: 1;
+	}
+
+	.at-selection div {
+		opacity: 0.25;
+		outline: 1px solid var(--interactive-accent);
+	}
+
+	.at-highlight * {
+		opacity: 1 !important;
+	}
+}
+
+/* 
+ * 7. 减少动画模式 - 尊重用户偏好
+ * 当用户偏好减少动画时，移除过渡效果
+ */
+@media (prefers-reduced-motion: reduce) {
+	.at-cursor-bar,
+	.at-cursor-beat,
+	.at-selection div,
+	.at-highlight * {
+		transition: none;
+	}
+}
+
+/* 
+ * 8. 打印模式 - 隐藏所有光标
+ * 打印时不显示播放指示器
+ */
+@media print {
+	.at-cursor-bar,
+	.at-cursor-beat,
+	.at-selection,
+	.at-highlight {
+		display: none !important;
+	}
+}
+
+/* 
+ * 9. 响应式调整 - 小屏幕优化
+ * 在移动设备上使用更醒目的指示器
+ */
+@media (max-width: 768px) {
+	.at-cursor-beat {
+		width: 4px;
+	}
+
+	.at-cursor-bar {
+		opacity: 0.12;
+	}
+
+	.theme-dark .at-cursor-bar {
+		opacity: 0.16;
+	}
+}
+
+/* 
+ * 10. 焦点状态 - 键盘导航时的光标增强
+ * 当用户使用键盘控制播放时，增强光标可见度
+ */

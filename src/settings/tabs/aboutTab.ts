@@ -19,7 +19,7 @@ export function renderAboutTab(
 	plugin: TabFlowPlugin,
 	app: App
 ): Promise<void> {
-	tabContents.createEl('h3', { text: t('settings.tabs.about') });
+	new Setting(tabContents).setName(t('settings.tabs.about')).setHeading();
 	tabContents.createEl('p', {
 		text: t('settings.about.title'),
 	});

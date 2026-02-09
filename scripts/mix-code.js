@@ -16,7 +16,7 @@ for (let i = 2; i < process.argv.length; i++) {
         break;
     }
 }
-const srcDir = path.join(__dirname, userDir);
+const srcDir = userDir.startsWith('../') ? path.join(__dirname, userDir) : path.resolve(process.cwd(), userDir);
 const stylesFile = path.join(__dirname, '../styles.css');
 const readmeFile = path.join(__dirname, '../README.md');
 const githubWorkflowsDir = path.join(__dirname, '../.github/workflows');
@@ -56,7 +56,7 @@ function getAllTsFiles(dir) {
         const stat = fs.statSync(filePath);
         if (stat && stat.isDirectory()) {
             results = results.concat(getAllTsFiles(filePath));
-        } else if (file.endsWith('.ts')) {
+        } else if (file.endsWith('.ts') || file.endsWith('.tsx')) {
             results.push(filePath);
         }
     });
@@ -145,7 +145,7 @@ function mergeFiles() {
 
     fs.writeFileSync(outputFile, merged, 'utf-8');
     const ymlCount = ymlFiles.length;
-    console.log(`Merged ${tsFiles.length} ts files${fs.existsSync(stylesFile) ? ', styles.css' : ''}${fs.existsSync(readmeFile) ? ', README.md' : ''}${ymlCount > 0 ? `, ${ymlCount} yml files` : ''} into ${outputFile}`);
+    console.log(`Merged ${tsFiles.length} ts/tsx files${fs.existsSync(stylesFile) ? ', styles.css' : ''}${fs.existsSync(readmeFile) ? ', README.md' : ''}${ymlCount > 0 ? `, ${ymlCount} yml files` : ''} into ${outputFile}`);
 }
 
 // ## 4. 主执行部分
