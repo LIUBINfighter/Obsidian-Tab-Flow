@@ -398,7 +398,7 @@ export class MediaSyncService {
 		if (!this.debugMode) {
 			return;
 		}
-		console.log(`[MediaSyncService] ${message}`, data ?? '');
+		console.debug(`[MediaSyncService] ${message}`, data ?? '');
 	}
 
 	/**

@@ -73,7 +73,7 @@ export const TracksPanel: React.FC<TracksPanelProps> = ({ controller, isOpen, on
 
 	// 事件处理
 	const handleTrackSelectionChange = (track: AlphaTab.model.Track, selected: boolean) => {
-		console.log('[TracksPanel] 音轨选择变化', {
+		console.debug('[TracksPanel] 音轨选择变化', {
 			track: track.name,
 			index: track.index,
 			selected,

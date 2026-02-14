@@ -6,6 +6,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useId, useState } from 'react';
+import { Notice } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
 import {
@@ -754,12 +755,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							className="settings-tool-button"
 							onClick={() => {
 								if (api) {
-									console.log('[Settings] Current API Settings:', api.settings);
-									console.log(
+									console.debug('[Settings] Current API Settings:', api.settings);
+									console.debug(
 										'[Settings] Current Global Config:',
 										controller.getGlobalConfigStore().getState()
 									);
-									console.log(
+									console.debug(
 										'[Settings] Current Workspace Config:',
 										controller.getWorkspaceConfigStore().getState()
 									);
@@ -771,22 +772,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 						<button
 							type="button"
 							className="settings-tool-button"
-							onClick={async () => {
-								const globalConfig = controller.getGlobalConfigStore().getState();
-								// 临时转换为旧格式以兼容工具函数
-								const legacyConfig: any = {
-									scoreSource: controller.getWorkspaceConfigStore().getState()
-										.scoreSource,
-									alphaTabSettings: globalConfig.alphaTabSettings,
-									playerExtensions: globalConfig.playerExtensions,
-									uiConfig: globalConfig.uiConfig,
-								};
-								const success = await copyConfigToClipboard(legacyConfig);
-								if (success) {
-									alert('Configuration copied to clipboard!');
-								} else {
-									alert('Failed to copy configuration');
-								}
+							onClick={() => {
+								void (async () => {
+									const globalConfig = controller.getGlobalConfigStore().getState();
+									// 临时转换为旧格式以兼容工具函数
+									const legacyConfig: any = {
+										scoreSource: controller.getWorkspaceConfigStore().getState()
+											.scoreSource,
+										alphaTabSettings: globalConfig.alphaTabSettings,
+										playerExtensions: globalConfig.playerExtensions,
+										uiConfig: globalConfig.uiConfig,
+									};
+									const success = await copyConfigToClipboard(legacyConfig);
+									if (success) {
+										new Notice('Configuration copied to clipboard!');
+									} else {
+										new Notice('Failed to copy configuration');
+									}
+								})();
 							}}
 						>
 							Copy Config to Clipboard
@@ -812,28 +815,30 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 						<button
 							type="button"
 							className="settings-tool-button"
-							onClick={async () => {
-								const config = await importConfigFromJSON();
-								if (config) {
-									// 导入配置需要更新 globalConfig
-									const store = controller.getGlobalConfigStore().getState();
-									if (config.alphaTabSettings) {
-										// 转换类型：处理 barsPerRow null -> -1
-										const settings: any = { ...config.alphaTabSettings };
-										if (settings.display?.barsPerRow === null) {
-											settings.display.barsPerRow = -1;
+							onClick={() => {
+								void (async () => {
+									const config = await importConfigFromJSON();
+									if (config) {
+										// 导入配置需要更新 globalConfig
+										const store = controller.getGlobalConfigStore().getState();
+										if (config.alphaTabSettings) {
+											// 转换类型：处理 barsPerRow null -> -1
+											const settings: any = { ...config.alphaTabSettings };
+											if (settings.display?.barsPerRow === null) {
+												settings.display.barsPerRow = -1;
+											}
+											store.updateAlphaTabSettings(settings);
 										}
-										store.updateAlphaTabSettings(settings);
+										if (config.playerExtensions) {
+											store.updatePlayerExtensions(config.playerExtensions);
+										}
+										if (config.uiConfig) {
+											store.updateUIConfig(config.uiConfig);
+										}
+										new Notice('Configuration imported! Reloading...');
+										window.location.reload();
 									}
-									if (config.playerExtensions) {
-										store.updatePlayerExtensions(config.playerExtensions);
-									}
-									if (config.uiConfig) {
-										store.updateUIConfig(config.uiConfig);
-									}
-									alert('Configuration imported! Reloading...');
-									window.location.reload();
-								}
+								})();
 							}}
 						>
 							Import Config from JSON
@@ -842,14 +847,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							type="button"
 							className="settings-tool-button settings-tool-button-danger"
 							onClick={() => {
-								if (
-									confirm(
-										'Reset all settings to defaults? This will reload the page.'
-									)
-								) {
-									controller.getGlobalConfigStore().getState().resetToDefaults();
-									window.location.reload();
-								}
+								new Notice('Reset all settings to defaults? This will reload the page.', 5000);
+								controller.getGlobalConfigStore().getState().resetToDefaults();
+								window.location.reload();
 							}}
 						>
 							Reset to Defaults

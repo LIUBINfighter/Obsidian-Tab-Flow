@@ -40,7 +40,7 @@ export const createGlobalConfigStore = (adapter: ObsidianPluginStorageAdapter) =
 				version: CURRENT_VERSION,
 				// 迁移函数（未来版本变更时使用）
 				migrate: (persistedState: GlobalConfigState, version: number) => {
-					console.log(
+					console.debug(
 						'[GlobalConfigStore] Migrating from version',
 						version,
 						'to',

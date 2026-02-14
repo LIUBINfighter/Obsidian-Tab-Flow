@@ -97,7 +97,7 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 	 * 处理音轨选择变化
 	 */
 	const handleTrackSelectionChange = (track: AlphaTab.model.Track, selected: boolean) => {
-		console.log('[TracksModal] 音轨选择变化', {
+		console.debug('[TracksModal] 音轨选择变化', {
 			track: track.name,
 			index: track.index,
 			selected,

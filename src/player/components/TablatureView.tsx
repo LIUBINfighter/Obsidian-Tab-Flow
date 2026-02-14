@@ -98,14 +98,14 @@ export const TablatureView: React.FC<TablatureViewProps> = ({
 	useEffect(() => {
 		if (!containerRef.current || !viewportRef.current) return;
 
-		console.log('[TablatureView] Initializing controller...');
+		console.debug('[TablatureView] Initializing controller...');
 
 		// 直接初始化，IntersectionObserver 会处理可见性时序
 		controller.init(containerRef.current, viewportRef.current);
 
 		// 清理函数
 		return () => {
-			console.log('[TablatureView] Cleaning up controller...');
+			console.debug('[TablatureView] Cleaning up controller...');
 			controller.destroy();
 		};
 	}, [controller]);

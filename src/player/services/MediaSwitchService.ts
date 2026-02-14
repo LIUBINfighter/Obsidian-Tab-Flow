@@ -54,7 +54,7 @@ export class MediaSwitchService {
 			onSwitchError,
 		} = options;
 
-		console.log('[MediaSwitchService] 切换媒体源', {
+		console.debug('[MediaSwitchService] 切换媒体源', {
 			from: this.currentMediaSource?.type,
 			to: source.type,
 			options,
@@ -83,7 +83,7 @@ export class MediaSwitchService {
 				this.api.play();
 			}
 
-			console.log('[MediaSwitchService] 媒体源切换成功', source.type);
+			console.debug('[MediaSwitchService] 媒体源切换成功', source.type);
 			onSwitchComplete?.();
 		} catch (error) {
 			console.error('[MediaSwitchService] 媒体源切换失败', error);
@@ -122,7 +122,7 @@ export class MediaSwitchService {
 	 * 切换到合成器模式
 	 */
 	private async switchToSynth(): Promise<void> {
-		console.log('[MediaSwitchService] 切换到合成器模式');
+		console.debug('[MediaSwitchService] 切换到合成器模式');
 
 		this.api.settings.player.playerMode = PlayerMode.EnabledSynthesizer;
 		this.api.updateSettings();
@@ -134,7 +134,7 @@ export class MediaSwitchService {
 	private async switchToAudio(
 		source: Extract<MediaSource, { type: MediaType.Audio }>
 	): Promise<void> {
-		console.log('[MediaSwitchService] 切换到音频文件模式', {
+		console.debug('[MediaSwitchService] 切换到音频文件模式', {
 			url: source.url,
 			hasBlob: !!source.blob,
 			hasAudioFile: !!source.audioFile,
@@ -157,7 +157,7 @@ export class MediaSwitchService {
 	private async switchToYouTube(
 		source: Extract<MediaSource, { type: MediaType.YouTube }>
 	): Promise<void> {
-		console.log('[MediaSwitchService] 切换到 YouTube 模式', {
+		console.debug('[MediaSwitchService] 切换到 YouTube 模式', {
 			url: source.url,
 			offset: source.offset,
 		});
@@ -166,7 +166,7 @@ export class MediaSwitchService {
 		this.api.updateSettings();
 
 		// 外部媒体处理器将在 ExternalMediaService 中设置
-		console.log('[MediaSwitchService] YouTube 模式需要配合 ExternalMediaService 使用');
+		console.debug('[MediaSwitchService] YouTube 模式需要配合 ExternalMediaService 使用');
 	}
 
 	/**
@@ -175,7 +175,7 @@ export class MediaSwitchService {
 	private async switchToExternal(
 		source: Extract<MediaSource, { type: MediaType.External }>
 	): Promise<void> {
-		console.log('[MediaSwitchService] 切换到外部媒体模式', {
+		console.debug('[MediaSwitchService] 切换到外部媒体模式', {
 			element: source.element.tagName,
 			offset: source.offset,
 		});
@@ -184,7 +184,7 @@ export class MediaSwitchService {
 		this.api.updateSettings();
 
 		// 外部媒体处理器将在 ExternalMediaService 中设置
-		console.log('[MediaSwitchService] External 模式需要配合 ExternalMediaService 使用');
+		console.debug('[MediaSwitchService] External 模式需要配合 ExternalMediaService 使用');
 	}
 
 	/**
@@ -209,7 +209,7 @@ export class MediaSwitchService {
 	 * 重置到默认媒体源（合成器）
 	 */
 	async reset(): Promise<void> {
-		console.log('[MediaSwitchService] 重置到默认媒体源');
+		console.debug('[MediaSwitchService] 重置到默认媒体源');
 
 		await this.switchMedia({ type: MediaType.Synth });
 	}

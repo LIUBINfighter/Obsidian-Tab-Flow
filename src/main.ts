@@ -595,7 +595,7 @@ export default class TabFlowPlugin extends Plugin {
 									type: VIEW_TYPE_REACT,
 									state: { file: file.path },
 								});
-								this.app.workspace.revealLeaf(leaf);
+								await this.app.workspace.revealLeaf(leaf);
 							});
 					});
 				}
@@ -618,7 +618,7 @@ export default class TabFlowPlugin extends Plugin {
 									type: VIEW_TYPE_REACT,
 									state: { file: file.path },
 								});
-								this.app.workspace.revealLeaf(rightLeaf);
+								await this.app.workspace.revealLeaf(rightLeaf);
 
 								// 手动触发刷新事件，确保 ReactView 正确加载
 								setTimeout(() => {

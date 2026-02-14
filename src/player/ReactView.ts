@@ -51,11 +51,11 @@ export class ReactView extends FileView {
 	}
 
 	async onOpen() {
-		console.log('[ReactView] Opening view...');
+		console.debug('[ReactView] Opening view...');
 
 		// 1. 创建 stores（使用 StoreFactory）
 		this.stores = this.storeFactory.createStores(this);
-		console.log('[ReactView] Stores created:', {
+		console.debug('[ReactView] Stores created:', {
 			globalConfig: !!this.stores.globalConfig,
 			workspaceConfig: !!this.stores.workspaceConfig,
 			runtime: !!this.stores.runtime,
@@ -78,7 +78,7 @@ export class ReactView extends FileView {
 			globalFontStyle.appendChild(document.createTextNode(fontFaceRule));
 			this.containerEl.ownerDocument.head.appendChild(globalFontStyle);
 			fontStyleInjected = true;
-			console.log('[ReactView] Global @font-face injected');
+			console.debug('[ReactView] Global @font-face injected');
 		}
 
 		// 3. 创建 PlayerController（传递 resources 和 stores）
@@ -100,11 +100,11 @@ export class ReactView extends FileView {
 		this.root = createRoot(this.reactContainer);
 		this.renderReactComponent();
 
-		console.log('[ReactView] View opened successfully');
+		console.debug('[ReactView] View opened successfully');
 	}
 
 	async onClose() {
-		console.log('[ReactView] Closing view...');
+		console.debug('[ReactView] Closing view...');
 
 		// 注意: 不移除全局字体样式,因为可能有其他实例在使用
 		// 字体样式会在插件卸载时自动清理
@@ -117,21 +117,21 @@ export class ReactView extends FileView {
 		if (this.root) {
 			this.root.unmount();
 			this.root = null;
-			console.log('[ReactView] React root unmounted');
+			console.debug('[ReactView] React root unmounted');
 		}
 
 		// 2. 清理 PlayerController
 		if (this.controller) {
 			this.controller.destroy();
 			this.controller = null;
-			console.log('[ReactView] PlayerController destroyed');
+			console.debug('[ReactView] PlayerController destroyed');
 		}
 
 		// 3. 销毁 stores（清理回调）
 		if (this.stores) {
 			this.storeFactory.destroyStores(this.stores);
 			this.stores = null;
-			console.log('[ReactView] Stores destroyed');
+			console.debug('[ReactView] Stores destroyed');
 		}
 
 		// 4. 清理容器
@@ -141,7 +141,7 @@ export class ReactView extends FileView {
 		}
 
 		this.currentFile = null;
-		console.log('[ReactView] View closed');
+		console.debug('[ReactView] View closed');
 
 		// 注意：controller.destroy() 会清理实例状态，无需额外重置全局状态
 	}
@@ -155,7 +155,7 @@ export class ReactView extends FileView {
 		}
 
 		// 直接调用新方法，不再需要等待循环
-		this.controller.loadFileWhenReady(file).catch((error) => {
+		void this.controller.loadFileWhenReady(file).catch((error) => {
 			console.error(`[ReactView] Controller failed to load file:`, error);
 		});
 

@@ -60,7 +60,7 @@ export class StoreFactory {
 	 * @returns Store 集合
 	 */
 	createStores(view: ItemView): StoreCollection {
-		console.log('[StoreFactory] Creating stores for view:', view.getViewType());
+		console.debug('[StoreFactory] Creating stores for view:', view.getViewType());
 
 		// 1. 创建存储适配器
 		const pluginAdapter = new ObsidianPluginStorageAdapter(this.plugin);
@@ -106,7 +106,7 @@ export class StoreFactory {
 	 * @param stores - Store 集合
 	 */
 	destroyStores(stores: StoreCollection): void {
-		console.log('[StoreFactory] Destroying stores');
+		console.debug('[StoreFactory] Destroying stores');
 
 		// 1. 清除 workspace adapter 的回调
 		stores.adapters.workspace.clearCallbacks();
@@ -115,6 +115,6 @@ export class StoreFactory {
 		// 注意：Zustand 不需要手动 destroy，但可以清除订阅
 
 		// 3. 清理完成
-		console.log('[StoreFactory] Stores destroyed');
+		console.debug('[StoreFactory] Stores destroyed');
 	}
 }

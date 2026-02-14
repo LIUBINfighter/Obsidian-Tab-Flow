@@ -57,21 +57,21 @@ const storageAdapterImpl = <
 				const persistedState = await adapter.load<T | null>(name);
 
 				if (!persistedState) {
-					console.log('[StorageAdapter] No persisted state found for:', name);
+					console.debug('[StorageAdapter] No persisted state found for:', name);
 					return;
 				}
 
 				let activeState: T = persistedState;
 
 				if (migrate && persistedVersion !== null && persistedVersion < version) {
-					console.log(
+					console.debug(
 						`[StorageAdapter] Migrating ${name} from version ${persistedVersion} to ${version}`
 					);
 					activeState = migrate(activeState, persistedVersion);
 				}
 
 				set(activeState, true);
-				console.log('[StorageAdapter] State loaded for:', name);
+				console.debug('[StorageAdapter] State loaded for:', name);
 			} catch (error) {
 				console.error('[StorageAdapter] Load failed:', error);
 			}
