@@ -81,7 +81,7 @@ export class EditorView extends FileView {
 
 			if (result === content) {
 				this.lastSavedContent = content;
-				// console.log('[EditorView] flushSave: 保存已完成');
+				// console.debug('[EditorView] flushSave: 保存已完成');
 			} else {
 				console.warn('[EditorView] flushSave: 磁盘文件已变更，未覆盖。');
 				// new Notice(

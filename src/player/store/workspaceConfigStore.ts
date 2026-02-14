@@ -48,7 +48,7 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 				version: CURRENT_VERSION,
 				// 迁移函数（未来版本变更时使用）
 				migrate: (persistedState: WorkspaceConfigState, version: number) => {
-					console.log(
+					console.debug(
 						'[WorkspaceConfigStore] Migrating from version',
 						version,
 						'to',

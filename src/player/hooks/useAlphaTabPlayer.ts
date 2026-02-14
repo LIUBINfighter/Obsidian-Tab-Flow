@@ -135,7 +135,7 @@ export function useAlphaTabPlayer(
 			return;
 		}
 
-		console.log('[useAlphaTabPlayer] 初始化 AlphaTab API', {
+		console.debug('[useAlphaTabPlayer] 初始化 AlphaTab API', {
 			container,
 			config,
 		});
@@ -148,7 +148,7 @@ export function useAlphaTabPlayer(
 				const newApi = new AlphaTabApi(container, settings);
 				setApi(newApi);
 
-				console.log('[useAlphaTabPlayer] AlphaTab API 创建成功', newApi);
+				console.debug('[useAlphaTabPlayer] AlphaTab API 创建成功', newApi);
 			});
 		} catch (error) {
 			console.error('[useAlphaTabPlayer] AlphaTab API 创建失败', error);
@@ -157,7 +157,7 @@ export function useAlphaTabPlayer(
 		// 清理函数：销毁 API
 		return () => {
 			if (api) {
-				console.log('[useAlphaTabPlayer] 销毁 AlphaTab API');
+				console.debug('[useAlphaTabPlayer] 销毁 AlphaTab API');
 				api.destroy();
 			}
 		};
@@ -169,7 +169,7 @@ export function useAlphaTabPlayer(
 			return;
 		}
 
-		console.log('[useAlphaTabPlayer] 更新 AlphaTab 配置', config);
+		console.debug('[useAlphaTabPlayer] 更新 AlphaTab 配置', config);
 
 		// 更新可变配置
 		let needsUpdate = false;
@@ -216,7 +216,7 @@ export function useAlphaTabPlayer(
 
 		// 批量更新配置（避免多次调用 updateSettings）
 		if (needsUpdate) {
-			console.log('[useAlphaTabPlayer] 应用配置更新');
+			console.debug('[useAlphaTabPlayer] 应用配置更新');
 			api.updateSettings();
 		}
 	}, [

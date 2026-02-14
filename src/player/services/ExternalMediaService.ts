@@ -331,7 +331,7 @@ export class ExternalMediaService {
 			return;
 		}
 
-		console.log(`[ExternalMediaService] ${message}`, data ?? '');
+		console.debug(`[ExternalMediaService] ${message}`, data ?? '');
 	}
 }
 

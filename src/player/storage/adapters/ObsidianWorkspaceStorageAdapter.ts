@@ -24,7 +24,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 	 */
 	setCallbacks(callbacks: WorkspaceStorageCallbacks): void {
 		this.callbacks = callbacks;
-		console.log('[WorkspaceStorage] Callbacks registered');
+		console.debug('[WorkspaceStorage] Callbacks registered');
 	}
 
 	/**
@@ -32,7 +32,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 	 */
 	clearCallbacks(): void {
 		this.callbacks = null;
-		console.log('[WorkspaceStorage] Callbacks cleared');
+		console.debug('[WorkspaceStorage] Callbacks cleared');
 	}
 
 	async save<T>(key: string, data: T): Promise<void> {
@@ -45,7 +45,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 			const current = { ...(this.callbacks.getViewState() ?? {}) };
 			current[key] = data as unknown;
 			await this.callbacks.setViewState(current, {} as Record<string, unknown>);
-			console.log('[WorkspaceStorage] Saved to workspace:', key);
+			console.debug('[WorkspaceStorage] Saved to workspace:', key);
 		} catch (error) {
 			console.error('[WorkspaceStorage] Save failed:', key, error);
 			throw error;
@@ -61,7 +61,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 		try {
 			const state = this.callbacks.getViewState();
 			const value = state?.[key] ?? null;
-			console.log(
+			console.debug(
 				'[WorkspaceStorage] Loaded from workspace:',
 				key,
 				value ? 'found' : 'not found'
@@ -83,7 +83,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 			const current = { ...(this.callbacks.getViewState() ?? {}) };
 			delete current[key];
 			await this.callbacks.setViewState(current, {} as Record<string, unknown>);
-			console.log('[WorkspaceStorage] Removed from workspace:', key);
+			console.debug('[WorkspaceStorage] Removed from workspace:', key);
 		} catch (error) {
 			console.error('[WorkspaceStorage] Remove failed:', key, error);
 			throw error;
@@ -101,7 +101,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 				{} as Record<string, unknown>,
 				{} as Record<string, unknown>
 			);
-			console.log('[WorkspaceStorage] Workspace state cleared');
+			console.debug('[WorkspaceStorage] Workspace state cleared');
 		} catch (error) {
 			console.error('[WorkspaceStorage] Clear failed:', error);
 			throw error;

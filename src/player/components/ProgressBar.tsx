@@ -151,7 +151,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 			const targetMs = percentage * totalMs;
 
 			// 调试日志（开发时可取消注释）
-			// console.log('[ProgressBar] Seek:', {
+			// console.debug('[ProgressBar] Seek:', {
 			// 	clientX: (e as MouseEvent).clientX,
 			// 	rectLeft: rect.left,
 			// 	rectWidth: rect.width,
