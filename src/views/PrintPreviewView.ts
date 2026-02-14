@@ -438,7 +438,10 @@ export class PrintPreviewView extends FileView {
 				this.api.tex(textContent);
 			} else if (type === 'binary') {
 				const binaryContent = content as Uint8Array;
-				console.debug('[PrintPreview] Loading binary score, size:', binaryContent.byteLength);
+				console.debug(
+					'[PrintPreview] Loading binary score, size:',
+					binaryContent.byteLength
+				);
 				await this.api.load(binaryContent);
 			}
 		} catch (error) {

@@ -211,7 +211,9 @@ export class PlayerController {
 			const settings = this.createAlphaTabSettings();
 
 			// 创建新 API（直接使用静态导入的 alphaTab 模块）
-			console.debug(`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`);
+			console.debug(
+				`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`
+			);
 			this.api = new alphaTab.AlphaTabApi(this.container, settings);
 
 			// 绑定事件
@@ -483,7 +485,10 @@ export class PlayerController {
 
 		// 验证滚动元素配置
 		if (typeof currentScrollElement === 'string') {
-			console.debug('[PlayerController] Scroll element is CSS selector:', currentScrollElement);
+			console.debug(
+				'[PlayerController] Scroll element is CSS selector:',
+				currentScrollElement
+			);
 		} else {
 			const scrollInfo = {
 				element: currentScrollElement.tagName,
@@ -885,7 +890,9 @@ export class PlayerController {
 		const savedConfigs = workspaceConfig.sessionPlayerState.trackConfigs || [];
 
 		if (savedConfigs.length === 0) {
-			console.debug(`[PlayerController #${this.instanceId}] No saved track configs to restore`);
+			console.debug(
+				`[PlayerController #${this.instanceId}] No saved track configs to restore`
+			);
 			return;
 		}
 
