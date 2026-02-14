@@ -1,5 +1,5 @@
 import { App } from 'obsidian';
-import * as path from 'path';
+import { vaultPath } from '../utils';
 import { fileExists } from '../utils';
 
 export interface AlphaTabResources {
@@ -20,9 +20,9 @@ export class ResourceLoaderService {
 	constructor(private app: App) {}
 
 	public async load(pluginDir: string): Promise<AlphaTabResources> {
-		const bravuraPath = path.join(pluginDir, 'assets', ASSET_FILES.BRAVURA);
-		const alphaTabPath = path.join(pluginDir, 'assets', ASSET_FILES.ALPHA_TAB);
-		const soundFontPath = path.join(pluginDir, 'assets', ASSET_FILES.SOUNDFONT);
+		const bravuraPath = vaultPath(pluginDir, 'assets', ASSET_FILES.BRAVURA);
+		const alphaTabPath = vaultPath(pluginDir, 'assets', ASSET_FILES.ALPHA_TAB);
+		const soundFontPath = vaultPath(pluginDir, 'assets', ASSET_FILES.SOUNDFONT);
 
 		// 初始化资源对象
 		const resources: AlphaTabResources = {

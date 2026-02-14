@@ -9,7 +9,7 @@ export { setupHorizontalScroll } from './scrollUtils';
 //
 // Example: fileExists(path, this.app.vault.adapter)
 export { fileExists } from './fileUtils';
-export { vaultPath, getRelativePathToVault } from './pathUtils';
+export { vaultPath, getRelativePathToVault, basename, dirname } from './pathUtils';
 // Optional exports (uncomment if used widely):
 export { convertSamplesToWavBlobUrl } from './audioUtils';
 export { parseInlineInit, toScrollMode } from './alphatexParser';

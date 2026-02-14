@@ -5,9 +5,8 @@ import { vaultPath } from '../../utils';
 import { AssetStatus } from '../../types/assets';
 import { t } from '../../i18n';
 import { formatError } from '../../utils/errorUtils';
-import path from 'path';
-// @ts-ignore
-import { shell } from 'electron';
+// desktop-only helpers (required dynamically at click-time)
+// `path` and `electron.shell` are accessed at runtime inside the click handler only.
 import { showConfirmDialog } from '../../utils/dialogs';
 import { toggleHidden } from '../../utils/styleUtils';
 
@@ -168,14 +167,19 @@ export async function renderGeneralTab(
 			}
 			// TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
 			// 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
-			const pluginDir = path.join(
-				basePath,
-				app.vault.configDir,
-				'plugins',
-				plugin.manifest.id
-			);
-			const mainJsPath = path.join(pluginDir, 'main.js');
-			// @ts-ignore
+			const pluginDir = `${basePath.replace(/[\\/]+$/,'')}/${app.vault.configDir.replace(/^\\/,'')}/plugins/${plugin.manifest.id}`;
+			const mainJsPath = `${pluginDir.replace(/[\\/]+$/,'')}/main.js`;
+			// Electron `shell` is desktop-only; require dynamically so mobile doesn't import electron at module load.
+			let shell: any = undefined;
+			try {
+				shell = (typeof require === 'function' && require('electron'))?.shell;
+			} catch {
+				/* ignore */
+			}
+			if (!shell) {
+				new Notice(t('assetManagement.desktopOnly'));
+				return;
+			}
 			shell.showItemInFolder(mainJsPath);
 		} catch (e) {
 			new Notice(t('assetManagement.openDirFailed') + ': ' + formatError(e));
