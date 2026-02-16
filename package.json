@@ -42,7 +42,7 @@
 		"@codemirror/commands": "^6.8.1",
 		"@codemirror/fold": "^0.19.4",
 		"@codemirror/highlight": "^0.19.8",
-		"@codemirror/language": "^6.11.1",
+		"@codemirror/language": "^6.12.1",
 		"@codemirror/matchbrackets": "^0.19.4",
 		"@codemirror/rangeset": "^0.19.2",
 		"@codemirror/search": "^6.5.11",
