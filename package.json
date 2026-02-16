@@ -49,7 +49,7 @@
 		"@codemirror/state": "^6.4.1",
 		"@codemirror/stream-parser": "^0.19.9",
 		"@codemirror/view": "^6.26.3",
-		"@coderline/alphatab": "^1.6.3",
+		"@coderline/alphatab": "^1.8.1",
 		"@types/mime-types": "^3.0.1",
 		"@types/react": "^19.2.2",
 		"@types/react-dom": "^19.2.2",
