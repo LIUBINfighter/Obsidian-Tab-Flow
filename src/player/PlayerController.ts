@@ -16,6 +16,7 @@ import type { StoreCollection } from './store/StoreFactory';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import * as convert from 'color-convert';
+import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
 
 type AlphaTabSettingsInput = alphaTab.Settings;
 type AlphaTabSettingsJson = Parameters<alphaTab.Settings['fillFromJson']>[0];
@@ -119,6 +120,14 @@ export class PlayerController {
 		// 保存容器引用
 		this.container = container;
 		this.scrollViewport = viewport || null;
+
+		const rect = container.getBoundingClientRect();
+		if (!Number.isFinite(rect.width) || rect.width <= 0) {
+			console.warn(
+				`[PlayerController #${this.instanceId}] Init called with invalid container width, waiting for layout`,
+				{ width: rect.width, height: rect.height }
+			);
+		}
 
 		try {
 			this.rebuildApi();
@@ -339,10 +348,16 @@ export class PlayerController {
 			player: {
 				enablePlayer: globalConfig.alphaTabSettings.player.enablePlayer,
 				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
-				scrollSpeed: globalConfig.alphaTabSettings.player.scrollSpeed,
+				scrollSpeed: toFiniteNumber(globalConfig.alphaTabSettings.player.scrollSpeed, 500),
 				scrollMode: globalConfig.alphaTabSettings.player.scrollMode,
-				scrollOffsetX: globalConfig.alphaTabSettings.player.scrollOffsetX,
-				scrollOffsetY: globalConfig.alphaTabSettings.player.scrollOffsetY,
+				scrollOffsetX: toFiniteNumber(
+					globalConfig.alphaTabSettings.player.scrollOffsetX,
+					25
+				),
+				scrollOffsetY: toFiniteNumber(
+					globalConfig.alphaTabSettings.player.scrollOffsetY,
+					-25
+				),
 				enableCursor: globalConfig.alphaTabSettings.player.enableCursor,
 				enableAnimatedBeatCursor:
 					globalConfig.alphaTabSettings.player.enableAnimatedBeatCursor,
@@ -351,7 +366,12 @@ export class PlayerController {
 				nativeBrowserSmoothScroll: false,
 			},
 			display: {
-				scale: globalConfig.alphaTabSettings.display.scale,
+				scale: toFiniteClampedNumber(
+					globalConfig.alphaTabSettings.display.scale,
+					1,
+					0.5,
+					2
+				),
 				startBar: 1, // 总是从第一小节开始
 				layoutMode: globalConfig.alphaTabSettings.display.layoutMode,
 				barsPerRow: globalConfig.alphaTabSettings.display.barsPerRow,
@@ -401,9 +421,24 @@ export class PlayerController {
 		// 添加颜色配置（防御性编程：确保所有颜色值都有效）
 		if (style) {
 			// 安全地读取 CSS 变量，确保 parseFloat 得到有效数字
-			const accentH = parseFloat(style.getPropertyValue('--accent-h')) || 0;
-			const accentS = parseFloat(style.getPropertyValue('--accent-s')) || 50;
-			const accentL = parseFloat(style.getPropertyValue('--accent-l')) || 50;
+			const accentH = toFiniteClampedNumber(
+				parseFloat(style.getPropertyValue('--accent-h')),
+				0,
+				0,
+				360
+			);
+			const accentS = toFiniteClampedNumber(
+				parseFloat(style.getPropertyValue('--accent-s')),
+				50,
+				0,
+				100
+			);
+			const accentL = toFiniteClampedNumber(
+				parseFloat(style.getPropertyValue('--accent-l')),
+				50,
+				0,
+				100
+			);
 
 			// 验证 HSL 值的有效性
 			const isValidHSL =
@@ -697,7 +732,7 @@ export class PlayerController {
 
 	setPlaybackSpeed(speed: number): void {
 		if (!this.api) return;
-		this.api.playbackSpeed = speed;
+		this.api.playbackSpeed = toFiniteClampedNumber(speed, 1, 0.5, 2);
 	}
 
 	setMasterVolume(volume: number): void {
@@ -746,7 +781,7 @@ export class PlayerController {
 	 */
 	setZoom(scale: number): void {
 		if (!this.api) return;
-		this.api.settings.display.scale = scale;
+		this.api.settings.display.scale = toFiniteClampedNumber(scale, 1, 0.5, 2);
 		this.api.updateSettings();
 		this.api.render();
 	}
@@ -786,7 +821,7 @@ export class PlayerController {
 	 */
 	setScrollSpeed(speed: number): void {
 		if (!this.api) return;
-		this.api.settings.player.scrollSpeed = speed;
+		this.api.settings.player.scrollSpeed = toFiniteNumber(speed, 500);
 		this.api.updateSettings();
 	}
 

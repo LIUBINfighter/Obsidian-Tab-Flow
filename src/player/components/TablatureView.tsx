@@ -38,10 +38,7 @@ interface TablatureViewProps {
 	options?: TablatureViewOptions;
 }
 
-export const TablatureView: React.FC<TablatureViewProps> = ({
-	controller,
-	options = {},
-}) => {
+export const TablatureView: React.FC<TablatureViewProps> = ({ controller, options = {} }) => {
 	// 默认配置
 	const {
 		showDebugBar = true,
@@ -98,15 +95,53 @@ export const TablatureView: React.FC<TablatureViewProps> = ({
 	useEffect(() => {
 		if (!containerRef.current || !viewportRef.current) return;
 
-		console.debug('[TablatureView] Initializing controller...');
+		let disposed = false;
+		let initialized = false;
 
-		// 直接初始化，IntersectionObserver 会处理可见性时序
-		controller.init(containerRef.current, viewportRef.current);
+		const tryInitController = () => {
+			if (disposed || initialized || !containerRef.current || !viewportRef.current) {
+				return;
+			}
+
+			const containerRect = containerRef.current.getBoundingClientRect();
+			const viewportRect = viewportRef.current.getBoundingClientRect();
+
+			const containerReady = Number.isFinite(containerRect.width) && containerRect.width > 0;
+			const viewportReady = Number.isFinite(viewportRect.width) && viewportRect.width > 0;
+
+			if (!containerReady || !viewportReady) {
+				console.debug('[TablatureView] Waiting for non-zero layout before init', {
+					containerWidth: containerRect.width,
+					viewportWidth: viewportRect.width,
+				});
+				return;
+			}
+
+			console.debug('[TablatureView] Initializing controller...');
+			initialized = true;
+			void controller.init(containerRef.current, viewportRef.current);
+		};
+
+		const resizeObserver = new ResizeObserver(() => {
+			tryInitController();
+		});
+
+		resizeObserver.observe(containerRef.current);
+		resizeObserver.observe(viewportRef.current);
+
+		const rafId = window.requestAnimationFrame(() => {
+			tryInitController();
+		});
 
 		// 清理函数
 		return () => {
+			disposed = true;
+			window.cancelAnimationFrame(rafId);
+			resizeObserver.disconnect();
 			console.debug('[TablatureView] Cleaning up controller...');
-			controller.destroy();
+			if (initialized) {
+				controller.destroy();
+			}
 		};
 	}, [controller]);
 

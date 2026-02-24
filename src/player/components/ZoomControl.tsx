@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ZoomIn } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { toFiniteClampedNumber } from '../../utils';
 
 interface ZoomControlProps {
 	controller: PlayerController;
@@ -27,18 +28,16 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ controller }) => {
 	const [currentZoom, setCurrentZoom] = useState(initialZoom);
 
 	const handleZoomChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const zoom = parseFloat(e.target.value);
-		if (!isNaN(zoom)) {
-			setCurrentZoom(zoom);
+		const zoom = toFiniteClampedNumber(parseFloat(e.target.value), 1, 0.5, 2);
+		setCurrentZoom(zoom);
 
-			// 更新全局配置（持久化）
-			globalConfig.getState().updateAlphaTabSettings({
-				display: { ...globalConfig.getState().alphaTabSettings.display, scale: zoom },
-			});
+		// 更新全局配置（持久化）
+		globalConfig.getState().updateAlphaTabSettings({
+			display: { ...globalConfig.getState().alphaTabSettings.display, scale: zoom },
+		});
 
-			// 同步到 API
-			controller.setZoom(zoom);
-		}
+		// 同步到 API
+		controller.setZoom(zoom);
 	};
 
 	return (
