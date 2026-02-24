@@ -15,6 +15,7 @@ type GpExporterModule = {
 // Extended API type for export methods
 interface ExtendedAlphaTabApi {
 	exportMidi?: () => Uint8Array;
+	downloadMidi?: (fileName?: string) => void;
 	renderTarget?: HTMLElement;
 }
 
@@ -82,8 +83,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			} else if (api && typeof api.downloadMidi === 'function') {
 				// 回退到内置下载（可能无法自定义文件名）
 				try {
-					// @ts-ignore 尝试带文件名（部分版本支持）
-					api.downloadMidi(fileName);
+					(api as ExtendedAlphaTabApi).downloadMidi?.(fileName);
 				} catch {
 					api.downloadMidi();
 				}
@@ -135,7 +135,6 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			const win = window.open('', '_blank');
 			if (!win) throw new Error('无法打开打印窗口');
 
-			// 使用 DOM API 而不是 document.write
 			const htmlEl = win.document.createElement('html');
 			const headEl = win.document.createElement('head');
 			const titleEl = win.document.createElement('title');

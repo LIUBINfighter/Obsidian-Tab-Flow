@@ -44,9 +44,7 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onTracksClick }) =
 	return (
 		<div className="tab-flow-play-bar">
 			{/* 音轨管理按钮（如果提供回调） */}
-			{onTracksClick && (
-				<TracksToggle controller={controller} onClick={onTracksClick} />
-			)}
+			{onTracksClick && <TracksToggle controller={controller} onClick={onTracksClick} />}
 			{/* 播放控制组件 */}
 			<PlayControls controller={controller} isPlaying={isPlaying} canPlay={canPlay} />
 

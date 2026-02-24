@@ -24,7 +24,6 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
 
 	try {
 		// try using alphaTab ByteBuffer if present for compatibility
-		// @ts-ignore
 		// AlphaTab internal IO API types (not exported)
 		const ioNamespace = Reflect.get(alphaTab, 'io') as AlphaTabIONamespace | undefined;
 		if (ioNamespace?.ByteBuffer && ioNamespace.IOHelper) {

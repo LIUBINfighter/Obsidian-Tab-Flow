@@ -15,12 +15,51 @@
 	padding: 20px;
 }
 
+.tabflow-print-preview-view.print-preview-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.tabflow-print-preview-view .print-preview-toolbar {
+	display: flex;
+	gap: 10px;
+	padding: 10px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	justify-content: space-between;
+	flex-shrink: 0;
+}
+
+.tabflow-print-preview-view .print-preview-toolbar-left,
+.tabflow-print-preview-view .print-preview-toolbar-right {
+	display: flex;
+	gap: 8px;
+}
+
+.tabflow-print-preview-view .print-preview-body {
+	flex: 1;
+	flex-direction: row;
+	min-height: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-preview-wrapper {
+	flex: 1;
+	overflow: auto;
+	padding: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	background-color: var(--background-secondary);
+}
+
 .tabflow-print-preview-view .print-preview-iframe {
 	/* A4 纸宽度，阴影只在屏幕预览时可见 */
 	width: 210mm;
+	height: auto;
 	border: none;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 	background: white;
+	display: block;
 }
 
 /* 左侧打印 Track/Staff 面板 */

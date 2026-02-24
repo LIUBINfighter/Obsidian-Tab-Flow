@@ -15,7 +15,6 @@ import type { AlphaTabApi, synth } from '@coderline/alphatab';
 import type { StoreCollection } from './store/StoreFactory';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
-import * as convert from 'color-convert';
 import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
 
 type AlphaTabSettingsInput = alphaTab.Settings;
@@ -27,6 +26,47 @@ type PositionChangedEventArgsWithBeatInfo = synth.PositionChangedEventArgs & {
 	currentTick?: number;
 };
 type EventDisposer = () => void;
+
+function hslToHex(h: number, s: number, l: number): string {
+	const hue = ((h % 360) + 360) % 360;
+	const sat = Math.max(0, Math.min(100, s)) / 100;
+	const lig = Math.max(0, Math.min(100, l)) / 100;
+	const chroma = (1 - Math.abs(2 * lig - 1)) * sat;
+	const x = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+	const m = lig - chroma / 2;
+
+	let r = 0;
+	let g = 0;
+	let b = 0;
+
+	if (hue < 60) {
+		r = chroma;
+		g = x;
+	} else if (hue < 120) {
+		r = x;
+		g = chroma;
+	} else if (hue < 180) {
+		g = chroma;
+		b = x;
+	} else if (hue < 240) {
+		g = x;
+		b = chroma;
+	} else if (hue < 300) {
+		r = x;
+		b = chroma;
+	} else {
+		r = chroma;
+		b = x;
+	}
+
+	const toHex = (value: number): string => {
+		const channel = Math.round((value + m) * 255);
+		const clamped = Math.max(0, Math.min(255, channel));
+		return clamped.toString(16).padStart(2, '0');
+	};
+
+	return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
 
 export interface PlayerControllerResources {
 	bravuraUri: string;
@@ -455,7 +495,7 @@ export class PlayerController {
 			let barNumberColor = '#000';
 			if (isValidHSL) {
 				try {
-					barNumberColor = '#' + convert.hsl.hex([accentH, accentS, accentL]);
+					barNumberColor = hslToHex(accentH, accentS, accentL);
 				} catch (error) {
 					console.warn(
 						`[PlayerController #${this.instanceId}] Failed to convert HSL to hex, using default:`,

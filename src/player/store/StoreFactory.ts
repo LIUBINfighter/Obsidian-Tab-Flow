@@ -15,6 +15,10 @@ import type TabFlowPlugin from '../../main';
 import type { ItemView } from 'obsidian';
 import type { StoreApi, UseBoundStore } from 'zustand';
 
+type ViewStateBridge = ItemView & {
+	setState: (state: unknown, result?: unknown) => Promise<void>;
+};
+
 /**
  * Store 集合
  */
@@ -77,8 +81,8 @@ export class StoreFactory {
 				return Object.assign(snapshot, state);
 			},
 			setViewState: async (state, result) => {
-				// @ts-expect-error - Obsidian View setState signature varies between versions
-				await view.setState(state, result);
+				const viewBridge = view as unknown as ViewStateBridge;
+				await viewBridge.setState(state, result);
 			},
 		});
 

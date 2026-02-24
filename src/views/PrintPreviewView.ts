@@ -3,6 +3,7 @@ import type TabFlowPlugin from '../main';
 import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
 import { PrintTracksPanelDom } from '../player/components/PrintTracksPanel';
+import { setCssProps, toggleHidden } from '../utils/styleUtils';
 
 export const VIEW_TYPE_PRINT_PREVIEW = 'tab-flow-print-preview';
 
@@ -97,32 +98,22 @@ export class PrintPreviewView extends FileView {
 			}
 			this.api = null;
 		}
+
+		await Promise.resolve();
 	}
 
-	async onOpen() {
+	async onOpen(): Promise<void> {
 		const container = this.contentEl;
 		container.empty();
 		container.addClass('tabflow-print-preview-view');
-		container.style.display = 'flex';
-		container.style.flexDirection = 'column';
-		container.style.height = '100%';
+		container.addClass('print-preview-root');
 
 		// 1. Toolbar
 		const toolbar = container.createDiv({ cls: 'print-preview-toolbar' });
-		toolbar.style.display = 'flex';
-		toolbar.style.gap = '10px';
-		toolbar.style.padding = '10px';
-		toolbar.style.borderBottom = '1px solid var(--background-modifier-border)';
-		toolbar.style.justifyContent = 'space-between';
-		toolbar.style.flexShrink = '0';
 
-		const leftToolbar = toolbar.createDiv();
-		leftToolbar.style.display = 'flex';
-		leftToolbar.style.gap = '8px';
+		const leftToolbar = toolbar.createDiv({ cls: 'print-preview-toolbar-left' });
 
-		const rightToolbar = toolbar.createDiv();
-		rightToolbar.style.display = 'flex';
-		rightToolbar.style.gap = '8px';
+		const rightToolbar = toolbar.createDiv({ cls: 'print-preview-toolbar-right' });
 
 		new ButtonComponent(leftToolbar)
 			.setIcon('layout-sidebar-left')
@@ -139,120 +130,52 @@ export class PrintPreviewView extends FileView {
 
 		// 2. Body: 左侧轨道面板 + 右侧预览
 		const body = container.createDiv({ cls: 'print-preview-body' });
-		body.style.flex = '1';
-		body.style.display = 'flex';
-		body.style.flexDirection = 'row';
-		body.style.minHeight = '0';
 
 		// 左侧：打印用 Track/Staff 面板
 		this.sidebarEl = body.createDiv('tabflow-print-sidebar');
 
 		// 右侧：iframe 预览区域
 		const previewWrapper = body.createDiv('tabflow-print-preview-wrapper');
-		previewWrapper.style.flex = '1';
-		previewWrapper.style.overflow = 'auto';
-		previewWrapper.style.padding = '20px';
-		previewWrapper.style.display = 'flex';
-		previewWrapper.style.justifyContent = 'center';
-		previewWrapper.style.alignItems = 'flex-start';
-		previewWrapper.style.backgroundColor = 'var(--background-secondary)';
 
 		// Create iframe for print preview（宽度贴近 A4，内部不再二次添加水平 padding）
 		const iframe = previewWrapper.createEl('iframe', {
 			cls: 'print-preview-iframe',
 		});
-		iframe.style.width = '210mm';
-		iframe.style.height = 'auto';
-		iframe.style.border = 'none';
-		iframe.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
-		iframe.style.backgroundColor = 'white';
-		iframe.style.display = 'block';
-		iframe.scrolling = 'no';
 
 		// Wait for iframe to load
 		iframe.onload = () => {
 			this.setupIframeContent(iframe);
 		};
 
-		// Initialize iframe document（仅负责布局，不在此处加载 Bravura 字体）
-		const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-		if (iframeDoc) {
-			iframeDoc.open();
-			iframeDoc.write(`
-				<!DOCTYPE html>
-				<html>
-				<head>
-					<meta charset="UTF-8">
-					<title>Print Preview</title>
-					<style>
-						* {
-							margin: 0;
-							padding: 0;
-							box-sizing: border-box;
-						}
-						
-						html, body {
-							overflow: visible;
-							height: auto;
-							width: 100%;
-						}
-						
-						body {
-							font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-							background: white;
-							color: black;
-						}
-						
-						/* A4 page settings：交给打印引擎控制纸张与统一边距 */
-						@page {
-							size: A4;
-							margin: 10mm;
-						}
-						
-						@media print {
-							html, body {
-								/* 确保打印时可见 */
-								overflow: visible !important;
-								height: auto !important;
-								background: white !important;
-							}
-							
-							.content-area {
-								/* 打印时让 AlphaTab 的 page 布局直接贴边由 @page 控制可打印区域 */
-								margin: 0;
-								padding: 0;
-							}
-							
-							/* 确保 SVG 在打印时可见 */
-							svg {
-								display: block !important;
-								visibility: visible !important;
-								opacity: 1 !important;
-							}
-						}
-						
-						.content-area {
-							/* Content will auto-expand; AlphaTab page 布局负责分页 */
-							width: 100%;
-							position: relative;
-						}
-						
-						/* 确保 AlphaTab 容器正确显示（字体由 AlphaTab 自己加载） */
-						.alphaTab {
-							width: 100%;
-							position: relative;
-						}
-					</style>
-				</head>
-				<body>
-					<div class="content-area" id="scoreContent">
-						<!-- Content will be inserted here -->
-					</div>
-				</body>
-				</html>
-			`);
-			iframeDoc.close();
-		}
+		iframe.srcdoc = this.getPrintPreviewSrcDoc();
+
+		await Promise.resolve();
+	}
+
+	private getPrintPreviewSrcDoc(): string {
+		return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Print preview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { overflow: visible; height: auto; width: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: white; color: black; }
+    @page { size: A4; margin: 10mm; }
+    @media print {
+      html, body { overflow: visible !important; height: auto !important; background: white !important; }
+      .content-area { margin: 0; padding: 0; }
+      svg { display: block !important; visibility: visible !important; opacity: 1 !important; }
+    }
+    .content-area { width: 100%; position: relative; }
+    .alphaTab { width: 100%; position: relative; }
+  </style>
+</head>
+<body>
+  <div class="content-area" id="scoreContent"></div>
+</body>
+</html>`;
 	}
 
 	private setupIframeContent(iframe: HTMLIFrameElement) {
@@ -305,11 +228,7 @@ export class PrintPreviewView extends FileView {
 	private toggleSidebar() {
 		if (!this.sidebarEl) return;
 		this.isSidebarCollapsed = !this.isSidebarCollapsed;
-		if (this.isSidebarCollapsed) {
-			this.sidebarEl.style.display = 'none';
-		} else {
-			this.sidebarEl.style.display = 'flex';
-		}
+		toggleHidden(this.sidebarEl, this.isSidebarCollapsed);
 		this.adjustIframeHeight();
 	}
 
@@ -351,7 +270,9 @@ export class PrintPreviewView extends FileView {
 
 		// 直接使用 body scrollHeight 作为 iframe 高度
 		const height = iframeDoc.body.scrollHeight;
-		this.iframe.style.height = height + 'px';
+		setCssProps(this.iframe, {
+			height: `${height}px`,
+		});
 
 		console.debug('[PrintPreview] Iframe height adjusted to:', height);
 	}
@@ -442,7 +363,7 @@ export class PrintPreviewView extends FileView {
 					'[PrintPreview] Loading binary score, size:',
 					binaryContent.byteLength
 				);
-				await this.api.load(binaryContent);
+				await Promise.resolve(this.api.load(binaryContent));
 			}
 		} catch (error) {
 			console.error('[PrintPreview] Failed to render score:', error);
@@ -488,7 +409,7 @@ export class PrintPreviewView extends FileView {
 			},
 			player: {
 				// ✅ 禁用播放器（仅渲染）
-				enablePlayer: false,
+				playerMode: alphaTab.PlayerMode.Disabled,
 				soundFont: resources.soundFontUri,
 			},
 			display: {
@@ -521,7 +442,7 @@ export class PrintPreviewView extends FileView {
 			stretchForce: settings.display.stretchForce,
 			layoutMode: settings.display.layoutMode,
 			enableLazyLoading: settings.core.enableLazyLoading,
-			enablePlayer: settings.player.enablePlayer,
+			playerMode: settings.player.playerMode,
 		});
 
 		return settings;
@@ -561,7 +482,7 @@ export class PrintPreviewView extends FileView {
 		}
 	}
 
-	async onClose() {
+	async onClose(): Promise<void> {
 		// 销毁 AlphaTab API
 		if (this.api) {
 			try {
@@ -575,5 +496,7 @@ export class PrintPreviewView extends FileView {
 		this.iframe = null;
 		this.previewContainer = null;
 		this.contentEl.empty();
+
+		await Promise.resolve();
 	}
 }

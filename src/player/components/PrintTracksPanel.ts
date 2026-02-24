@@ -1,5 +1,6 @@
 import { ButtonComponent, setIcon } from 'obsidian';
 import type * as alphaTab from '@coderline/alphatab';
+import { setCssProps } from '../../utils/styleUtils';
 
 interface PrintTracksPanelOptions {
 	container: HTMLElement;
@@ -144,7 +145,9 @@ export class PrintTracksPanelDom {
 				const visible = this.getTrackVisible(track.index);
 				iconEl.empty();
 				setIcon(iconEl, visible ? 'eye' : 'eye-off');
-				iconEl.style.opacity = visible ? '1' : '0.35';
+				setCssProps(iconEl, {
+					opacity: visible ? '1' : '0.35',
+				});
 				iconEl.toggleClass('mod-muted', !visible);
 				iconBtn.toggleClass('is-active', visible);
 			};

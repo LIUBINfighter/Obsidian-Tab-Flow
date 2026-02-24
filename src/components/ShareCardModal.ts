@@ -52,6 +52,34 @@ export class ShareCardModal extends Modal {
 	private maxZoom = 3;
 	private zoomStep = 0.1;
 
+	private buildPlaygroundOptions(
+		lazyEnabled: boolean
+	): import('./AlphaTexPlayground').AlphaTexPlaygroundOptions {
+		return {
+			readOnly: true,
+			showEditor: false,
+			layout: 'vertical',
+			className: 'share-card-playground',
+			alphaTabOptions: {
+				player: 'disable',
+				__disableLazyLoading: lazyEnabled,
+			},
+		};
+	}
+
+	private async writeImageToClipboard(blob: Blob): Promise<boolean> {
+		type ClipboardWithWrite = Clipboard & {
+			write?: (items: ClipboardItem[]) => Promise<void>;
+		};
+		const clipboard = navigator.clipboard as ClipboardWithWrite | undefined;
+		if (!clipboard?.write) {
+			return false;
+		}
+		const item = new ClipboardItem({ [blob.type]: blob });
+		await clipboard.write([item]);
+		return true;
+	}
+
 	// 预设相关运行期字段（不持久化）
 	private presetService: ShareCardPresetService | null = null;
 	private currentPresetId: string | null = null; // 当前下拉选中
@@ -818,21 +846,7 @@ export class ShareCardModal extends Modal {
 					this.plugin,
 					this.playgroundContent!,
 					source,
-					{
-						readOnly: true,
-						showEditor: false,
-						layout: 'vertical',
-						className: 'share-card-playground',
-						// @ts-ignore 透传给 mountAlphaTexBlock 的 init：关闭播放器
-						player: 'disable',
-						// 自定义附加 alphaTabOptions：根据勾选决定是否禁用懒加载
-						alphaTabOptions: {
-							// alphaTab Settings.core 不一定暴露 enableLazyLoading，这里作为扩展字段传给我们的实现
-							// 约定：在 mountAlphaTexBlock 内读取并应用
-							// @ts-ignore
-							__disableLazyLoading: lazyCb.checked,
-						},
-					}
+					this.buildPlaygroundOptions(lazyCb.checked)
 				);
 			} catch (e) {
 				console.error('[ShareCardModal] 创建 playground 失败', e);
@@ -960,17 +974,7 @@ export class ShareCardModal extends Modal {
 									: 'image/webp';
 						try {
 							const blob = await this.generateImageBlob(resolution, fmt, mime);
-							// @ts-ignore
-							interface ClipboardWithWrite extends Clipboard {
-								write?: (items: ClipboardItem[]) => Promise<void>;
-							}
-							if (
-								navigator.clipboard &&
-								(navigator.clipboard as ClipboardWithWrite).write
-							) {
-								const item = new ClipboardItem({ [blob.type]: blob });
-								// @ts-ignore
-								await navigator.clipboard.write([item]);
+							if (await this.writeImageToClipboard(blob)) {
 								new Notice(t('shareCard.notice.copiedToClipboard'));
 							} else {
 								new Notice(t('shareCard.notice.clipboardNotSupported'));

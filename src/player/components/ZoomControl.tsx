@@ -47,7 +47,7 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ controller }) => {
 				className="play-bar-control-select"
 				value={currentZoom}
 				onChange={handleZoomChange}
-				aria-label="Zoom Level"
+				aria-label="Zoom level"
 				title="缩放级别"
 			>
 				{zoomLevels.map(({ label, value }) => (

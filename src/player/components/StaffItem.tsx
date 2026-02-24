@@ -28,6 +28,8 @@ type StaffOptions = {
 	showStandardNotation: boolean;
 };
 
+type StaffOptionKey = keyof StaffOptions;
+
 /**
  * 五线谱控制项属性
  */
@@ -59,8 +61,8 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 
 	useEffect(() => {
 		// 应用配置到 staff 对象
-		for (const key in staffOptions) {
-			(staff as any)[key] = (staffOptions as any)[key];
+		for (const key of Object.keys(staffOptions) as StaffOptionKey[]) {
+			staff[key] = staffOptions[key];
 		}
 
 		// 重新渲染

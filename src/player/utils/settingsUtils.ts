@@ -2,13 +2,13 @@
  * Settings Utilities - 设置面板辅助工具
  */
 
-import type { AlphaTabPlayerConfig } from '../types/config-schema';
+type SerializableConfig = Record<string, unknown>;
 
 /**
  * 导出配置为 JSON 文件
  */
 export function exportConfigToJSON(
-	config: AlphaTabPlayerConfig,
+	config: SerializableConfig,
 	filename = 'alphatab-config.json'
 ): void {
 	const json = JSON.stringify(config, null, 2);
@@ -26,7 +26,7 @@ export function exportConfigToJSON(
 /**
  * 从 JSON 文件导入配置
  */
-export function importConfigFromJSON(): Promise<AlphaTabPlayerConfig | null> {
+export function importConfigFromJSON(): Promise<SerializableConfig | null> {
 	return new Promise((resolve) => {
 		const input = document.createElement('input');
 		input.type = 'file';
@@ -41,7 +41,7 @@ export function importConfigFromJSON(): Promise<AlphaTabPlayerConfig | null> {
 
 			try {
 				const text = await file.text();
-				const config = JSON.parse(text) as AlphaTabPlayerConfig;
+				const config = JSON.parse(text) as SerializableConfig;
 				resolve(config);
 			} catch (error) {
 				console.error('[SettingsUtils] Failed to parse config:', error);
@@ -56,7 +56,7 @@ export function importConfigFromJSON(): Promise<AlphaTabPlayerConfig | null> {
 /**
  * 复制配置到剪贴板
  */
-export async function copyConfigToClipboard(config: AlphaTabPlayerConfig): Promise<boolean> {
+export async function copyConfigToClipboard(config: SerializableConfig): Promise<boolean> {
 	const json = JSON.stringify(config, null, 2);
 
 	try {

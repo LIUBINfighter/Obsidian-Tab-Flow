@@ -14,6 +14,11 @@ import {
 	importConfigFromJSON,
 	copyConfigToClipboard,
 } from '../utils/settingsUtils';
+import type {
+	GlobalAlphaTabSettings,
+	GlobalPlayerExtensions,
+	UIConfig,
+} from '../types/global-config-schema';
 
 // ========== Context ==========
 
@@ -27,15 +32,16 @@ const SettingsContext = createContext<SettingsContextProps>(null!);
 // ========== Type Definitions ==========
 
 type TypeScriptEnum = { [key: number | string]: number | string };
+type Indexable = Record<string, unknown>;
 
 type ValueAccessor = {
-	getValue(context: SettingsContextProps): any;
-	setValue(context: SettingsContextProps, value: any): void;
+	getValue(context: SettingsContextProps): unknown;
+	setValue(context: SettingsContextProps, value: unknown): void;
 };
 
 type ControlProps = ValueAccessor & { inputId: string };
 
-type ButtonGroupButtonSchema = { label: string; value: any };
+type ButtonGroupButtonSchema = { label: string; value: unknown };
 
 type ButtonGroupSchema = { type: 'button-group'; buttons: ButtonGroupButtonSchema[] };
 type NumberInputSchema = { type: 'number-input'; min?: number; max?: number; step?: number };
@@ -53,16 +59,24 @@ type SettingSchema = {
 		| NumberInputSchema
 		| BooleanToggleSchema
 		| TextInputSchema;
-	prepareValue?(value: any): any;
+	prepareValue?(value: unknown): unknown;
 } & ValueAccessor;
 
 type SettingsGroupSchema = { title: string; settings: SettingSchema[] };
 
 type UpdateSettingsOptions = {
-	prepareValue?: (value: any) => any;
-	afterUpdate?: (context: SettingsContextProps) => any;
+	prepareValue?: (value: unknown) => unknown;
+	afterUpdate?: (context: SettingsContextProps) => void;
 	callRender?: boolean;
 	callUpdateSettings?: boolean;
+};
+
+type ImportedConfig = {
+	alphaTabSettings?: Partial<GlobalAlphaTabSettings> & {
+		display?: Partial<GlobalAlphaTabSettings['display']> & { barsPerRow?: number | null };
+	};
+	playerExtensions?: Partial<GlobalPlayerExtensions>;
+	uiConfig?: Partial<UIConfig>;
 };
 
 // ========== Helper Functions ==========
@@ -90,6 +104,26 @@ function updateApiSettings(
 	options?.afterUpdate?.(context);
 }
 
+function useSettingsContext(): SettingsContextProps {
+	const context = useContext(SettingsContext);
+	if (!context) {
+		throw new Error('[SettingsPanel] Missing settings context');
+	}
+	return context;
+}
+
+function toNumberValue(value: unknown, fallback = 0): number {
+	if (typeof value === 'number' && Number.isFinite(value)) {
+		return value;
+	}
+	const num = Number(value);
+	return Number.isFinite(num) ? num : fallback;
+}
+
+function toBooleanValue(value: unknown, fallback = false): boolean {
+	return typeof value === 'boolean' ? value : fallback;
+}
+
 // ========== Factory for Accessors ==========
 
 function isPollutingKey(key: string) {
@@ -105,13 +139,17 @@ const factory = {
 				const api = context.controller.getRuntimeStore().getState().alphaTabApi;
 				if (!api) return null;
 
-				let obj: any = api.settings;
+				let obj: Indexable = api.settings as unknown as Indexable;
 				for (let i = 0; i < parts.length - 1; i++) {
 					const key = parts[i];
 					if (isPollutingKey(key)) {
 						return undefined;
 					}
-					obj = obj[key];
+					const next = obj[key];
+					if (!next || typeof next !== 'object') {
+						return undefined;
+					}
+					obj = next as Indexable;
 				}
 				const lastKey = parts[parts.length - 1];
 				if (isPollutingKey(lastKey)) {
@@ -119,17 +157,21 @@ const factory = {
 				}
 				return obj[lastKey];
 			},
-			setValue(context: SettingsContextProps, value: any) {
+			setValue(context: SettingsContextProps, value: unknown) {
 				updateApiSettings(
 					context,
 					(api) => {
-						let obj: any = api.settings;
+						let obj: Indexable = api.settings as unknown as Indexable;
 						for (let i = 0; i < parts.length - 1; i++) {
 							const key = parts[i];
 							if (isPollutingKey(key)) {
 								return; // Prevent polluting property chain
 							}
-							obj = obj[key];
+							const next = obj[key];
+							if (!next || typeof next !== 'object') {
+								return;
+							}
+							obj = next as Indexable;
 						}
 						const lastKey = parts[parts.length - 1];
 						if (isPollutingKey(lastKey)) {
@@ -151,7 +193,7 @@ const factory = {
 		return {
 			getValue(context: SettingsContextProps) {
 				const api = context.controller.getRuntimeStore().getState().alphaTabApi;
-				return api ? (api[property] as alphaTab.AlphaTabApi[P]) : null;
+				return api ? api[property] : null;
 			},
 			setValue(context: SettingsContextProps, value: alphaTab.AlphaTabApi[P]) {
 				const api = context.controller.getRuntimeStore().getState().alphaTabApi;
@@ -170,13 +212,16 @@ const factory = {
 		return {
 			getValue(context: SettingsContextProps) {
 				const globalConfig = context.controller.getGlobalConfigStore().getState();
-				let obj: any = globalConfig;
+				let obj: unknown = globalConfig;
 				for (const part of parts) {
-					obj = obj?.[part];
+					if (!obj || typeof obj !== 'object') {
+						return undefined;
+					}
+					obj = (obj as Indexable)[part];
 				}
 				return obj;
 			},
-			setValue(context: SettingsContextProps, value: any) {
+			setValue(context: SettingsContextProps, value: unknown) {
 				if (updateOptions?.prepareValue) {
 					value = updateOptions.prepareValue(value);
 				}
@@ -190,9 +235,13 @@ const factory = {
 						.getState().alphaTabSettings;
 					const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
 
-					let target: any = updatedSettings;
+					let target: Indexable = updatedSettings as unknown as Indexable;
 					for (let i = 0; i < settingPath.length - 1; i++) {
-						target = target[settingPath[i]];
+						const next = target[settingPath[i]];
+						if (!next || typeof next !== 'object') {
+							return;
+						}
+						target = next as Indexable;
 					}
 					target[settingPath[settingPath.length - 1]] = value;
 
@@ -281,7 +330,7 @@ const factory = {
 	buttonGroup(
 		label: string,
 		setting: string,
-		buttons: [string, any][],
+		buttons: [string, unknown][],
 		updateOptions?: UpdateSettingsOptions
 	): SettingSchema {
 		return {
@@ -453,23 +502,23 @@ const EnumDropDown: React.FC<EnumDropDownSchema & ControlProps> = ({
 	getValue,
 	setValue,
 }) => {
-	const context = useContext(SettingsContext)!;
+	const context = useSettingsContext();
 	const enumValues: { value: number; label: string }[] = [];
 
 	for (const value of Object.values(enumType)) {
 		if (typeof value === 'string') {
-			const key = enumType[value] as number;
+			const key = toNumberValue(enumType[value]);
 			enumValues.push({ value: key, label: value });
 		}
 	}
 
-	const currentValue = getValue(context);
+	const currentValue = toNumberValue(getValue(context));
 
 	return (
 		<select
 			id={inputId}
 			className="settings-select"
-			value={currentValue ?? 0}
+			value={currentValue}
 			onChange={(e) => setValue(context, Number.parseInt(e.target.value))}
 		>
 			{enumValues.map((v) => (
@@ -489,8 +538,8 @@ const NumberRange: React.FC<NumberRangeSchema & ControlProps> = ({
 	getValue,
 	setValue,
 }) => {
-	const context = useContext(SettingsContext)!;
-	const value = getValue(context) ?? 0;
+	const context = useSettingsContext();
+	const value = toNumberValue(getValue(context));
 	const [localValue, setLocalValue] = useState(value);
 
 	useEffect(() => {
@@ -526,8 +575,8 @@ const NumberInput: React.FC<NumberInputSchema & ControlProps> = ({
 	getValue,
 	setValue,
 }) => {
-	const context = useContext(SettingsContext)!;
-	const value = getValue(context) ?? 0;
+	const context = useSettingsContext();
+	const value = toNumberValue(getValue(context));
 
 	return (
 		<input
@@ -548,8 +597,8 @@ const BooleanToggle: React.FC<BooleanToggleSchema & ControlProps> = ({
 	getValue,
 	setValue,
 }) => {
-	const context = useContext(SettingsContext)!;
-	const value = getValue(context) ?? false;
+	const context = useSettingsContext();
+	const value = toBooleanValue(getValue(context));
 
 	return (
 		<label className="settings-toggle">
@@ -570,7 +619,7 @@ const ButtonGroupButton: React.FC<ButtonGroupButtonSchema & ControlProps> = ({
 	getValue,
 	setValue,
 }) => {
-	const context = useContext(SettingsContext)!;
+	const context = useSettingsContext();
 	const currentValue = getValue(context);
 	const isActive = currentValue === value;
 
@@ -774,9 +823,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							className="settings-tool-button"
 							onClick={() => {
 								void (async () => {
-									const globalConfig = controller.getGlobalConfigStore().getState();
+									const globalConfig = controller
+										.getGlobalConfigStore()
+										.getState();
 									// 临时转换为旧格式以兼容工具函数
-									const legacyConfig: any = {
+									const legacyConfig = {
 										scoreSource: controller.getWorkspaceConfigStore().getState()
 											.scoreSource,
 										alphaTabSettings: globalConfig.alphaTabSettings,
@@ -800,7 +851,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							onClick={() => {
 								const globalConfig = controller.getGlobalConfigStore().getState();
 								// 临时转换为旧格式以兼容工具函数
-								const legacyConfig: any = {
+								const legacyConfig = {
 									scoreSource: controller.getWorkspaceConfigStore().getState()
 										.scoreSource,
 									alphaTabSettings: globalConfig.alphaTabSettings,
@@ -817,13 +868,14 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							className="settings-tool-button"
 							onClick={() => {
 								void (async () => {
-									const config = await importConfigFromJSON();
-									if (config) {
+									const rawConfig = await importConfigFromJSON();
+									if (rawConfig) {
+										const config = rawConfig as ImportedConfig;
 										// 导入配置需要更新 globalConfig
 										const store = controller.getGlobalConfigStore().getState();
 										if (config.alphaTabSettings) {
 											// 转换类型：处理 barsPerRow null -> -1
-											const settings: any = { ...config.alphaTabSettings };
+											const settings = { ...config.alphaTabSettings };
 											if (settings.display?.barsPerRow === null) {
 												settings.display.barsPerRow = -1;
 											}
@@ -847,7 +899,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							type="button"
 							className="settings-tool-button settings-tool-button-danger"
 							onClick={() => {
-								new Notice('Reset all settings to defaults? This will reload the page.', 5000);
+								new Notice(
+									'Reset all settings to defaults? This will reload the page.',
+									5000
+								);
 								controller.getGlobalConfigStore().getState().resetToDefaults();
 								window.location.reload();
 							}}

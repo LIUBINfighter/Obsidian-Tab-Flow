@@ -10,6 +10,15 @@ import {
 } from '../../editor/EmbeddableMarkdownEditor';
 import { setCssProps } from '../../utils/styleUtils';
 
+type WorkspaceEventBus = {
+	trigger: (eventName: string, ...args: unknown[]) => void;
+};
+
+function triggerWorkspaceEvent(app: App, eventName: string, ...args: unknown[]): void {
+	const workspace = app.workspace as unknown as WorkspaceEventBus;
+	workspace.trigger(eventName, ...args);
+}
+
 export function renderEditorTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
@@ -574,9 +583,7 @@ export function renderEditorTab(
 						};
 						await plugin.saveSettings();
 						try {
-							/* @ts-ignore */ app.workspace.trigger(
-								'tabflow:editorbar-components-changed'
-							);
+							triggerWorkspaceEvent(app, 'tabflow:editorbar-components-changed');
 						} catch {
 							// Ignore workspace trigger errors
 						}
@@ -830,9 +837,7 @@ export function renderEditorTab(
 							components[key] = m.disabled ? false : value;
 							await plugin.saveSettings();
 							try {
-								/* @ts-ignore */ app.workspace.trigger(
-									'tabflow:editorbar-components-changed'
-								);
+								triggerWorkspaceEvent(app, 'tabflow:editorbar-components-changed');
 							} catch {
 								// Ignore workspace trigger errors
 							}
@@ -895,9 +900,7 @@ export function renderEditorTab(
 						renderCards();
 					});
 					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:editorbar-components-changed'
-						);
+						triggerWorkspaceEvent(app, 'tabflow:editorbar-components-changed');
 					} catch {
 						// Ignore workspace trigger errors
 					}
@@ -918,9 +921,7 @@ export function renderEditorTab(
 						renderCards();
 					});
 					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:editorbar-components-changed'
-						);
+						triggerWorkspaceEvent(app, 'tabflow:editorbar-components-changed');
 					} catch {
 						// Ignore workspace trigger errors
 					}
@@ -993,9 +994,7 @@ export function renderEditorTab(
 					await plugin.saveSettings();
 					renderCards();
 					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:editorbar-components-changed'
-						);
+						triggerWorkspaceEvent(app, 'tabflow:editorbar-components-changed');
 					} catch {
 						// Ignore workspace trigger errors
 					}

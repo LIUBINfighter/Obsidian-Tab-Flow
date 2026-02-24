@@ -50,7 +50,7 @@ export const SpeedControl: React.FC<SpeedControlProps> = ({ controller }) => {
 				className="play-bar-control-select"
 				value={speed}
 				onChange={handleChange}
-				aria-label="Playback Speed"
+				aria-label="Playback speed"
 				title="播放速度"
 			>
 				{speedOptions.map(({ label, value }) => (

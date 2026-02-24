@@ -23,7 +23,7 @@ export const LocateCursorButton: React.FC<LocateCursorButtonProps> = ({ controll
 		<button
 			className="play-bar-button"
 			onClick={handleLocate}
-			aria-label="Locate Cursor"
+			aria-label="Locate cursor"
 			title="定位到播放光标"
 		>
 			<Crosshair size={16} />

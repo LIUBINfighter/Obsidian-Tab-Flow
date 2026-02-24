@@ -276,7 +276,6 @@ export function mountAlphaTexBlock(
 					: new Map<number, string>(),
 				fontDirectory: '',
 				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
-				// @ts-ignore
 				enableLazyLoading: disableLazyLoading ? false : undefined,
 			},
 			player: {
@@ -468,7 +467,6 @@ export function mountAlphaTexBlock(
 
 			// const speedIcon = document.createElement("span");
 			// setIcon(speedIcon, "lucide-gauge");
-			// speedIcon.style.marginRight = "0.5em";
 
 			// const speedInput = document.createElement("input");
 			// speedInput.type = "number";
@@ -491,8 +489,6 @@ export function mountAlphaTexBlock(
 
 			// const zoomIcon = document.createElement("span");
 			// setIcon(zoomIcon, "lucide-zoom-in");
-			// zoomIcon.style.marginLeft = "1em";
-			// zoomIcon.style.marginRight = "0.5em";
 			// const zoomInput = document.createElement("input");
 			// zoomInput.type = "number";
 			// zoomInput.min = "0.5";

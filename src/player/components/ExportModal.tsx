@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { Notice } from 'obsidian';
 import type { PlayerController } from '../PlayerController';
 
 interface ExportModalProps {
@@ -88,10 +89,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 		// 收集音频块
 		const chunks: Float32Array[] = [];
 		try {
-			// eslint-disable-next-line no-constant-condition
-			while (true) {
+			let hasMoreChunks = true;
+			while (hasMoreChunks) {
 				const chunk = await exporter.render(500); // 每次渲染 500ms
 				if (chunk === undefined) {
+					hasMoreChunks = false;
 					break;
 				}
 
@@ -125,15 +127,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 		await exportWAV();
 
 		// 提示用户使用在线工具转换
-		alert(
-			'WAV 文件已导出。\n\n要转换为 MP3，您可以使用在线工具如：\n- https://cloudconvert.com/wav-to-mp3\n- https://convertio.co/wav-mp3/'
+		new Notice(
+			'WAV exported. To convert to MP3, use https://cloudconvert.com/wav-to-mp3 or https://convertio.co/wav-mp3/',
+			9000
 		);
 	};
 
 	/**
 	 * 导出 MIDI 文件
 	 */
-	const exportMIDI = async () => {
+	const exportMIDI = () => {
 		if (!api) throw new Error('API not ready');
 
 		setProgress(50);

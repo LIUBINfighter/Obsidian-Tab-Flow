@@ -1,5 +1,6 @@
 import { ShareCardPresetV1 } from '../settings/defaults';
 import type TabFlowPlugin from '../main';
+import { setCssProps } from '../utils/styleUtils';
 
 /**
  * ShareCard 预设服务：封装增删改查、迁移、应用与收集逻辑。
@@ -45,7 +46,7 @@ export class ShareCardPresetService {
 		}
 		try {
 			const el = document.createElement('div');
-			el.style.color = s;
+			setCssProps(el, { color: s });
 			document.body.appendChild(el);
 			const cs = getComputedStyle(el).color;
 			document.body.removeChild(el);
