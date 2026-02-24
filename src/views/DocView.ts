@@ -1,7 +1,13 @@
-import { ItemView, WorkspaceLeaf } from 'obsidian';
+import { App, ItemView, WorkspaceLeaf } from 'obsidian';
 import TabFlowPlugin from '../main';
 import panelsRegistry, { DocPanel, loadDocPanels } from './docs/index';
 import { t, getCurrentLanguageCode, addLanguageChangeListener } from '../i18n';
+
+type AppWithCommands = App & {
+	commands: {
+		executeCommandById: (commandId: string) => void;
+	};
+};
 
 export const VIEW_TYPE_TABFLOW_DOC = 'tabflow-doc-view';
 // 兼容导出：保留旧名称以避免其它文件立刻出错
@@ -15,6 +21,15 @@ export class DocView extends ItemView {
 	activeId: string | null = null;
 	private layoutObserver?: ResizeObserver;
 	private settingsAction: HTMLElement | null = null;
+
+	private openPluginSettingsAbout(): void {
+		this.plugin.app.workspace.trigger('tabflow:open-plugin-settings-about');
+	}
+
+	private openSettingsCommand(): void {
+		const appWithCommands = this.plugin.app as unknown as AppWithCommands;
+		appWithCommands.commands.executeCommandById('app:open-settings');
+	}
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
 		super(leaf);
@@ -190,13 +205,11 @@ export class DocView extends ItemView {
 			}
 			const btn = this.addAction('settings', t('docView.settings', undefined, '设置'), () => {
 				try {
-					// @ts-ignore
-					this.plugin.app.workspace.trigger('tabflow:open-plugin-settings-about');
+					this.openPluginSettingsAbout();
 				} catch {
 					try {
 						// 退化处理
-						// @ts-ignore
-						this.plugin.app.commands.executeCommandById('app:open-settings');
+						this.openSettingsCommand();
 						setTimeout(() => {
 							try {
 								const search = document.querySelector<HTMLInputElement>(

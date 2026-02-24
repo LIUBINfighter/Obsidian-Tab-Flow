@@ -276,7 +276,6 @@ export function mountAlphaTexBlock(
 					: new Map<number, string>(),
 				fontDirectory: '',
 				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
-				// @ts-ignore
 				enableLazyLoading: disableLazyLoading ? false : undefined,
 			},
 			player: {

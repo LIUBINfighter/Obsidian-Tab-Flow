@@ -131,6 +131,11 @@ export class ExternalMediaService {
 	 */
 	private setupExternalMediaHandler(): void {
 		if (!this.mediaElement || !this.api.player || !this.api.player.output) return;
+		type ExternalMediaOutputLike = alphaTab.synth.IExternalMediaSynthOutput & {
+			handler?: alphaTab.synth.IExternalMediaHandler;
+			updatePosition?: (positionMs: number) => void;
+		};
+		const externalOutput = this.api.player.output as ExternalMediaOutputLike;
 		const handler: alphaTab.synth.IExternalMediaHandler = {
 			get backingTrackDuration() {
 				if (!this.mediaElement) return 0;
@@ -173,8 +178,7 @@ export class ExternalMediaService {
 		};
 
 		// 设置外部媒体处理器
-		// @ts-ignore - 类型兼容性问题
-		(this.api.player.output as alphaTab.synth.IExternalMediaSynthOutput).handler = handler;
+		externalOutput.handler = handler;
 	}
 
 	/**
@@ -235,11 +239,11 @@ export class ExternalMediaService {
 	// 媒体元素事件处理函数
 	private onTimeUpdate = (): void => {
 		if (!this.mediaElement || !this.api.player?.output) return;
-
-		// @ts-ignore - 类型兼容性问题
-		(this.api.player.output as alphaTab.synth.IExternalMediaSynthOutput).updatePosition(
-			this.mediaElement.currentTime * 1000
-		);
+		type ExternalMediaOutputLike = alphaTab.synth.IExternalMediaSynthOutput & {
+			updatePosition?: (positionMs: number) => void;
+		};
+		const externalOutput = this.api.player.output as ExternalMediaOutputLike;
+		externalOutput.updatePosition?.(this.mediaElement.currentTime * 1000);
 	};
 
 	private onPlay = (): void => {

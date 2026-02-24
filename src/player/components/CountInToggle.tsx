@@ -33,8 +33,8 @@ export const CountInToggle: React.FC<CountInToggleProps> = ({ controller }) => {
 		<button
 			className={`play-bar-button ${enabled ? 'active' : ''}`}
 			onClick={handleToggle}
-			aria-label="Count In"
-			title="Toggle Count In"
+			aria-label="Count in"
+			title="Toggle count in"
 		>
 			<Timer size={16} />
 			<span className="play-bar-button-text">预备拍</span>

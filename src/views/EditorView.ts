@@ -103,6 +103,13 @@ export class EditorView extends FileView {
 	private settingsAction: HTMLElement | null = null;
 	private switchToPlayerAction: HTMLElement | null = null;
 
+	private openEditorSettingsTab(): void {
+		const workspace = this.plugin.app.workspace as unknown as {
+			trigger: (eventName: string, ...args: unknown[]) => void;
+		};
+		workspace.trigger('tabflow:open-plugin-settings-editor');
+	}
+
 	constructor(
 		leaf: WorkspaceLeaf,
 		private plugin: TabFlowPlugin
@@ -442,8 +449,7 @@ export class EditorView extends FileView {
 				t('settings.tabs.editor', undefined, '设置'),
 				() => {
 					try {
-						// @ts-ignore
-						this.plugin.app.workspace.trigger('tabflow:open-plugin-settings-editor');
+						this.openEditorSettingsTab();
 					} catch {
 						// 忽略触发错误，SettingTab 内会有降级逻辑
 					}

@@ -1,6 +1,14 @@
 import { Modal, App, Setting, Notice, requestUrl } from 'obsidian';
 import { t } from '../i18n';
 
+type ClipboardWithWrite = Clipboard & {
+	write?: (items: ClipboardItem[]) => Promise<void>;
+};
+
+type WindowWithClipboardItem = Window & {
+	ClipboardItem?: new (items: Record<string, Blob>) => ClipboardItem;
+};
+
 export class AudioExportModal extends Modal {
 	constructor(
 		app: App,
@@ -14,13 +22,13 @@ export class AudioExportModal extends Modal {
 		try {
 			const response = await requestUrl({ url: this.audioUrl });
 			const blob = new Blob([response.arrayBuffer], { type: 'audio/wav' });
-			// ClipboardItem 需要 audio/wav 类型
-			// @ts-ignore
-			await navigator.clipboard.write([
-				new window.ClipboardItem({
-					[blob.type]: blob,
-				}),
-			]);
+			const clipboard = navigator.clipboard as ClipboardWithWrite | undefined;
+			const ClipboardItemCtor = (window as WindowWithClipboardItem).ClipboardItem;
+			if (!clipboard?.write || !ClipboardItemCtor) {
+				new Notice(t('shareCard.notice.clipboardNotSupported'));
+				return;
+			}
+			await clipboard.write([new ClipboardItemCtor({ [blob.type]: blob })]);
 			new Notice(t('export.audioCopied'));
 		} catch (e) {
 			new Notice(t('export.copyFailed') + ': ' + (e?.message || e));

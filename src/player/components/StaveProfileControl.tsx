@@ -48,7 +48,7 @@ export const StaveProfileControl: React.FC<StaveProfileControlProps> = ({ contro
 				className="play-bar-control-select"
 				value={profile}
 				onChange={handleChange}
-				aria-label="Stave Profile"
+				aria-label="Stave profile"
 				title="谱表模式"
 			>
 				{profiles.map(({ name, value }) => (

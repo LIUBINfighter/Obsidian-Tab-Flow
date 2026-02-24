@@ -33,7 +33,7 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ controller }) => {
 		<button
 			className="play-bar-button"
 			onClick={handleRefresh}
-			aria-label="Refresh Player"
+			aria-label="Refresh player"
 			title="重新加载播放器"
 		>
 			<RefreshCcw size={16} />

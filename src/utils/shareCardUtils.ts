@@ -34,7 +34,7 @@ export function normalizeColorToHex(
 	}
 	try {
 		const el = document.createElement('div');
-		el.style.color = s;
+		setCssProps(el, { color: s });
 		document.body.appendChild(el);
 		const cs = getComputedStyle(el).color;
 		document.body.removeChild(el);

@@ -6,14 +6,29 @@ import { AssetStatus } from '../../types/assets';
 import { t } from '../../i18n';
 import { formatError } from '../../utils/errorUtils';
 import path from 'path';
-// @ts-ignore
-import { shell } from 'electron';
 import { showConfirmDialog } from '../../utils/dialogs';
 import { toggleHidden } from '../../utils/styleUtils';
 
 type CommandManager = {
 	executeCommandById?: (id: string) => void;
 };
+
+type ShellLike = {
+	showItemInFolder: (fullPath: string) => void;
+};
+
+type RequireCapableWindow = Window & {
+	require?: (moduleName: string) => unknown;
+};
+
+function getElectronShell(): ShellLike | null {
+	const req = (window as RequireCapableWindow).require;
+	if (typeof req !== 'function') {
+		return null;
+	}
+	const electronModule = req('electron') as { shell?: ShellLike } | undefined;
+	return electronModule?.shell ?? null;
+}
 
 async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<AssetStatus[]> {
 	const pluginId = plugin.manifest.id;
@@ -175,8 +190,12 @@ export async function renderGeneralTab(
 				plugin.manifest.id
 			);
 			const mainJsPath = path.join(pluginDir, 'main.js');
-			// @ts-ignore
-			shell.showItemInFolder(mainJsPath);
+			const shellLike = getElectronShell();
+			if (!shellLike) {
+				new Notice(t('assetManagement.desktopOnly'));
+				return;
+			}
+			shellLike.showItemInFolder(mainJsPath);
 		} catch (e) {
 			new Notice(t('assetManagement.openDirFailed') + ': ' + formatError(e));
 		}

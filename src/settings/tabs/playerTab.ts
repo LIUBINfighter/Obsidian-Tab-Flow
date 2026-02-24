@@ -5,6 +5,15 @@ import { DEFAULT_SETTINGS, PlayBarComponentVisibility } from '../defaults';
 import { t } from '../../i18n';
 import { formatError } from '../../utils/errorUtils';
 
+type WorkspaceEventBus = {
+	trigger: (eventName: string, ...args: unknown[]) => void;
+};
+
+function triggerWorkspaceEvent(app: App, eventName: string, ...args: unknown[]): void {
+	const workspace = app.workspace as unknown as WorkspaceEventBus;
+	workspace.trigger(eventName, ...args);
+}
+
 export function renderPlayerTab(
 	tabContents: HTMLElement,
 	plugin: TabFlowPlugin,
@@ -27,9 +36,7 @@ export function renderPlayerTab(
 					};
 					await plugin.saveSettings();
 					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:playbar-components-changed'
-						);
+						triggerWorkspaceEvent(app, 'tabflow:playbar-components-changed');
 					} catch {
 						// Ignore workspace trigger errors
 					}
@@ -240,9 +247,7 @@ export function renderPlayerTab(
 						components[key] = m.disabled ? false : value;
 						await plugin.saveSettings();
 						try {
-							/* @ts-ignore */ app.workspace.trigger(
-								'tabflow:playbar-components-changed'
-							);
+							triggerWorkspaceEvent(app, 'tabflow:playbar-components-changed');
 						} catch {
 							// Ignore workspace trigger errors
 						}
@@ -306,9 +311,7 @@ export function renderPlayerTab(
 						renderCards();
 					});
 					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:playbar-components-changed'
-						);
+						triggerWorkspaceEvent(app, 'tabflow:playbar-components-changed');
 					} catch {
 						// Ignore workspace trigger errors
 					}
@@ -331,9 +334,7 @@ export function renderPlayerTab(
 						renderCards();
 					});
 					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:playbar-components-changed'
-						);
+						triggerWorkspaceEvent(app, 'tabflow:playbar-components-changed');
 					} catch {
 						// Ignore workspace trigger errors
 					}
@@ -410,9 +411,7 @@ export function renderPlayerTab(
 					await plugin.saveSettings();
 					renderCards();
 					try {
-						/* @ts-ignore */ app.workspace.trigger(
-							'tabflow:playbar-components-changed'
-						);
+						triggerWorkspaceEvent(app, 'tabflow:playbar-components-changed');
 					} catch {
 						// Ignore workspace trigger errors
 					}
@@ -440,8 +439,7 @@ export function renderPlayerTab(
 				plugin.settings.showDebugBar = value;
 				await plugin.saveSettings();
 				try {
-					// @ts-ignore
-					app.workspace.trigger('tabflow:debugbar-toggle', value);
+					triggerWorkspaceEvent(app, 'tabflow:debugbar-toggle', value);
 				} catch {
 					// Ignore workspace trigger errors
 				}

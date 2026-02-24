@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Music, Film, Youtube } from 'lucide-react';
+import { Music, Film, PlayCircle } from 'lucide-react';
 import type { App, TFile } from 'obsidian';
 import type { PlayerController } from '../PlayerController';
 import { MediaType, type MediaState } from '../types/media-sync';
@@ -167,35 +167,40 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 
 	// 打开文件选择 Modal
 	const openFileSelectModal = () => {
-		new MediaFileSuggestModal(app, async (file: TFile) => {
-			try {
-				// 读取文件并创建 Blob URL
-				const arrayBuffer = await app.vault.readBinary(file);
-				const blob = new Blob([arrayBuffer]);
-				const url = URL.createObjectURL(blob);
+		new MediaFileSuggestModal(app, (file: TFile) => {
+			void (async () => {
+				try {
+					// 读取文件并创建 Blob URL
+					const arrayBuffer = await app.vault.readBinary(file);
+					const blob = new Blob([arrayBuffer]);
+					const url = URL.createObjectURL(blob);
 
-				// 验证生成的 URL
-				const sanitized = sanitizeMediaUrl(url);
-				if (!sanitized) {
-					console.error('[MediaSync] Failed to create valid URL for file:', file.path);
-					return;
+					// 验证生成的 URL
+					const sanitized = sanitizeMediaUrl(url);
+					if (!sanitized) {
+						console.error(
+							'[MediaSync] Failed to create valid URL for file:',
+							file.path
+						);
+						return;
+					}
+
+					// 根据文件类型加载
+					const isAudio = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'].includes(
+						file.extension.toLowerCase()
+					);
+
+					if (isAudio) {
+						setAudioUrl(sanitized);
+						setMediaState({ type: MediaType.Audio, url: sanitized });
+					} else {
+						setVideoUrl(sanitized);
+						setMediaState({ type: MediaType.Video, url: sanitized });
+					}
+				} catch (error) {
+					console.error('[MediaSync] Failed to load file:', error);
 				}
-
-				// 根据文件类型加载
-				const isAudio = ['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a'].includes(
-					file.extension.toLowerCase()
-				);
-
-				if (isAudio) {
-					setAudioUrl(sanitized);
-					setMediaState({ type: MediaType.Audio, url: sanitized });
-				} else {
-					setVideoUrl(sanitized);
-					setMediaState({ type: MediaType.Video, url: sanitized });
-				}
-			} catch (error) {
-				console.error('[MediaSync] Failed to load file:', error);
-			}
+			})();
 		}).open();
 	};
 
@@ -319,9 +324,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 						className={`media-sync-btn ${mediaState.type === MediaType.YouTube ? 'active' : ''}`}
 						onClick={switchToYouTube}
 						disabled={!extractYouTubeVideoId(youtubeInput)}
-						title="加载 YouTube 视频"
+						title="Load YouTube video"
 					>
-						<Youtube size={16} />
+						<PlayCircle size={16} />
 						<span>YouTube</span>
 					</button>
 				</div>

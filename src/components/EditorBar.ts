@@ -15,6 +15,26 @@ interface AppWithPlugins extends App {
 	};
 }
 
+type AppWithCommands = App & {
+	commands?: {
+		executeCommandById?: (commandId: string) => void;
+	};
+};
+
+type WorkspaceEventBus = {
+	trigger: (eventName: string, ...args: unknown[]) => void;
+};
+
+function triggerWorkspaceEvent(app: App, eventName: string, ...args: unknown[]): void {
+	const workspace = app.workspace as unknown as WorkspaceEventBus;
+	workspace.trigger(eventName, ...args);
+}
+
+function openSettingsCommand(app: App): void {
+	const appWithCommands = app as unknown as AppWithCommands;
+	appWithCommands.commands?.executeCommandById?.('app:open-settings');
+}
+
 // Type for TabFlowPlugin with settings
 interface TabFlowPluginLike extends Plugin {
 	settings?: TabFlowSettings;
@@ -155,7 +175,6 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		| undefined = undefined;
 	let plugin: TabFlowPluginLike | null = null;
 	try {
-		// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 		const pluginId = 'tab-flow';
 		plugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
 			pluginId
@@ -505,13 +524,11 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			openSettingsBtn.onclick = () => {
 				try {
 					// 直达本插件SettingTab的“播放器配置”页签
-					// @ts-ignore
-					app.workspace.trigger('tabflow:open-plugin-settings-editor');
+					triggerWorkspaceEvent(app, 'tabflow:open-plugin-settings-editor');
 				} catch {
 					try {
 						// 退化处理
-						// @ts-ignore
-						app.commands.executeCommandById('app:open-settings');
+						openSettingsCommand(app);
 						setTimeout(() => {
 							try {
 								const search: HTMLInputElement | null = document.querySelector(
@@ -664,7 +681,6 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			// 设置当前值
 			try {
 				const pluginId = 'tab-flow';
-				// @ts-ignore - 通过全局 app.plugins 获取本插件实例
 				const localPlugin = (app as AppWithPlugins)?.plugins?.getPlugin?.(
 					pluginId
 				) as TabFlowPluginLike | null;

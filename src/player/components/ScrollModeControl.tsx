@@ -44,7 +44,7 @@ export const ScrollModeControl: React.FC<ScrollModeControlProps> = ({ controller
 				className="play-bar-control-select"
 				value={currentMode}
 				onChange={handleModeChange}
-				aria-label="Scroll Mode"
+				aria-label="Scroll mode"
 				title="滚动模式"
 			>
 				{scrollModes.map(({ name, value }) => (
