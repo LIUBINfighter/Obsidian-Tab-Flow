@@ -4,7 +4,7 @@ import { createProgressBar } from './ProgressBar';
 import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
-import { formatTime } from '../utils';
+import { formatTime, toFiniteClampedNumber } from '../utils';
 import { t } from '../i18n';
 import type { TabFlowSettings } from '../settings/defaults';
 
@@ -567,11 +567,12 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 				select.appendChild(opt);
 			});
 			select.onchange = () => {
+				const nextSpeed = toFiniteClampedNumber(parseFloat(select.value), 1, 0.5, 2);
 				const api = options.getApi?.();
 				if (api) {
-					api.playbackSpeed = parseFloat(select.value);
+					api.playbackSpeed = nextSpeed;
 				} else {
-					eventBus?.publish('命令:设置速度', parseFloat(select.value));
+					eventBus?.publish('命令:设置速度', nextSpeed);
 				}
 			};
 			bar.appendChild(select);
@@ -630,13 +631,14 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 				select.appendChild(opt);
 			});
 			select.onchange = () => {
+				const nextScale = toFiniteClampedNumber(parseFloat(select.value), 1, 0.5, 2);
 				const api = options.getApi?.();
 				if (api) {
-					api.settings.display.scale = parseFloat(select.value);
+					api.settings.display.scale = nextScale;
 					api.updateSettings();
 					api.render();
 				} else {
-					eventBus?.publish('命令:设置缩放', parseFloat(select.value));
+					eventBus?.publish('命令:设置缩放', nextScale);
 				}
 			};
 			bar.appendChild(select);

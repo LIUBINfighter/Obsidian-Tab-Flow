@@ -15,3 +15,4 @@ export { convertSamplesToWavBlobUrl } from './audioUtils';
 export { parseInlineInit, toScrollMode } from './alphatexParser';
 export { requestIdle, scheduleInit } from './concurrency';
 export { formatError } from './errorUtils';
+export { toFiniteNumber, clampNumber, toFiniteClampedNumber } from './numberUtils';

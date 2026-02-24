@@ -4,7 +4,7 @@ import { createProgressBar } from './ProgressBar';
 import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
-import { formatTime } from '../utils';
+import { formatTime, toFiniteClampedNumber } from '../utils';
 import { t } from '../i18n';
 import type { TabFlowSettings } from '../settings/defaults';
 
@@ -467,7 +467,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				if (val === '1.0') opt.selected = true;
 				select.appendChild(opt);
 			});
-			select.onchange = () => eventBus?.publish('命令:设置速度', parseFloat(select.value));
+			select.onchange = () => {
+				const nextSpeed = toFiniteClampedNumber(parseFloat(select.value), 1, 0.5, 2);
+				eventBus?.publish('命令:设置速度', nextSpeed);
+			};
 			bar.appendChild(select);
 		},
 		staveProfile: () => {
@@ -512,7 +515,10 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 				if (value === 1) opt.selected = true;
 				select.appendChild(opt);
 			});
-			select.onchange = () => eventBus?.publish('命令:设置缩放', parseFloat(select.value));
+			select.onchange = () => {
+				const nextScale = toFiniteClampedNumber(parseFloat(select.value), 1, 0.5, 2);
+				eventBus?.publish('命令:设置缩放', nextScale);
+			};
 			bar.appendChild(select);
 		},
 		scrollMode: () => {

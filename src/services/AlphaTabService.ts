@@ -2,7 +2,7 @@
 
 import * as alphaTab from '@coderline/alphatab';
 import { App } from 'obsidian';
-import { EventBus, convertSamplesToWavBlobUrl } from '../utils';
+import { EventBus, convertSamplesToWavBlobUrl, toFiniteClampedNumber } from '../utils';
 import { ScrollEventManager } from '../events/scrollEvents';
 import * as convert from 'color-convert';
 
@@ -17,6 +17,33 @@ export class AlphaTabService {
 		soundFontUri: string;
 		bravuraUri: string;
 	};
+
+	private getSafeAccentHex(style: CSSStyleDeclaration): string {
+		const h = toFiniteClampedNumber(
+			parseFloat(style.getPropertyValue('--accent-h')),
+			0,
+			0,
+			360
+		);
+		const s = toFiniteClampedNumber(
+			parseFloat(style.getPropertyValue('--accent-s')),
+			50,
+			0,
+			100
+		);
+		const l = toFiniteClampedNumber(
+			parseFloat(style.getPropertyValue('--accent-l')),
+			50,
+			0,
+			100
+		);
+
+		try {
+			return `#${convert.hsl.hex([h, s, l])}`;
+		} catch {
+			return '#000000';
+		}
+	}
 
 	constructor(
 		app: App,
@@ -73,13 +100,7 @@ export class AlphaTabService {
 					secondaryGlyphColor: style.getPropertyValue('--color-base-60'),
 					staffLineColor: style.getPropertyValue('--color-base-40'),
 					barSeparatorColor: style.getPropertyValue('--color-base-40'),
-					barNumberColor:
-						'#' +
-						convert.hsl.hex([
-							parseFloat(style.getPropertyValue('--accent-h')),
-							parseFloat(style.getPropertyValue('--accent-s')),
-							parseFloat(style.getPropertyValue('--accent-l')),
-						]),
+					barNumberColor: this.getSafeAccentHex(style),
 					scoreInfoColor: style.getPropertyValue('--color-base-100'),
 				},
 			},
@@ -99,7 +120,7 @@ export class AlphaTabService {
 		this.eventBus.subscribe('命令:播放暂停', () => this.api.playPause());
 		this.eventBus.subscribe('命令:停止', () => this.api.stop());
 		this.eventBus.subscribe('命令:设置速度', (speed: number) => {
-			this.api.playbackSpeed = speed;
+			this.api.playbackSpeed = toFiniteClampedNumber(speed, 1, 0.5, 2);
 		});
 		this.eventBus.subscribe('命令:设置谱表', (profile: number) => {
 			this.api.settings.display.staveProfile = profile;
@@ -113,7 +134,7 @@ export class AlphaTabService {
 			this.api.countInVolume = enabled ? 1 : 0;
 		});
 		this.eventBus.subscribe('命令:设置缩放', (scale: number) => {
-			this.api.settings.display.scale = scale;
+			this.api.settings.display.scale = toFiniteClampedNumber(scale, 1, 0.5, 2);
 			this.api.updateSettings();
 			this.api.render();
 		});
@@ -418,13 +439,7 @@ export class AlphaTabService {
 						secondaryGlyphColor: style.getPropertyValue('--color-base-60'),
 						staffLineColor: style.getPropertyValue('--color-base-40'),
 						barSeparatorColor: style.getPropertyValue('--color-base-40'),
-						barNumberColor:
-							'#' +
-							convert.hsl.hex([
-								parseFloat(style.getPropertyValue('--accent-h')),
-								parseFloat(style.getPropertyValue('--accent-s')),
-								parseFloat(style.getPropertyValue('--accent-l')),
-							]),
+						barNumberColor: this.getSafeAccentHex(style),
 						scoreInfoColor: style.getPropertyValue('--color-base-100'),
 					},
 				},

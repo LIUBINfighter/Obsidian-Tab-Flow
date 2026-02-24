@@ -4,6 +4,7 @@ import { createEmbeddableMarkdownEditor } from '../editor/EmbeddableMarkdownEdit
 import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
 import type { AlphaTexMountHandle } from '../markdown/AlphaTexBlock';
+import { toFiniteClampedNumber } from '../utils';
 
 interface EventBus {
 	subscribe(event: string, callback: (...args: unknown[]) => void): void;
@@ -437,7 +438,7 @@ export function createAlphaTexPlayground(
 
 		eventBus.subscribe('命令:设置速度', (speed: number) => {
 			const api = mounted?.api;
-			if (api) api.playbackSpeed = speed;
+			if (api) api.playbackSpeed = toFiniteClampedNumber(speed, 1, 0.5, 2);
 		});
 
 		eventBus.subscribe('命令:设置谱表', (profile: number) => {
@@ -452,7 +453,7 @@ export function createAlphaTexPlayground(
 		eventBus.subscribe('命令:设置缩放', (scale: number) => {
 			const api = mounted?.api;
 			if (api) {
-				api.settings.display.scale = scale;
+				api.settings.display.scale = toFiniteClampedNumber(scale, 1, 0.5, 2);
 				api.updateSettings();
 				api.render();
 			}

@@ -4,6 +4,7 @@ import * as alphaTab from '@coderline/alphatab';
 import { ScrollEventManager } from '../events/scrollEvents';
 import { AudioExportModal } from './AudioExportModal';
 import { t } from '../i18n';
+import { toFiniteClampedNumber } from '../utils';
 
 // Extend Window interface for alphaTab global
 declare global {
@@ -126,10 +127,8 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	});
 	speedSelect.onchange = () => {
 		if (!api) return;
-		const speed = parseFloat(speedSelect.value);
-		if (!isNaN(speed)) {
-			eventBus.publish('命令:设置速度', speed);
-		}
+		const speed = toFiniteClampedNumber(parseFloat(speedSelect.value), 1, 0.5, 2);
+		eventBus.publish('命令:设置速度', speed);
 	};
 	debugBar.appendChild(speedSelect);
 
@@ -205,7 +204,8 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	zoomSlider.classList.add('slider-control');
 	zoomSlider.oninput = () => {
 		if (!api) return;
-		eventBus.publish('命令:设置缩放', parseFloat(zoomSlider.value));
+		const zoom = toFiniteClampedNumber(parseFloat(zoomSlider.value), 1, 0.5, 2);
+		eventBus.publish('命令:设置缩放', zoom);
 	};
 	debugBar.appendChild(zoomSlider);
 

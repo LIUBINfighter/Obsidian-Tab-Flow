@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Gauge } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { toFiniteClampedNumber } from '../../utils';
 
 interface SpeedControlProps {
 	controller: PlayerController;
@@ -27,21 +28,19 @@ export const SpeedControl: React.FC<SpeedControlProps> = ({ controller }) => {
 	const [speed, setSpeed] = useState(initialSpeed);
 
 	const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newSpeed = parseFloat(e.target.value);
-		if (!isNaN(newSpeed)) {
-			setSpeed(newSpeed);
+		const newSpeed = toFiniteClampedNumber(parseFloat(e.target.value), 1, 0.5, 2);
+		setSpeed(newSpeed);
 
-			// 更新全局配置（持久化）
-			globalConfig.getState().updateAlphaTabSettings({
-				player: {
-					...globalConfig.getState().alphaTabSettings.player,
-					playbackSpeed: newSpeed,
-				},
-			});
+		// 更新全局配置（持久化）
+		globalConfig.getState().updateAlphaTabSettings({
+			player: {
+				...globalConfig.getState().alphaTabSettings.player,
+				playbackSpeed: newSpeed,
+			},
+		});
 
-			// 同步到 API
-			controller.setPlaybackSpeed(newSpeed);
-		}
+		// 同步到 API
+		controller.setPlaybackSpeed(newSpeed);
 	};
 
 	return (

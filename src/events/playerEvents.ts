@@ -1,4 +1,5 @@
 import * as alphaTab from '@coderline/alphatab';
+import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
 
 export type PlayerEventType =
 	| 'playPause'
@@ -30,7 +31,7 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
 			api.stop();
 			break;
 		case 'setSpeed':
-			api.playbackSpeed = payload.value as number;
+			api.playbackSpeed = toFiniteClampedNumber(payload.value, 1, 0.5, 2);
 			break;
 		case 'setStaveProfile':
 			api.settings.display.staveProfile = payload.value as alphaTab.StaveProfile;
@@ -44,7 +45,7 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
 			api.countInVolume = payload.value ? 1 : 0;
 			break;
 		case 'setZoom':
-			api.settings.display.scale = payload.value as number;
+			api.settings.display.scale = toFiniteClampedNumber(payload.value, 1, 0.5, 2);
 			api.updateSettings();
 			api.render();
 			break;
@@ -78,19 +79,19 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
 			break;
 		case 'setScrollSpeed':
 			if (api.settings.player) {
-				api.settings.player.scrollSpeed = payload.value as number;
+				api.settings.player.scrollSpeed = toFiniteNumber(payload.value, 500);
 				api.updateSettings();
 			}
 			break;
 		case 'setScrollOffsetX':
 			if (api.settings.player) {
-				api.settings.player.scrollOffsetX = payload.value as number;
+				api.settings.player.scrollOffsetX = toFiniteNumber(payload.value, 25);
 				api.updateSettings();
 			}
 			break;
 		case 'setScrollOffsetY':
 			if (api.settings.player) {
-				api.settings.player.scrollOffsetY = payload.value as number;
+				api.settings.player.scrollOffsetY = toFiniteNumber(payload.value, -25);
 				api.updateSettings();
 			}
 			break;
