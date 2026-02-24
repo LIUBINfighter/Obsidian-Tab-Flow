@@ -135,7 +135,6 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			const win = window.open('', '_blank');
 			if (!win) throw new Error('无法打开打印窗口');
 
-			// 使用 DOM API 而不是 document.write
 			const htmlEl = win.document.createElement('html');
 			const headEl = win.document.createElement('head');
 			const titleEl = win.document.createElement('title');

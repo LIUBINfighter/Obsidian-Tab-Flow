@@ -263,7 +263,7 @@ export class EditorView extends FileView {
 				this.documentAction.remove();
 			}
 			this.documentAction = null;
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 
@@ -273,7 +273,7 @@ export class EditorView extends FileView {
 				this.switchToPlayerAction.remove();
 			}
 			this.switchToPlayerAction = null;
-		} catch (_) {
+		} catch {
 			// ignore
 		}
 	}
