@@ -24,6 +24,17 @@ interface MediaSyncProps {
 	onClose?: () => void;
 }
 
+function hasSuspiciousUrlChars(value: string): boolean {
+	for (const char of value) {
+		const code = char.charCodeAt(0);
+		if ((code >= 0 && code <= 0x1f) || code === 0x7f || char === '<' || char === '>') {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 /**
  * 清理和验证媒体 URL，防止 XSS 攻击
  * 只允许 http(s)://, file://, 和 blob: 协议
@@ -44,8 +55,7 @@ function sanitizeMediaUrl(url: string): string | null {
 		}
 
 		// 拒绝包含可疑字符的 URL (控制字符、换行符、尖括号等)
-		// eslint-disable-next-line no-control-regex
-		if (/[\u0000-\u001F\u007F<>]/.test(parsed.href)) {
+		if (hasSuspiciousUrlChars(parsed.href)) {
 			console.warn('[MediaSync] Blocked URL with suspicious characters');
 			return null;
 		}
@@ -292,6 +302,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 				<div className="media-sync-toolbar-left">
 					{/* 媒体类型选择按钮 */}
 					<button
+						type="button"
 						className={`media-sync-btn ${mediaState.type === MediaType.Synth ? 'active' : ''}`}
 						onClick={switchToSynth}
 						title="使用内置合成器"
@@ -301,6 +312,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 					</button>
 
 					<button
+						type="button"
 						className={`media-sync-btn ${mediaState.type === MediaType.Audio ? 'active' : ''}`}
 						onClick={switchToAudio}
 						disabled={!audioUrl}
@@ -311,6 +323,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 					</button>
 
 					<button
+						type="button"
 						className={`media-sync-btn ${mediaState.type === MediaType.Video ? 'active' : ''}`}
 						onClick={switchToVideo}
 						disabled={!videoUrl}
@@ -321,6 +334,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 					</button>
 
 					<button
+						type="button"
 						className={`media-sync-btn ${mediaState.type === MediaType.YouTube ? 'active' : ''}`}
 						onClick={switchToYouTube}
 						disabled={!extractYouTubeVideoId(youtubeInput)}
@@ -371,6 +385,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 					{/* 关闭按钮 */}
 					{onClose && (
 						<button
+							type="button"
 							className="media-sync-close-btn"
 							onClick={onClose}
 							title="关闭媒体同步面板"
@@ -387,6 +402,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 				{/* 标签页头 */}
 				<div className="media-sync-tabs-header">
 					<button
+						type="button"
 						className={`media-sync-tab ${activeTab === 'basic' ? 'active' : ''}`}
 						onClick={() => setActiveTab('basic')}
 					>
@@ -394,6 +410,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 					</button>
 					{mediaState.type !== MediaType.Synth && (
 						<button
+							type="button"
 							className={`media-sync-tab ${activeTab === 'editor' ? 'active' : ''}`}
 							onClick={() => setActiveTab('editor')}
 						>
@@ -412,8 +429,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 								mediaState.type === MediaType.Audio ||
 								mediaState.type === MediaType.Video) && (
 								<div className="media-sync-input-group">
-									<label>从 Vault 中选择：</label>
+									<span>从 Vault 中选择：</span>
 									<button
+										type="button"
 										className="media-sync-load-btn"
 										onClick={openFileSelectModal}
 									>
@@ -426,9 +444,10 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.Audio) && (
 								<div className="media-sync-input-group">
-									<label>音频文件 URL：</label>
+									<label htmlFor="media-sync-audio-url">音频文件 URL：</label>
 									<div className="media-sync-input-row">
 										<input
+											id="media-sync-audio-url"
 											type="text"
 											value={audioUrl}
 											onChange={(e) => {
@@ -440,6 +459,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											className="media-sync-input"
 										/>
 										<button
+											type="button"
 											className="media-sync-load-btn"
 											onClick={switchToAudio}
 											disabled={!audioUrl}
@@ -454,9 +474,10 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.Video) && (
 								<div className="media-sync-input-group">
-									<label>视频文件 URL：</label>
+									<label htmlFor="media-sync-video-url">视频文件 URL：</label>
 									<div className="media-sync-input-row">
 										<input
+											id="media-sync-video-url"
 											type="text"
 											value={videoUrl}
 											onChange={(e) => {
@@ -468,6 +489,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											className="media-sync-input"
 										/>
 										<button
+											type="button"
 											className="media-sync-load-btn"
 											onClick={switchToVideo}
 											disabled={!videoUrl}
@@ -482,9 +504,12 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.YouTube) && (
 								<div className="media-sync-input-group">
-									<label>YouTube 视频 URL 或 ID：</label>
+									<label htmlFor="media-sync-youtube-url">
+										YouTube 视频 URL 或 ID：
+									</label>
 									<div className="media-sync-input-row">
 										<input
+											id="media-sync-youtube-url"
 											type="text"
 											value={youtubeInput}
 											onChange={(e) => setYoutubeInput(e.target.value)}
@@ -492,6 +517,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											className="media-sync-input"
 										/>
 										<button
+											type="button"
 											className="media-sync-load-btn"
 											onClick={switchToYouTube}
 											disabled={!extractYouTubeVideoId(youtubeInput)}
@@ -513,7 +539,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 										onTimeUpdate={(e) => {
 											setPlaybackTime(e.currentTarget.currentTime * 1000);
 										}}
-									/>
+									>
+										<track kind="captions" label="Captions not provided" />
+									</audio>
 								</div>
 							)}
 
@@ -528,7 +556,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 										onTimeUpdate={(e) => {
 											setPlaybackTime(e.currentTarget.currentTime * 1000);
 										}}
-									/>
+									>
+										<track kind="captions" label="Captions not provided" />
+									</video>
 								</div>
 							)}
 
@@ -536,6 +566,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{mediaState.type === MediaType.YouTube && (
 								<div className="media-sync-player">
 									<iframe
+										title="YouTube media sync player"
 										src={mediaState.url}
 										style={{ width: '100%', height: '400px', border: 'none' }}
 										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

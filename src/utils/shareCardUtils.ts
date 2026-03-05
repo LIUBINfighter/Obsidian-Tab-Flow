@@ -109,8 +109,8 @@ export function measureCaptureDimensions(
 			restoreTransform = panWrapper.style.transform;
 			setCssProps(panWrapper, { transform: 'none' });
 		}
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- trigger reflow for accurate dimensions
-		captureEl.offsetHeight;
+
+		const _forceReflow = captureEl.offsetHeight;
 		const rawW = captureEl.scrollWidth || captureEl.clientWidth;
 		const rawH = captureEl.scrollHeight || captureEl.clientHeight;
 		width = Math.ceil(rawW * resolution);

@@ -31,8 +31,11 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ controller }) => {
 
 	return (
 		<button
+			type="button"
 			className="play-bar-button"
-			onClick={handleRefresh}
+			onClick={() => {
+				void handleRefresh();
+			}}
 			aria-label="Refresh player"
 			title="重新加载播放器"
 		>

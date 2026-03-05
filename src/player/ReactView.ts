@@ -47,10 +47,10 @@ export class ReactView extends FileView {
 		if (this.currentFile) {
 			return this.currentFile.basename;
 		}
-		return 'Tab Player';
+		return 'Tab player';
 	}
 
-	async onOpen() {
+	async onOpen(): Promise<void> {
 		console.debug('[ReactView] Opening view...');
 
 		// 1. 创建 stores（使用 StoreFactory）
@@ -101,9 +101,10 @@ export class ReactView extends FileView {
 		this.renderReactComponent();
 
 		console.debug('[ReactView] View opened successfully');
+		await Promise.resolve();
 	}
 
-	async onClose() {
+	async onClose(): Promise<void> {
 		console.debug('[ReactView] Closing view...');
 
 		// 注意: 不移除全局字体样式,因为可能有其他实例在使用
@@ -144,6 +145,7 @@ export class ReactView extends FileView {
 		console.debug('[ReactView] View closed');
 
 		// 注意：controller.destroy() 会清理实例状态，无需额外重置全局状态
+		await Promise.resolve();
 	}
 
 	async onLoadFile(file: TFile): Promise<void> {
@@ -163,6 +165,7 @@ export class ReactView extends FileView {
 		this.updateSwitchToEditorButton();
 		// 针对可打印谱面类型，添加打印预览按钮
 		this.updatePrintPreviewButton();
+		await Promise.resolve();
 	}
 
 	async onUnloadFile(file: TFile): Promise<void> {

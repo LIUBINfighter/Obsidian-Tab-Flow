@@ -52,10 +52,10 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 		}
 	}
 
-	async load<T>(key: string): Promise<T | null> {
+	load<T>(key: string): Promise<T | null> {
 		if (!this.callbacks) {
 			console.warn('[WorkspaceStorage] Load skipped - callbacks not registered:', key);
-			return null;
+			return Promise.resolve(null);
 		}
 
 		try {
@@ -66,10 +66,10 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 				key,
 				value ? 'found' : 'not found'
 			);
-			return value as T | null;
+			return Promise.resolve(value as T | null);
 		} catch (error) {
 			console.error('[WorkspaceStorage] Load failed:', key, error);
-			return null;
+			return Promise.resolve(null);
 		}
 	}
 

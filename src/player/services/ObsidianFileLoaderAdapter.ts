@@ -17,7 +17,7 @@ export class ObsidianFileLoaderAdapter implements IFileLoaderAdapter {
 	/**
 	 * 搜索 vault 中的媒体文件
 	 */
-	async searchMediaFiles(query?: string): Promise<MediaFileInfo[]> {
+	searchMediaFiles(query?: string): Promise<MediaFileInfo[]> {
 		const files = this.app.vault.getFiles();
 		const mediaFiles: MediaFileInfo[] = [];
 
@@ -55,7 +55,7 @@ export class ObsidianFileLoaderAdapter implements IFileLoaderAdapter {
 		// 按文件名排序
 		mediaFiles.sort((a, b) => a.name.localeCompare(b.name));
 
-		return mediaFiles;
+		return Promise.resolve(mediaFiles);
 	}
 
 	/**

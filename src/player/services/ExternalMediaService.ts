@@ -165,7 +165,12 @@ export class ExternalMediaService {
 			play(): void {
 				if (mediaElement) {
 					log('播放');
-					mediaElement.play();
+					const playResult = mediaElement.play();
+					if (playResult instanceof Promise) {
+						void playResult.catch((error: unknown) => {
+							console.warn('[ExternalMediaService] 媒体播放失败:', error);
+						});
+					}
 				}
 			},
 

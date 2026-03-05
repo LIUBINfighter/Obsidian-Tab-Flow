@@ -105,22 +105,20 @@ export class EmbeddableMarkdownEditor {
 		this.scope = new Scope(app.scope);
 		this.scope.register(['Mod'], 'Enter', () => true);
 
-		// eslint-disable-next-line @typescript-eslint/no-this-alias -- capture self for monkey-patched hooks
-		const selfRef = this; // capture instance for function-based hooks
+		const getOwner = () => this;
 		const rawUninstaller = around(EditorClass.prototype, {
 			buildLocalExtensions: (originalMethod: (this: InternalMarkdownEditor) => unknown[]) =>
 				function (this: InternalMarkdownEditor) {
 					const extensions = originalMethod.call(this) || [];
-					// Note: selfRef.editor is set after EditorClass instantiation, so we check if this instance
-					// matches the one that will be assigned to selfRef.editor by comparing after assignment
 					// For now, we'll apply extensions to all instances and rely on the editor being set correctly
-					const editorRef = selfRef.editor;
+					const owner = getOwner();
+					const editorRef = owner.editor;
 					// Only apply extensions if editor is already set and matches
 					// During initial construction, editorRef will be undefined, so we apply to all instances
 					// After editor is set, we only apply to the matching instance
 					if (editorRef === undefined || this === editorRef) {
-						if (selfRef.options.placeholder)
-							extensions.push(placeholder(selfRef.options.placeholder));
+						if (owner.options.placeholder)
+							extensions.push(placeholder(owner.options.placeholder));
 						// Disable browser spellcheck/auto-correct in the embedded editor
 						extensions.push(
 							EditorView.editorAttributes.of({
@@ -131,28 +129,28 @@ export class EmbeddableMarkdownEditor {
 						);
 						extensions.push(
 							EditorView.domEventHandlers({
-								paste: (event) => selfRef.options.onPaste?.(event, selfRef),
+								paste: (event) => owner.options.onPaste?.(event, owner),
 								blur: () => {
-									app.keymap.popScope(selfRef.scope);
+									app.keymap.popScope(owner.scope);
 									const activeEditor = Reflect.get(
 										app.workspace,
 										'activeEditor'
 									) as unknown;
 									if (
 										EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR &&
-										activeEditor === selfRef.editor
+										activeEditor === owner.editor
 									) {
 										Reflect.set(app.workspace, 'activeEditor', null);
 									}
-									selfRef.options.onBlur?.(selfRef);
+									owner.options.onBlur?.(owner);
 								},
 								focusin: () => {
-									app.keymap.pushScope(selfRef.scope);
+									app.keymap.pushScope(owner.scope);
 									if (EmbeddableMarkdownEditor.USE_ACTIVE_EDITOR) {
 										Reflect.set(
 											app.workspace,
 											'activeEditor',
-											selfRef.editor ?? null
+											owner.editor ?? null
 										);
 									}
 								},
@@ -161,28 +159,28 @@ export class EmbeddableMarkdownEditor {
 						const keyBindings = [
 							{
 								key: 'Enter',
-								run: () => selfRef.options.onEnter?.(selfRef, false, false),
-								shift: () => selfRef.options.onEnter?.(selfRef, false, true),
+								run: () => owner.options.onEnter?.(owner, false, false),
+								shift: () => owner.options.onEnter?.(owner, false, true),
 							},
 							{
 								key: 'Mod-Enter',
-								run: () => selfRef.options.onEnter?.(selfRef, true, false),
-								shift: () => selfRef.options.onEnter?.(selfRef, true, true),
+								run: () => owner.options.onEnter?.(owner, true, false),
+								shift: () => owner.options.onEnter?.(owner, true, true),
 							},
 							{
 								key: 'Escape',
 								run: () => {
-									selfRef.options.onEscape?.(selfRef);
+									owner.options.onEscape?.(owner);
 									return true;
 								},
 								preventDefault: true,
 							},
 						];
-						if (selfRef.options.singleLine) {
+						if (owner.options.singleLine) {
 							keyBindings[0] = {
 								key: 'Enter',
-								run: () => selfRef.options.onEnter?.(selfRef, false, false),
-								shift: () => selfRef.options.onEnter?.(selfRef, false, true),
+								run: () => owner.options.onEnter?.(owner, false, false),
+								shift: () => owner.options.onEnter?.(owner, false, true),
 							};
 						}
 						extensions.push(Prec.highest(keymap.of(keyBindings)));
@@ -191,10 +189,10 @@ export class EmbeddableMarkdownEditor {
 						const resolveSetting = (key: string, def = true) => {
 							try {
 								if (
-									selfRef.options.highlightSettings &&
-									key in selfRef.options.highlightSettings
+									owner.options.highlightSettings &&
+									key in owner.options.highlightSettings
 								) {
-									return !!selfRef.options.highlightSettings[key];
+									return !!owner.options.highlightSettings[key];
 								}
 								// fallback: some callers may expose settings on window for minimal changes
 								const globalSettings = Reflect.get(
