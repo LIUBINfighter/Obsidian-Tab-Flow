@@ -732,7 +732,7 @@ export function mountAlphaTexBlock(
 			// compact note, no controls container
 			const note = document.createElement('div');
 			note.className = 'alphatex-note';
-			note.textContent = 'SoundFont missing: Playback disabled. Rendering only.';
+			note.textContent = 'Soundfont missing: playback disabled. Rendering only.';
 			wrapper.appendChild(note);
 		}
 	};

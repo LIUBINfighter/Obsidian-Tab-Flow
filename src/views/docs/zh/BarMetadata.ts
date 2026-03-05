@@ -35,7 +35,7 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'Bar metadata（小节元数据）' });
 		container.createEl('p', {
-			text: '演示拍号、反复与结尾、调号、谱号/八度、小节内变速、三连感、弱起、分段、双小节线、Simile 等。',
+			text: '演示拍号、反复与结尾、调号、谱号/八度、小节内变速、三连感、弱起、分段、双小节线、simile 等。',
 		});
 
 		const sections: Array<[string, string]> = [

@@ -349,10 +349,10 @@ export function renderEditorTab(
 				}
 				case 'whitespace': {
 					const a = document.createElement('span');
-					a.textContent = 'a';
+					a.textContent = 'A';
 					const space = span('cm-whitespace-space', ' '); // render visible dot via ::before
 					const b = document.createElement('span');
-					b.textContent = 'b';
+					b.textContent = 'B';
 					wrap.append(span('', 'Example: '), a, space, b);
 					break;
 				}

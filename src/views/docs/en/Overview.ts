@@ -20,22 +20,22 @@ export default {
 	title: 'Overview',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'AlphaTex overview' });
+		container.createEl('h3', { text: 'Alphatex overview' });
 		container.createEl('p', {
-			text: "AlphaTex is AlphaTab's text-based notation format. It typically contains (optional) metadata, (required) musical content, and (optional) sync points for external audio/video synchronization. Sections are separated by a single dot (.).",
+			text: "Alphatex is alphatab's text-based notation format. It typically contains (optional) metadata, (required) musical content, and (optional) sync points for external audio/video synchronization. Sections are separated by a single dot (.).",
 		});
 		const list = container.createEl('ul');
 		list.createEl('li', {
-			text: 'Song metadata: Global song information like title, artist, tempo.',
+			text: 'Song metadata: global song information like title, artist, tempo.',
 		});
 		list.createEl('li', {
-			text: 'Song contents: Main musical content (tracks, staves, bars, beats, notes), bars separated by |.',
+			text: 'Song contents: main musical content (tracks, staves, bars, beats, notes), bars separated by |.',
 		});
 		list.createEl('li', {
-			text: 'Sync points: Time alignment points with external media (advanced, optional).',
+			text: 'Sync points: time alignment points with external media (advanced, optional).',
 		});
 		container.createEl('p', {
-			text: 'Below is an example snippet (Canon Rock). You can directly edit the text and the preview will refresh automatically.',
+			text: 'Below is an example snippet (canon rock). You can directly edit the text and the preview will refresh automatically.',
 		});
 
 		if (plugin) {

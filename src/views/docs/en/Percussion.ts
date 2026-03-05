@@ -175,7 +175,7 @@ export default {
 		// 乐器发音部分
 		container.createEl('h4', { text: '乐器发音' });
 		container.createEl('p', {
-			text: 'alphaTab 附带了一套默认的乐器发音集，源自 Guitar Pro 7。每个发音都有一个内部数字，可以通过该数字引用它。为了使编写更人性化，您可以通过 \\articulation Name Number 定义自定义发音名称',
+			text: 'Alphatab 附带了一套默认的乐器发音集，源自 guitar pro 7。每个发音都有一个内部数字，可以通过该数字引用它。为了使编写更人性化，您可以通过 \\articulation name number 定义自定义发音名称',
 		});
 
 		if (plugin) {

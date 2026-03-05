@@ -51,7 +51,7 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'Notes - writing notes' });
 		container.createEl('p', {
-			text: 'The examples below demonstrate how to write general notes in AlphaTex. Multiple bars are separated by vertical lines |. Each bar corresponds to a section on the score.',
+			text: 'The examples below demonstrate how to write general notes in alphatex. Multiple bars are separated by vertical lines |. Each bar corresponds to a section on the score.',
 		});
 
 		// Single notes and rests
@@ -77,7 +77,7 @@ export default {
 		// Duration ranges
 		container.createEl('h4', { text: 'Duration ranges' });
 		container.createEl('p', {
-			text: 'Use :duration to start a duration range, subsequent notes share that duration; AlphaTex also remembers the last explicitly set duration.',
+			text: 'Use :duration to start a duration range, subsequent notes share that duration; alphatex also remembers the last explicitly set duration.',
 		});
 		if (plugin) {
 			const host3 = container.createDiv({ cls: 'doc-playground-host' });
@@ -87,7 +87,7 @@ export default {
 		// Repeat beats
 		container.createEl('h4', { text: 'Repeat beats' });
 		container.createEl('p', {
-			text: 'Use *N after a beat to quickly repeat that beat N times.',
+			text: 'Use *n after a beat to quickly repeat that beat n times.',
 		});
 		if (plugin) {
 			const host4 = container.createDiv({ cls: 'doc-playground-host' });
@@ -97,7 +97,7 @@ export default {
 		// Multiple voices
 		container.createEl('h4', { text: 'Multiple voices' });
 		container.createEl('p', {
-			text: 'Use \\voice to start a new voice. Multiple independent voices can be written in parallel within the same track; AlphaTab will try to merge bars with different voice counts.',
+			text: 'Use \\voice to start a new voice. Multiple independent voices can be written in parallel within the same track; alphatab will try to merge bars with different voice counts.',
 		});
 		if (plugin) {
 			const host5 = container.createDiv({ cls: 'doc-playground-host' });
@@ -107,7 +107,7 @@ export default {
 		// Accidentals
 		container.createEl('h4', { text: 'Accidentals' });
 		container.createEl('p', {
-			text: 'Default (\\accidentals explicit) uses accidentals as written; can switch to \\accidentals auto. Accidentals can also be specified in note effects using acc (like forceSharp/forceFlat, etc.).',
+			text: 'Default (\\accidentals explicit) uses accidentals as written; can switch to \\accidentals auto. Accidentals can also be specified in note effects using acc (like forcesharp/forceflat, etc.).',
 		});
 		if (plugin) {
 			const host6 = container.createDiv({ cls: 'doc-playground-host' });

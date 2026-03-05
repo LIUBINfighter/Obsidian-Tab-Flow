@@ -36,7 +36,7 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: '天空之城-指弹' });
 		container.createEl('p', {
-			text: '此页面展示一个包含全局和弦定义、拍号设置与若干小节的 AlphaTex 片段。可直接编辑下方代码尝试修改和弦或音符。',
+			text: '此页面展示一个包含全局和弦定义、拍号设置与若干小节的 alphatex 片段。可直接编辑下方代码尝试修改和弦或音符。',
 		});
 		container.createEl('p', {
 			text: '要点：1) 使用 \\chord 定义可复用和弦；2) 用 {ch "名称"} 在音符处标注当前和弦；3) :8 表示后续继承八分音长度；4) *N 可重复节拍；5) 竖线 | 分隔小节。',

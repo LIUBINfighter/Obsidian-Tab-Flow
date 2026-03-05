@@ -11,13 +11,13 @@ const SimpleTabifyPanel: DocPanel = {
 
 		// 创建标题
 		const h2 = document.createElement('h2');
-		h2.textContent = 'SimpleTabify service';
+		h2.textContent = 'Simpletabify service';
 		container.appendChild(h2);
 
 		// 创建描述段落
 		const p1 = document.createElement('p');
 		p1.textContent =
-			'SimpleTabify is a service for converting musical scores to standard formats, supporting multiple input and output formats, making it convenient for music creators and enthusiasts.';
+			'Simpletabify is a service for converting musical scores to standard formats, supporting multiple input and output formats, making it convenient for music creators and enthusiasts.';
 		container.appendChild(p1);
 
 		// 创建列表
@@ -42,7 +42,7 @@ const SimpleTabifyPanel: DocPanel = {
 		const link = document.createElement('a');
 		link.href = 'https://github.com/your-repo/SimpleTabify';
 		link.target = '_blank';
-		link.textContent = 'SimpleTabify project homepage';
+		link.textContent = 'Simpletabify project homepage';
 		p2.appendChild(link);
 		p2.appendChild(document.createTextNode('.'));
 		container.appendChild(p2);

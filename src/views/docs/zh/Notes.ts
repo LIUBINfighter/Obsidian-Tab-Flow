@@ -51,7 +51,7 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'Notes 编写音符' });
 		container.createEl('p', {
-			text: '下面的示例演示如何在 AlphaTex 中编写一般音符。多个小节用竖线 | 分隔。每个小节对应谱面上的一段。',
+			text: '下面的示例演示如何在 alphatex 中编写一般音符。多个小节用竖线 | 分隔。每个小节对应谱面上的一段。',
 		});
 
 		// Single notes and rests
@@ -75,9 +75,9 @@ export default {
 		}
 
 		// Duration Ranges
-		container.createEl('h4', { text: 'Duration Ranges（时值范围）' });
+		container.createEl('h4', { text: 'Duration ranges（时值范围）' });
 		container.createEl('p', {
-			text: '用 :duration 开始一个时值范围，之后的若干音符共享该时值；AlphaTex 也会记住最近一次明确设置的时值。',
+			text: '用 :duration 开始一个时值范围，之后的若干音符共享该时值；alphatex 也会记住最近一次明确设置的时值。',
 		});
 		if (plugin) {
 			const host3 = container.createDiv({ cls: 'doc-playground-host' });
@@ -86,7 +86,7 @@ export default {
 
 		// Repeat beats
 		container.createEl('h4', { text: 'Repeat beats（节拍重复）' });
-		container.createEl('p', { text: '在节拍后使用 *N 可快速重复该节拍 N 次。' });
+		container.createEl('p', { text: '在节拍后使用 *n 可快速重复该节拍 n 次。' });
 		if (plugin) {
 			const host4 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host4, SAMPLE_REPEAT_BEATS, {});
@@ -95,7 +95,7 @@ export default {
 		// Multiple voices
 		container.createEl('h4', { text: 'Multiple voices（多声部）' });
 		container.createEl('p', {
-			text: '使用 \\voice 开启新声部。在同一轨中可并行编写多个独立声部；AlphaTab 会尽力合并不同声部的小节数量差异。',
+			text: '使用 \\voice 开启新声部。在同一轨中可并行编写多个独立声部；alphatab 会尽力合并不同声部的小节数量差异。',
 		});
 		if (plugin) {
 			const host5 = container.createDiv({ cls: 'doc-playground-host' });
@@ -105,7 +105,7 @@ export default {
 		// Accidentals
 		container.createEl('h4', { text: 'Accidentals（变音记号）' });
 		container.createEl('p', {
-			text: '默认（\\accidentals explicit）按写入音高使用变音；可切换为 \\accidentals auto。也可在音符效果中用 acc 指定（如 forceSharp/forceFlat 等）。',
+			text: '默认（\\accidentals explicit）按写入音高使用变音；可切换为 \\accidentals auto。也可在音符效果中用 acc 指定（如 forcesharp/forceflat 等）。',
 		});
 		if (plugin) {
 			const host6 = container.createDiv({ cls: 'doc-playground-host' });

@@ -4,7 +4,7 @@ export default {
 	title: 'ReadMe',
 	render(container: HTMLElement, _plugin?: unknown) {
 		container.empty();
-		container.createEl('h3', { text: 'ReadMe 面板' });
+		container.createEl('h3', { text: 'Readme 面板' });
 
 		const paragraphs: string[] = [
 			'欢迎使用 TabFlow！这里是你在 Obsidian 中 “写谱 + 听谱 + 管理创作灵感” 的交互式工作区。',
