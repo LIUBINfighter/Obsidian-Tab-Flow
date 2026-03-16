@@ -34,9 +34,9 @@ export default {
 	title: 'Castle in the Sky - fingerstyle',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Castle in the Sky - fingerstyle' });
+		container.createEl('h3', { text: 'Castle in the sky - fingerstyle' });
 		container.createEl('p', {
-			text: 'This page shows an AlphaTex fragment with global chord definitions, time signature settings, and several bars. You can directly edit the code below to try modifying chords or notes.',
+			text: 'This page shows an alphatex fragment with global chord definitions, time signature settings, and several bars. You can directly edit the code below to try modifying chords or notes.',
 		});
 		container.createEl('p', {
 			text: 'Key points: 1) Use \\chord to define reusable chords; 2) Use {ch "name"} to label current chord at notes; 3) :8 means subsequent notes inherit eighth note duration; 4) *N can repeat beats; 5) | separates bars.',

@@ -275,7 +275,7 @@ export class TabView extends FileView {
 		if (this.currentFile) {
 			return this.currentFile.basename;
 		}
-		return 'AlphaTab';
+		return 'Alphatab';
 	}
 
 	public getScoreTitle(): string {

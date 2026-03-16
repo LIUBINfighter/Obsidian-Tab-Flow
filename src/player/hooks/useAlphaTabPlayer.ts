@@ -135,6 +135,8 @@ export function useAlphaTabPlayer(
 			return;
 		}
 
+		let currentApi: AlphaTabApi | null = null;
+
 		console.debug('[useAlphaTabPlayer] 初始化 AlphaTab API', {
 			container,
 			config,
@@ -144,24 +146,29 @@ export function useAlphaTabPlayer(
 			const settings = createAlphaTabSettings(config);
 
 			// 动态导入 AlphaTab（避免 SSR 问题）
-			import('@coderline/alphatab').then(({ AlphaTabApi }) => {
-				const newApi = new AlphaTabApi(container, settings);
-				setApi(newApi);
+			void import('@coderline/alphatab')
+				.then(({ AlphaTabApi }) => {
+					currentApi = new AlphaTabApi(container, settings);
+					setApi(currentApi);
 
-				console.debug('[useAlphaTabPlayer] AlphaTab API 创建成功', newApi);
-			});
+					console.debug('[useAlphaTabPlayer] AlphaTab API 创建成功', currentApi);
+				})
+				.catch((error) => {
+					console.error('[useAlphaTabPlayer] AlphaTab 模块加载失败', error);
+				});
 		} catch (error) {
 			console.error('[useAlphaTabPlayer] AlphaTab API 创建失败', error);
 		}
 
 		// 清理函数：销毁 API
 		return () => {
-			if (api) {
+			if (currentApi) {
 				console.debug('[useAlphaTabPlayer] 销毁 AlphaTab API');
-				api.destroy();
+				currentApi.destroy();
+				currentApi = null;
 			}
 		};
-	}, [container]); // 仅在 container 变化时重新创建
+	}, [container, config]);
 
 	// 配置变更时更新设置（不重新创建 API）
 	useEffect(() => {
@@ -219,14 +226,7 @@ export function useAlphaTabPlayer(
 			console.debug('[useAlphaTabPlayer] 应用配置更新');
 			api.updateSettings();
 		}
-	}, [
-		api,
-		config.layoutMode,
-		config.staveProfile,
-		config.scrollMode,
-		config.scrollOffsetY,
-		config.playerMode,
-	]);
+	}, [api, config]);
 
 	return api;
 }
@@ -254,20 +254,27 @@ export function useAlphaTabPlayerSimple(
 			return;
 		}
 
-		import('@coderline/alphatab').then(({ AlphaTabApi, Settings }) => {
-			const settings = new Settings();
-			configure(settings);
+		let currentApi: AlphaTabApi | null = null;
 
-			const newApi = new AlphaTabApi(container, settings);
-			setApi(newApi);
-		});
+		void import('@coderline/alphatab')
+			.then(({ AlphaTabApi, Settings }) => {
+				const settings = new Settings();
+				configure(settings);
+
+				currentApi = new AlphaTabApi(container, settings);
+				setApi(currentApi);
+			})
+			.catch((error) => {
+				console.error('[useAlphaTabPlayerSimple] AlphaTab 模块加载失败', error);
+			});
 
 		return () => {
-			if (api) {
-				api.destroy();
+			if (currentApi) {
+				currentApi.destroy();
+				currentApi = null;
 			}
 		};
-	}, [container]);
+	}, [container, configure]);
 
 	return api;
 }

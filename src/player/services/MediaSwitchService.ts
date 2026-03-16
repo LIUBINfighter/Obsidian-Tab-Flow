@@ -121,19 +121,18 @@ export class MediaSwitchService {
 	/**
 	 * 切换到合成器模式
 	 */
-	private async switchToSynth(): Promise<void> {
+	private switchToSynth(): Promise<void> {
 		console.debug('[MediaSwitchService] 切换到合成器模式');
 
 		this.api.settings.player.playerMode = PlayerMode.EnabledSynthesizer;
 		this.api.updateSettings();
+		return Promise.resolve();
 	}
 
 	/**
 	 * 切换到音频文件模式
 	 */
-	private async switchToAudio(
-		source: Extract<MediaSource, { type: MediaType.Audio }>
-	): Promise<void> {
+	private switchToAudio(source: Extract<MediaSource, { type: MediaType.Audio }>): Promise<void> {
 		console.debug('[MediaSwitchService] 切换到音频文件模式', {
 			url: source.url,
 			hasBlob: !!source.blob,
@@ -149,12 +148,14 @@ export class MediaSwitchService {
 			// 如果是外部音频，需要使用 External 模式
 			console.warn('[MediaSwitchService] Audio 模式需要曲谱内置 backing track');
 		}
+
+		return Promise.resolve();
 	}
 
 	/**
 	 * 切换到 YouTube 模式
 	 */
-	private async switchToYouTube(
+	private switchToYouTube(
 		source: Extract<MediaSource, { type: MediaType.YouTube }>
 	): Promise<void> {
 		console.debug('[MediaSwitchService] 切换到 YouTube 模式', {
@@ -167,12 +168,13 @@ export class MediaSwitchService {
 
 		// 外部媒体处理器将在 ExternalMediaService 中设置
 		console.debug('[MediaSwitchService] YouTube 模式需要配合 ExternalMediaService 使用');
+		return Promise.resolve();
 	}
 
 	/**
 	 * 切换到外部媒体模式
 	 */
-	private async switchToExternal(
+	private switchToExternal(
 		source: Extract<MediaSource, { type: MediaType.External }>
 	): Promise<void> {
 		console.debug('[MediaSwitchService] 切换到外部媒体模式', {
@@ -185,6 +187,7 @@ export class MediaSwitchService {
 
 		// 外部媒体处理器将在 ExternalMediaService 中设置
 		console.debug('[MediaSwitchService] External 模式需要配合 ExternalMediaService 使用');
+		return Promise.resolve();
 	}
 
 	/**

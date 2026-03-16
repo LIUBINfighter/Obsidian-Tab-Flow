@@ -195,7 +195,7 @@ export class DocView extends ItemView {
 			},
 			cls: 'mod-cta',
 		});
-		alphaTabBtn.innerText = 'AlphaTab.js';
+		alphaTabBtn.innerText = 'Alphatab.js';
 
 		// 使用视图 action 注入设置按钮，统一管理生命周期
 		try {

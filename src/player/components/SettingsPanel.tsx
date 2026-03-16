@@ -35,8 +35,8 @@ type TypeScriptEnum = { [key: number | string]: number | string };
 type Indexable = Record<string, unknown>;
 
 type ValueAccessor = {
-	getValue(context: SettingsContextProps): unknown;
-	setValue(context: SettingsContextProps, value: unknown): void;
+	getValue: (context: SettingsContextProps) => unknown;
+	setValue: (context: SettingsContextProps, value: unknown) => void;
 };
 
 type ControlProps = ValueAccessor & { inputId: string };

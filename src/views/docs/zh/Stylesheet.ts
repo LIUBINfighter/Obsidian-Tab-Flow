@@ -48,7 +48,7 @@ export default {
 			text: '以下示例演示显示/隐藏力度标记、系统分隔符与调弦显示控制、轨名策略等。',
 		});
 
-		container.createEl('h4', { text: '显示/隐藏力度（Dynamics）' });
+		container.createEl('h4', { text: '显示/隐藏力度（dynamics）' });
 		if (plugin) {
 			const host1 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host1, SAMPLE_SHOW_HIDE_DYNAMICS, {
@@ -61,7 +61,7 @@ export default {
 		}
 
 		container.createEl('h4', {
-			text: '系统分隔符（System Sign Separator）',
+			text: '系统分隔符（system sign separator）',
 		});
 		if (plugin) {
 			const host3 = container.createDiv({ cls: 'doc-playground-host' });
@@ -71,7 +71,7 @@ export default {
 		}
 
 		container.createEl('h4', {
-			text: '每轨显示调弦（Show Tuning per Track）',
+			text: '每轨显示调弦（show tuning per track）',
 		});
 		if (plugin) {
 			const host4 = container.createDiv({ cls: 'doc-playground-host' });
@@ -84,7 +84,7 @@ export default {
 			});
 		}
 
-		container.createEl('h4', { text: '轨名显示策略（Track Names）' });
+		container.createEl('h4', { text: '轨名显示策略（track names）' });
 		if (plugin) {
 			const host6 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, host6, SAMPLE_TRACK_NAMES, {

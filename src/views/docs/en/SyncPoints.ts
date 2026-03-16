@@ -6,7 +6,7 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'Sync points (external media synchronization)' });
 		container.createEl('p', {
-			text: 'In development: Will provide examples based on \\sync BarIndex Occurence MillisecondOffset [Ratio] syntax, and demonstrate integration with external audio synchronization.',
+			text: 'In development: will provide examples based on \\sync barindex occurence millisecondoffset [ratio] syntax, and demonstrate integration with external audio synchronization.',
 		});
 	},
 };

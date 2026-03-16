@@ -20,9 +20,9 @@ export default {
 	title: '总览',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'AlphaTex 总览' });
+		container.createEl('h3', { text: 'Alphatex 总览' });
 		container.createEl('p', {
-			text: 'AlphaTex 是 AlphaTab 的文本谱写格式。它通常包含（可选）元数据、（必需）乐谱内容，以及（可选）用于外部音频/视频同步的 Sync Points。各段之间使用一个点号（.）分隔。',
+			text: 'Alphatex 是 alphatab 的文本谱写格式。它通常包含（可选）元数据、（必需）乐谱内容，以及（可选）用于外部音频/视频同步的 sync points。各段之间使用一个点号（.）分隔。',
 		});
 		const list = container.createEl('ul');
 		list.createEl('li', { text: 'Song metadata：曲目全局信息，如标题、作者、速度。' });
@@ -31,7 +31,7 @@ export default {
 		});
 		list.createEl('li', { text: 'Sync points：与外部媒体的时间对齐点（进阶，可选）。' });
 		container.createEl('p', {
-			text: '下面给出一个示例片段（Canon Rock）。可直接修改文本，预览会自动刷新。',
+			text: '下面给出一个示例片段（canon rock）。可直接修改文本，预览会自动刷新。',
 		});
 
 		if (plugin) {

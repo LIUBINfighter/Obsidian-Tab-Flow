@@ -190,7 +190,12 @@ export class MediaSyncService {
 			play(): void {
 				if (mediaElement && config.allowScoreControlMedia) {
 					log('播放');
-					mediaElement.play();
+					const playResult = mediaElement.play();
+					if (playResult instanceof Promise) {
+						void playResult.catch((error: unknown) => {
+							console.warn('[MediaSyncService] 媒体播放失败:', error);
+						});
+					}
 				}
 			},
 

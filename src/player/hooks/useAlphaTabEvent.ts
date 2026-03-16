@@ -102,7 +102,7 @@ export type AlphaTabEventName =
  */
 export function useAlphaTabEvent<TEventArgs = void>(
 	api: AlphaTabApi | null,
-	eventName: AlphaTabEventName | string,
+	eventName: string,
 	handler: AlphaTabEventHandler<TEventArgs>,
 	deps: React.DependencyList = []
 ): void {
@@ -182,7 +182,9 @@ export function useAlphaTabEvents(
 		// 清理所有事件
 		return () => {
 			console.debug('[useAlphaTabEvents] 批量清理事件', Object.keys(events));
-			cleanups.forEach((cleanup) => cleanup());
+			for (const cleanup of cleanups) {
+				cleanup();
+			}
 		};
 	}, [api, events]);
 }
@@ -200,7 +202,7 @@ export function useAlphaTabEvents(
  */
 export function useAlphaTabEventOnce<TEventArgs = void>(
 	api: AlphaTabApi | null,
-	eventName: AlphaTabEventName | string,
+	eventName: string,
 	handler: AlphaTabEventHandler<TEventArgs>
 ): void {
 	const hasTriggered = useRef(false);
@@ -251,7 +253,7 @@ export function useAlphaTabEventOnce<TEventArgs = void>(
  */
 export function useAlphaTabEventConditional<TEventArgs = void>(
 	api: AlphaTabApi | null,
-	eventName: AlphaTabEventName | string,
+	eventName: string,
 	handler: AlphaTabEventHandler<TEventArgs>,
 	condition: boolean
 ): void {
@@ -294,7 +296,7 @@ export function useAlphaTabEventConditional<TEventArgs = void>(
  */
 export function useAlphaTabEventDebounced<TEventArgs = void>(
 	api: AlphaTabApi | null,
-	eventName: AlphaTabEventName | string,
+	eventName: string,
 	handler: AlphaTabEventHandler<TEventArgs>,
 	delay: number
 ): void {
@@ -352,7 +354,7 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
  */
 export function useAlphaTabEventThrottled<TEventArgs = void>(
 	api: AlphaTabApi | null,
-	eventName: AlphaTabEventName | string,
+	eventName: string,
 	handler: AlphaTabEventHandler<TEventArgs>,
 	interval: number
 ): void {

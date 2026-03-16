@@ -14,12 +14,12 @@ export interface MediaSyncEditorProps {
 	/** 同步点信息 */
 	syncPointInfo: SyncPointInfo;
 	/** 同步点变化回调 */
-	onSyncPointInfoChanged(info: SyncPointInfo): void;
+	onSyncPointInfoChanged: (info: SyncPointInfo) => void;
 
 	/** 当前播放位置（毫秒） */
 	playbackTime?: number;
 	/** 播放位置变化回调 */
-	onPlaybackTimeChange?(time: number): void;
+	onPlaybackTimeChange?: (time: number) => void;
 
 	/** 编辑器宽度 */
 	width?: number;
@@ -124,6 +124,7 @@ export const MediaSyncEditor: React.FC<MediaSyncEditorProps> = ({
 				}}
 			>
 				<button
+					type="button"
 					onClick={() => handleZoom('out')}
 					style={{
 						padding: '4px 12px',
@@ -139,6 +140,7 @@ export const MediaSyncEditor: React.FC<MediaSyncEditorProps> = ({
 				</button>
 
 				<button
+					type="button"
 					onClick={handleResetZoom}
 					style={{
 						padding: '4px 12px',
@@ -154,6 +156,7 @@ export const MediaSyncEditor: React.FC<MediaSyncEditorProps> = ({
 				</button>
 
 				<button
+					type="button"
 					onClick={() => handleZoom('in')}
 					style={{
 						padding: '4px 12px',

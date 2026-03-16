@@ -56,7 +56,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 					await exportMP3();
 					break;
 				case 'midi':
-					await exportMIDI();
+					exportMIDI();
 					break;
 				case 'gp':
 					await exportGP();
@@ -259,11 +259,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 	];
 
 	return (
-		<div className="modal-container mod-dim" onClick={onClose}>
-			<div className="modal mod-settings" onClick={(e) => e.stopPropagation()}>
+		<div className="modal-container mod-dim">
+			<div className="modal mod-settings">
 				<div className="modal-header">
 					<div className="modal-title">导出乐谱</div>
 					<button
+						type="button"
 						className="clickable-icon modal-close-button"
 						onClick={onClose}
 						aria-label="关闭"
@@ -418,13 +419,16 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 				<div className="modal-button-container">
 					<button
+						type="button"
 						className="mod-cta"
-						onClick={handleExport}
+						onClick={() => {
+							void handleExport();
+						}}
 						disabled={status === 'exporting'}
 					>
 						{status === 'exporting' ? '导出中...' : '开始导出'}
 					</button>
-					<button onClick={onClose} disabled={status === 'exporting'}>
+					<button type="button" onClick={onClose} disabled={status === 'exporting'}>
 						{status === 'success' ? '关闭' : '取消'}
 					</button>
 				</div>

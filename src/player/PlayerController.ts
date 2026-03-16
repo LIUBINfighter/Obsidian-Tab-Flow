@@ -148,7 +148,7 @@ export class PlayerController {
 	 * @param container - AlphaTab 渲染目标容器
 	 * @param viewport - 滚动视口容器（可选）
 	 */
-	public async init(container: HTMLElement, viewport?: HTMLElement): Promise<void> {
+	public init(container: HTMLElement, viewport?: HTMLElement): void {
 		if (!container) {
 			console.error(
 				`[PlayerController #${this.instanceId}] Container not provided to init()`
@@ -169,18 +169,7 @@ export class PlayerController {
 			);
 		}
 
-		try {
-			this.rebuildApi();
-		} catch (error) {
-			console.error(
-				`[PlayerController #${this.instanceId}] API initialization failed:`,
-				error
-			);
-			this.stores.runtime
-				.getState()
-				.setError('api-init', error instanceof Error ? error.message : String(error));
-			throw error;
-		}
+		void this.rebuildApi();
 	} /**
 	 * 销毁控制器
 	 */
@@ -291,7 +280,7 @@ export class PlayerController {
 						if (lastScore.type === 'alphatex') {
 							this.api.tex(lastScore.data as string);
 						} else if (lastScore.type === 'binary') {
-							await this.api.load(lastScore.data as Uint8Array);
+							this.api.load(lastScore.data as Uint8Array);
 						}
 						console.debug(
 							`[PlayerController #${this.instanceId}] Last score reloaded successfully`
@@ -672,14 +661,29 @@ export class PlayerController {
 			this.eventDisposers.push(this.api.renderFinished.on(renderFinishedHandler));
 
 			// Player Ready
-			const playerReadyHandler = async () => {
+			const playerReadyHandler = () => {
 				console.debug('[PlayerController] Player ready - can now play music');
 				this.stores.runtime.getState().setApiReady(true);
 
 				// 播放器就绪后，检查是否有待加载的文件
 				if (this.pendingFileLoad) {
-					await this.pendingFileLoad();
+					const pendingLoad = this.pendingFileLoad;
 					this.pendingFileLoad = null;
+					void pendingLoad().catch((error) => {
+						console.error(
+							`[PlayerController #${this.instanceId}] Pending file load failed:`,
+							error
+						);
+						this.stores.runtime
+							.getState()
+							.setError(
+								'score-load',
+								error instanceof Error ? error.message : String(error)
+							);
+						this.stores.ui
+							.getState()
+							.showToast('error', 'Failed to load score after player ready');
+					});
 				}
 			};
 			this.eventDisposers.push(this.api.playerReady.on(playerReadyHandler));
@@ -1063,7 +1067,8 @@ export class PlayerController {
 		this.stores.runtime.getState().clearError();
 
 		try {
-			await this.api.load(url);
+			this.api.load(url);
+			await Promise.resolve();
 			this.stores.workspaceConfig.getState().setScoreSource({ type: 'url', content: url });
 			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
 		} catch (error) {
@@ -1089,7 +1094,8 @@ export class PlayerController {
 
 		try {
 			const uint8Array = new Uint8Array(arrayBuffer);
-			await this.api.load(uint8Array);
+			this.api.load(uint8Array);
+			await Promise.resolve();
 
 			// 保存乐谱数据用于 API 重建后重新加载
 			this.stores.runtime.getState().setLastLoadedScore('binary', uint8Array, fileName);
@@ -1110,9 +1116,9 @@ export class PlayerController {
 		}
 	}
 
-	async loadScoreFromAlphaTex(tex: string): Promise<void> {
+	loadScoreFromAlphaTex(tex: string): Promise<void> {
 		if (!this.api) {
-			throw new Error('API not initialized');
+			return Promise.reject(new Error('API not initialized'));
 		}
 
 		this.stores.ui.getState().setLoading(true, 'Loading score...');
@@ -1129,13 +1135,14 @@ export class PlayerController {
 				.getState()
 				.setScoreSource({ type: 'alphatex', content: tex });
 			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
+			return Promise.resolve();
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
 			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
 			this.stores.ui.getState().showToast('error', 'Failed to load score');
-			throw error;
+			return Promise.reject(error);
 		} finally {
 			this.stores.ui.getState().setLoading(false);
 		}

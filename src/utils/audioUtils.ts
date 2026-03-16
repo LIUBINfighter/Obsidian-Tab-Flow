@@ -55,7 +55,8 @@ export function convertSamplesToWavBlobUrl(chunks: Float32Array[], sampleRate = 
 				const bytes = new Uint8Array(c.buffer, c.byteOffset, c.byteLength);
 				buffer.write(bytes, 0, bytes.length);
 			}
-			const blob = new Blob([buffer.toArray()], { type: 'audio/wav' });
+			const wavBytes = Uint8Array.from(buffer.toArray());
+			const blob = new Blob([wavBytes], { type: 'audio/wav' });
 			return URL.createObjectURL(blob);
 		}
 	} catch (e) {

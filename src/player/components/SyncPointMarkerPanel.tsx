@@ -16,9 +16,9 @@ export interface SyncPointMarkerPanelProps {
 	/** 同步点信息 */
 	syncPointInfo: SyncPointInfo;
 	/** 同步点变化回调 */
-	onSyncPointInfoChanged(info: SyncPointInfo): void;
+	onSyncPointInfoChanged: (info: SyncPointInfo) => void;
 	/** 寻址回调 */
-	onSeek(milliseconds: number): void;
+	onSeek: (milliseconds: number) => void;
 
 	/** 面板宽度（像素） */
 	width: number;
@@ -181,11 +181,8 @@ export const SyncPointMarkerPanel: React.FC<SyncPointMarkerPanelProps> = ({
 	/**
 	 * 处理标记双击（激活/禁用同步点）
 	 */
-	const onToggleMarker = useCallback(
-		(marker: SyncPointMarker, e: React.MouseEvent) => {
-			e.stopPropagation();
-			e.preventDefault();
-
+	const toggleMarker = useCallback(
+		(marker: SyncPointMarker) => {
 			const markerIndex = syncPointInfo.syncPointMarkers.indexOf(marker);
 			if (markerIndex === -1) return;
 
@@ -204,6 +201,15 @@ export const SyncPointMarkerPanel: React.FC<SyncPointMarkerPanelProps> = ({
 			});
 		},
 		[syncPointInfo, onSyncPointInfoChanged]
+	);
+
+	const onToggleMarker = useCallback(
+		(marker: SyncPointMarker, e: React.MouseEvent) => {
+			e.stopPropagation();
+			e.preventDefault();
+			toggleMarker(marker);
+		},
+		[toggleMarker]
 	);
 
 	/**
@@ -374,6 +380,17 @@ export const SyncPointMarkerPanel: React.FC<SyncPointMarkerPanelProps> = ({
 		<div
 			ref={wrapRef}
 			onClick={onClick}
+			role="button"
+			tabIndex={0}
+			onKeyDown={(e) => {
+				if ((e.key === 'Enter' || e.key === ' ') && wrapRef.current) {
+					e.preventDefault();
+					const rect = wrapRef.current.getBoundingClientRect();
+					const x = rect.width / 2;
+					const time = xToTimePosition(pixelPerMilliseconds, x, zoom, leftPadding);
+					onSeek(time);
+				}
+			}}
 			style={{
 				position: 'relative',
 				width: `${width}px`,
@@ -387,6 +404,15 @@ export const SyncPointMarkerPanel: React.FC<SyncPointMarkerPanelProps> = ({
 			{syncPointInfo.syncPointMarkers.map((marker) => (
 				<div
 					key={marker.uniqueId}
+					role="button"
+					tabIndex={0}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							e.stopPropagation();
+							toggleMarker(marker);
+						}
+					}}
 					style={computeMarkerInlineStyle(
 						marker,
 						pixelPerMilliseconds,

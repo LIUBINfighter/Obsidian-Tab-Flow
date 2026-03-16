@@ -23,17 +23,17 @@ export default {
 		container.empty();
 		container.createEl('h3', { text: 'Instruments & tuning' });
 		container.createEl('p', {
-			text: 'In AlphaTex, you can specify playback timbre with \\instrument and set the pitch of each string with \\tuning (starting from the lowest string). If only \\instrument is set without \\tuning, AlphaTab will attempt to apply default tuning based on the instrument type.',
+			text: 'In alphatex, you can specify playback timbre with \\instrument and set the pitch of each string with \\tuning (starting from the lowest string). If only \\instrument is set without \\tuning, alphatab will attempt to apply default tuning based on the instrument type.',
 		});
 		const ul = container.createEl('ul');
 		ul.createEl('li', {
-			text: '\\instrument supports GM numbers or names (like ElectricGuitarClean, piano, etc.).',
+			text: '\\instrument supports gm numbers or names (like electricguitarclean, piano, etc.).',
 		});
 		ul.createEl('li', {
-			text: '\\tuning uses note names + octaves (like E4 B3 G3 D3 A2 E2) for stringed instrument fretboard positioning and pitch.',
+			text: '\\tuning uses note names + octaves (like e4 b3 g3 d3 a2 e2) for stringed instrument fretboard positioning and pitch.',
 		});
 		container.createEl('p', {
-			text: 'Below are two minimal examples: the first is electric guitar (stringed, using fret.string); the second is piano (non-stringed, using note names and octaves like C4 D4).',
+			text: 'Below are two minimal examples: the first is electric guitar (stringed, using fret.string); the second is piano (non-stringed, using note names and octaves like c4 d4).',
 		});
 
 		if (plugin) {
