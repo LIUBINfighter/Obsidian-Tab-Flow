@@ -14,7 +14,7 @@ import { FontFileFormat } from '@coderline/alphatab';
 import type { AlphaTabApi, synth } from '@coderline/alphatab';
 import type { StoreCollection } from './store/StoreFactory';
 import { disableUnsafeNumberedNotation, sanitizeTrackConfig } from './utils/scoreSafety';
-import type { Plugin, TFile } from 'obsidian';
+import { Platform, type Plugin, type TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { applyStaveProfileToScore, toFiniteClampedNumber, toFiniteNumber } from '../utils';
 
@@ -249,6 +249,7 @@ export class PlayerController {
 		console.debug(`[PlayerController #${this.instanceId}] Rebuilding API...`);
 		this.stores.ui.getState().setLoading(true, 'Loading score...');
 		this.stores.runtime.getState().setApiReady(false);
+		this.stores.runtime.getState().setScoreLoaded(false);
 
 		try {
 			// 销毁旧 API
@@ -368,10 +369,26 @@ export class PlayerController {
 		}
 	}
 
+	private shouldUseObsidianSafeInitialRender(configuredEngine?: string): boolean {
+		const engine =
+			configuredEngine ?? this.stores.globalConfig.getState().alphaTabSettings.core.engine;
+		return (
+			this.renderFallbackMode === 'normal' &&
+			!Platform.isMobile &&
+			engine === 'svg' &&
+			!this.stores.runtime.getState().scoreLoaded
+		);
+	}
+
 	private getEffectiveRenderMode(): { engine: string; useWorkers: boolean } {
 		const globalConfig = this.stores.globalConfig.getState();
 		const configuredEngine = globalConfig.alphaTabSettings.core.engine || 'svg';
 		const configuredWorkers = globalConfig.alphaTabSettings.core.useWorkers;
+		const initialSafeMode = this.shouldUseObsidianSafeInitialRender(configuredEngine);
+
+		if (initialSafeMode) {
+			return { engine: configuredEngine, useWorkers: false };
+		}
 
 		switch (this.renderFallbackMode) {
 			case 'no-workers':
@@ -403,9 +420,10 @@ export class PlayerController {
 		}
 
 		const globalConfig = this.stores.globalConfig.getState();
+		const effectiveRenderMode = this.getEffectiveRenderMode();
 		let nextMode: 'no-workers' | 'html5' | null = null;
 
-		if (this.renderFallbackMode === 'normal' && globalConfig.alphaTabSettings.core.useWorkers) {
+		if (this.renderFallbackMode === 'normal' && effectiveRenderMode.useWorkers) {
 			nextMode = 'no-workers';
 		} else if (this.renderFallbackMode !== 'html5') {
 			nextMode = 'html5';
@@ -612,12 +630,13 @@ export class PlayerController {
 		}
 
 		const effectiveRenderMode = this.getEffectiveRenderMode();
+		const initialSafeMode = this.shouldUseObsidianSafeInitialRender();
 		const settingsJson: AlphaTabSettingsJson = {
 			core: {
 				file: null, // 总是 null，通过 API 方法加载
 				engine: effectiveRenderMode.engine,
 				useWorkers: effectiveRenderMode.useWorkers,
-				enableLazyLoading: this.renderFallbackMode === 'normal',
+				enableLazyLoading: this.renderFallbackMode === 'normal' && !initialSafeMode,
 				logLevel: globalConfig.alphaTabSettings.core.logLevel,
 				includeNoteBounds: globalConfig.alphaTabSettings.core.includeNoteBounds,
 				scriptFile: this.resources.alphaTabWorkerUri,
@@ -677,6 +696,7 @@ export class PlayerController {
 				engine: effectiveRenderMode.engine,
 				useWorkers: effectiveRenderMode.useWorkers,
 				fallbackMode: this.renderFallbackMode,
+				initialSafeMode,
 			},
 			layout: {
 				layoutMode: displaySettings.layoutMode,
@@ -945,6 +965,9 @@ export class PlayerController {
 				});
 
 				const scoreLoaded = this.stores.runtime.getState().scoreLoaded;
+				const shouldUseSinglePassRender = this.api
+					? this.api.settings.core.useWorkers === false
+					: !this.getEffectiveRenderMode().useWorkers;
 				const hasMeasuredRender =
 					Number.isFinite(totalWidth) &&
 					Number.isFinite(totalHeight) &&
@@ -966,6 +989,14 @@ export class PlayerController {
 						if (!this.stabilizationRenderRequested) {
 							this.requestStabilizedRender();
 						}
+						return;
+					}
+
+					if (shouldUseSinglePassRender) {
+						window.requestAnimationFrame(() => {
+							this.endStableRenderWait();
+						});
+						this.scheduleRenderIntegrityCheck();
 						return;
 					}
 

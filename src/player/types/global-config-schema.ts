@@ -105,7 +105,7 @@ export function getDefaultGlobalConfig(): GlobalConfig {
 		alphaTabSettings: {
 			core: {
 				engine: 'svg',
-				useWorkers: true,
+				useWorkers: false,
 				logLevel: alphaTab.LogLevel.Warning,
 				includeNoteBounds: false,
 			},

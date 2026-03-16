@@ -26,7 +26,7 @@ interface GlobalConfigState extends GlobalConfig {
 }
 
 const STORAGE_KEY = 'global-config';
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 function normalizeEnumValue<T extends number>(
 	value: unknown,
@@ -54,7 +54,13 @@ function normalizeAlphaTabSettings(
 	const nextDisplay = { ...current.display, ...update.display };
 
 	return {
-		core: nextCore,
+		core: {
+			...nextCore,
+			useWorkers:
+				typeof nextCore.useWorkers === 'boolean'
+					? nextCore.useWorkers
+					: current.core.useWorkers,
+		},
 		player: {
 			...nextPlayer,
 			scrollMode: normalizeEnumValue(
