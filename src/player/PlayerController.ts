@@ -84,10 +84,6 @@ export class PlayerController {
 	private stabilizationRenderInFlight = false;
 	private stableRenderDebugStart = 0;
 	private stableRenderTimeoutId: number | null = null;
-	private renderIntegrityCheckId: number | null = null;
-	private renderFallbackMode: 'normal' | 'no-workers' | 'html5' = 'normal';
-	private renderFallbackInProgress = false;
-	private readonly allowHtml5FallbackRetry = false;
 	private unsubscribeGlobalConfig: (() => void) | null = null;
 	private unsubscribeWorkspaceConfig: (() => void) | null = null;
 	private lastConfigHash: string | null = null;
@@ -363,21 +359,11 @@ export class PlayerController {
 		this.stores.ui.getState().setLoading(false);
 	}
 
-	private clearRenderIntegrityCheck(): void {
-		if (this.renderIntegrityCheckId !== null) {
-			window.clearTimeout(this.renderIntegrityCheckId);
-			this.renderIntegrityCheckId = null;
-		}
-	}
-
 	private shouldUseObsidianSafeInitialRender(configuredEngine?: string): boolean {
 		const engine =
 			configuredEngine ?? this.stores.globalConfig.getState().alphaTabSettings.core.engine;
 		return (
-			this.renderFallbackMode === 'normal' &&
-			!Platform.isMobile &&
-			engine === 'svg' &&
-			!this.stores.runtime.getState().scoreLoaded
+			!Platform.isMobile && engine === 'svg' && !this.stores.runtime.getState().scoreLoaded
 		);
 	}
 
@@ -391,97 +377,7 @@ export class PlayerController {
 			return { engine: configuredEngine, useWorkers: false };
 		}
 
-		switch (this.renderFallbackMode) {
-			case 'no-workers':
-				return { engine: configuredEngine, useWorkers: false };
-			case 'html5':
-				return { engine: 'html5', useWorkers: false };
-			default:
-				return { engine: configuredEngine, useWorkers: configuredWorkers };
-		}
-	}
-
-	private hasInvalidRenderOutput(): boolean {
-		if (!this.container) {
-			return false;
-		}
-
-		const svgSurface = this.container.querySelector('.at-surface-svg');
-		if (!svgSurface) {
-			return false;
-		}
-
-		const markup = svgSurface.outerHTML;
-		return /nan/i.test(markup);
-	}
-
-	private triggerRenderFallback(reason: string): void {
-		if (this.renderFallbackInProgress) {
-			return;
-		}
-
-		const globalConfig = this.stores.globalConfig.getState();
-		const effectiveRenderMode = this.getEffectiveRenderMode();
-		let nextMode: 'no-workers' | 'html5' | null = null;
-
-		if (this.renderFallbackMode === 'normal' && effectiveRenderMode.useWorkers) {
-			nextMode = 'no-workers';
-		} else if (this.renderFallbackMode !== 'html5' && this.allowHtml5FallbackRetry) {
-			nextMode = 'html5';
-		}
-
-		if (!nextMode) {
-			console.warn(`[PlayerController #${this.instanceId}] Render fallback stopped`, {
-				reason,
-				renderFallbackMode: this.renderFallbackMode,
-				allowHtml5FallbackRetry: this.allowHtml5FallbackRetry,
-			});
-			return;
-		}
-
-		this.renderFallbackInProgress = true;
-		this.renderFallbackMode = nextMode;
-		this.clearRenderIntegrityCheck();
-		this.endStableRenderWait();
-
-		const message =
-			nextMode === 'no-workers'
-				? 'Invalid render detected. Retrying without workers.'
-				: 'Invalid render detected. Retrying with HTML5 safe mode.';
-
-		console.warn(`[PlayerController #${this.instanceId}] Triggering render fallback`, {
-			reason,
-			nextMode,
-		});
-		this.stores.ui.getState().showToast('warning', message, 4500);
-		void this.rebuildApi().finally(() => {
-			this.renderFallbackInProgress = false;
-		});
-	}
-
-	private scheduleRenderIntegrityCheck(attempt = 0): void {
-		if (!this.container) {
-			return;
-		}
-
-		this.clearRenderIntegrityCheck();
-		this.renderIntegrityCheckId = window.setTimeout(
-			() => {
-				this.renderIntegrityCheckId = null;
-
-				if (this.hasInvalidRenderOutput()) {
-					this.triggerRenderFallback(
-						`Detected invalid SVG output after render (attempt ${attempt + 1})`
-					);
-					return;
-				}
-
-				if (attempt < 3) {
-					this.scheduleRenderIntegrityCheck(attempt + 1);
-				}
-			},
-			attempt === 0 ? 0 : 60
-		);
+		return { engine: configuredEngine, useWorkers: configuredWorkers };
 	}
 
 	private async waitForFontAndLayoutStability(target: HTMLElement): Promise<void> {
@@ -566,7 +462,6 @@ export class PlayerController {
 	}
 
 	private destroyApi(): void {
-		this.clearRenderIntegrityCheck();
 		if (this.api) {
 			try {
 				// 先解绑事件
@@ -630,7 +525,7 @@ export class PlayerController {
 				file: null, // 总是 null，通过 API 方法加载
 				engine: effectiveRenderMode.engine,
 				useWorkers: effectiveRenderMode.useWorkers,
-				enableLazyLoading: this.renderFallbackMode === 'normal' && !initialSafeMode,
+				enableLazyLoading: !initialSafeMode,
 				logLevel: globalConfig.alphaTabSettings.core.logLevel,
 				includeNoteBounds: globalConfig.alphaTabSettings.core.includeNoteBounds,
 				scriptFile: this.resources.alphaTabWorkerUri,
@@ -689,7 +584,6 @@ export class PlayerController {
 			renderMode: {
 				engine: effectiveRenderMode.engine,
 				useWorkers: effectiveRenderMode.useWorkers,
-				fallbackMode: this.renderFallbackMode,
 				initialSafeMode,
 			},
 			layout: {
@@ -987,10 +881,6 @@ export class PlayerController {
 					}
 
 					if (shouldUseSinglePassRender) {
-						window.requestAnimationFrame(() => {
-							this.endStableRenderWait();
-						});
-						this.scheduleRenderIntegrityCheck();
 						return;
 					}
 
@@ -1003,10 +893,27 @@ export class PlayerController {
 						this.endStableRenderWait();
 					});
 				}
-
-				this.scheduleRenderIntegrityCheck();
 			};
 			this.eventDisposers.push(this.api.renderFinished.on(renderFinishedHandler));
+
+			const postRenderFinishedHandler = () => {
+				console.debug(`[PlayerController #${this.instanceId}] postRenderFinished`, {
+					awaitingStableRender: this.awaitingStableRender,
+					containerRect: this.container?.getBoundingClientRect(),
+					viewportRect: this.scrollViewport?.getBoundingClientRect(),
+				});
+
+				const shouldUseSinglePassRender = this.api
+					? this.api.settings.core.useWorkers === false
+					: !this.getEffectiveRenderMode().useWorkers;
+
+				if (this.awaitingStableRender && shouldUseSinglePassRender) {
+					window.requestAnimationFrame(() => {
+						this.endStableRenderWait();
+					});
+				}
+			};
+			this.eventDisposers.push(this.api.postRenderFinished.on(postRenderFinishedHandler));
 
 			// Player Ready
 			const playerReadyHandler = () => {
