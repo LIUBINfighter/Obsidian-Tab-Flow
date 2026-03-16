@@ -21,6 +21,7 @@
 import { useEffect, useState } from 'react';
 import type { AlphaTabApi } from '@coderline/alphatab';
 import { LayoutMode, PlayerMode, ScrollMode, Settings, StaveProfile } from '@coderline/alphatab';
+import { applyStaveProfileToScore } from '../../utils';
 
 /**
  * AlphaTab 播放器配置选项
@@ -86,10 +87,6 @@ function createAlphaTabSettings(config: AlphaTabPlayerConfig): Settings {
 
 	// Display 配置
 	settings.display.layoutMode = config.layoutMode ?? LayoutMode.Page;
-
-	if (config.staveProfile !== undefined) {
-		settings.display.staveProfile = config.staveProfile;
-	}
 
 	// Player 配置
 	settings.player.playerMode = config.playerMode ?? PlayerMode.EnabledSynthesizer;
@@ -180,6 +177,7 @@ export function useAlphaTabPlayer(
 
 		// 更新可变配置
 		let needsUpdate = false;
+		let needsRender = false;
 
 		if (
 			config.layoutMode !== undefined &&
@@ -191,10 +189,11 @@ export function useAlphaTabPlayer(
 
 		if (
 			config.staveProfile !== undefined &&
-			api.settings.display.staveProfile !== config.staveProfile
+			config.staveProfile !== StaveProfile.Default &&
+			api.score &&
+			applyStaveProfileToScore(api.score, config.staveProfile)
 		) {
-			api.settings.display.staveProfile = config.staveProfile;
-			needsUpdate = true;
+			needsRender = true;
 		}
 
 		if (
@@ -225,6 +224,10 @@ export function useAlphaTabPlayer(
 		if (needsUpdate) {
 			console.debug('[useAlphaTabPlayer] 应用配置更新');
 			api.updateSettings();
+		}
+
+		if (needsRender) {
+			api.render();
 		}
 	}, [api, config]);
 

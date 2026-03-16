@@ -2,7 +2,13 @@
 
 import * as alphaTab from '@coderline/alphatab';
 import { App } from 'obsidian';
-import { EventBus, convertSamplesToWavBlobUrl, toFiniteClampedNumber } from '../utils';
+import {
+	EventBus,
+	applyStaveProfileToScore,
+	convertSamplesToWavBlobUrl,
+	toFiniteClampedNumber,
+	toStaveProfile,
+} from '../utils';
 import { ScrollEventManager } from '../events/scrollEvents';
 import * as convert from 'color-convert';
 
@@ -123,9 +129,16 @@ export class AlphaTabService {
 			this.api.playbackSpeed = toFiniteClampedNumber(speed, 1, 0.5, 2);
 		});
 		this.eventBus.subscribe('命令:设置谱表', (profile: number) => {
-			this.api.settings.display.staveProfile = profile;
-			this.api.updateSettings();
-			this.api.render();
+			if (!this.api.score) {
+				return;
+			}
+
+			const nextProfile = toStaveProfile(profile);
+			if (nextProfile !== alphaTab.StaveProfile.Default) {
+				if (applyStaveProfileToScore(this.api.score, nextProfile)) {
+					this.api.render();
+				}
+			}
 		});
 		this.eventBus.subscribe('命令:设置节拍器', (enabled: boolean) => {
 			this.api.metronomeVolume = enabled ? 1 : 0;
@@ -474,12 +487,13 @@ export class AlphaTabService {
 		const exporter = await this.api.exportAudio(exportOptions);
 		const chunks: Float32Array[] = [];
 		try {
-			let chunk: unknown;
-			while ((chunk = await exporter.render(500))) {
+			let chunk: unknown = await exporter.render(500);
+			while (chunk) {
 				interface AudioChunk {
 					samples?: Float32Array;
 				}
 				chunks.push((chunk as AudioChunk).samples || new Float32Array());
+				chunk = await exporter.render(500);
 			}
 		} finally {
 			exporter.destroy();

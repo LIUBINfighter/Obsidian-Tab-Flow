@@ -92,5 +92,17 @@ export function formatSettingValue(value: unknown): string {
 		return JSON.stringify(value);
 	}
 
-	return String(value);
+	if (typeof value === 'bigint') {
+		return value.toString();
+	}
+
+	if (typeof value === 'symbol') {
+		return value.description ? `Symbol(${value.description})` : 'Symbol';
+	}
+
+	if (typeof value === 'function') {
+		return '[Function]';
+	}
+
+	return '';
 }

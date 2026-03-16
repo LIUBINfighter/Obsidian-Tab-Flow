@@ -383,12 +383,19 @@ function buildSettingsGroups(): SettingsGroupSchema[] {
 				{
 					label: 'Stave Profile',
 					getValue(context: SettingsContextProps) {
-						const api = context.controller.getRuntimeStore().getState().alphaTabApi;
-						return (
-							api?.settings?.display?.staveProfile ?? alphaTab.StaveProfile.Default
-						);
+						return context.controller.getGlobalConfigStore().getState().alphaTabSettings
+							.display.staveProfile;
 					},
 					setValue(context: SettingsContextProps, value: alphaTab.StaveProfile) {
+						const globalConfigStore = context.controller
+							.getGlobalConfigStore()
+							.getState();
+						globalConfigStore.updateAlphaTabSettings({
+							display: {
+								...globalConfigStore.alphaTabSettings.display,
+								staveProfile: value,
+							},
+						});
 						context.controller.setStaveProfile(value);
 						context.onSettingsUpdated();
 					},
@@ -729,10 +736,15 @@ const SettingsGroup: React.FC<SettingsGroupSchema> = ({ title, settings }) => {
 
 	return (
 		<div className="settings-group">
-			<h4 className="settings-group-title" onClick={() => setIsCollapsed(!isCollapsed)}>
+			<button
+				type="button"
+				className="settings-group-title"
+				onClick={() => setIsCollapsed(!isCollapsed)}
+				aria-expanded={!isCollapsed}
+			>
 				<span className={`settings-group-icon ${isCollapsed ? 'collapsed' : ''}`}>▼</span>
 				{title}
-			</h4>
+			</button>
 			{!isCollapsed && (
 				<div className="settings-group-content">
 					{settings.map((s) => (
@@ -909,9 +921,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 						>
 							Reset to Defaults
 						</button>
-						<h4></h4>
-						<h4>_</h4>
-						{/* 我也没办法，就这样先顶上吧 */}
 					</div>
 				</div>
 			</div>

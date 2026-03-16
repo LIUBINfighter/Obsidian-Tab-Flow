@@ -66,11 +66,17 @@
 }
 
 .settings-group-title {
+	appearance: none;
+	background: none;
+	text-align: left;
+	width: 100%;
+	font-family: inherit;
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-accent);
 	margin: 0 0 12px 0;
 	padding: 8px 0;
+	border: none;
 	border-bottom: 1px solid var(--background-modifier-border);
 	cursor: pointer;
 	user-select: none;

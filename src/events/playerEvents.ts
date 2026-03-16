@@ -1,5 +1,10 @@
 import * as alphaTab from '@coderline/alphatab';
-import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
+import {
+	applyStaveProfileToScore,
+	toFiniteClampedNumber,
+	toFiniteNumber,
+	toStaveProfile,
+} from '../utils';
 
 export type PlayerEventType =
 	| 'playPause'
@@ -34,9 +39,15 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
 			api.playbackSpeed = toFiniteClampedNumber(payload.value, 1, 0.5, 2);
 			break;
 		case 'setStaveProfile':
-			api.settings.display.staveProfile = payload.value as alphaTab.StaveProfile;
-			api.updateSettings();
-			api.render();
+			if (api.score) {
+				const nextProfile = toStaveProfile(payload.value);
+				if (
+					nextProfile !== alphaTab.StaveProfile.Default &&
+					applyStaveProfileToScore(api.score, nextProfile)
+				) {
+					api.render();
+				}
+			}
 			break;
 		case 'setMetronome':
 			api.metronomeVolume = payload.value ? 1 : 0;

@@ -4,7 +4,12 @@ import { createProgressBar } from './ProgressBar';
 import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
-import { formatTime, toFiniteClampedNumber } from '../utils';
+import {
+	applyStaveProfileToScore,
+	formatTime,
+	toFiniteClampedNumber,
+	toStaveProfile,
+} from '../utils';
 import { t } from '../i18n';
 import type { TabFlowSettings } from '../settings/defaults';
 
@@ -251,7 +256,9 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 					if (!allowed.has(k)) currentComponents[k] = false;
 				});
 				// 确保已选择的键默认显示
-				order.forEach((k) => (currentComponents[k] = true));
+				order.forEach((k) => {
+					currentComponents[k] = true;
+				});
 				currentRuntimeOverride.components = currentComponents;
 				runtimeOverride = currentRuntimeOverride;
 			}
@@ -614,14 +621,17 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			});
 			select.onchange = () => {
 				const api = options.getApi?.();
+				const nextProfile = toStaveProfile(parseInt(select.value, 10));
 				if (api) {
-					(api.settings.display as ExtendedDisplaySettings).staveProfile = parseInt(
-						select.value
-					);
-					api.updateSettings();
-					api.render();
+					if (
+						api.score &&
+						nextProfile !== alphaTab.StaveProfile.Default &&
+						applyStaveProfileToScore(api.score, nextProfile)
+					) {
+						api.render();
+					}
 				} else {
-					eventBus?.publish('命令:设置谱表', parseInt(select.value));
+					eventBus?.publish('命令:设置谱表', nextProfile);
 				}
 			};
 			bar.appendChild(select);
