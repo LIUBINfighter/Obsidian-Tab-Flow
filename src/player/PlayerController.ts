@@ -78,6 +78,7 @@ export class PlayerController {
 	private api: AlphaTabApi | null = null;
 	private container: HTMLElement | null = null;
 	private scrollViewport: HTMLElement | null = null; // 新增：滚动容器引用
+	private awaitingStableRender = false;
 	private unsubscribeGlobalConfig: (() => void) | null = null;
 	private unsubscribeWorkspaceConfig: (() => void) | null = null;
 	private lastConfigHash: string | null = null;
@@ -162,9 +163,9 @@ export class PlayerController {
 		this.scrollViewport = viewport || null;
 
 		const rect = container.getBoundingClientRect();
-		if (!Number.isFinite(rect.width) || rect.width <= 0) {
+		if (!Number.isFinite(rect.width) || rect.width <= 0 || !Number.isFinite(rect.height)) {
 			console.warn(
-				`[PlayerController #${this.instanceId}] Init called with invalid container width, waiting for layout`,
+				`[PlayerController #${this.instanceId}] Init called with unstable container layout`,
 				{ width: rect.width, height: rect.height }
 			);
 		}
@@ -303,8 +304,24 @@ export class PlayerController {
 				.setError('api-init', error instanceof Error ? error.message : String(error));
 			this.stores.ui.getState().showToast('error', 'Failed to initialize player');
 		} finally {
-			this.stores.ui.getState().setLoading(false);
+			if (!this.awaitingStableRender) {
+				this.stores.ui.getState().setLoading(false);
+			}
 		}
+	}
+
+	private beginStableRenderWait(message: string): void {
+		this.awaitingStableRender = true;
+		this.stores.ui.getState().setLoading(true, message);
+	}
+
+	private endStableRenderWait(): void {
+		if (!this.awaitingStableRender) {
+			return;
+		}
+
+		this.awaitingStableRender = false;
+		this.stores.ui.getState().setLoading(false);
 	}
 
 	private destroyApi(): void {
@@ -577,21 +594,25 @@ export class PlayerController {
 			}
 		}
 
-		// 延迟应用滚动模式和光标设置，确保 DOM 完全就绪
-		setTimeout(() => {
-			if (this.api?.settings.player) {
-				const globalConfig = this.stores.globalConfig.getState();
-				this.api.settings.player.scrollMode =
-					globalConfig.alphaTabSettings.player.scrollMode;
-				this.api.settings.player.enableCursor =
-					globalConfig.alphaTabSettings.player.enableCursor;
+		if (this.api?.settings.player) {
+			const globalConfig = this.stores.globalConfig.getState();
+			const nextScrollMode = globalConfig.alphaTabSettings.player.scrollMode;
+			const nextEnableCursor = globalConfig.alphaTabSettings.player.enableCursor;
+
+			if (
+				this.api.settings.player.scrollMode !== nextScrollMode ||
+				this.api.settings.player.enableCursor !== nextEnableCursor
+			) {
+				this.api.settings.player.scrollMode = nextScrollMode;
+				this.api.settings.player.enableCursor = nextEnableCursor;
 				this.api.updateSettings();
-				console.debug('[PlayerController] Scroll mode applied:', {
-					scrollMode: globalConfig.alphaTabSettings.player.scrollMode,
-					enableCursor: globalConfig.alphaTabSettings.player.enableCursor,
-				});
 			}
-		}, 100);
+
+			console.debug('[PlayerController] Scroll mode verified:', {
+				scrollMode: nextScrollMode,
+				enableCursor: nextEnableCursor,
+			});
+		}
 	}
 
 	// ========== API Events ==========
@@ -645,10 +666,7 @@ export class PlayerController {
 				// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
 				// 那才是考虑了速度等因素的实际播放时长
 
-				// 延迟配置滚动容器，确保 DOM 就绪（参考 TabView）
-				setTimeout(() => {
-					this.configureScrollElement();
-				}, 100);
+				this.configureScrollElement();
 			};
 			this.eventDisposers.push(this.api.scoreLoaded.on(scoreLoadedHandler));
 			const renderStartedHandler = () => {
@@ -657,8 +675,21 @@ export class PlayerController {
 			this.eventDisposers.push(this.api.renderStarted.on(renderStartedHandler));
 
 			// Render Finished
-			const renderFinishedHandler = () => {
+			const renderFinishedHandler = (renderResult?: {
+				totalWidth?: number;
+				totalHeight?: number;
+			}) => {
 				this.stores.runtime.getState().setRenderState('finished');
+
+				const scoreLoaded = this.stores.runtime.getState().scoreLoaded;
+				const hasMeasuredRender =
+					(renderResult?.totalWidth ?? 0) > 0 && (renderResult?.totalHeight ?? 0) > 0;
+
+				if (scoreLoaded && hasMeasuredRender) {
+					window.requestAnimationFrame(() => {
+						this.endStableRenderWait();
+					});
+				}
 			};
 			this.eventDisposers.push(this.api.renderFinished.on(renderFinishedHandler));
 
@@ -719,6 +750,7 @@ export class PlayerController {
 			);
 			const errorHandler = (error: Error) => {
 				console.error('[PlayerController] alphaTab error:', error);
+				this.endStableRenderWait();
 				this.stores.runtime.getState().setError('api-init', error.message ?? String(error));
 				this.stores.ui.getState().showToast('error', 'An error occurred in the player');
 			};
@@ -1085,7 +1117,7 @@ export class PlayerController {
 		}
 
 		console.debug(`[PlayerController #${this.instanceId}] Loading score from URL:`, url);
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.beginStableRenderWait('Loading score...');
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();
 
@@ -1100,9 +1132,8 @@ export class PlayerController {
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
 			this.stores.ui.getState().showToast('error', 'Failed to load score');
+			this.endStableRenderWait();
 			throw error;
-		} finally {
-			this.stores.ui.getState().setLoading(false);
 		}
 	}
 
@@ -1111,7 +1142,7 @@ export class PlayerController {
 			throw new Error('API not initialized');
 		}
 
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.beginStableRenderWait('Loading score...');
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();
 
@@ -1133,9 +1164,8 @@ export class PlayerController {
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
 			this.stores.ui.getState().showToast('error', 'Failed to load score');
+			this.endStableRenderWait();
 			throw error;
-		} finally {
-			this.stores.ui.getState().setLoading(false);
 		}
 	}
 
@@ -1144,7 +1174,7 @@ export class PlayerController {
 			return Promise.reject(new Error('API not initialized'));
 		}
 
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.beginStableRenderWait('Loading score...');
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();
 
@@ -1165,9 +1195,8 @@ export class PlayerController {
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
 			this.stores.ui.getState().showToast('error', 'Failed to load score');
+			this.endStableRenderWait();
 			return Promise.reject(error);
-		} finally {
-			this.stores.ui.getState().setLoading(false);
 		}
 	}
 

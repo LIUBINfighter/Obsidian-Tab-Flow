@@ -97,6 +97,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 
 		let disposed = false;
 		let initialized = false;
+		let initRafId: number | null = null;
 
 		const tryInitController = () => {
 			if (disposed || initialized || !containerRef.current || !viewportRef.current) {
@@ -107,19 +108,40 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 			const viewportRect = viewportRef.current.getBoundingClientRect();
 
 			const containerReady = Number.isFinite(containerRect.width) && containerRect.width > 0;
+			const containerHeightReady =
+				Number.isFinite(containerRect.height) && containerRect.height > 0;
 			const viewportReady = Number.isFinite(viewportRect.width) && viewportRect.width > 0;
+			const viewportHeightReady =
+				Number.isFinite(viewportRect.height) && viewportRect.height > 0;
 
-			if (!containerReady || !viewportReady) {
+			if (
+				!containerReady ||
+				!containerHeightReady ||
+				!viewportReady ||
+				!viewportHeightReady
+			) {
 				console.debug('[TablatureView] Waiting for non-zero layout before init', {
 					containerWidth: containerRect.width,
+					containerHeight: containerRect.height,
 					viewportWidth: viewportRect.width,
+					viewportHeight: viewportRect.height,
 				});
 				return;
 			}
 
-			console.debug('[TablatureView] Initializing controller...');
-			initialized = true;
-			void controller.init(containerRef.current, viewportRef.current);
+			if (initRafId !== null) {
+				window.cancelAnimationFrame(initRafId);
+			}
+
+			initRafId = window.requestAnimationFrame(() => {
+				if (disposed || initialized || !containerRef.current || !viewportRef.current) {
+					return;
+				}
+
+				console.debug('[TablatureView] Initializing controller after stable layout...');
+				initialized = true;
+				void controller.init(containerRef.current, viewportRef.current);
+			});
 		};
 
 		const resizeObserver = new ResizeObserver(() => {
@@ -136,6 +158,9 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 		// 清理函数
 		return () => {
 			disposed = true;
+			if (initRafId !== null) {
+				window.cancelAnimationFrame(initRafId);
+			}
 			window.cancelAnimationFrame(rafId);
 			resizeObserver.disconnect();
 			console.debug('[TablatureView] Cleaning up controller...');
@@ -186,8 +211,11 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 				/>
 			)}
 			{/* 自定义侧边栏组件 */}
-			{customComponents?.sidebars?.map((Sidebar, index) => (
-				<Sidebar key={index} controller={controller} />
+			{customComponents?.sidebars?.map((Sidebar) => (
+				<Sidebar
+					key={Sidebar.displayName ?? Sidebar.name ?? 'tabflow-custom-sidebar'}
+					controller={controller}
+				/>
 			))}
 			{/* Loading Indicator */}
 			{loading.isLoading && (
