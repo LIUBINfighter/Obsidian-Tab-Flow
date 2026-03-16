@@ -124,7 +124,7 @@ export function getDefaultGlobalConfig(): GlobalConfig {
 				layoutMode: alphaTab.LayoutMode.Page,
 				barsPerRow: -1,
 				stretchForce: 1.0,
-				staveProfile: alphaTab.StaveProfile.ScoreTab, // 默认五线谱+六线谱
+				staveProfile: alphaTab.StaveProfile.Default,
 			},
 		},
 

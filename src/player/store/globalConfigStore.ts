@@ -5,11 +5,13 @@
  * 数据持久化到 plugin.saveData / loadData (data.json)
  */
 
+import * as alphaTab from '@coderline/alphatab';
 import { create } from 'zustand';
 import { storageAdapter } from './middleware/storageAdapter';
 import type { GlobalConfig } from '../types/global-config-schema';
 import { getDefaultGlobalConfig } from '../types/global-config-schema';
 import type { ObsidianPluginStorageAdapter } from '../storage/adapters/ObsidianPluginStorageAdapter';
+import { toFiniteClampedNumber, toFiniteNumber } from '../../utils/numberUtils';
 
 // Store state interface
 interface GlobalConfigState extends GlobalConfig {
@@ -24,7 +26,78 @@ interface GlobalConfigState extends GlobalConfig {
 }
 
 const STORAGE_KEY = 'global-config';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
+
+function normalizeEnumValue<T extends number>(
+	value: unknown,
+	validValues: readonly T[],
+	fallback: T
+): T {
+	return typeof value === 'number' && validValues.includes(value as T) ? (value as T) : fallback;
+}
+
+function normalizeBarsPerRow(value: unknown): number {
+	const numericValue = Math.trunc(toFiniteNumber(value, -1));
+	if (numericValue === -1) {
+		return -1;
+	}
+
+	return numericValue >= 1 ? numericValue : -1;
+}
+
+function normalizeAlphaTabSettings(
+	current: GlobalConfig['alphaTabSettings'],
+	update: Partial<GlobalConfig['alphaTabSettings']>
+): GlobalConfig['alphaTabSettings'] {
+	const nextCore = { ...current.core, ...update.core };
+	const nextPlayer = { ...current.player, ...update.player };
+	const nextDisplay = { ...current.display, ...update.display };
+
+	return {
+		core: nextCore,
+		player: {
+			...nextPlayer,
+			scrollMode: normalizeEnumValue(
+				nextPlayer.scrollMode,
+				Object.values(alphaTab.ScrollMode).filter(
+					(value): value is alphaTab.ScrollMode => typeof value === 'number'
+				),
+				current.player.scrollMode
+			),
+			scrollSpeed: Math.max(
+				0,
+				toFiniteNumber(nextPlayer.scrollSpeed, current.player.scrollSpeed)
+			),
+			scrollOffsetX: toFiniteNumber(nextPlayer.scrollOffsetX, current.player.scrollOffsetX),
+			scrollOffsetY: toFiniteNumber(nextPlayer.scrollOffsetY, current.player.scrollOffsetY),
+		},
+		display: {
+			...nextDisplay,
+			scale: toFiniteClampedNumber(nextDisplay.scale, current.display.scale, 0.5, 2),
+			layoutMode: normalizeEnumValue(
+				nextDisplay.layoutMode,
+				Object.values(alphaTab.LayoutMode).filter(
+					(value): value is alphaTab.LayoutMode => typeof value === 'number'
+				),
+				current.display.layoutMode
+			),
+			staveProfile: normalizeEnumValue(
+				nextDisplay.staveProfile,
+				Object.values(alphaTab.StaveProfile).filter(
+					(value): value is alphaTab.StaveProfile => typeof value === 'number'
+				),
+				current.display.staveProfile
+			),
+			barsPerRow: normalizeBarsPerRow(nextDisplay.barsPerRow),
+			stretchForce: toFiniteClampedNumber(
+				nextDisplay.stretchForce,
+				current.display.stretchForce,
+				0.25,
+				2
+			),
+		},
+	};
+}
 
 /**
  * 创建全局配置 store 的工厂函数
@@ -47,13 +120,23 @@ export const createGlobalConfigStore = (adapter: ObsidianPluginStorageAdapter) =
 						CURRENT_VERSION
 					);
 
-					// Version 1 无需迁移
-					if (version === 0) {
-						// 从旧版本迁移（如果有）
-						return { ...getDefaultGlobalConfig(), ...persistedState };
-					}
-
-					return persistedState;
+					const defaults = getDefaultGlobalConfig();
+					return {
+						...defaults,
+						...persistedState,
+						alphaTabSettings: normalizeAlphaTabSettings(
+							defaults.alphaTabSettings,
+							persistedState.alphaTabSettings ?? {}
+						),
+						playerExtensions: {
+							...defaults.playerExtensions,
+							...persistedState.playerExtensions,
+						},
+						uiConfig: {
+							...defaults.uiConfig,
+							...persistedState.uiConfig,
+						},
+					};
 				},
 			},
 			(set, get) => ({
@@ -63,7 +146,10 @@ export const createGlobalConfigStore = (adapter: ObsidianPluginStorageAdapter) =
 				// Actions
 				updateAlphaTabSettings: (settings) =>
 					set((state) => ({
-						alphaTabSettings: { ...state.alphaTabSettings, ...settings },
+						alphaTabSettings: normalizeAlphaTabSettings(
+							state.alphaTabSettings,
+							settings
+						),
 					})),
 
 				updatePlayerExtensions: (extensions) =>

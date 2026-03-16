@@ -367,6 +367,9 @@ function buildSettingsGroups(): SettingsGroupSchema[] {
 					label: 'Bars Per Row',
 					...factory.settingAccessors('display.barsPerRow', {
 						prepareValue(value: number) {
+							if (!Number.isFinite(value)) {
+								return -1;
+							}
 							// -1 表示自动，转换 UI 值
 							return value < 0 ? -1 : value;
 						},
@@ -565,6 +568,9 @@ const NumberRange: React.FC<NumberRangeSchema & ControlProps> = ({
 				value={localValue}
 				onChange={(e) => {
 					const newValue = e.target.valueAsNumber;
+					if (!Number.isFinite(newValue)) {
+						return;
+					}
 					setLocalValue(newValue);
 					setValue(context, newValue);
 				}}
@@ -594,7 +600,13 @@ const NumberInput: React.FC<NumberInputSchema & ControlProps> = ({
 			max={max}
 			step={step}
 			value={value}
-			onChange={(e) => setValue(context, e.target.valueAsNumber)}
+			onChange={(e) => {
+				const nextValue = e.target.valueAsNumber;
+				if (!Number.isFinite(nextValue)) {
+					return;
+				}
+				setValue(context, nextValue);
+			}}
 		/>
 	);
 };

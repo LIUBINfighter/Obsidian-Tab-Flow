@@ -1,5 +1,5 @@
 /* This file is auto generated, to edit this please refer to ./src/styles/*.css  */ 
-/* --- doc\doc.css --- */
+/* --- doc/doc.css --- */
 /* Basic layout for TabFlow documentation view */
 .tabflow-doc-header {
 	padding: 12px 16px;
@@ -473,7 +473,7 @@
 	background-color: var(--background-modifier-active);
 }
 
-/* --- editor\ShareModal.css --- */
+/* --- editor/ShareModal.css --- */
 /* ShareCard Modal Styles */
 .share-card-modal {
 	display: flex;
@@ -799,7 +799,7 @@
 	margin-left: 4px;
 }
 
-/* --- editor\alphatex.css --- */
+/* --- editor/alphatex.css --- */
 /* AlphaTex Editor View Styles */
 .alphatex-editor-layout {
 	display: flex;
@@ -1395,7 +1395,7 @@
 	stroke: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
 }
 
-/* --- editor\codemirror.css --- */
+/* --- editor/codemirror.css --- */
 /* CodeMirror Editor Styles - Obsidian Integration */
 
 /* ===== Base Editor Container ===== */
@@ -1748,7 +1748,7 @@
 	/* box-shadow removed - no focus highlight */
 }
 
-/* --- editor\editor.css --- */
+/* --- editor/editor.css --- */
 /* EditorView 样式 - 添加类似 playground 的边框和圆角，使编辑器和预览看起来像两个独立的"页面" */
 
 /* 缩小 Obsidian 自带的 .view-content 的边角和间距，让主要内容区域更大 */
@@ -1808,7 +1808,7 @@
 	background: var(--background-primary);
 }
 
-/* --- editor\print.css --- */
+/* --- editor/print.css --- */
 /* Print-preview specific styles for AlphaTab page layout.
  *
  * 目标：
@@ -1826,12 +1826,51 @@
 	padding: 20px;
 }
 
+.tabflow-print-preview-view.print-preview-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.tabflow-print-preview-view .print-preview-toolbar {
+	display: flex;
+	gap: 10px;
+	padding: 10px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	justify-content: space-between;
+	flex-shrink: 0;
+}
+
+.tabflow-print-preview-view .print-preview-toolbar-left,
+.tabflow-print-preview-view .print-preview-toolbar-right {
+	display: flex;
+	gap: 8px;
+}
+
+.tabflow-print-preview-view .print-preview-body {
+	flex: 1;
+	flex-direction: row;
+	min-height: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-preview-wrapper {
+	flex: 1;
+	overflow: auto;
+	padding: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	background-color: var(--background-secondary);
+}
+
 .tabflow-print-preview-view .print-preview-iframe {
 	/* A4 纸宽度，阴影只在屏幕预览时可见 */
 	width: 210mm;
+	height: auto;
 	border: none;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 	background: white;
+	display: block;
 }
 
 /* 左侧打印 Track/Staff 面板 */
@@ -2038,7 +2077,7 @@
 	font-display: swap;
 }
 
-/* --- new-react-player\debugbar.css --- */
+/* --- new-react-player/debugbar.css --- */
 /* PlayBar - 播放控制栏样式 (参考 DebugBar 设计) */
 
 /* ============================================
@@ -2331,7 +2370,7 @@
 	}
 }
 
-/* --- new-react-player\media-sync.css --- */
+/* --- new-react-player/media-sync.css --- */
 /**
  * MediaSync Panel Styles
  * 外部媒体同步面板样式
@@ -2851,7 +2890,7 @@
 	flex-shrink: 0;
 }
 
-/* --- new-react-player\player-cursor.css --- */
+/* --- new-react-player/player-cursor.css --- */
 /* ============================================
    AlphaTab 播放器光标样式
    符合 Obsidian 主题的播放指示器
@@ -3025,7 +3064,7 @@
  * 当用户使用键盘控制播放时，增强光标可见度
  */
 
-/* --- new-react-player\progress-bar.css --- */
+/* --- new-react-player/progress-bar.css --- */
 /**
  * ProgressBar - 播放进度条样式
  * 
@@ -3205,7 +3244,7 @@
 	outline-offset: 2px;
 }
 
-/* --- new-react-player\settings-panel.css --- */
+/* --- new-react-player/settings-panel.css --- */
 /* Settings Panel - 调试和配置面板样式 */
 
 .settings-panel {
@@ -3274,11 +3313,17 @@
 }
 
 .settings-group-title {
+	appearance: none;
+	background: none;
+	text-align: left;
+	width: 100%;
+	font-family: inherit;
 	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-accent);
 	margin: 0 0 12px 0;
 	padding: 8px 0;
+	border: none;
 	border-bottom: 1px solid var(--background-modifier-border);
 	cursor: pointer;
 	user-select: none;
@@ -3580,7 +3625,7 @@
 	}
 }
 
-/* --- new-react-player\tablature-view.css --- */
+/* --- new-react-player/tablature-view.css --- */
 /* TablatureView 组件样式 - 参考 AlphaTab 官方推荐结构 */
 
 /* 外层容器：固定尺寸，不滚动 */
@@ -3612,6 +3657,16 @@
 	width: 100%;
 	min-height: 100%; /* 确保至少占满视口 */
 	/* AlphaTab 会在这里添加渲染内容 */
+}
+
+.tablature-view .at-surface .at,
+.tablature-view .at-surface-svg .at,
+.tablature-view .at {
+	font-family: 'alphaTab', 'Bravura', sans-serif !important;
+	font-size: 34px !important;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1;
 }
 
 /* 滚动条样式 */
@@ -3709,7 +3764,7 @@
 	}
 }
 
-/* --- new-react-player\tracks-panel.css --- */
+/* --- new-react-player/tracks-panel.css --- */
 /* TracksPanel - 音轨管理侧边栏样式 */
 
 .tracks-panel {
@@ -4372,7 +4427,7 @@ ul.tabflow-setting-description li {
 	display: inline-block;
 }
 
-/* --- tabview\TrackModal.css --- */
+/* --- tabview/TrackModal.css --- */
 .tracks-modal .setting-item {
 	display: flex;
 	flex-direction: column;
@@ -4457,7 +4512,7 @@ ul.tabflow-setting-description li {
 	padding-right: 4px;
 }
 
-/* --- tabview\debug.css --- */
+/* --- tabview/debug.css --- */
 /* .debug-bar {
 	display: none !important;
 } */
@@ -4516,7 +4571,7 @@ ul.tabflow-setting-description li {
 	opacity: 0.5;
 }
 
-/* --- tabview\play.css --- */
+/* --- tabview/play.css --- */
 /* 播放栏自定义按钮样式 */
 .play-bar {
 	position: absolute;
@@ -4683,7 +4738,7 @@ ul.tabflow-setting-description li {
 	height: 32px;
 }
 
-/* --- tabview\tracks.css --- */
+/* --- tabview/tracks.css --- */
 /**
  * 音轨和五线谱组件样式
  */

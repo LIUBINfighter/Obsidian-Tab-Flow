@@ -23,6 +23,30 @@ export class ReactView extends FileView {
 	private resources: PlayerControllerResources;
 	private static instanceId = 0;
 
+	private async ensureBravuraFontReady(): Promise<void> {
+		if (!this.resources.bravuraUri) {
+			return;
+		}
+
+		const fonts = Reflect.get(this.containerEl.ownerDocument, 'fonts') as
+			| FontFaceSet
+			| undefined;
+		if (!fonts || typeof fonts.load !== 'function') {
+			return;
+		}
+
+		try {
+			await fonts.load(`34px alphaTab`, ' ');
+			await Promise.race([
+				fonts.ready.catch(() => undefined),
+				new Promise((resolve) => window.setTimeout(resolve, 1200)),
+			]);
+			console.debug('[ReactView] Bravura font ready for alphaTab');
+		} catch (error) {
+			console.warn('[ReactView] Failed to prewarm alphaTab font:', error);
+		}
+	}
+
 	// Store 管理
 	private storeFactory: StoreFactory;
 	private stores: StoreCollection | null = null;
@@ -80,6 +104,8 @@ export class ReactView extends FileView {
 			fontStyleInjected = true;
 			console.debug('[ReactView] Global @font-face injected');
 		}
+
+		await this.ensureBravuraFontReady();
 
 		// 3. 创建 PlayerController（传递 resources 和 stores）
 		if (!this.stores) {

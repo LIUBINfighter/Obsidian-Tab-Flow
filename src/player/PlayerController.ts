@@ -13,6 +13,7 @@
 import { FontFileFormat } from '@coderline/alphatab';
 import type { AlphaTabApi, synth } from '@coderline/alphatab';
 import type { StoreCollection } from './store/StoreFactory';
+import { disableUnsafeNumberedNotation, sanitizeTrackConfig } from './utils/scoreSafety';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { applyStaveProfileToScore, toFiniteClampedNumber, toFiniteNumber } from '../utils';
@@ -79,6 +80,13 @@ export class PlayerController {
 	private container: HTMLElement | null = null;
 	private scrollViewport: HTMLElement | null = null; // 新增：滚动容器引用
 	private awaitingStableRender = false;
+	private stabilizationRenderRequested = false;
+	private stabilizationRenderInFlight = false;
+	private stableRenderDebugStart = 0;
+	private stableRenderTimeoutId: number | null = null;
+	private renderIntegrityCheckId: number | null = null;
+	private renderFallbackMode: 'normal' | 'no-workers' | 'html5' = 'normal';
+	private renderFallbackInProgress = false;
 	private unsubscribeGlobalConfig: (() => void) | null = null;
 	private unsubscribeWorkspaceConfig: (() => void) | null = null;
 	private lastConfigHash: string | null = null;
@@ -312,6 +320,24 @@ export class PlayerController {
 
 	private beginStableRenderWait(message: string): void {
 		this.awaitingStableRender = true;
+		this.stabilizationRenderRequested = false;
+		this.stabilizationRenderInFlight = false;
+		if (this.stableRenderTimeoutId !== null) {
+			window.clearTimeout(this.stableRenderTimeoutId);
+		}
+		this.stableRenderTimeoutId = window.setTimeout(() => {
+			console.warn(`[PlayerController #${this.instanceId}] Stable render wait timed out`, {
+				containerRect: this.container?.getBoundingClientRect(),
+				viewportRect: this.scrollViewport?.getBoundingClientRect(),
+			});
+			this.endStableRenderWait();
+		}, 3000);
+		this.stableRenderDebugStart = performance.now();
+		console.debug(`[PlayerController #${this.instanceId}] Begin stable render wait`, {
+			message,
+			containerRect: this.container?.getBoundingClientRect(),
+			viewportRect: this.scrollViewport?.getBoundingClientRect(),
+		});
 		this.stores.ui.getState().setLoading(true, message);
 	}
 
@@ -321,10 +347,214 @@ export class PlayerController {
 		}
 
 		this.awaitingStableRender = false;
+		this.stabilizationRenderRequested = false;
+		this.stabilizationRenderInFlight = false;
+		if (this.stableRenderTimeoutId !== null) {
+			window.clearTimeout(this.stableRenderTimeoutId);
+			this.stableRenderTimeoutId = null;
+		}
+		console.debug(`[PlayerController #${this.instanceId}] End stable render wait`, {
+			elapsedMs: Math.round(performance.now() - this.stableRenderDebugStart),
+			containerRect: this.container?.getBoundingClientRect(),
+			viewportRect: this.scrollViewport?.getBoundingClientRect(),
+		});
 		this.stores.ui.getState().setLoading(false);
 	}
 
+	private clearRenderIntegrityCheck(): void {
+		if (this.renderIntegrityCheckId !== null) {
+			window.clearTimeout(this.renderIntegrityCheckId);
+			this.renderIntegrityCheckId = null;
+		}
+	}
+
+	private getEffectiveRenderMode(): { engine: string; useWorkers: boolean } {
+		const globalConfig = this.stores.globalConfig.getState();
+		const configuredEngine = globalConfig.alphaTabSettings.core.engine || 'svg';
+		const configuredWorkers = globalConfig.alphaTabSettings.core.useWorkers;
+
+		switch (this.renderFallbackMode) {
+			case 'no-workers':
+				return { engine: configuredEngine, useWorkers: false };
+			case 'html5':
+				return { engine: 'html5', useWorkers: false };
+			default:
+				return { engine: configuredEngine, useWorkers: configuredWorkers };
+		}
+	}
+
+	private hasInvalidRenderOutput(): boolean {
+		if (!this.container) {
+			return false;
+		}
+
+		const svgSurface = this.container.querySelector('.at-surface-svg');
+		if (!svgSurface) {
+			return false;
+		}
+
+		const markup = svgSurface.outerHTML;
+		return /nan/i.test(markup);
+	}
+
+	private triggerRenderFallback(reason: string): void {
+		if (this.renderFallbackInProgress) {
+			return;
+		}
+
+		const globalConfig = this.stores.globalConfig.getState();
+		let nextMode: 'no-workers' | 'html5' | null = null;
+
+		if (this.renderFallbackMode === 'normal' && globalConfig.alphaTabSettings.core.useWorkers) {
+			nextMode = 'no-workers';
+		} else if (this.renderFallbackMode !== 'html5') {
+			nextMode = 'html5';
+		}
+
+		if (!nextMode) {
+			console.error(`[PlayerController #${this.instanceId}] Render fallback exhausted`, {
+				reason,
+			});
+			this.stores.runtime
+				.getState()
+				.setError(
+					'api-init',
+					'alphaTab produced invalid render output in all fallback modes'
+				);
+			this.stores.ui
+				.getState()
+				.showToast('error', 'Rendering failed even after safe mode fallback');
+			return;
+		}
+
+		this.renderFallbackInProgress = true;
+		this.renderFallbackMode = nextMode;
+		this.clearRenderIntegrityCheck();
+		this.endStableRenderWait();
+
+		const message =
+			nextMode === 'no-workers'
+				? 'Invalid render detected. Retrying without workers.'
+				: 'Invalid render detected. Retrying with HTML5 safe mode.';
+
+		console.warn(`[PlayerController #${this.instanceId}] Triggering render fallback`, {
+			reason,
+			nextMode,
+		});
+		this.stores.ui.getState().showToast('warning', message, 4500);
+		void this.rebuildApi().finally(() => {
+			this.renderFallbackInProgress = false;
+		});
+	}
+
+	private scheduleRenderIntegrityCheck(attempt = 0): void {
+		if (!this.container) {
+			return;
+		}
+
+		this.clearRenderIntegrityCheck();
+		this.renderIntegrityCheckId = window.setTimeout(
+			() => {
+				this.renderIntegrityCheckId = null;
+
+				if (this.hasInvalidRenderOutput()) {
+					this.triggerRenderFallback(
+						`Detected invalid SVG output after render (attempt ${attempt + 1})`
+					);
+					return;
+				}
+
+				if (attempt < 3) {
+					this.scheduleRenderIntegrityCheck(attempt + 1);
+				}
+			},
+			attempt === 0 ? 0 : 60
+		);
+	}
+
+	private async waitForFontAndLayoutStability(target: HTMLElement): Promise<void> {
+		const fonts = Reflect.get(document, 'fonts') as FontFaceSet | undefined;
+		const fontApiAvailable = Boolean(fonts && typeof fonts.ready?.then === 'function');
+		console.debug(`[PlayerController #${this.instanceId}] Waiting for font/layout stability`, {
+			fontApiAvailable,
+			initialRect: target.getBoundingClientRect(),
+		});
+		if (fonts && typeof fonts.ready?.then === 'function') {
+			await Promise.race([
+				fonts.ready.catch(() => undefined),
+				new Promise((resolve) => window.setTimeout(resolve, 1200)),
+			]);
+		}
+
+		let stableFrames = 0;
+		let lastWidth = -1;
+		let lastHeight = -1;
+		let lastLeft = Number.NaN;
+		let lastTop = Number.NaN;
+
+		while (stableFrames < 3) {
+			await new Promise<void>((resolve) => {
+				window.requestAnimationFrame(() => resolve());
+			});
+
+			const rect = target.getBoundingClientRect();
+			const widthStable = Math.abs(rect.width - lastWidth) < 0.5;
+			const heightStable = Math.abs(rect.height - lastHeight) < 0.5;
+			const leftStable = Math.abs(rect.left - lastLeft) < 0.5;
+			const topStable = Math.abs(rect.top - lastTop) < 0.5;
+
+			if (widthStable && heightStable && leftStable && topStable) {
+				stableFrames += 1;
+			} else {
+				stableFrames = 0;
+			}
+
+			lastWidth = rect.width;
+			lastHeight = rect.height;
+			lastLeft = rect.left;
+			lastTop = rect.top;
+		}
+
+		console.debug(`[PlayerController #${this.instanceId}] Font/layout stability reached`, {
+			stableFrames,
+			finalRect: target.getBoundingClientRect(),
+		});
+	}
+
+	private requestStabilizedRender(): void {
+		if (
+			!this.awaitingStableRender ||
+			this.stabilizationRenderRequested ||
+			this.stabilizationRenderInFlight ||
+			!this.api ||
+			!this.container
+		) {
+			return;
+		}
+
+		this.stabilizationRenderRequested = true;
+		this.stabilizationRenderInFlight = true;
+
+		void this.waitForFontAndLayoutStability(this.container)
+			.then(() => {
+				if (!this.api || !this.container) {
+					return;
+				}
+
+				console.debug('[PlayerController] Triggering stabilized follow-up render');
+				this.api.render();
+			})
+			.catch((error) => {
+				console.warn('[PlayerController] Stabilized render wait failed:', error);
+				this.endStableRenderWait();
+			})
+			.finally(() => {
+				this.stabilizationRenderInFlight = false;
+			});
+	}
+
 	private destroyApi(): void {
+		this.clearRenderIntegrityCheck();
 		if (this.api) {
 			try {
 				// 先解绑事件
@@ -381,11 +611,13 @@ export class PlayerController {
 			}
 		}
 
+		const effectiveRenderMode = this.getEffectiveRenderMode();
 		const settingsJson: AlphaTabSettingsJson = {
 			core: {
 				file: null, // 总是 null，通过 API 方法加载
-				engine: globalConfig.alphaTabSettings.core.engine || 'svg',
-				useWorkers: globalConfig.alphaTabSettings.core.useWorkers,
+				engine: effectiveRenderMode.engine,
+				useWorkers: effectiveRenderMode.useWorkers,
+				enableLazyLoading: this.renderFallbackMode === 'normal',
 				logLevel: globalConfig.alphaTabSettings.core.logLevel,
 				includeNoteBounds: globalConfig.alphaTabSettings.core.includeNoteBounds,
 				scriptFile: this.resources.alphaTabWorkerUri,
@@ -420,8 +652,18 @@ export class PlayerController {
 				),
 				startBar: 1, // 总是从第一小节开始
 				layoutMode: globalConfig.alphaTabSettings.display.layoutMode,
-				barsPerRow: globalConfig.alphaTabSettings.display.barsPerRow,
-				stretchForce: globalConfig.alphaTabSettings.display.stretchForce,
+				barsPerRow: (() => {
+					const barsPerRow = Math.trunc(
+						toFiniteNumber(globalConfig.alphaTabSettings.display.barsPerRow, -1)
+					);
+					return barsPerRow === -1 ? -1 : Math.max(1, barsPerRow);
+				})(),
+				stretchForce: toFiniteClampedNumber(
+					globalConfig.alphaTabSettings.display.stretchForce,
+					1,
+					0.25,
+					2
+				),
 			},
 		};
 
@@ -431,6 +673,11 @@ export class PlayerController {
 
 		// 调试：输出布局和滚动相关配置
 		console.debug(`[PlayerController #${this.instanceId}] AlphaTab settings configured:`, {
+			renderMode: {
+				engine: effectiveRenderMode.engine,
+				useWorkers: effectiveRenderMode.useWorkers,
+				fallbackMode: this.renderFallbackMode,
+			},
 			layout: {
 				layoutMode: displaySettings.layoutMode,
 				barsPerRow: displaySettings.barsPerRow,
@@ -488,9 +735,9 @@ export class PlayerController {
 
 			// 验证 HSL 值的有效性
 			const isValidHSL =
-				!isNaN(accentH) &&
-				!isNaN(accentS) &&
-				!isNaN(accentL) &&
+				!Number.isNaN(accentH) &&
+				!Number.isNaN(accentS) &&
+				!Number.isNaN(accentL) &&
 				accentH >= 0 &&
 				accentH <= 360 &&
 				accentS >= 0 &&
@@ -654,14 +901,16 @@ export class PlayerController {
 			const scoreLoadedHandler = (score: alphaTab.model.Score) => {
 				this.stores.runtime.getState().setScoreLoaded(true);
 				this.stores.runtime.getState().setRenderState('idle');
+				const disabledUnsafeNumberedNotation = disableUnsafeNumberedNotation(score);
+				console.debug(`[PlayerController #${this.instanceId}] scoreLoaded`, {
+					trackCount: score.tracks.length,
+					disabledUnsafeNumberedNotation,
+					containerRect: this.container?.getBoundingClientRect(),
+					viewportRect: this.scrollViewport?.getBoundingClientRect(),
+				});
 
 				// ✅ 恢复音轨配置
 				this.restoreTrackConfigs(score);
-
-				// ✅ 设置吉他音轨的默认显示选项（仅六线谱）
-				this.applyDefaultStaffDisplay(score);
-
-				this.applyConfiguredStaveProfile(score);
 
 				// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
 				// 那才是考虑了速度等因素的实际播放时长
@@ -671,6 +920,10 @@ export class PlayerController {
 			this.eventDisposers.push(this.api.scoreLoaded.on(scoreLoadedHandler));
 			const renderStartedHandler = () => {
 				this.stores.runtime.getState().setRenderState('rendering');
+				console.debug(`[PlayerController #${this.instanceId}] renderStarted`, {
+					containerRect: this.container?.getBoundingClientRect(),
+					viewportRect: this.scrollViewport?.getBoundingClientRect(),
+				});
 			};
 			this.eventDisposers.push(this.api.renderStarted.on(renderStartedHandler));
 
@@ -680,16 +933,53 @@ export class PlayerController {
 				totalHeight?: number;
 			}) => {
 				this.stores.runtime.getState().setRenderState('finished');
+				const totalWidth = renderResult?.totalWidth ?? 0;
+				const totalHeight = renderResult?.totalHeight ?? 0;
+				console.debug(`[PlayerController #${this.instanceId}] renderFinished`, {
+					totalWidth,
+					totalHeight,
+					awaitingStableRender: this.awaitingStableRender,
+					stabilizationRenderRequested: this.stabilizationRenderRequested,
+					containerRect: this.container?.getBoundingClientRect(),
+					viewportRect: this.scrollViewport?.getBoundingClientRect(),
+				});
 
 				const scoreLoaded = this.stores.runtime.getState().scoreLoaded;
 				const hasMeasuredRender =
-					(renderResult?.totalWidth ?? 0) > 0 && (renderResult?.totalHeight ?? 0) > 0;
+					Number.isFinite(totalWidth) &&
+					Number.isFinite(totalHeight) &&
+					totalWidth > 0 &&
+					totalHeight > 0;
 
-				if (scoreLoaded && hasMeasuredRender) {
+				if (scoreLoaded && this.awaitingStableRender) {
+					if (!hasMeasuredRender) {
+						console.warn(
+							`[PlayerController #${this.instanceId}] renderFinished without valid measurements`,
+							{
+								totalWidth,
+								totalHeight,
+								containerRect: this.container?.getBoundingClientRect(),
+								viewportRect: this.scrollViewport?.getBoundingClientRect(),
+							}
+						);
+
+						if (!this.stabilizationRenderRequested) {
+							this.requestStabilizedRender();
+						}
+						return;
+					}
+
+					if (!this.stabilizationRenderRequested) {
+						this.requestStabilizedRender();
+						return;
+					}
+
 					window.requestAnimationFrame(() => {
 						this.endStableRenderWait();
 					});
 				}
+
+				this.scheduleRenderIntegrityCheck();
 			};
 			this.eventDisposers.push(this.api.renderFinished.on(renderFinishedHandler));
 
@@ -965,57 +1255,6 @@ export class PlayerController {
 	}
 
 	/**
-	 * ✅ 设置吉他音轨的默认显示选项
-	 * 在曲谱加载后调用，为吉他类乐器设置默认显示为仅六线谱
-	 */
-	private applyDefaultStaffDisplay(score: alphaTab.model.Score): void {
-		console.debug(
-			`[PlayerController #${this.instanceId}] Applying default staff display for guitar tracks`
-		);
-
-		for (const track of score.tracks) {
-			// 检查是否为弦乐器（吉他、贝斯等）
-			// AlphaTab 中 track.playbackInfo.program 表示 MIDI 乐器编号
-			// 24-31: 吉他类乐器
-			// 32-39: 贝斯类乐器
-			const program = track.playbackInfo.program;
-			const isGuitarFamily =
-				(program >= 24 && program <= 31) || (program >= 32 && program <= 39);
-
-			if (isGuitarFamily) {
-				// 为每个 Staff 设置默认显示选项
-				for (const staff of track.staves) {
-					// 默认：仅显示六线谱
-					staff.showStandardNotation = false;
-					staff.showTablature = true;
-					staff.showSlash = false;
-					staff.showNumbered = false;
-
-					console.debug(
-						`[PlayerController #${this.instanceId}] Set guitar track ${track.index} staff ${staff.index} to tab-only`
-					);
-				}
-			}
-		}
-	}
-
-	private applyConfiguredStaveProfile(score: alphaTab.model.Score): void {
-		const configuredProfile =
-			this.stores.globalConfig.getState().alphaTabSettings.display.staveProfile;
-
-		if (configuredProfile === alphaTab.StaveProfile.Default) {
-			return;
-		}
-
-		if (applyStaveProfileToScore(score, configuredProfile)) {
-			console.debug(
-				`[PlayerController #${this.instanceId}] Applied stave profile via staff visibility`,
-				configuredProfile
-			);
-		}
-	}
-
-	/**
 	 * ✅ 恢复音轨配置
 	 * 在曲谱加载后调用，从 workspace 配置中恢复用户之前保存的音轨设置
 	 */
@@ -1036,6 +1275,7 @@ export class PlayerController {
 		);
 
 		for (const config of savedConfigs) {
+			const sanitizedConfig = sanitizeTrackConfig(config.trackIndex, config);
 			const track = score.tracks.find((t) => t.index === config.trackIndex);
 			if (!track) {
 				console.warn(
@@ -1045,35 +1285,35 @@ export class PlayerController {
 			}
 
 			// 恢复 mute 状态
-			if (config.isMute !== undefined) {
-				track.playbackInfo.isMute = config.isMute;
-				this.api?.changeTrackMute([track], config.isMute);
+			if (sanitizedConfig.isMute !== undefined) {
+				track.playbackInfo.isMute = sanitizedConfig.isMute;
+				this.api?.changeTrackMute([track], sanitizedConfig.isMute);
 			}
 
 			// 恢复 solo 状态
-			if (config.isSolo !== undefined) {
-				track.playbackInfo.isSolo = config.isSolo;
-				this.api?.changeTrackSolo([track], config.isSolo);
+			if (sanitizedConfig.isSolo !== undefined) {
+				track.playbackInfo.isSolo = sanitizedConfig.isSolo;
+				this.api?.changeTrackSolo([track], sanitizedConfig.isSolo);
 			}
 
 			// 恢复音量
-			if (config.volume !== undefined && track.playbackInfo.volume > 0) {
-				const volumeRatio = config.volume / track.playbackInfo.volume;
+			if (sanitizedConfig.volume !== undefined && track.playbackInfo.volume > 0) {
+				const volumeRatio = sanitizedConfig.volume / track.playbackInfo.volume;
 				this.api?.changeTrackVolume([track], volumeRatio);
 			}
 
 			// 恢复音频移调
-			if (config.transposeAudio !== undefined) {
-				this.api?.changeTrackTranspositionPitch([track], config.transposeAudio);
+			if (sanitizedConfig.transposeAudio !== undefined) {
+				this.api?.changeTrackTranspositionPitch([track], sanitizedConfig.transposeAudio);
 			}
 
 			// 恢复完全移调
-			if (config.transposeFull !== undefined && this.api) {
+			if (sanitizedConfig.transposeFull !== undefined && this.api) {
 				const pitches = this.api.settings.notation.transpositionPitches;
 				while (pitches.length < track.index + 1) {
 					pitches.push(0);
 				}
-				pitches[track.index] = config.transposeFull;
+				pitches[track.index] = sanitizedConfig.transposeFull;
 			}
 		}
 
@@ -1083,7 +1323,11 @@ export class PlayerController {
 			console.debug(
 				`[PlayerController #${this.instanceId}] Applied transposition settings, triggering re-render`
 			);
-			// 注意：这里不需要调用 render()，因为 scoreLoaded 之后会自动渲染
+			if (this.awaitingStableRender) {
+				window.requestAnimationFrame(() => {
+					this.api?.render();
+				});
+			}
 		}
 	}
 

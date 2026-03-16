@@ -63,11 +63,11 @@ const storageAdapterImpl = <
 
 				let activeState: T = persistedState;
 
-				if (migrate && persistedVersion !== null && persistedVersion < version) {
+				if (migrate && (persistedVersion === null || persistedVersion < version)) {
 					console.debug(
-						`[StorageAdapter] Migrating ${name} from version ${persistedVersion} to ${version}`
+						`[StorageAdapter] Migrating ${name} from version ${persistedVersion ?? 'unknown'} to ${version}`
 					);
-					activeState = migrate(activeState, persistedVersion);
+					activeState = migrate(activeState, persistedVersion ?? 0);
 				}
 
 				set(activeState, true);

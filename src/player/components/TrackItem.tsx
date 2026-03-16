@@ -10,10 +10,11 @@
  */
 
 import type * as AlphaTab from '@coderline/alphatab';
+import { Eye, EyeOff, Mic, Volume2, VolumeX } from 'lucide-react';
 import React, { useState } from 'react';
-import { Mic, VolumeX, Volume2, Eye, EyeOff } from 'lucide-react';
-import { StaffItem } from './StaffItem';
 import type { PlayerController } from '../PlayerController';
+import { toFiniteClampedNumber, toFiniteNumber } from '../../utils/numberUtils';
+import { StaffItem } from './StaffItem';
 
 /**
  * 音轨控制项属性
@@ -69,6 +70,9 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 	// 完全移调（影响播放和显示）- 优先使用保存的配置
 	const [transposeFull, setTransposeFull] = useState<number>(savedConfig?.transposeFull ?? 0);
+	const volumeInputId = `tabflow-track-volume-${track.index}`;
+	const transposeFullInputId = `tabflow-track-transpose-full-${track.index}`;
+	const transposeAudioInputId = `tabflow-track-transpose-audio-${track.index}`;
 
 	// ========== 事件处理 ==========
 
@@ -108,10 +112,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 	 * 音量调节
 	 */
 	const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newVolume = e.target.valueAsNumber;
+		const newVolume = toFiniteClampedNumber(e.target.valueAsNumber, volume, 0, 16);
 		setVolume(newVolume);
 		// 计算相对音量变化
-		api.changeTrackVolume([track], newVolume / track.playbackInfo.volume);
+		const currentTrackVolume = toFiniteNumber(track.playbackInfo.volume, 1);
+		const volumeRatio = currentTrackVolume > 0 ? newVolume / currentTrackVolume : 0;
+		api.changeTrackVolume([track], volumeRatio);
 
 		// ✅ 持久化到配置
 		workspaceConfig.getState().updateTrackConfig(track.index, {
@@ -153,7 +159,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 	 * 音频移调
 	 */
 	const handleTransposeAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newTranspose = e.target.valueAsNumber;
+		const newTranspose = Math.trunc(toFiniteClampedNumber(e.target.valueAsNumber, 0, -12, 12));
 		setTransposeAudio(newTranspose);
 		api.changeTrackTranspositionPitch([track], newTranspose);
 
@@ -168,7 +174,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 	 * 完全移调
 	 */
 	const handleTransposeFullChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newTranspose = e.target.valueAsNumber;
+		const newTranspose = Math.trunc(toFiniteClampedNumber(e.target.valueAsNumber, 0, -12, 12));
 		setTransposeFull(newTranspose);
 
 		// 更新设置中的移调音高
@@ -207,9 +213,9 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 						>
 							{isSelected ? <Eye size={16} /> : <EyeOff size={16} />}
 						</button>
-						<label className="tabflow-track-name" title={track.name}>
+						<span className="tabflow-track-name" title={track.name}>
 							{track.name}
-						</label>
+						</span>
 					</div>
 
 					{/* Solo 和 Mute 控制 */}
@@ -240,12 +246,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 				{/* 第二行：五线谱显示选项 */}
 				<div className="tabflow-track-header-row-2">
-					{track.staves.map((staff, staffArrayIndex) => (
+					{track.staves.map((staff) => (
 						<div
-							key={`staff-${track.index}-${staff.index}-${staffArrayIndex}`}
+							key={`staff-${track.index}-${staff.index}`}
 							className="tabflow-staff-group"
 						>
-							<span className="tabflow-staff-label">谱表 {staffArrayIndex + 1}</span>
+							<span className="tabflow-staff-label">谱表 {staff.index + 1}</span>
 							<StaffItem api={api} staff={staff} isCompact={true} />
 						</div>
 					))}
@@ -254,9 +260,12 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 			{/* 音量控制 */}
 			<div className="tabflow-track-setting">
-				<label className="tabflow-setting-label">音量</label>
+				<label className="tabflow-setting-label" htmlFor={volumeInputId}>
+					音量
+				</label>
 				<div className="tabflow-setting-control">
 					<input
+						id={volumeInputId}
 						type="range"
 						className="tabflow-slider"
 						min="0"
@@ -276,12 +285,14 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 			<div className="tabflow-track-setting">
 				<label
 					className="tabflow-setting-label"
+					htmlFor={transposeFullInputId}
 					title="完全移调 - 同时影响音频播放和乐谱显示"
 				>
 					完全移调
 				</label>
 				<div className="tabflow-setting-control">
 					<input
+						id={transposeFullInputId}
 						type="range"
 						className="tabflow-slider"
 						min="-12"
@@ -302,12 +313,14 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 			<div className="tabflow-track-setting">
 				<label
 					className="tabflow-setting-label"
+					htmlFor={transposeAudioInputId}
 					title="音频移调 - 仅影响音频播放，不改变乐谱显示"
 				>
 					音频移调
 				</label>
 				<div className="tabflow-setting-control">
 					<input
+						id={transposeAudioInputId}
 						type="range"
 						className="tabflow-slider"
 						min="-12"

@@ -85,7 +85,7 @@ export class PrintTracksPanelDom {
 					showStandardNotation: s.showStandardNotation ?? true,
 					showTablature: s.showTablature ?? true,
 					showSlash: s.showSlash ?? false,
-					showNumbered: s.showNumbered ?? false,
+					showNumbered: false,
 				});
 			}
 		}
@@ -197,7 +197,11 @@ export class PrintTracksPanelDom {
 					btn.textContent = opts.label;
 					btn.title = opts.title;
 					btn.ariaLabel = opts.title;
-					btn.disabled = !!disabled;
+					btn.disabled = !!disabled || opts.field === 'showNumbered';
+					if (opts.field === 'showNumbered') {
+						btn.title = 'Numbered notation is temporarily disabled';
+						btn.ariaLabel = btn.title;
+					}
 
 					const applyActive = () => {
 						const latest = this.getStaffOptions(key, staff as StaffWithFlags);
@@ -223,25 +227,25 @@ export class PrintTracksPanelDom {
 				makeToggle({
 					field: 'showStandardNotation',
 					label: '𝅘𝅥',
-					title: 'Standard Notation',
+					title: 'Standard notation',
 					className: '',
 				});
 				makeToggle({
 					field: 'showTablature',
 					label: 'TAB',
-					title: 'Guitar Tabs',
+					title: 'Guitar tabs',
 					className: '',
 				});
 				makeToggle({
 					field: 'showSlash',
 					label: '𝄍',
-					title: 'Slash Notation',
+					title: 'Slash notation',
 					className: 'tabflow-btn-icon',
 				});
 				makeToggle({
 					field: 'showNumbered',
 					label: '123',
-					title: 'Numbered Notation',
+					title: 'Numbered notation',
 					className: 'tabflow-btn-icon',
 				});
 			}
@@ -266,7 +270,7 @@ export class PrintTracksPanelDom {
 				showStandardNotation: staff.showStandardNotation ?? true,
 				showTablature: staff.showTablature ?? true,
 				showSlash: staff.showSlash ?? false,
-				showNumbered: staff.showNumbered ?? false,
+				showNumbered: false,
 			};
 			this.staffOptions.set(key, options);
 		}
@@ -280,7 +284,7 @@ export class PrintTracksPanelDom {
 		updater: (current: StaffDisplayOptions) => StaffDisplayOptions
 	) {
 		const current = this.getStaffOptions(key, staff);
-		const next = updater(current);
+		const next = { ...updater(current), showNumbered: false };
 		const hasAny = Object.values(next).some((v) => v === true);
 		if (!hasAny) {
 			return;
@@ -320,7 +324,7 @@ export class PrintTracksPanelDom {
 						showStandardNotation: s.showStandardNotation ?? true,
 						showTablature: s.showTablature ?? true,
 						showSlash: s.showSlash ?? false,
-						showNumbered: s.showNumbered ?? false,
+						showNumbered: false,
 					});
 				}
 			}
@@ -352,7 +356,7 @@ export class PrintTracksPanelDom {
 				staff.showStandardNotation = options.showStandardNotation;
 				staff.showTablature = options.showTablature;
 				staff.showSlash = options.showSlash;
-				staff.showNumbered = options.showNumbered;
+				staff.showNumbered = false;
 			}
 
 			if (isVisible) {

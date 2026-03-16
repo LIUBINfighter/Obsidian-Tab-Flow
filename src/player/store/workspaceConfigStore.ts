@@ -11,6 +11,7 @@ import { storageAdapter } from './middleware/storageAdapter';
 import type { WorkspaceSessionConfig, TrackConfig } from '../types/workspace-config-schema';
 import { getDefaultWorkspaceSessionConfig } from '../types/workspace-config-schema';
 import type { ObsidianWorkspaceStorageAdapter } from '../storage/adapters/ObsidianWorkspaceStorageAdapter';
+import { sanitizeTrackConfig } from '../utils/scoreSafety';
 
 // Store state interface
 interface WorkspaceConfigState extends WorkspaceSessionConfig {
@@ -32,7 +33,18 @@ interface WorkspaceConfigState extends WorkspaceSessionConfig {
 }
 
 const STORAGE_KEY = 'workspace-session-config';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
+
+function sanitizeTrackConfigs(trackConfigs: TrackConfig[] | undefined): TrackConfig[] {
+	if (!trackConfigs?.length) {
+		return [];
+	}
+
+	return trackConfigs.map((config) => ({
+		trackIndex: config.trackIndex,
+		...sanitizeTrackConfig(config.trackIndex, config),
+	}));
+}
 
 /**
  * 创建工作区会话配置 store 的工厂函数
@@ -55,13 +67,22 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 						CURRENT_VERSION
 					);
 
-					// Version 1 无需迁移
-					if (version === 0) {
-						// 从旧版本迁移（如果有）
-						return { ...getDefaultWorkspaceSessionConfig(), ...persistedState };
-					}
+					const defaults = getDefaultWorkspaceSessionConfig();
+					const mergedState =
+						version === 0
+							? { ...defaults, ...persistedState }
+							: { ...defaults, ...persistedState };
 
-					return persistedState;
+					return {
+						...mergedState,
+						sessionPlayerState: {
+							...defaults.sessionPlayerState,
+							...mergedState.sessionPlayerState,
+							trackConfigs: sanitizeTrackConfigs(
+								mergedState.sessionPlayerState?.trackConfigs
+							),
+						},
+					};
 				},
 			},
 			(set, get) => ({
@@ -99,6 +120,7 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 						const existingIndex = existingConfigs.findIndex(
 							(tc) => tc.trackIndex === trackIndex
 						);
+						const normalizedConfig = sanitizeTrackConfig(trackIndex, config);
 
 						let newConfigs: TrackConfig[];
 						if (existingIndex >= 0) {
@@ -106,12 +128,12 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 							newConfigs = [...existingConfigs];
 							newConfigs[existingIndex] = {
 								...newConfigs[existingIndex],
-								...config,
+								...normalizedConfig,
 								trackIndex, // 确保 trackIndex 始终存在
 							};
 						} else {
 							// 添加新配置
-							newConfigs = [...existingConfigs, { trackIndex, ...config }];
+							newConfigs = [...existingConfigs, { trackIndex, ...normalizedConfig }];
 						}
 
 						return {

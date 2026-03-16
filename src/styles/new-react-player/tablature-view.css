@@ -31,6 +31,16 @@
 	/* AlphaTab 会在这里添加渲染内容 */
 }
 
+.tablature-view .at-surface .at,
+.tablature-view .at-surface-svg .at,
+.tablature-view .at {
+	font-family: 'alphaTab', 'Bravura', sans-serif !important;
+	font-size: 34px !important;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1;
+}
+
 /* 滚动条样式 */
 .tablature-view .alphatab-viewport::-webkit-scrollbar {
 	width: 12px;

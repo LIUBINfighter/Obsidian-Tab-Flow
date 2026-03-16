@@ -9,7 +9,7 @@
  */
 
 import type * as AlphaTab from '@coderline/alphatab';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 /**
  * 五线谱显示选项
@@ -126,7 +126,8 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 	const toggleNumbered = () => {
 		setStaffOptions((options) => ({
 			...options,
-			showNumbered: !options.showNumbered,
+			showNumbered: false,
+			showStandardNotation: options.showStandardNotation || !options.showTablature,
 		}));
 	};
 
@@ -177,9 +178,9 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					type="button"
 					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showNumbered ? 'is-active' : ''}`}
 					onClick={toggleNumbered}
-					disabled={staff.isPercussion}
+					disabled={true}
 					aria-label="Numbered Notation"
-					title="简谱 - 数字谱"
+					title="简谱暂时禁用，以避免 alphaTab 渲染错误"
 				>
 					<span className="tabflow-notation-icon">123</span>
 				</button>
@@ -236,9 +237,9 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					type="button"
 					className={`tabflow-btn tabflow-btn-icon tabflow-btn-notation ${staffOptions.showNumbered ? 'is-active' : ''}`}
 					onClick={toggleNumbered}
-					disabled={staff.isPercussion}
+					disabled={true}
 					aria-label="Numbered Notation"
-					title="简谱 - 数字谱"
+					title="简谱暂时禁用，以避免 alphaTab 渲染错误"
 				>
 					<span className="tabflow-notation-icon">123</span>
 				</button>
