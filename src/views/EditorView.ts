@@ -193,6 +193,7 @@ export class EditorView extends FileView {
 		await this.render();
 
 		// 注册文件修改监听器
+		this.app.vault.off('modify', this.fileModifyHandler);
 		this.app.vault.on('modify', this.fileModifyHandler);
 	}
 
@@ -202,7 +203,19 @@ export class EditorView extends FileView {
 		} catch {
 			// flushSave already logs internally
 		}
+		this.app.vault.off('modify', this.fileModifyHandler);
 		this.cleanup({ skipFlush: true });
+	}
+
+	async onClose(): Promise<void> {
+		try {
+			await this.flushSave();
+		} catch {
+			// flushSave already logs internally
+		}
+		this.app.vault.off('modify', this.fileModifyHandler);
+		this.cleanup({ skipFlush: true });
+		await Promise.resolve();
 	}
 
 	private cleanup(options?: { skipFlush?: boolean }): void {
@@ -398,6 +411,7 @@ export class EditorView extends FileView {
 				void (async () => {
 					await this.flushSave();
 					if (!file) return; // 再次检查，确保文件仍然存在
+					this.disposeReactPlayer();
 					await this.leaf.setViewState({
 						type: VIEW_TYPE_REACT,
 						state: { file: file.path },
@@ -568,15 +582,16 @@ export class EditorView extends FileView {
 		);
 
 		const runtimeStore = this.playerController.getRuntimeStore();
-		let lastApiReady = runtimeStore.getState().apiReady;
-		if (lastApiReady) {
+		let lastApiBound = Boolean(runtimeStore.getState().alphaTabApi);
+		if (lastApiBound) {
 			this.flushPendingPlayerTex();
 		}
 		this.playerApiReadyUnsubscribe = runtimeStore.subscribe((state) => {
-			if (state.apiReady && !lastApiReady) {
+			const apiBound = Boolean(state.alphaTabApi);
+			if (apiBound && !lastApiBound) {
 				this.flushPendingPlayerTex();
 			}
-			lastApiReady = state.apiReady;
+			lastApiBound = apiBound;
 		});
 
 		this.queuePlayerRender(initialContent);
@@ -614,7 +629,7 @@ export class EditorView extends FileView {
 		if (!this.playerController) return;
 		this.pendingPlayerTex = tex;
 		const runtimeStore = this.playerController.getRuntimeStore();
-		if (runtimeStore.getState().apiReady) {
+		if (runtimeStore.getState().alphaTabApi) {
 			this.flushPendingPlayerTex();
 		}
 	}

@@ -84,9 +84,16 @@ export class PlayerController {
 	private stabilizationRenderInFlight = false;
 	private stableRenderDebugStart = 0;
 	private stableRenderTimeoutId: number | null = null;
+	private stableRenderTimedOut = false;
+	private retryLoadAfterStableWait = false;
 	private unsubscribeGlobalConfig: (() => void) | null = null;
 	private unsubscribeWorkspaceConfig: (() => void) | null = null;
 	private lastConfigHash: string | null = null;
+	private rebuildInFlight: Promise<void> | null = null;
+	private rebuildQueued = false;
+	private apiContainer: HTMLElement | null = null;
+	private apiLoadHandled = false;
+	private destroyed = false;
 	private plugin: Plugin;
 	private resources: PlayerControllerResources;
 	private pendingFileLoad: (() => Promise<void>) | null = null;
@@ -155,6 +162,7 @@ export class PlayerController {
 	 * @param viewport - 滚动视口容器（可选）
 	 */
 	public init(container: HTMLElement, viewport?: HTMLElement): void {
+		this.destroyed = false;
 		if (!container) {
 			console.error(
 				`[PlayerController #${this.instanceId}] Container not provided to init()`
@@ -181,6 +189,11 @@ export class PlayerController {
 	 */
 	destroy(): void {
 		console.debug(`[PlayerController #${this.instanceId}] Destroying controller...`);
+		this.destroyed = true;
+		this.rebuildQueued = false;
+		this.pendingFileLoad = null;
+		this.apiLoadHandled = false;
+		this.retryLoadAfterStableWait = false;
 
 		// 清理 IntersectionObserver
 		if (this.intersectionObserver) {
@@ -238,92 +251,187 @@ export class PlayerController {
 	 * 用于配置变更或手动刷新时重新初始化播放器
 	 */
 	public async rebuildApi(): Promise<void> {
-		if (!this.container) {
-			console.warn(`[PlayerController #${this.instanceId}] No container, skipping rebuild`);
+		if (this.destroyed) {
 			return;
 		}
 
-		console.debug(`[PlayerController #${this.instanceId}] Rebuilding API...`);
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
-		this.stores.runtime.getState().setApiReady(false);
-		this.stores.runtime.getState().setScoreLoaded(false);
-
-		try {
-			// 销毁旧 API
-			this.destroyApi();
-
-			// 创建 alphaTab Settings
-			const settings = this.createAlphaTabSettings();
-
-			// 创建新 API（直接使用静态导入的 alphaTab 模块）
+		if (this.rebuildInFlight) {
+			this.rebuildQueued = true;
 			console.debug(
-				`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`
+				`[PlayerController #${this.instanceId}] Rebuild already in progress, waiting...`
 			);
-			this.api = new alphaTab.AlphaTabApi(this.container, settings);
+			await this.rebuildInFlight;
+			return;
+		}
 
-			// 绑定事件
-			this.bindApiEvents();
-
-			// 保存到 runtimeStore
-			this.stores.runtime.getState().setApi(this.api);
-
-			// 更新最后配置哈希
-			this.lastConfigHash = this.getCurrentConfigHash();
-
-			console.debug(`[PlayerController #${this.instanceId}] API rebuilt successfully`);
-
-			// API 准备好后，检查是否有待加载的文件
-			if (this.pendingFileLoad) {
-				await this.pendingFileLoad();
-				this.pendingFileLoad = null;
-			} else {
-				// 如果有之前加载的乐谱，重新加载
-				const lastScore = this.stores.runtime.getState().lastLoadedScore;
-				if (lastScore.type && lastScore.data) {
-					console.debug(
-						`[PlayerController #${this.instanceId}] Reloading last score after rebuild...`
+		do {
+			this.rebuildQueued = false;
+			this.rebuildInFlight = new Promise<void>((resolve) => {
+				if (this.destroyed || !this.container) {
+					console.warn(
+						`[PlayerController #${this.instanceId}] No container, skipping rebuild`
 					);
-					try {
-						if (lastScore.type === 'alphatex') {
-							this.api.tex(lastScore.data as string);
-						} else if (lastScore.type === 'binary') {
-							this.api.load(lastScore.data as Uint8Array);
-						}
-						console.debug(
-							`[PlayerController #${this.instanceId}] Last score reloaded successfully`
-						);
-					} catch (error) {
-						console.error(
-							`[PlayerController #${this.instanceId}] Failed to reload last score:`,
-							error
-						);
-						this.stores.ui
-							.getState()
-							.showToast('error', 'Failed to reload score after rebuild');
-					}
+					resolve();
+					return;
 				}
+
+				console.debug(`[PlayerController #${this.instanceId}] Rebuilding API...`);
+				this.stores.ui.getState().setLoading(true, 'Loading score...');
+				this.stores.runtime.getState().setApiReady(false);
+				this.stores.runtime.getState().setScoreLoaded(false);
+
+				try {
+					this.destroyApi();
+					if (this.destroyed) {
+						return;
+					}
+					const apiHost = this.createApiHost();
+					if (!apiHost) {
+						throw new Error('API host container not available');
+					}
+					const settings = this.createAlphaTabSettings();
+					if (this.destroyed) {
+						return;
+					}
+
+					console.debug(
+						`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`
+					);
+					this.api = new alphaTab.AlphaTabApi(apiHost, settings);
+					this.apiContainer = apiHost;
+
+					this.bindApiEvents();
+					this.stores.runtime.getState().setApi(this.api);
+					this.lastConfigHash = this.getCurrentConfigHash();
+					this.apiLoadHandled = false;
+
+					console.debug(
+						`[PlayerController #${this.instanceId}] API rebuilt successfully`
+					);
+					this.tryLoadScoreAfterApiReady({ allowLastScoreReload: false });
+				} catch (error) {
+					console.error(
+						`[PlayerController #${this.instanceId}] Failed to rebuild API:`,
+						error
+					);
+					this.stores.runtime
+						.getState()
+						.setError(
+							'api-init',
+							error instanceof Error ? error.message : String(error)
+						);
+					this.stores.ui.getState().showToast('error', 'Failed to initialize player');
+				} finally {
+					if (!this.awaitingStableRender) {
+						this.stores.ui.getState().setLoading(false);
+					}
+					resolve();
+				}
+			});
+
+			try {
+				await this.rebuildInFlight;
+			} finally {
+				this.rebuildInFlight = null;
 			}
-		} catch (error) {
-			console.error(`[PlayerController #${this.instanceId}] Failed to rebuild API:`, error);
-			this.stores.runtime
-				.getState()
-				.setError('api-init', error instanceof Error ? error.message : String(error));
-			this.stores.ui.getState().showToast('error', 'Failed to initialize player');
-		} finally {
-			if (!this.awaitingStableRender) {
-				this.stores.ui.getState().setLoading(false);
+		} while (this.rebuildQueued);
+	}
+
+	private tryLoadScoreAfterApiReady(options?: { allowLastScoreReload?: boolean }): void {
+		if (this.destroyed) {
+			return;
+		}
+
+		if (this.apiLoadHandled) {
+			return;
+		}
+
+		const pendingLoad = this.pendingFileLoad;
+		if (pendingLoad) {
+			this.apiLoadHandled = true;
+			this.pendingFileLoad = null;
+			void pendingLoad().catch((error) => {
+				if (this.destroyed) {
+					return;
+				}
+
+				const apiReady = this.stores.runtime.getState().apiReady;
+				if (!apiReady) {
+					this.pendingFileLoad = pendingLoad;
+					this.apiLoadHandled = false;
+					console.warn(
+						`[PlayerController #${this.instanceId}] Pending load failed before player ready, will retry on playerReady`,
+						error
+					);
+					return;
+				}
+
+				console.error(
+					`[PlayerController #${this.instanceId}] Pending file load failed:`,
+					error
+				);
+				this.stores.runtime
+					.getState()
+					.setError('score-load', error instanceof Error ? error.message : String(error));
+				this.stores.ui
+					.getState()
+					.showToast('error', 'Failed to load score after player ready');
+			});
+			return;
+		}
+
+		if (options?.allowLastScoreReload === false) {
+			return;
+		}
+
+		const lastScore = this.stores.runtime.getState().lastLoadedScore;
+		if (lastScore.type && lastScore.data && this.api) {
+			this.apiLoadHandled = true;
+			console.debug(
+				`[PlayerController #${this.instanceId}] Reloading last score after player ready...`
+			);
+			try {
+				if (lastScore.type === 'alphatex') {
+					this.api.tex(lastScore.data as string);
+				} else if (lastScore.type === 'binary') {
+					this.api.load(lastScore.data as Uint8Array);
+				}
+				console.debug(
+					`[PlayerController #${this.instanceId}] Last score reloaded successfully`
+				);
+			} catch (error) {
+				console.error(
+					`[PlayerController #${this.instanceId}] Failed to reload last score on player ready:`,
+					error
+				);
+				this.stores.ui
+					.getState()
+					.showToast('error', 'Failed to reload score after player ready');
 			}
 		}
+	}
+
+	private createApiHost(): HTMLElement | null {
+		if (!this.container) {
+			return null;
+		}
+
+		const host = this.container.ownerDocument.createElement('div');
+		host.className = 'alphatab-runtime-host';
+		this.container.replaceChildren(host);
+		return host;
 	}
 
 	private beginStableRenderWait(message: string): void {
 		this.awaitingStableRender = true;
 		this.stabilizationRenderRequested = false;
 		this.stabilizationRenderInFlight = false;
+		this.stableRenderTimedOut = false;
 		if (this.stableRenderTimeoutId !== null) {
 			window.clearTimeout(this.stableRenderTimeoutId);
 		}
 		this.stableRenderTimeoutId = window.setTimeout(() => {
+			this.stableRenderTimedOut = true;
 			console.warn(`[PlayerController #${this.instanceId}] Stable render wait timed out`, {
 				containerRect: this.container?.getBoundingClientRect(),
 				viewportRect: this.scrollViewport?.getBoundingClientRect(),
@@ -344,6 +452,11 @@ export class PlayerController {
 			return;
 		}
 
+		const timedOut = this.stableRenderTimedOut;
+		const retryAfterStableWait = this.retryLoadAfterStableWait;
+		this.stableRenderTimedOut = false;
+		this.retryLoadAfterStableWait = false;
+
 		this.awaitingStableRender = false;
 		this.stabilizationRenderRequested = false;
 		this.stabilizationRenderInFlight = false;
@@ -357,6 +470,12 @@ export class PlayerController {
 			viewportRect: this.scrollViewport?.getBoundingClientRect(),
 		});
 		this.stores.ui.getState().setLoading(false);
+
+		const scoreLoaded = this.stores.runtime.getState().scoreLoaded;
+		if ((timedOut || retryAfterStableWait) && !scoreLoaded && !this.destroyed) {
+			this.apiLoadHandled = false;
+			this.tryLoadScoreAfterApiReady();
+		}
 	}
 
 	private shouldUseObsidianSafeInitialRender(configuredEngine?: string): boolean {
@@ -381,6 +500,10 @@ export class PlayerController {
 	}
 
 	private async waitForFontAndLayoutStability(target: HTMLElement): Promise<void> {
+		if (this.destroyed) {
+			return;
+		}
+
 		const fonts = Reflect.get(document, 'fonts') as FontFaceSet | undefined;
 		const fontApiAvailable = Boolean(fonts && typeof fonts.ready?.then === 'function');
 		console.debug(`[PlayerController #${this.instanceId}] Waiting for font/layout stability`, {
@@ -394,16 +517,24 @@ export class PlayerController {
 			]);
 		}
 
+		if (this.destroyed) {
+			return;
+		}
+
 		let stableFrames = 0;
 		let lastWidth = -1;
 		let lastHeight = -1;
 		let lastLeft = Number.NaN;
 		let lastTop = Number.NaN;
 
-		while (stableFrames < 3) {
+		while (stableFrames < 3 && !this.destroyed) {
 			await new Promise<void>((resolve) => {
 				window.requestAnimationFrame(() => resolve());
 			});
+
+			if (this.destroyed) {
+				return;
+			}
 
 			const rect = target.getBoundingClientRect();
 			const widthStable = Math.abs(rect.width - lastWidth) < 0.5;
@@ -431,6 +562,7 @@ export class PlayerController {
 
 	private requestStabilizedRender(): void {
 		if (
+			this.destroyed ||
 			!this.awaitingStableRender ||
 			this.stabilizationRenderRequested ||
 			this.stabilizationRenderInFlight ||
@@ -445,7 +577,7 @@ export class PlayerController {
 
 		void this.waitForFontAndLayoutStability(this.container)
 			.then(() => {
-				if (!this.api || !this.container) {
+				if (this.destroyed || !this.api || !this.container) {
 					return;
 				}
 
@@ -462,18 +594,25 @@ export class PlayerController {
 	}
 
 	private destroyApi(): void {
+		const targetContainer = this.apiContainer ?? this.container;
 		if (this.api) {
 			try {
-				// 先解绑事件
 				this.unbindApiEvents();
-
-				// 再销毁 API
 				this.api.destroy();
 			} catch (error) {
 				console.warn('[PlayerController] Error destroying API:', error);
 			}
 			this.api = null;
 		}
+
+		if (targetContainer) {
+			targetContainer.replaceChildren();
+		}
+
+		this.apiContainer = null;
+		this.apiLoadHandled = false;
+		this.stores.runtime.getState().setApi(null);
+		this.stores.runtime.getState().setApiReady(false);
 	}
 
 	private createAlphaTabSettings(): AlphaTabSettingsInput {
@@ -809,6 +948,7 @@ export class PlayerController {
 			const scoreLoadedHandler = (score: alphaTab.model.Score) => {
 				this.stores.runtime.getState().setScoreLoaded(true);
 				this.stores.runtime.getState().setRenderState('idle');
+				this.retryLoadAfterStableWait = false;
 				const disabledUnsafeNumberedNotation = disableUnsafeNumberedNotation(score);
 				console.debug(`[PlayerController #${this.instanceId}] scoreLoaded`, {
 					trackCount: score.tracks.length,
@@ -884,13 +1024,10 @@ export class PlayerController {
 						return;
 					}
 
-					if (!this.stabilizationRenderRequested) {
-						this.requestStabilizedRender();
-						return;
-					}
-
 					window.requestAnimationFrame(() => {
-						this.endStableRenderWait();
+						if (this.awaitingStableRender && !this.stabilizationRenderInFlight) {
+							this.endStableRenderWait();
+						}
 					});
 				}
 			};
@@ -918,28 +1055,20 @@ export class PlayerController {
 			// Player Ready
 			const playerReadyHandler = () => {
 				console.debug('[PlayerController] Player ready - can now play music');
-				this.stores.runtime.getState().setApiReady(true);
+				const runtime = this.stores.runtime.getState();
+				runtime.setApiReady(true);
 
-				// 播放器就绪后，检查是否有待加载的文件
-				if (this.pendingFileLoad) {
-					const pendingLoad = this.pendingFileLoad;
-					this.pendingFileLoad = null;
-					void pendingLoad().catch((error) => {
-						console.error(
-							`[PlayerController #${this.instanceId}] Pending file load failed:`,
-							error
-						);
-						this.stores.runtime
-							.getState()
-							.setError(
-								'score-load',
-								error instanceof Error ? error.message : String(error)
-							);
-						this.stores.ui
-							.getState()
-							.showToast('error', 'Failed to load score after player ready');
-					});
+				if (runtime.scoreLoaded) {
+					this.apiLoadHandled = true;
+					return;
 				}
+
+				if (this.awaitingStableRender) {
+					this.retryLoadAfterStableWait = true;
+					return;
+				}
+
+				this.tryLoadScoreAfterApiReady();
 			};
 			this.eventDisposers.push(this.api.playerReady.on(playerReadyHandler));
 
@@ -1252,13 +1381,14 @@ export class PlayerController {
 		// 应用移调设置
 		if (this.api && savedConfigs.some((c) => c.transposeFull !== undefined)) {
 			this.api.updateSettings();
-			console.debug(
-				`[PlayerController #${this.instanceId}] Applied transposition settings, triggering re-render`
-			);
-			if (this.awaitingStableRender) {
-				window.requestAnimationFrame(() => {
-					this.api?.render();
-				});
+			console.debug(`[PlayerController #${this.instanceId}] Applied transposition settings`);
+			if (
+				!this.awaitingStableRender &&
+				!this.stabilizationRenderInFlight &&
+				!this.stabilizationRenderRequested &&
+				!this.destroyed
+			) {
+				this.api.render();
 			}
 		}
 	}
@@ -1270,24 +1400,64 @@ export class PlayerController {
 	 */
 	async loadFileWhenReady(file: TFile): Promise<void> {
 		const loadTask = async () => {
+			if (this.destroyed) {
+				throw new Error('Controller destroyed');
+			}
+
+			if (!this.api) {
+				throw new Error('API not initialized for score load');
+			}
+
 			if (file.extension && ['alphatab', 'alphatex'].includes(file.extension.toLowerCase())) {
 				const textContent = await this.plugin.app.vault.read(file);
+				if (!this.api || this.destroyed) {
+					throw new Error('API not initialized for score load');
+				}
 				await this.loadScoreFromAlphaTex(textContent);
 			} else {
 				const arrayBuffer = await this.plugin.app.vault.readBinary(file);
+				if (!this.api || this.destroyed) {
+					throw new Error('API not initialized for score load');
+				}
 				await this.loadScoreFromFile(arrayBuffer, file.name);
 			}
 		};
 
-		// 如果 API 已经就绪，立即执行。否则，放入队列。
-		if (this.stores.runtime.getState().apiReady && this.api) {
-			await loadTask();
+		if (this.api) {
+			try {
+				await loadTask();
+				this.apiLoadHandled = true;
+				this.pendingFileLoad = null;
+			} catch (error) {
+				if (this.destroyed) {
+					return;
+				}
+
+				if (!this.api) {
+					this.pendingFileLoad = loadTask;
+					this.apiLoadHandled = false;
+					console.debug(
+						`[PlayerController #${this.instanceId}] Deferred score load until api becomes available`
+					);
+					return;
+				}
+
+				throw error;
+			}
 		} else {
+			if (this.destroyed) {
+				return;
+			}
 			this.pendingFileLoad = loadTask;
+			this.apiLoadHandled = false;
 		}
 	}
 
 	async loadScoreFromUrl(url: string): Promise<void> {
+		if (this.destroyed) {
+			throw new Error('Controller destroyed');
+		}
+
 		if (!this.api) {
 			throw new Error('API not initialized');
 		}
@@ -1314,6 +1484,10 @@ export class PlayerController {
 	}
 
 	async loadScoreFromFile(arrayBuffer: ArrayBuffer, fileName?: string): Promise<void> {
+		if (this.destroyed) {
+			throw new Error('Controller destroyed');
+		}
+
 		if (!this.api) {
 			throw new Error('API not initialized');
 		}
@@ -1346,6 +1520,10 @@ export class PlayerController {
 	}
 
 	loadScoreFromAlphaTex(tex: string): Promise<void> {
+		if (this.destroyed) {
+			return Promise.reject(new Error('Controller destroyed'));
+		}
+
 		if (!this.api) {
 			return Promise.reject(new Error('API not initialized'));
 		}

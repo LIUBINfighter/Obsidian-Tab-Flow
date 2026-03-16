@@ -68,7 +68,6 @@ export function createRuntimeStore(): UseBoundStore<StoreApi<RuntimeStore>> {
 		setApi: (api) => {
 			set({
 				alphaTabApi: api,
-				apiReady: !!api,
 			});
 		},
 
