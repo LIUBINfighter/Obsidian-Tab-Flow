@@ -87,6 +87,7 @@ export class PlayerController {
 	private renderIntegrityCheckId: number | null = null;
 	private renderFallbackMode: 'normal' | 'no-workers' | 'html5' = 'normal';
 	private renderFallbackInProgress = false;
+	private readonly allowHtml5FallbackRetry = false;
 	private unsubscribeGlobalConfig: (() => void) | null = null;
 	private unsubscribeWorkspaceConfig: (() => void) | null = null;
 	private lastConfigHash: string | null = null;
@@ -425,23 +426,16 @@ export class PlayerController {
 
 		if (this.renderFallbackMode === 'normal' && effectiveRenderMode.useWorkers) {
 			nextMode = 'no-workers';
-		} else if (this.renderFallbackMode !== 'html5') {
+		} else if (this.renderFallbackMode !== 'html5' && this.allowHtml5FallbackRetry) {
 			nextMode = 'html5';
 		}
 
 		if (!nextMode) {
-			console.error(`[PlayerController #${this.instanceId}] Render fallback exhausted`, {
+			console.warn(`[PlayerController #${this.instanceId}] Render fallback stopped`, {
 				reason,
+				renderFallbackMode: this.renderFallbackMode,
+				allowHtml5FallbackRetry: this.allowHtml5FallbackRetry,
 			});
-			this.stores.runtime
-				.getState()
-				.setError(
-					'api-init',
-					'alphaTab produced invalid render output in all fallback modes'
-				);
-			this.stores.ui
-				.getState()
-				.showToast('error', 'Rendering failed even after safe mode fallback');
 			return;
 		}
 
