@@ -48,7 +48,7 @@
 		"@codemirror/search": "^6.6.0",
 		"@codemirror/state": "^6.4.1",
 		"@codemirror/stream-parser": "^0.19.9",
-		"@codemirror/view": "^6.26.3",
+		"@codemirror/view": "^6.41.0",
 		"@coderline/alphatab": "^1.8.2",
 		"@types/mime-types": "^3.0.1",
 		"@types/react": "^19.2.14",
