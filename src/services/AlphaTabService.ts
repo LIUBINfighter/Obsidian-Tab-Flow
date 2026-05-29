@@ -3,6 +3,7 @@
 import * as alphaTab from '@coderline/alphatab';
 import { App } from 'obsidian';
 import { EventBus, convertSamplesToWavBlobUrl, toFiniteClampedNumber } from '../utils';
+import type { EventHandler } from '../utils/EventBus';
 import { ScrollEventManager } from '../events/scrollEvents';
 import * as convert from 'color-convert';
 
@@ -10,6 +11,7 @@ export class AlphaTabService {
 	private api: alphaTab.AlphaTabApi;
 	private scrollManager: ScrollEventManager;
 	private eventBus: EventBus;
+	private eventBusSubscriptions: Array<{ event: string; handler: EventHandler }> = [];
 	private app: App;
 	private element: HTMLElement;
 	private resources: {
@@ -45,6 +47,56 @@ export class AlphaTabService {
 		}
 	}
 
+	private createAlphaTabSettings(style: CSSStyleDeclaration): alphaTab.Settings {
+		const settings = new alphaTab.Settings();
+		settings.fillFromJson({
+			core: {
+				scriptFile: this.resources.alphaTabWorkerUri,
+				fontDirectory: '',
+			},
+			player: {
+				enablePlayer: true,
+				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
+				enableCursor: true,
+				enableAnimatedBeatCursor: true,
+				soundFont: this.resources.soundFontUri,
+				scrollMode: alphaTab.ScrollMode.Continuous,
+				scrollSpeed: 500,
+				scrollOffsetY: -25,
+				scrollOffsetX: 25,
+				nativeBrowserSmoothScroll: false,
+			},
+			display: {
+				resources: {
+					mainGlyphColor: style.getPropertyValue('--color-base-100'),
+					secondaryGlyphColor: style.getPropertyValue('--color-base-60'),
+					staffLineColor: style.getPropertyValue('--color-base-40'),
+					barSeparatorColor: style.getPropertyValue('--color-base-40'),
+					barNumberColor: this.getSafeAccentHex(style),
+					scoreInfoColor: style.getPropertyValue('--color-base-100'),
+				},
+			},
+		});
+		if (this.resources.bravuraUri) {
+			settings.core.smuflFontSources = new Map<alphaTab.FontFileFormat, string>([
+				[alphaTab.FontFileFormat.Woff2, this.resources.bravuraUri],
+			]);
+		}
+		return settings;
+	}
+
+	private subscribe(event: string, handler: EventHandler): void {
+		this.eventBus.subscribe(event, handler);
+		this.eventBusSubscriptions.push({ event, handler });
+	}
+
+	private clearEventBusSubscriptions(): void {
+		for (const { event, handler } of this.eventBusSubscriptions) {
+			this.eventBus.unsubscribe(event, handler);
+		}
+		this.eventBusSubscriptions = [];
+	}
+
 	constructor(
 		app: App,
 		element: HTMLElement,
@@ -63,48 +115,7 @@ export class AlphaTabService {
 		// 获取当前元素的计算样式用于暗色适配
 		const style = window.getComputedStyle(element);
 
-		this.api = new alphaTab.AlphaTabApi(element, {
-			core: {
-				scriptFile: resources.alphaTabWorkerUri,
-				smuflFontSources: resources.bravuraUri
-					? new Map<number, string>([
-							[
-								(
-									alphaTab as {
-										rendering?: {
-											glyphs?: { FontFileFormat?: { Woff2?: number } };
-										};
-									}
-								).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
-								resources.bravuraUri,
-							],
-						])
-					: new Map<number, string>(),
-				fontDirectory: '',
-			},
-			player: {
-				enablePlayer: true,
-				playerMode: alphaTab.PlayerMode.EnabledAutomatic,
-				enableCursor: true,
-				enableAnimatedBeatCursor: true,
-				soundFont: resources.soundFontUri,
-				scrollMode: alphaTab.ScrollMode.Continuous,
-				scrollSpeed: 500,
-				scrollOffsetY: -25,
-				scrollOffsetX: 25,
-				nativeBrowserSmoothScroll: false,
-			},
-			display: {
-				resources: {
-					mainGlyphColor: style.getPropertyValue('--color-base-100'),
-					secondaryGlyphColor: style.getPropertyValue('--color-base-60'),
-					staffLineColor: style.getPropertyValue('--color-base-40'),
-					barSeparatorColor: style.getPropertyValue('--color-base-40'),
-					barNumberColor: this.getSafeAccentHex(style),
-					scoreInfoColor: style.getPropertyValue('--color-base-100'),
-				},
-			},
-		});
+		this.api = new alphaTab.AlphaTabApi(element, this.createAlphaTabSettings(style));
 		this.scrollManager = new ScrollEventManager(this.api);
 
 		this.registerCommandHandlers();
@@ -114,51 +125,45 @@ export class AlphaTabService {
 
 	private registerCommandHandlers() {
 		// 选择音轨事件（弹出轨道选择 Modal） - 不再直接实例化 TracksModal，而是发出事件
-		this.eventBus.subscribe('命令:选择音轨', () => {
+		this.subscribe('命令:选择音轨', () => {
 			this.eventBus.publish('UI:showTracksModal');
 		});
-		this.eventBus.subscribe('命令:播放暂停', () => this.api.playPause());
-		this.eventBus.subscribe('命令:停止', () => this.api.stop());
-		this.eventBus.subscribe('命令:设置速度', (speed: number) => {
+		this.subscribe('命令:播放暂停', () => this.api.playPause());
+		this.subscribe('命令:停止', () => this.api.stop());
+		this.subscribe('命令:设置速度', (speed: number) => {
 			this.api.playbackSpeed = toFiniteClampedNumber(speed, 1, 0.5, 2);
 		});
-		this.eventBus.subscribe('命令:设置谱表', (profile: number) => {
+		this.subscribe('命令:设置谱表', (profile: number) => {
 			this.api.settings.display.staveProfile = profile;
 			this.api.updateSettings();
 			this.api.render();
 		});
-		this.eventBus.subscribe('命令:设置节拍器', (enabled: boolean) => {
+		this.subscribe('命令:设置节拍器', (enabled: boolean) => {
 			this.api.metronomeVolume = enabled ? 1 : 0;
 		});
-		this.eventBus.subscribe('命令:设置预备拍', (enabled: boolean) => {
+		this.subscribe('命令:设置预备拍', (enabled: boolean) => {
 			this.api.countInVolume = enabled ? 1 : 0;
 		});
-		this.eventBus.subscribe('命令:设置缩放', (scale: number) => {
+		this.subscribe('命令:设置缩放', (scale: number) => {
 			this.api.settings.display.scale = toFiniteClampedNumber(scale, 1, 0.5, 2);
 			this.api.updateSettings();
 			this.api.render();
 		});
 		// 滚动相关
-		this.eventBus.subscribe('命令:设置滚动模式', (mode: number) =>
-			this.scrollManager.setScrollMode(mode as alphaTab.ScrollMode)
-		);
-		this.eventBus.subscribe('命令:设置滚动速度', (speed: number) =>
-			this.scrollManager.setScrollSpeed(speed)
-		);
-		this.eventBus.subscribe('命令:设置Y偏移', (offset: number) =>
-			this.scrollManager.setScrollOffsetY(offset)
-		);
-		this.eventBus.subscribe('命令:设置X偏移', (offset: number) =>
-			this.scrollManager.setScrollOffsetX(offset)
-		);
-		this.eventBus.subscribe('命令:设置原生滚动', (enabled: boolean) =>
-			this.scrollManager.setNativeBrowserSmoothScroll(enabled)
-		);
-		this.eventBus.subscribe('命令:滚动到光标', () =>
-			this.scrollManager.triggerScrollToCursor()
-		);
+		this.subscribe('命令:设置滚动模式', (mode: number) =>
+			this.scrollManager.setScrollMode(mode as alphaTab.ScrollMode));
+		this.subscribe('命令:设置滚动速度', (speed: number) =>
+			this.scrollManager.setScrollSpeed(speed));
+		this.subscribe('命令:设置Y偏移', (offset: number) =>
+			this.scrollManager.setScrollOffsetY(offset));
+		this.subscribe('命令:设置X偏移', (offset: number) =>
+			this.scrollManager.setScrollOffsetX(offset));
+		this.subscribe('命令:设置原生滚动', (enabled: boolean) =>
+			this.scrollManager.setNativeBrowserSmoothScroll(enabled));
+		this.subscribe('命令:滚动到光标', () =>
+			this.scrollManager.triggerScrollToCursor());
 		// 新增：布局切换事件
-		this.eventBus.subscribe('命令:切换布局', (layoutMode: number) => {
+		this.subscribe('命令:切换布局', (layoutMode: number) => {
 			if (this.api.settings && this.api.settings.display) {
 				this.api.settings.display.layoutMode = layoutMode;
 				this.api.updateSettings();
@@ -166,7 +171,7 @@ export class AlphaTabService {
 			}
 		});
 		// 新增：刷新播放器（重新渲染当前乐谱）
-		this.eventBus.subscribe('命令:刷新播放器', () => {
+		this.subscribe('命令:刷新播放器', () => {
 			try {
 				if (this.api?.score) {
 					// 方案A：仅强制渲染
@@ -177,9 +182,7 @@ export class AlphaTabService {
 			}
 		});
 		// 音频导出事件
-		this.eventBus.subscribe(
-			'命令:导出音频',
-			(
+		this.subscribe('命令:导出音频', (
 				payload?: {
 					fileName?: string;
 				} & Partial<alphaTab.synth.AudioExportOptions>
@@ -193,10 +196,9 @@ export class AlphaTabService {
 						this.eventBus.publish('状态:音频导出失败', e);
 					}
 				})();
-			}
-		);
+			});
 		// 新增：导出 MIDI / PDF / GP 事件
-		this.eventBus.subscribe('命令:导出MIDI', (payload?: { fileName?: string }) => {
+		this.subscribe('命令:导出MIDI', (payload?: { fileName?: string }) => {
 			void (async () => {
 				try {
 					// Dynamically import to avoid circular dependency with events module
@@ -217,7 +219,7 @@ export class AlphaTabService {
 				}
 			})();
 		});
-		this.eventBus.subscribe('命令:导出PDF', (payload?: { fileName?: string }) => {
+		this.subscribe('命令:导出PDF', (payload?: { fileName?: string }) => {
 			void (async () => {
 				try {
 					// Dynamically import to avoid circular dependency with events module
@@ -238,7 +240,7 @@ export class AlphaTabService {
 				}
 			})();
 		});
-		this.eventBus.subscribe('命令:导出GP', (payload?: { fileName?: string }) => {
+		this.subscribe('命令:导出GP', (payload?: { fileName?: string }) => {
 			void (async () => {
 				try {
 					// Dynamically import to avoid circular dependency with events module
@@ -260,7 +262,7 @@ export class AlphaTabService {
 			})();
 		});
 		// 命令：加载乐谱（传入 Uint8Array 或 ArrayBuffer）
-		this.eventBus.subscribe('命令:加载乐谱', (data: Uint8Array | ArrayBuffer) => {
+		this.subscribe('命令:加载乐谱', (data: Uint8Array | ArrayBuffer) => {
 			void (async () => {
 				try {
 					const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
@@ -273,7 +275,7 @@ export class AlphaTabService {
 		});
 
 		// 命令：加载 AlphaTex 乐谱（传入文本内容）
-		this.eventBus.subscribe('命令:加载AlphaTex乐谱', (textContent: string) => {
+		this.subscribe('命令:加载AlphaTex乐谱', (textContent: string) => {
 			void (async () => {
 				try {
 					await this.loadAlphaTexScore(textContent);
@@ -284,7 +286,7 @@ export class AlphaTabService {
 			})();
 		});
 		// 命令：重新构造 AlphaTabApi
-		this.eventBus.subscribe('命令:重建AlphaTabApi', () => {
+		this.subscribe('命令:重建AlphaTabApi', () => {
 			this.reconstructApi();
 		});
 		// 轨道事件订阅已移除：改为 TrackStateStore -> TabView -> API 的单向数据流
@@ -296,6 +298,9 @@ export class AlphaTabService {
 
 		// 添加播放位置变化事件监听，用于进度条更新
 		this.api.playerPositionChanged.on((args) => {
+			if (!args) {
+				return;
+			}
 			this.eventBus.publish('状态:播放位置变化', {
 				currentTime: args.currentTime || 0,
 				endTime: args.endTime || 0,
@@ -307,7 +312,7 @@ export class AlphaTabService {
 
 	private registerWorkspaceEvents() {
 		// 监听手动刷新事件 - 使用事件总线而不是 workspace
-		this.eventBus.subscribe('命令:手动刷新', () => {
+		this.subscribe('命令:手动刷新', () => {
 			try {
 				// console.debug('[AlphaTabService] 收到手动刷新事件');
 				// 强制重新渲染
@@ -378,8 +383,11 @@ export class AlphaTabService {
 	}
 
 	public destroy() {
+		this.clearEventBusSubscriptions();
 		this.api.destroy();
 		this.scrollManager.destroy();
+		this.api = null!;
+		this.scrollManager = null!;
 	}
 
 	/**
@@ -402,48 +410,7 @@ export class AlphaTabService {
 				}
 			}
 			const style = window.getComputedStyle(this.element);
-			this.api = new alphaTab.AlphaTabApi(this.element, {
-				core: {
-					scriptFile: this.resources.alphaTabWorkerUri,
-					smuflFontSources: this.resources.bravuraUri
-						? new Map<number, string>([
-								[
-									(
-										alphaTab as {
-											rendering?: {
-												glyphs?: { FontFileFormat?: { Woff2?: number } };
-											};
-										}
-									).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
-									this.resources.bravuraUri,
-								],
-							])
-						: new Map<number, string>(),
-					fontDirectory: '',
-				},
-				player: {
-					enablePlayer: true,
-					playerMode: alphaTab.PlayerMode.EnabledAutomatic,
-					enableCursor: true,
-					enableAnimatedBeatCursor: true,
-					soundFont: this.resources.soundFontUri,
-					scrollMode: alphaTab.ScrollMode.Continuous,
-					scrollSpeed: 500,
-					scrollOffsetY: -25,
-					scrollOffsetX: 25,
-					nativeBrowserSmoothScroll: false,
-				},
-				display: {
-					resources: {
-						mainGlyphColor: style.getPropertyValue('--color-base-100'),
-						secondaryGlyphColor: style.getPropertyValue('--color-base-60'),
-						staffLineColor: style.getPropertyValue('--color-base-40'),
-						barSeparatorColor: style.getPropertyValue('--color-base-40'),
-						barNumberColor: this.getSafeAccentHex(style),
-						scoreInfoColor: style.getPropertyValue('--color-base-100'),
-					},
-				},
-			});
+			this.api = new alphaTab.AlphaTabApi(this.element, this.createAlphaTabSettings(style));
 			this.scrollManager = new ScrollEventManager(this.api);
 			this.registerApiListeners();
 			// 将新 API 上报给外界：某些组件直接持有 _api 引用

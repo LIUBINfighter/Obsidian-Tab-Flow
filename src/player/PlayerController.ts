@@ -253,6 +253,12 @@ export class PlayerController {
 				`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`
 			);
 			this.api = new alphaTab.AlphaTabApi(this.container, settings);
+			this.api.playbackSpeed = toFiniteClampedNumber(
+				this.stores.globalConfig.getState().alphaTabSettings.player.playbackSpeed,
+				1,
+				0.5,
+				2
+			);
 
 			// 绑定事件
 			this.bindApiEvents();
@@ -405,12 +411,12 @@ export class PlayerController {
 				layoutMode: globalConfig.alphaTabSettings.display.layoutMode,
 				barsPerRow: globalConfig.alphaTabSettings.display.barsPerRow,
 				stretchForce: globalConfig.alphaTabSettings.display.stretchForce,
+				staveProfile: globalConfig.alphaTabSettings.display.staveProfile,
 			},
 		};
 
 		const displaySettings = settingsJson.display!;
 		const playerSettings = settingsJson.player!;
-		const coreSettings = settingsJson.core!;
 
 		// 调试：输出布局和滚动相关配置
 		console.debug(`[PlayerController #${this.instanceId}] AlphaTab settings configured:`, {
@@ -430,22 +436,6 @@ export class PlayerController {
 				scrollOffsetY: playerSettings.scrollOffsetY,
 			},
 		});
-
-		// 配置字体源 - 使用正确的字体格式枚举
-		// AlphaTab 的 FontFileFormat 枚举值：Woff2 = 0, Woff = 1, Ttf = 2
-		if (this.resources.bravuraUri) {
-			// 使用 AlphaTab 内部的枚举值（向后兼容）
-			coreSettings.smuflFontSources = new Map<
-				| FontFileFormat
-				| keyof typeof FontFileFormat
-				| Lowercase<keyof typeof FontFileFormat>,
-				string
-			>([[FontFileFormat.Woff2, this.resources.bravuraUri]]);
-			console.debug(
-				`[PlayerController #${this.instanceId}] Font configured:`,
-				this.resources.bravuraUri
-			);
-		}
 
 		// 添加颜色配置（防御性编程：确保所有颜色值都有效）
 		if (style) {
@@ -530,6 +520,15 @@ export class PlayerController {
 
 		const settings = new alphaTab.Settings();
 		settings.fillFromJson(settingsJson);
+		if (this.resources.bravuraUri) {
+			settings.core.smuflFontSources = new Map<FontFileFormat, string>([
+				[FontFileFormat.Woff2, this.resources.bravuraUri],
+			]);
+			console.debug(
+				`[PlayerController #${this.instanceId}] Font configured:`,
+				this.resources.bravuraUri
+			);
+		}
 		return settings;
 	}
 
@@ -700,8 +699,11 @@ export class PlayerController {
 			this.eventDisposers.push(this.api.playerStateChanged.on(playerStateChangedHandler));
 
 			// Player Position Changed
-			const playerPositionChangedHandler = (event: PositionChangedEventArgsWithBeatInfo) => {
-				this.stores.runtime.getState().setPosition(event.currentTime);
+			const playerPositionChangedHandler = (event?: PositionChangedEventArgsWithBeatInfo) => {
+				if (!event) {
+					return;
+				}
+				this.stores.runtime.getState().setPosition(event.currentTime ?? 0);
 				// 重要：使用 e.endTime 作为总时长，这是考虑了速度等因素的实际播放时长
 				if (event.endTime !== undefined) {
 					this.stores.runtime.getState().setDuration(event.endTime);
