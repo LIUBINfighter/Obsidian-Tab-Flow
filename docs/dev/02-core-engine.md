@@ -21,10 +21,10 @@
 
 ```typescript
 // AlphaTab API 配置示例
-this.api = new alphaTab.AlphaTabApi(element, {
+const settings = new alphaTab.Settings();
+settings.fillFromJson({
   core: {
     scriptFile: resources.alphaTabWorkerUri,
-    smuflFontSources: new Map([[fontFormat, resources.bravuraUri]]),
     fontDirectory: "",
   },
   player: {
@@ -42,6 +42,14 @@ this.api = new alphaTab.AlphaTabApi(element, {
     },
   },
 });
+
+if (resources.bravuraUri) {
+  settings.core.smuflFontSources = new Map([
+    [alphaTab.FontFileFormat.Woff2, resources.bravuraUri],
+  ]);
+}
+
+this.api = new alphaTab.AlphaTabApi(element, settings);
 ```
 
 ### 命令系统
@@ -84,6 +92,7 @@ private registerApiListeners() {
   this.api.playerReady.on(() => this.eventBus.publish("状态:音频就绪"));
   this.api.error.on((err) => this.eventBus.publish("状态:错误", err));
   this.api.playerPositionChanged.on((args) => {
+    if (!args) return;
     this.eventBus.publish("状态:播放位置变化", {
       currentTime: args.currentTime,
       endTime: args.endTime,
@@ -156,7 +165,7 @@ public reconstructApi(): void {
   this.scrollProxy.destroy();
   
   // 创建新实例
-  this.api = new alphaTab.AlphaTabApi(this.element, config);
+  this.api = new alphaTab.AlphaTabApi(this.element, this.createAlphaTabSettings(style));
   this.scrollProxy = new ScrollConfigProxy(this.api);
   
   // 重新注册监听器
