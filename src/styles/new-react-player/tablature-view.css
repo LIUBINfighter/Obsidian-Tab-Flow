@@ -31,6 +31,20 @@
 	/* AlphaTab 会在这里添加渲染内容 */
 }
 
+/*
+ * Let alphaTab's own SVG geometry win.
+ * Obsidian themes and plugin styles often target generic svg elements for icons;
+ * those rules can resize score SVGs and make tablature lines/numbers drift apart.
+ */
+.tablature-view .alphatab-main svg {
+	display: block;
+	max-width: none;
+	max-height: none;
+	width: auto;
+	height: auto;
+	overflow: visible;
+}
+
 /* 滚动条样式 */
 .tablature-view .alphatab-viewport::-webkit-scrollbar {
 	width: 12px;

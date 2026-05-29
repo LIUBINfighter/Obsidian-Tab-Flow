@@ -1826,12 +1826,51 @@
 	padding: 20px;
 }
 
+.tabflow-print-preview-view.print-preview-root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.tabflow-print-preview-view .print-preview-toolbar {
+	display: flex;
+	gap: 10px;
+	padding: 10px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	justify-content: space-between;
+	flex-shrink: 0;
+}
+
+.tabflow-print-preview-view .print-preview-toolbar-left,
+.tabflow-print-preview-view .print-preview-toolbar-right {
+	display: flex;
+	gap: 8px;
+}
+
+.tabflow-print-preview-view .print-preview-body {
+	flex: 1;
+	flex-direction: row;
+	min-height: 0;
+}
+
+.tabflow-print-preview-view .tabflow-print-preview-wrapper {
+	flex: 1;
+	overflow: auto;
+	padding: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	background-color: var(--background-secondary);
+}
+
 .tabflow-print-preview-view .print-preview-iframe {
 	/* A4 纸宽度，阴影只在屏幕预览时可见 */
 	width: 210mm;
+	height: auto;
 	border: none;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 	background: white;
+	display: block;
 }
 
 /* 左侧打印 Track/Staff 面板 */
@@ -2866,7 +2905,6 @@
 	opacity: 0.08;
 	transition: opacity 0.1s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 深色模式下调整透明度 */
@@ -2885,7 +2923,6 @@
 	border-radius: 1px;
 	transition: opacity 0.1s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 深色模式下增强可见度 */
@@ -2902,7 +2939,6 @@
 	opacity: 0.1;
 	transition: opacity 0.15s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 悬停时增强反馈 */
@@ -3612,6 +3648,20 @@
 	width: 100%;
 	min-height: 100%; /* 确保至少占满视口 */
 	/* AlphaTab 会在这里添加渲染内容 */
+}
+
+/*
+ * Let alphaTab's own SVG geometry win.
+ * Obsidian themes and plugin styles often target generic svg elements for icons;
+ * those rules can resize score SVGs and make tablature lines/numbers drift apart.
+ */
+.tablature-view .alphatab-main svg {
+	display: block;
+	max-width: none;
+	max-height: none;
+	width: auto;
+	height: auto;
+	overflow: visible;
 }
 
 /* 滚动条样式 */
