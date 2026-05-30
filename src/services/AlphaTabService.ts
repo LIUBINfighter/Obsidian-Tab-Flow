@@ -151,17 +151,21 @@ export class AlphaTabService {
 		});
 		// 滚动相关
 		this.subscribe('命令:设置滚动模式', (mode: number) =>
-			this.scrollManager.setScrollMode(mode as alphaTab.ScrollMode));
+			this.scrollManager.setScrollMode(mode as alphaTab.ScrollMode)
+		);
 		this.subscribe('命令:设置滚动速度', (speed: number) =>
-			this.scrollManager.setScrollSpeed(speed));
+			this.scrollManager.setScrollSpeed(speed)
+		);
 		this.subscribe('命令:设置Y偏移', (offset: number) =>
-			this.scrollManager.setScrollOffsetY(offset));
+			this.scrollManager.setScrollOffsetY(offset)
+		);
 		this.subscribe('命令:设置X偏移', (offset: number) =>
-			this.scrollManager.setScrollOffsetX(offset));
+			this.scrollManager.setScrollOffsetX(offset)
+		);
 		this.subscribe('命令:设置原生滚动', (enabled: boolean) =>
-			this.scrollManager.setNativeBrowserSmoothScroll(enabled));
-		this.subscribe('命令:滚动到光标', () =>
-			this.scrollManager.triggerScrollToCursor());
+			this.scrollManager.setNativeBrowserSmoothScroll(enabled)
+		);
+		this.subscribe('命令:滚动到光标', () => this.scrollManager.triggerScrollToCursor());
 		// 新增：布局切换事件
 		this.subscribe('命令:切换布局', (layoutMode: number) => {
 			if (this.api.settings && this.api.settings.display) {
@@ -182,7 +186,9 @@ export class AlphaTabService {
 			}
 		});
 		// 音频导出事件
-		this.subscribe('命令:导出音频', (
+		this.subscribe(
+			'命令:导出音频',
+			(
 				payload?: {
 					fileName?: string;
 				} & Partial<alphaTab.synth.AudioExportOptions>
@@ -196,7 +202,8 @@ export class AlphaTabService {
 						this.eventBus.publish('状态:音频导出失败', e);
 					}
 				})();
-			});
+			}
+		);
 		// 新增：导出 MIDI / PDF / GP 事件
 		this.subscribe('命令:导出MIDI', (payload?: { fileName?: string }) => {
 			void (async () => {
