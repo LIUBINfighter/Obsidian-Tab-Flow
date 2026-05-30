@@ -16,6 +16,7 @@ import type { StoreCollection } from './store/StoreFactory';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
+import { getAlphaTexDiagnosticMessages } from '../editor/alphaTexDiagnostics';
 
 type AlphaTabSettingsInput = alphaTab.Settings;
 type AlphaTabSettingsJson = Parameters<alphaTab.Settings['fillFromJson']>[0];
@@ -1128,6 +1129,16 @@ export class PlayerController {
 		this.stores.runtime.getState().clearError();
 
 		try {
+			const diagnosticMessages = getAlphaTexDiagnosticMessages(tex);
+			if (diagnosticMessages.length > 0) {
+				const message = [
+					'AlphaTex preview was not rendered because the source has errors.',
+					...diagnosticMessages,
+				].join('\n');
+				this.stores.runtime.getState().setError('score-load', message);
+				return Promise.reject(new Error(message));
+			}
+
 			this.api.tex(tex);
 
 			// 保存乐谱数据用于 API 重建后重新加载
