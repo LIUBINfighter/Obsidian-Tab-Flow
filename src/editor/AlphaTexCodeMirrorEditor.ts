@@ -5,13 +5,15 @@
  * Obsidian's private APIs. This provides better stability and maintainability.
  */
 
-import { EditorView, ViewUpdate, placeholder, keymap } from '@codemirror/view';
+import { EditorView, ViewUpdate, placeholder, keymap, lineNumbers } from '@codemirror/view';
 import { EditorState, Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands';
 import { bracketMatching } from '@codemirror/language';
-import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { closeBrackets, closeBracketsKeymap, completionKeymap } from '@codemirror/autocomplete';
 import { highlightSelectionMatches } from '@codemirror/search';
 import { alphaTex } from './alphaTexLanguage';
+import { createAlphaTexDiagnostics } from './alphaTexDiagnostics';
+import { createAlphaTexIntelligence } from './alphaTexIntelligence';
 import {
 	dotHighlightPlugin,
 	barHighlightPlugin,
@@ -97,16 +99,25 @@ export class AlphaTexCodeMirrorEditor {
 		// Build extensions
 		const extensions: Extension[] = [
 			// Basic editor features
-			// lineNumbers(), // Disabled - no line numbers needed
+			lineNumbers(),
 			EditorView.lineWrapping, // Enable automatic line wrapping
 			history(),
 			bracketMatching(),
 			closeBrackets(),
 			highlightSelectionMatches(),
 			// Keymaps
-			keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap]),
+			keymap.of([
+				...closeBracketsKeymap,
+				...completionKeymap,
+				...defaultKeymap,
+				...historyKeymap,
+			]),
 			// AlphaTex language support
 			...alphaTex(),
+			// AlphaTex autocomplete, hover documentation, and snippets
+			...createAlphaTexIntelligence(),
+			// AlphaTex diagnostics support
+			...createAlphaTexDiagnostics(),
 			// Highlight plugins
 			...buildHighlightExtensions(options.highlightSettings),
 		];

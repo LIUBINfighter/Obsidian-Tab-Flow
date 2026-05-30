@@ -4,7 +4,20 @@
  */
 import { App, Scope, TFile, WorkspaceLeaf } from 'obsidian';
 import { EditorSelection, Prec } from '@codemirror/state';
-import { EditorView, keymap, placeholder, ViewUpdate, ViewPlugin } from '@codemirror/view';
+import {
+	acceptCompletion,
+	closeCompletion,
+	completionKeymap,
+	completionStatus,
+} from '@codemirror/autocomplete';
+import {
+	EditorView,
+	keymap,
+	lineNumbers,
+	placeholder,
+	ViewUpdate,
+	ViewPlugin,
+} from '@codemirror/view';
 import {
 	dotHighlightPlugin,
 	barHighlightPlugin,
@@ -21,6 +34,8 @@ import {
 	// chordHighlightPlugin,
 } from './Highlight';
 import { alphaTex } from './alphaTexLanguage';
+import { createAlphaTexDiagnostics } from './alphaTexDiagnostics';
+import { createAlphaTexIntelligence } from './alphaTexIntelligence';
 import { around } from 'monkey-around';
 
 export interface MarkdownEditorProps {
@@ -159,7 +174,8 @@ export class EmbeddableMarkdownEditor {
 						const keyBindings = [
 							{
 								key: 'Enter',
-								run: () => owner.options.onEnter?.(owner, false, false),
+								run: (view: EditorView) =>
+									acceptCompletion(view) || owner.options.onEnter?.(owner, false, false),
 								shift: () => owner.options.onEnter?.(owner, false, true),
 							},
 							{
@@ -169,7 +185,10 @@ export class EmbeddableMarkdownEditor {
 							},
 							{
 								key: 'Escape',
-								run: () => {
+								run: (view: EditorView) => {
+									if (completionStatus(view.state) === 'active') {
+										return closeCompletion(view);
+									}
 									owner.options.onEscape?.(owner);
 									return true;
 								},
@@ -179,11 +198,14 @@ export class EmbeddableMarkdownEditor {
 						if (owner.options.singleLine) {
 							keyBindings[0] = {
 								key: 'Enter',
-								run: () => owner.options.onEnter?.(owner, false, false),
+								run: (view: EditorView) =>
+									acceptCompletion(view) || owner.options.onEnter?.(owner, false, false),
 								shift: () => owner.options.onEnter?.(owner, false, true),
 							};
 						}
-						extensions.push(Prec.highest(keymap.of(keyBindings)));
+						extensions.push(
+							Prec.highest(keymap.of([...completionKeymap, ...keyBindings]))
+						);
 						// Add highlight plugins extracted to separate module
 						// Resolve highlight settings: prefer explicit options, fallback to global plugin settings if available
 						const resolveSetting = (key: string, def = true) => {
@@ -282,6 +304,9 @@ export class EmbeddableMarkdownEditor {
 							const alphaExt = alphaTex();
 							if (Array.isArray(alphaExt)) extensions.push(...alphaExt);
 							else extensions.push(alphaExt);
+							extensions.push(lineNumbers());
+							extensions.push(...createAlphaTexIntelligence());
+							extensions.push(...createAlphaTexDiagnostics());
 						} catch {
 							// fail gracefully if alphaTex isn't available in runtime
 						}
