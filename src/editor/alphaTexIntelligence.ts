@@ -1,4 +1,9 @@
-import { CompletionContext, CompletionResult, snippetCompletion, autocompletion } from '@codemirror/autocomplete';
+import {
+	CompletionContext,
+	CompletionResult,
+	snippetCompletion,
+	autocompletion,
+} from '@codemirror/autocomplete';
 import { Extension } from '@codemirror/state';
 import { EditorView, Tooltip, hoverTooltip, tooltips } from '@codemirror/view';
 import { documentation } from '@coderline/alphatab-language-server';
@@ -79,7 +84,8 @@ const alphaTexSnippets: AlphaTexSnippet[] = [
 		detail: 'Full guitar tab scaffold',
 		template:
 			'\\title "${Title}"\n\\artist "${Artist}"\n\\tempo 120\n\\track "Guitar"\n  \\staff{tabs}\n  \\tuning E4 B3 G3 D3 A2 E2\n  :8 ${}',
-		description: 'Create a basic six-string guitar AlphaTex document with title, artist, tempo, track, staff, and standard tuning.',
+		description:
+			'Create a basic six-string guitar AlphaTex document with title, artist, tempo, track, staff, and standard tuning.',
 	},
 	{
 		label: 'trk',
@@ -186,7 +192,11 @@ function buildSnippetEntries(): DefinitionEntry[] {
 function buildLookupEntries(): Map<string, DefinitionEntry> {
 	if (lookupEntries) return lookupEntries;
 	lookupEntries = new Map<string, DefinitionEntry>();
-	for (const entry of [...buildMetadataEntries(), ...buildPropertyEntries(), ...buildSnippetEntries()]) {
+	for (const entry of [
+		...buildMetadataEntries(),
+		...buildPropertyEntries(),
+		...buildSnippetEntries(),
+	]) {
 		lookupEntries.set(entry.label.toLowerCase(), entry);
 	}
 	return lookupEntries;

@@ -175,7 +175,8 @@ export class EmbeddableMarkdownEditor {
 							{
 								key: 'Enter',
 								run: (view: EditorView) =>
-									acceptCompletion(view) || owner.options.onEnter?.(owner, false, false),
+									acceptCompletion(view) ||
+									owner.options.onEnter?.(owner, false, false),
 								shift: () => owner.options.onEnter?.(owner, false, true),
 							},
 							{
@@ -199,7 +200,8 @@ export class EmbeddableMarkdownEditor {
 							keyBindings[0] = {
 								key: 'Enter',
 								run: (view: EditorView) =>
-									acceptCompletion(view) || owner.options.onEnter?.(owner, false, false),
+									acceptCompletion(view) ||
+									owner.options.onEnter?.(owner, false, false),
 								shift: () => owner.options.onEnter?.(owner, false, true),
 							};
 						}
