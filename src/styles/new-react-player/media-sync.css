@@ -6,7 +6,7 @@
  */
 
 .media-sync-panel {
-	position: fixed;
+	position: absolute;
 	bottom: -500px; /* 初始位置在底部外 */
 	left: 50%;
 	transform: translateX(-50%);
@@ -21,7 +21,7 @@
 	overflow: hidden;
 	flex-shrink: 0;
 	box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
-	z-index: 999;
+	z-index: 2500;
 	transition:
 		bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
 		opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
