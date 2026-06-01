@@ -35,7 +35,7 @@
 		"obsidian": "latest",
 		"prettier": "^3.8.3",
 		"tslib": "2.8.1",
-		"typescript": "^5.6.3"
+		"typescript": "^6.0.3"
 	},
 	"dependencies": {
 		"@codemirror/autocomplete": "^6.20.2",
