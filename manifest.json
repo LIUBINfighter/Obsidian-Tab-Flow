@@ -6,6 +6,5 @@
 	"description": "Render, play and write guitar tabs. Support guitar pro(gtp) files(.gp, .gp3, .gp4, .gp5, .gpx), write scores in alphaTex (.atex).",
 	"author": "Jay Bridge",
 	"authorUrl": "https://github.com/LIUBINfighter",
-	"fundingUrl": "",
 	"isDesktopOnly": true
 }
