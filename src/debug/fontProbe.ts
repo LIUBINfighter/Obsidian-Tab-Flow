@@ -327,8 +327,32 @@ export function registerDebugCommands(plugin: ProbeHost) {
 						.map((c) => `U+${c.codePointAt(0)?.toString(16).toUpperCase()}`),
 				};
 			}
-			out.liveGlyphCount = glyphTexts.length;
 			out.liveSurfaces = doc.querySelectorAll('.at-surface').length;
+			const firstSurface = doc.querySelector('.at-surface');
+			if (firstSurface) {
+				out.liveSurfaceDetail = {
+					childCount: firstSurface.childElementCount,
+					firstChildTag: firstSurface.firstElementChild?.tagName ?? null,
+					svgs: firstSurface.querySelectorAll('svg').length,
+					canvases: firstSurface.querySelectorAll('canvas').length,
+					texts: firstSurface.querySelectorAll('text').length,
+					atElements: firstSurface.querySelectorAll('.at').length,
+				};
+			}
+			out.liveGlyphCount = glyphTexts.length;
+			out.domSnapshot = {
+				docViewLeaves: doc.querySelectorAll(
+					'.workspace-leaf-content[data-type="tabflow-doc-view"]'
+				).length,
+				editorViewLeaves: doc.querySelectorAll(
+					'.workspace-leaf-content[data-type="tabflow-alphatex-editor"]'
+				).length,
+				playgroundHosts: doc.querySelectorAll('.doc-playground-host').length,
+				alphatexBlocks: doc.querySelectorAll('.alphatex-block').length,
+				alphatexErrors: Array.from(doc.querySelectorAll('.alphatex-error'))
+					.slice(0, 3)
+					.map((el) => (el.textContent ?? '').slice(0, 120)),
+			};
 
 			if (uri && workerUri) {
 				const renders: RenderProbeResult[] = [];

@@ -5,7 +5,8 @@ const initQueue: Array<() => void> = [];
 export function requestIdle(fn: () => void) {
 	// requestIdleCallback is available in modern browsers
 	if (typeof window.requestIdleCallback === 'function') {
-		window.requestIdleCallback(() => fn());
+		// timeout guarantees the task still runs when the window is backgrounded
+		window.requestIdleCallback(() => fn(), { timeout: 2000 });
 	} else {
 		window.setTimeout(fn, 0);
 	}
