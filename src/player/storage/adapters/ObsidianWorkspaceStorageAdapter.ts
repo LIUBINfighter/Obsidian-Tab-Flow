@@ -43,8 +43,8 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 
 		try {
 			const current = { ...(this.callbacks.getViewState() ?? {}) };
-			current[key] = data as unknown;
-			await this.callbacks.setViewState(current, {} as Record<string, unknown>);
+			current[key] = data;
+			await this.callbacks.setViewState(current, {});
 			console.debug('[WorkspaceStorage] Saved to workspace:', key);
 		} catch (error) {
 			console.error('[WorkspaceStorage] Save failed:', key, error);
@@ -82,7 +82,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 		try {
 			const current = { ...(this.callbacks.getViewState() ?? {}) };
 			delete current[key];
-			await this.callbacks.setViewState(current, {} as Record<string, unknown>);
+			await this.callbacks.setViewState(current, {});
 			console.debug('[WorkspaceStorage] Removed from workspace:', key);
 		} catch (error) {
 			console.error('[WorkspaceStorage] Remove failed:', key, error);
@@ -97,10 +97,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 		}
 
 		try {
-			await this.callbacks.setViewState(
-				{} as Record<string, unknown>,
-				{} as Record<string, unknown>
-			);
+			await this.callbacks.setViewState({}, {});
 			console.debug('[WorkspaceStorage] Workspace state cleared');
 		} catch (error) {
 			console.error('[WorkspaceStorage] Clear failed:', error);

@@ -338,7 +338,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 		scrollModeSelect.appendChild(opt);
 	});
 	scrollModeSelect.onchange = () => {
-		const mode = parseInt(scrollModeSelect.value) as alphaTab.ScrollMode;
+		const mode = parseInt(scrollModeSelect.value);
 		scrollManager.setScrollMode(mode);
 	};
 	debugBar.appendChild(scrollModeSelect);

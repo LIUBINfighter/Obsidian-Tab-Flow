@@ -740,10 +740,10 @@ export class ShareCardModal extends Modal {
 		// Preview area (create via helper to keep modal file smaller)
 		const preview = createShareCardPreview(right, widthInput.value);
 		const previewWrap = preview.previewWrap;
-		this.panWrapper = preview.panWrapper as HTMLElement;
-		this.cardRoot = preview.cardRoot as HTMLElement;
+		this.panWrapper = preview.panWrapper;
+		this.cardRoot = preview.cardRoot;
 		// inner content container for playground rendering (so we can keep author block separate)
-		this.playgroundContent = preview.playgroundContent as HTMLElement;
+		this.playgroundContent = preview.playgroundContent;
 		this.applyPanTransform();
 
 		// 点击模态框外部关闭（增加一致的心智模型）

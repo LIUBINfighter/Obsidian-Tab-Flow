@@ -36,9 +36,7 @@ async function collectAssetStatuses(app: App, plugin: TabFlowPlugin): Promise<As
 	const files = [ASSET_FILES.ALPHA_TAB, ASSET_FILES.BRAVURA, ASSET_FILES.SOUNDFONT];
 	const dirExists = await app.vault.adapter.exists(assetsDir);
 	if (!dirExists) {
-		return files.map(
-			(f) => ({ file: f, exists: false, path: vaultPath(assetsDir, f) }) as AssetStatus
-		);
+		return files.map((f) => ({ file: f, exists: false, path: vaultPath(assetsDir, f) }));
 	}
 	const statuses: AssetStatus[] = [];
 	for (const f of files) {

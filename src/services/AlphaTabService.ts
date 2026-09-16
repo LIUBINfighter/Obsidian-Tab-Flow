@@ -150,7 +150,7 @@ export class AlphaTabService {
 		});
 		// 滚动相关
 		this.subscribe('命令:设置滚动模式', (mode: number) =>
-			this.scrollManager.setScrollMode(mode as alphaTab.ScrollMode)
+			this.scrollManager.setScrollMode(mode)
 		);
 		this.subscribe('命令:设置滚动速度', (speed: number) =>
 			this.scrollManager.setScrollSpeed(speed)
