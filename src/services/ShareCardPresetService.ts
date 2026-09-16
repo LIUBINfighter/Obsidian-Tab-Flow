@@ -137,7 +137,7 @@ export class ShareCardPresetService {
 			version: 1,
 			createdAt: partial.createdAt || now,
 			updatedAt: partial.updatedAt || now,
-		} as ShareCardPresetV1;
+		};
 		this.plugin.settings.shareCardPresets!.push(preset);
 		return preset;
 	}

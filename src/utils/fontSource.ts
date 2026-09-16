@@ -16,7 +16,7 @@ export const GLOBAL_FONT_STYLE_ID = 'alphatab-font-style-global';
 export function resolveWoff2FontFormat(): alphaTab.FontFileFormat {
 	const topLevel = (alphaTab as { FontFileFormat?: { Woff2?: number } }).FontFileFormat?.Woff2;
 	if (typeof topLevel === 'number') {
-		return topLevel as alphaTab.FontFileFormat;
+		return topLevel;
 	}
 
 	const legacy = (
@@ -25,11 +25,11 @@ export function resolveWoff2FontFormat(): alphaTab.FontFileFormat {
 		}
 	).rendering?.glyphs?.FontFileFormat?.Woff2;
 	if (typeof legacy === 'number') {
-		return legacy as alphaTab.FontFileFormat;
+		return legacy;
 	}
 
 	// Enum order has been stable since alphaTab 1.0: EmbeddedOpenType=0, Woff=1, Woff2=2
-	return 2 as alphaTab.FontFileFormat;
+	return 2;
 }
 
 /**

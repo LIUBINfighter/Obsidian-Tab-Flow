@@ -287,7 +287,7 @@ export class PlayerController {
 						if (lastScore.type === 'alphatex') {
 							this.api.tex(lastScore.data as string);
 						} else if (lastScore.type === 'binary') {
-							this.api.load(lastScore.data as Uint8Array);
+							this.api.load(lastScore.data);
 						}
 						console.debug(
 							`[PlayerController #${this.instanceId}] Last score reloaded successfully`

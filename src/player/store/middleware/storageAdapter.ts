@@ -13,16 +13,6 @@ export interface StorageAdapterOptions<TState> {
 	migrate?: (persistedState: TState, version: number) => TState; // 迁移函数
 }
 
-type StorageAdapterMiddleware = <
-	T,
-	Mps extends [StoreMutatorIdentifier, unknown][] = [],
-	Mcs extends [StoreMutatorIdentifier, unknown][] = [],
->(
-	adapter: IStorageAdapter,
-	options: StorageAdapterOptions<T>,
-	config: StateCreator<T, Mps, Mcs>
-) => StateCreator<T, Mps, Mcs>;
-
 const storageAdapterImpl = <
 	T,
 	Mps extends [StoreMutatorIdentifier, unknown][] = [],
@@ -83,4 +73,4 @@ const storageAdapterImpl = <
 	};
 };
 
-export const storageAdapter = storageAdapterImpl as unknown as StorageAdapterMiddleware;
+export const storageAdapter = storageAdapterImpl;

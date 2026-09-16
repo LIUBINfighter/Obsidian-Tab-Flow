@@ -262,7 +262,7 @@ export async function withExportLock<T>(fn: () => Promise<T>): Promise<T> {
 	type ReleaseFunction = () => void;
 	let release: ReleaseFunction | null = null;
 	exportLock = new Promise<void>((res) => {
-		release = res as ReleaseFunction;
+		release = res;
 	});
 	const callRelease = () => {
 		if (release) release();

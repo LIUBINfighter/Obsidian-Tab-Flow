@@ -26,11 +26,8 @@ export class EditorView extends FileView {
 	private editor: AlphaTexCodeMirrorEditor | null = null;
 	private container: HTMLElement;
 	private layout:
-		| 'horizontal'
-		| 'vertical'
-		| 'horizontal-swapped'
-		| 'vertical-swapped'
-		| 'single-bar' = 'horizontal';
+		'horizontal' | 'vertical' | 'horizontal-swapped' | 'vertical-swapped' | 'single-bar' =
+		'horizontal';
 	private fileModifyHandler: (file: TFile) => void;
 	private playerStoreFactory: StoreFactory;
 	private playerStores: StoreCollection | null = null;

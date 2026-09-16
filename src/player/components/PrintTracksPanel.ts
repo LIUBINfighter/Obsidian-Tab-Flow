@@ -68,7 +68,7 @@ export class PrintTracksPanelDom {
 		if (!this.api || !this.api.score) return;
 
 		for (const track of this.api.score.tracks) {
-			const model: TrackModel = track as TrackModel;
+			const model: TrackModel = track;
 			// 提前缓存 staves 引用，方便 UI 遍历
 			if (!model.staves) {
 				// alphatab 类型定义里 staves 可能是私有字段，这里做一次宽松访问
@@ -80,7 +80,7 @@ export class PrintTracksPanelDom {
 
 			for (const staff of model.staves ?? []) {
 				const key = this.getStaffKey(track.index, staff.index);
-				const s = staff as StaffWithFlags;
+				const s = staff;
 				this.staffOptions.set(key, {
 					showStandardNotation: s.showStandardNotation ?? true,
 					showTablature: s.showTablature ?? true,
@@ -181,7 +181,7 @@ export class PrintTracksPanelDom {
 
 				const buttons = staffRow.createDiv('tabflow-print-staff-buttons');
 				const key = this.getStaffKey(track.index, staff.index);
-				const disabled = (staff as StaffWithFlags).isPercussion as boolean | undefined;
+				const disabled = staff.isPercussion as boolean | undefined;
 
 				const makeToggle = (opts: {
 					field: keyof StaffDisplayOptions;
@@ -200,7 +200,7 @@ export class PrintTracksPanelDom {
 					btn.disabled = !!disabled;
 
 					const applyActive = () => {
-						const latest = this.getStaffOptions(key, staff as StaffWithFlags);
+						const latest = this.getStaffOptions(key, staff);
 						if (latest[opts.field]) {
 							btn.addClass('is-active');
 						} else {

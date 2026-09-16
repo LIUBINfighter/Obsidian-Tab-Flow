@@ -35,16 +35,6 @@ interface AlphaTexDefinition {
 	properties?: Map<string, AlphaTexDefinition>;
 }
 
-interface AlphaTexDocumentation {
-	structuralMetaData: Map<string, AlphaTexDefinition>;
-	scoreMetaData: Map<string, AlphaTexDefinition>;
-	staffMetaData: Map<string, AlphaTexDefinition>;
-	barMetaData: Map<string, AlphaTexDefinition>;
-	durationChangeProperties: Map<string, AlphaTexDefinition>;
-	beatProperties: Map<string, AlphaTexDefinition>;
-	noteProperties: Map<string, AlphaTexDefinition>;
-}
-
 type DefinitionKind = 'metadata' | 'property' | 'snippet';
 
 interface DefinitionEntry {
@@ -63,7 +53,7 @@ interface AlphaTexSnippet {
 	description: string;
 }
 
-const alphaTexDocumentation = documentation as AlphaTexDocumentation;
+const alphaTexDocumentation = documentation;
 
 const metadataSections: Array<[string, Map<string, AlphaTexDefinition>, number]> = [
 	['Structure', alphaTexDocumentation.structuralMetaData, 12],
