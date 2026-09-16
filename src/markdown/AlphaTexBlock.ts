@@ -258,15 +258,13 @@ export function mountAlphaTexBlock(
 	const heavyInit = () => {
 		if (destroyed) return;
 		// Initialize AlphaTab API with configuration
-		api = new alphaTab.AlphaTabApi(scoreEl, {
+		const settings = new alphaTab.Settings();
+		settings.fillFromJson({
 			core: {
 				scriptFile: resources.alphaTabWorkerUri || '',
-				smuflFontSources: resources.bravuraUri
-					? createSmuflFontSources(resources.bravuraUri)
-					: new Map<alphaTab.FontFileFormat, string>(),
 				fontDirectory: '',
 				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
-				enableLazyLoading: disableLazyLoading ? false : undefined,
+				...(disableLazyLoading ? { enableLazyLoading: false } : {}),
 			},
 			player: {
 				enablePlayer: playerEnabled,
@@ -294,6 +292,10 @@ export function mountAlphaTexBlock(
 				scale: merged.scale ?? 1.0,
 			},
 		});
+		if (resources.bravuraUri) {
+			settings.core.smuflFontSources = createSmuflFontSources(resources.bravuraUri);
+		}
+		api = new alphaTab.AlphaTabApi(scoreEl, settings);
 
 		// Update handle.api after creating the API
 		handle.api = api;

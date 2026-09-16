@@ -178,11 +178,10 @@ runtimeStyle.innerHTML = `
 ### AlphaTab API 初始化
 
 ```typescript
-api = new alphaTab.AlphaTabApi(scoreEl, {
+const settings = new alphaTab.Settings();
+settings.fillFromJson({
   core: {
     scriptFile: resources.alphaTabWorkerUri || "",
-    smuflFontSources: resources.bravuraUri ? 
-      new Map([[fontFormat, resources.bravuraUri]]) : new Map(),
     fontDirectory: "",
   },
   player: {
@@ -203,6 +202,14 @@ api = new alphaTab.AlphaTabApi(scoreEl, {
     scale: merged.scale ?? 1.0,
   },
 });
+
+if (resources.bravuraUri) {
+  settings.core.smuflFontSources = new Map([
+    [alphaTab.FontFileFormat.Woff2, resources.bravuraUri],
+  ]);
+}
+
+api = new alphaTab.AlphaTabApi(scoreEl, settings);
 ```
 
 ### 乐谱渲染逻辑

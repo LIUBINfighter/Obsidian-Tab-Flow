@@ -12,7 +12,6 @@
 	opacity: 0.08;
 	transition: opacity 0.1s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 深色模式下调整透明度 */
@@ -31,7 +30,6 @@
 	border-radius: 1px;
 	transition: opacity 0.1s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 深色模式下增强可见度 */
@@ -48,7 +46,6 @@
 	opacity: 0.1;
 	transition: opacity 0.15s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 悬停时增强反馈 */

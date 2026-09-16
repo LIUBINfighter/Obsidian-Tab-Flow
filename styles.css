@@ -2896,7 +2896,6 @@
 	opacity: 0.08;
 	transition: opacity 0.1s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 深色模式下调整透明度 */
@@ -2915,7 +2914,6 @@
 	border-radius: 1px;
 	transition: opacity 0.1s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 深色模式下增强可见度 */
@@ -2932,7 +2930,6 @@
 	opacity: 0.1;
 	transition: opacity 0.15s ease;
 	z-index: 900; /*  Panel (z-index: 1000) */
-	position: relative;
 }
 
 /* 悬停时增强反馈 */
@@ -3642,6 +3639,20 @@
 	width: 100%;
 	min-height: 100%; /* 确保至少占满视口 */
 	/* AlphaTab 会在这里添加渲染内容 */
+}
+
+/*
+ * Let alphaTab's own SVG geometry win.
+ * Obsidian themes and plugin styles often target generic svg elements for icons;
+ * those rules can resize score SVGs and make tablature lines/numbers drift apart.
+ */
+.tablature-view .alphatab-main svg {
+	display: block;
+	max-width: none;
+	max-height: none;
+	width: auto;
+	height: auto;
+	overflow: visible;
 }
 
 /* 滚动条样式 */

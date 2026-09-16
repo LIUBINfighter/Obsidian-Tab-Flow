@@ -73,6 +73,7 @@ export class TabView extends FileView {
 	private horizontalScrollCleanup?: () => void; // 用于清理横向滚动监听器
 	private settingsAction: HTMLElement | null = null;
 	private unsubscribeTrackStore?: () => void; // 解除 TrackStateStore 订阅
+	private playBarPositionChangedDisposer?: () => void;
 
 	/**
 	 * 将 TrackStateStore 中持久化的音轨状态应用到当前 API。
@@ -433,7 +434,11 @@ export class TabView extends FileView {
 		this.containerEl.appendChild(playBar);
 
 		if (this._api && this._api.playerPositionChanged) {
-			this._api.playerPositionChanged.on((args) => {
+			this.playBarPositionChangedDisposer?.();
+			this.playBarPositionChangedDisposer = this._api.playerPositionChanged.on((args) => {
+				if (!args) {
+					return;
+				}
 				window.requestAnimationFrame(() => {
 					const progressFill = playBar.querySelector('.progress-fill') as HTMLElement;
 					const progressHandle = playBar.querySelector('.progress-handle') as HTMLElement;
@@ -544,6 +549,9 @@ export class TabView extends FileView {
 		document.body.classList.remove('tabflow-hide-statusbar');
 
 		this.unregisterFileWatcher();
+		this.playBarPositionChangedDisposer?.();
+		this.playBarPositionChangedDisposer = undefined;
+		this.eventBus.unsubscribe('UI:showTracksModal', this.showTracksModal);
 
 		if (this._api) {
 			try {
