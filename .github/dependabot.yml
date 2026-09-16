@@ -8,7 +8,7 @@ updates:
     # npm dependencies (production + dev)
     - package-ecosystem: 'npm'
       directory: '/'
-      target-branch: 'dev'
+      target-branch: 'vibe'
       schedule:
           interval: 'weekly'
           day: 'monday'
@@ -57,7 +57,7 @@ updates:
     # GitHub Actions dependencies
     - package-ecosystem: 'github-actions'
       directory: '/'
-      target-branch: 'dev'
+      target-branch: 'vibe'
       schedule:
           interval: 'weekly'
           day: 'monday'
