@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { PlayerController } from '../PlayerController';
 import { PlayBar } from './PlayBar';
 import { DebugBar } from './DebugBar';
@@ -38,6 +39,20 @@ interface TablatureViewProps {
 	options?: TablatureViewOptions;
 }
 
+function getErrorTitle(type: string | null): string {
+	if (type === 'score-load') return 'AlphaTex 有错误，预览已暂停';
+	if (type === 'api-init') return '预览引擎出错';
+	if (type === 'soundfont-load') return '音色库加载失败';
+	if (type === 'media-load') return '媒体加载失败';
+	return '预览出错';
+}
+
+function getErrorHint(type: string | null): string {
+	if (type === 'score-load') return '先修复编辑器里的红色波浪线，预览会自动恢复。';
+	if (type === 'api-init') return '如果修正谱面后仍出现，请重载插件。';
+	return '查看下方详情。';
+}
+
 export const TablatureView: React.FC<TablatureViewProps> = ({ controller, options = {} }) => {
 	// 默认配置
 	const {
@@ -62,6 +77,16 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 	const mediaSyncOpen = uiStore((s) => s.panels.mediaSyncPanel);
 	const loading = uiStore((s) => s.loading);
 	const error = runtimeStore((s) => s.error);
+	const errorLines =
+		error.message
+			?.split('\n')
+			.map((line) => line.trim())
+			.filter(
+				(line) =>
+					line.length > 0 &&
+					line !== 'AlphaTex preview was not rendered because the source has errors.'
+			) ?? [];
+	const floatingPanelTarget = typeof document === 'undefined' ? null : document.body;
 
 	// 切换 Settings 面板
 	const handleToggleSettings = () => {
@@ -145,6 +170,30 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 		};
 	}, [controller]);
 
+	const floatingPanels = floatingPanelTarget
+		? createPortal(
+				<>
+					{/* Tracks Panel - 音轨管理侧边栏 */}
+					{showTracksPanel && (
+						<TracksPanel
+							controller={controller}
+							isOpen={tracksPanelOpen}
+							onClose={() => uiStore.getState().hidePanel('tracksPanel')}
+						/>
+					)}
+					{/* Settings Panel - 设置侧边栏 */}
+					{showSettingsPanel && (
+						<SettingsPanel
+							controller={controller}
+							isOpen={settingsPanelOpen}
+							onClose={() => uiStore.getState().hidePanel('settingsPanel')}
+						/>
+					)}
+				</>,
+				floatingPanelTarget
+			)
+		: null;
+
 	return (
 		<div
 			className="tablature-view"
@@ -169,22 +218,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 					onMediaSyncClick={handleToggleMediaSync}
 				/>
 			) : null}
-			{/* Tracks Panel - 音轨管理侧边栏 */}
-			{showTracksPanel && (
-				<TracksPanel
-					controller={controller}
-					isOpen={tracksPanelOpen}
-					onClose={() => uiStore.getState().hidePanel('tracksPanel')}
-				/>
-			)}
-			{/* Settings Panel - 设置侧边栏 */}
-			{showSettingsPanel && (
-				<SettingsPanel
-					controller={controller}
-					isOpen={settingsPanelOpen}
-					onClose={() => uiStore.getState().hidePanel('settingsPanel')}
-				/>
-			)}
+			{floatingPanels}
 			{/* 自定义侧边栏组件 */}
 			{customComponents?.sidebars?.map((Sidebar, index) => (
 				<Sidebar key={index} controller={controller} />
@@ -236,23 +270,34 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 			)}
 			{/* Error Display */}
 			{error.type && error.message && (
-				<div
-					className="error-overlay"
-					style={{
-						position: 'absolute',
-						top: '20px',
-						left: '50%',
-						transform: 'translateX(-50%)',
-						maxWidth: '80%',
-						padding: '10px 20px',
-						backgroundColor: 'var(--background-modifier-error)',
-						border: '1px solid var(--background-modifier-error-border)',
-						borderRadius: '4px',
-						zIndex: 999,
-					}}
-				>
+				<div className="error-overlay" role="alert">
+					<div className="error-card-header">
+						<div>
+							<div className="error-title">
+								<span className="error-dot" aria-hidden="true" />
+								{getErrorTitle(error.type)}
+							</div>
+							<div className="error-hint">{getErrorHint(error.type)}</div>
+						</div>
+						<button
+							type="button"
+							className="error-dismiss"
+							aria-label="Dismiss preview error"
+							onClick={() => runtimeStore.getState().clearError()}
+						>
+							隐藏
+						</button>
+					</div>
 					<div className="error-message">
-						<strong>Error ({error.type}):</strong> {error.message}
+						{errorLines.length > 0 ? (
+							errorLines.map((line, index) => (
+								<div className="error-detail" key={`${index}-${line}`}>
+									{line}
+								</div>
+							))
+						) : (
+							<div className="error-detail">{error.message}</div>
+						)}
 					</div>
 				</div>
 			)}
