@@ -20,7 +20,7 @@ export interface ScrollEventHandlers {
 export class ScrollEventManager {
 	private _api: alphaTab.AlphaTabApi;
 	private _handlers: ScrollEventHandlers = {};
-	private _scrollTimeout: NodeJS.Timeout | null = null;
+	private _scrollTimeout: number | null = null;
 
 	constructor(api: alphaTab.AlphaTabApi) {
 		this._api = api;
@@ -131,7 +131,7 @@ export class ScrollEventManager {
 	 */
 	destroy(): void {
 		if (this._scrollTimeout) {
-			clearTimeout(this._scrollTimeout);
+			window.clearTimeout(this._scrollTimeout);
 			this._scrollTimeout = null;
 		}
 		this._handlers = {};
@@ -182,9 +182,9 @@ export class ScrollEventManager {
 
 				// 检测滚动结束（简单的延时检测）
 				if (this._scrollTimeout) {
-					clearTimeout(this._scrollTimeout);
+					window.clearTimeout(this._scrollTimeout);
 				}
-				this._scrollTimeout = setTimeout(() => {
+				this._scrollTimeout = window.setTimeout(() => {
 					if (this._handlers.onScrollEnd) {
 						this._handlers.onScrollEnd();
 					}

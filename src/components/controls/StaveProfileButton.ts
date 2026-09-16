@@ -71,12 +71,12 @@ export class StaveProfileButton {
 		this.element.empty();
 
 		// 添加图标
-		this.element.createEl('span', {
+		this.element.createSpan({
 			cls: `lucide lucide-${this.getCurrentProfileIcon()}`,
 		});
 
 		// 添加文本标签
-		this.element.createEl('span', {
+		this.element.createSpan({
 			text: this.getCurrentProfileLabel(),
 			cls: 'button-text',
 		});

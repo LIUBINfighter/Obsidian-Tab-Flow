@@ -137,7 +137,7 @@ export class AlphaTexCodeMirrorEditor {
 					// Force line numbers to sync with content on viewport changes
 					if (update.viewportChanged || update.docChanged) {
 						// Trigger a re-measurement of line number gutter
-						requestAnimationFrame(() => {
+						window.requestAnimationFrame(() => {
 							if (this.view) {
 								// Force CodeMirror to recalculate gutter heights
 								this.view.requestMeasure();
@@ -166,7 +166,7 @@ export class AlphaTexCodeMirrorEditor {
 		});
 
 		// Force initial measurement and sync line numbers
-		requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
 			if (this.view) {
 				this.view.requestMeasure();
 				// Also trigger a scroll event to force line number sync

@@ -10,36 +10,36 @@ const SimpleTabifyPanel: DocPanel = {
 		}
 
 		// 创建标题
-		const h2 = document.createElement('h2');
+		const h2 = createEl('h2');
 		h2.textContent = 'Simpletabify 服务';
 		container.appendChild(h2);
 
 		// 创建描述段落
-		const p1 = document.createElement('p');
+		const p1 = createEl('p');
 		p1.textContent =
 			'Simpletabify 是一个用于将乐谱转换为标准格式的服务，支持多种输入和输出格式，方便音乐创作者和爱好者使用。';
 		container.appendChild(p1);
 
 		// 创建列表
-		const ul = document.createElement('ul');
-		const li1 = document.createElement('li');
+		const ul = createEl('ul');
+		const li1 = createEl('li');
 		li1.textContent = '支持多种乐谱格式转换';
 		ul.appendChild(li1);
 
-		const li2 = document.createElement('li');
+		const li2 = createEl('li');
 		li2.textContent = '易于集成和使用';
 		ul.appendChild(li2);
 
-		const li3 = document.createElement('li');
+		const li3 = createEl('li');
 		li3.textContent = '高效、准确';
 		ul.appendChild(li3);
 
 		container.appendChild(ul);
 
 		// 创建链接段落
-		const p2 = document.createElement('p');
+		const p2 = createEl('p');
 		p2.textContent = '更多信息请访问 ';
-		const link = document.createElement('a');
+		const link = createEl('a');
 		link.href = 'https://github.com/your-repo/SimpleTabify';
 		link.target = '_blank';
 		link.textContent = 'Simpletabify 项目主页';

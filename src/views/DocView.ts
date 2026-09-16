@@ -81,7 +81,7 @@ export class DocView extends ItemView {
 		if (!layout.classList.contains('is-narrow')) return;
 
 		// 简单的延迟滚动，立即执行
-		setTimeout(() => {
+		window.setTimeout(() => {
 			if (!layout) return;
 			const contentElement = layout.querySelector('.tabflow-doc-markdown');
 			if (contentElement) {
@@ -161,14 +161,14 @@ export class DocView extends ItemView {
 			cls: 'mod-cta',
 		});
 
-		const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+		const svg = createSvg('svg');
 		svg.setAttribute('width', '22');
 		svg.setAttribute('height', '22');
 		svg.setAttribute('viewBox', '0 0 16 16');
 		svg.setAttribute('fill', 'currentColor');
 		svg.classList.add('tabflow-doc-header__icon');
 
-		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+		const path = createSvg('path');
 		path.setAttribute(
 			'd',
 			'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.6-.18-3.29-.8-3.29-3.56 0-.79.28-1.43.74-1.93-.07-.18-.32-.91.07-1.89 0 0 .6-.19 1.97.73.57-.16 1.18-.24 1.79-.24.61 0 1.22.08 1.79.24 1.37-.92 1.97-.73 1.97-.73.39.98.14 1.71.07 1.89.46.5.74 1.14.74 1.93 0 2.77-1.69 3.38-3.3 3.56.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z'
@@ -210,7 +210,7 @@ export class DocView extends ItemView {
 					try {
 						// 退化处理
 						this.openSettingsCommand();
-						setTimeout(() => {
+						window.setTimeout(() => {
 							try {
 								const search = document.querySelector<HTMLInputElement>(
 									'input.setting-search-input'

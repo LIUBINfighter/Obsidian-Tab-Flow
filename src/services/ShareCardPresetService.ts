@@ -45,7 +45,7 @@ export class ShareCardPresetService {
 			}
 		}
 		try {
-			const el = document.createElement('div');
+			const el = createDiv();
 			setCssProps(el, { color: s });
 			document.body.appendChild(el);
 			const cs = getComputedStyle(el).color;

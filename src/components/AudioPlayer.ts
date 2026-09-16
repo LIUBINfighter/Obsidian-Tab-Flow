@@ -19,11 +19,11 @@ export function createAudioPlayer(options: AudioPlayerOptions): HTMLDivElement {
 	const { onAudioCreated, onTimeUpdate, onPlay, onPause, onSeek } = options;
 
 	// 创建主容器
-	const container = document.createElement('div');
+	const container = createDiv();
 	container.className = 'audio-player-container';
 
 	// 创建audio元素
-	const audio = document.createElement('audio');
+	const audio = createEl('audio');
 	audio.id = `alphatab-audio-player-${Date.now()}`;
 	audio.controls = true;
 
@@ -50,7 +50,7 @@ export function createAudioPlayer(options: AudioPlayerOptions): HTMLDivElement {
 	container.appendChild(audio);
 
 	// 通知父组件audio元素已创建
-	setTimeout(() => {
+	window.setTimeout(() => {
 		onAudioCreated(audio);
 	}, 0);
 

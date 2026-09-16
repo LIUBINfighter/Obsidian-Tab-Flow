@@ -633,10 +633,10 @@ export class TabView extends FileView {
 		const leafRoot = this.containerEl.closest(
 			'.workspace-leaf-content, .mod-root, .view-content'
 		);
-		if (leafRoot && leafRoot instanceof HTMLElement) {
-			// 在当前 leaf/view 内优先寻找 view-content
+		if (leafRoot && leafRoot.instanceOf(HTMLElement)) {
+			// 在当 leaf/view 内优先寻找 view-content
 			const viewContent = leafRoot.querySelector('.view-content');
-			scrollElement = (viewContent instanceof HTMLElement ? viewContent : null) ?? leafRoot;
+			scrollElement = (viewContent?.instanceOf(HTMLElement) ? viewContent : null) ?? leafRoot;
 		}
 
 		if (!scrollElement) {
@@ -648,7 +648,7 @@ export class TabView extends FileView {
 			];
 			for (const selector of selectors) {
 				const found = document.querySelector(selector);
-				if (found && found instanceof HTMLElement) {
+				if (found && found.instanceOf(HTMLElement)) {
 					scrollElement = found;
 					break;
 				}
@@ -666,7 +666,7 @@ export class TabView extends FileView {
 		this._api.updateSettings();
 
 		// 延迟应用滚动模式及智能阈值设置
-		setTimeout(() => {
+		window.setTimeout(() => {
 			if (this._api.settings.player) {
 				// 强制使用连续滚动模式进行调试（排除设置问题）
 				this._api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
@@ -753,7 +753,7 @@ export class TabView extends FileView {
 
 			this._api.tickPosition = endTick;
 
-			setTimeout(() => {
+			window.setTimeout(() => {
 				if (this._api) {
 					this._api.scrollToCursor();
 				}

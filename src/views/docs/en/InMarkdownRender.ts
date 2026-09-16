@@ -19,7 +19,7 @@ export default {
 		if (plugin) {
 			createAlphaTexPlayground(plugin, container, SAMPLE, {});
 		} else {
-			container.createEl('div', { text: 'Plugin context missing, cannot render.' });
+			container.createDiv({ text: 'Plugin context missing, cannot render.' });
 		}
 	},
 };

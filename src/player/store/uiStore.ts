@@ -138,7 +138,7 @@ export function createUIStore(): UseBoundStore<StoreApi<UIStore>> {
 
 			// 自动移除
 			if (duration > 0) {
-				setTimeout(() => {
+				window.setTimeout(() => {
 					get().removeToast(id);
 				}, duration);
 			}

@@ -71,7 +71,7 @@ export default {
 		}
 
 		if (!plugin) {
-			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
+			container.createDiv({ text: '缺少 plugin 上下文，无法渲染示例。' });
 		}
 	},
 };

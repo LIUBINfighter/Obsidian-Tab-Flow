@@ -207,7 +207,7 @@ function buildLookupEntries(): Map<string, DefinitionEntry> {
 }
 
 function completionInfo(entry: DefinitionEntry, hover = false): HTMLElement {
-	const container = document.createElement('div');
+	const container = createDiv();
 	container.className = hover
 		? 'alphatex-intelligence-info alphatex-intelligence-hover'
 		: 'alphatex-intelligence-info';
@@ -239,14 +239,14 @@ function completionInfo(entry: DefinitionEntry, hover = false): HTMLElement {
 }
 
 function appendDiv(parent: HTMLElement, className: string): HTMLDivElement {
-	const child = document.createElement('div');
+	const child = createDiv();
 	child.className = className;
 	parent.appendChild(child);
 	return child;
 }
 
 function appendPre(parent: HTMLElement, className: string): HTMLPreElement {
-	const child = document.createElement('pre');
+	const child = createEl('pre');
 	child.className = className;
 	parent.appendChild(child);
 	return child;

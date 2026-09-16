@@ -93,7 +93,7 @@ export default {
 		}
 
 		if (!plugin) {
-			container.createEl('div', {
+			container.createDiv({
 				text: '缺少 plugin 上下文，无法渲染示例。',
 			});
 		}

@@ -72,7 +72,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			const extendedApi = api as ExtendedAlphaTabApi;
 			if (api && typeof extendedApi.exportMidi === 'function') {
 				const midiData = extendedApi.exportMidi();
-				const a = document.createElement('a');
+				const a = createEl('a');
 				a.download = fileName;
 				a.href = URL.createObjectURL(
 					new Blob([midiData.buffer as ArrayBuffer], { type: 'audio/midi' })
@@ -108,7 +108,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			}
 			const exporter = new exporterModule.Gp7Exporter();
 			const data = exporter.export(api.score, api.settings);
-			const a = document.createElement('a');
+			const a = createEl('a');
 			a.download = (getFileName?.() || api.score.title || 'Untitled') + '.gp';
 			a.href = URL.createObjectURL(new Blob([data.buffer as ArrayBuffer]));
 			document.body.appendChild(a);
@@ -134,11 +134,9 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			const win = window.open('', '_blank');
 			if (!win) throw new Error('无法打开打印窗口');
 
-			const htmlEl = win.document.createElement('html');
-			const headEl = win.document.createElement('head');
-			const titleEl = win.document.createElement('title');
-			titleEl.textContent = '乐谱打印';
-			headEl.appendChild(titleEl);
+			const htmlEl = win.document.createEl('html');
+			const headEl = htmlEl.createEl('head');
+			headEl.createEl('title', { text: '乐谱打印' });
 
 			// 复制样式
 			document.querySelectorAll('style,link[rel="stylesheet"]').forEach((style) => {
@@ -146,14 +144,11 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 				headEl.appendChild(clonedStyle);
 			});
 
-			const bodyEl = win.document.createElement('body');
+			const bodyEl = htmlEl.createEl('body');
 			// 复制乐谱元素
 			const clonedEl = (el as HTMLElement).cloneNode(true) as HTMLElement;
 			bodyEl.appendChild(clonedEl);
 
-			htmlEl.appendChild(headEl);
-			htmlEl.appendChild(bodyEl);
-			win.document.appendChild(htmlEl);
 			win.document.close();
 			win.focus();
 			win.print();

@@ -27,13 +27,13 @@ export function createBasicControls(
 ) {
 	const basicCard = parent.createDiv({ cls: 'share-card-basic-grid' });
 	// 宽度
-	basicCard.createEl('div', { text: initial.t('shareCard.cardWidth'), cls: 'sc-label' });
+	basicCard.createDiv({ text: initial.t('shareCard.cardWidth'), cls: 'sc-label' });
 	const widthInput = basicCard.createEl('input');
 	widthInput.type = 'number';
 	widthInput.value = String(initial.cardWidth || 800);
 
 	// 分辨率
-	basicCard.createEl('div', { text: initial.t('shareCard.resolution'), cls: 'sc-label' });
+	basicCard.createDiv({ text: initial.t('shareCard.resolution'), cls: 'sc-label' });
 	const resSelect = basicCard.createEl('select');
 	['1x', '2x', '3x'].forEach((r) => {
 		const opt = resSelect.createEl('option', { text: r });
@@ -42,7 +42,7 @@ export function createBasicControls(
 	resSelect.value = initial.resolution || '2x';
 
 	// 格式
-	basicCard.createEl('div', { text: initial.t('shareCard.format'), cls: 'sc-label' });
+	basicCard.createDiv({ text: initial.t('shareCard.format'), cls: 'sc-label' });
 	const formatSelect = basicCard.createEl('select');
 	[
 		['png', 'png'],
@@ -55,7 +55,7 @@ export function createBasicControls(
 	formatSelect.value = initial.format || 'png';
 
 	// 导出背景模式
-	basicCard.createEl('div', { text: initial.t('shareCard.exportBg.label'), cls: 'sc-label' });
+	basicCard.createDiv({ text: initial.t('shareCard.exportBg.label'), cls: 'sc-label' });
 	const bgModeSelect = basicCard.createEl('select');
 	[
 		[initial.t('shareCard.exportBg.options.default'), 'default'],
@@ -67,7 +67,7 @@ export function createBasicControls(
 	});
 	bgModeSelect.value = initial.exportBgMode || 'default';
 
-	const customColorLabel = basicCard.createEl('div', {
+	const customColorLabel = basicCard.createDiv({
 		text: initial.t('shareCard.customColor'),
 		cls: 'sc-label',
 	});
@@ -78,7 +78,7 @@ export function createBasicControls(
 	toggleHidden(customColorInput, initial.exportBgMode !== 'custom');
 
 	// 禁用懒加载
-	basicCard.createEl('div', { text: initial.t('shareCard.disableLazyLabel'), cls: 'sc-label' });
+	basicCard.createDiv({ text: initial.t('shareCard.disableLazyLabel'), cls: 'sc-label' });
 	const lazyWrapInner = basicCard.createDiv({ cls: 'share-card-field-checkbox' });
 	const lazyCb = lazyWrapInner.createEl('input', {
 		attr: { type: 'checkbox' },

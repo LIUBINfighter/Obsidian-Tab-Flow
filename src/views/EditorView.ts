@@ -511,7 +511,7 @@ export class EditorView extends FileView {
 		const resources = this.getPlayerResources();
 		if (!resources) {
 			const holder = previewContainer.createDiv({ cls: 'alphatex-block' });
-			holder.createEl('div', { text: t('playground.resourcesMissing') });
+			holder.createDiv({ text: t('playground.resourcesMissing') });
 			const btn = holder.createEl('button', { text: t('playground.downloadResources') });
 			btn.addEventListener(
 				'click',
@@ -630,7 +630,7 @@ export class EditorView extends FileView {
 	private setCurrentBarInfo(info: string): void {
 		if (!this.currentBarInfoEl) return;
 		this.currentBarInfoEl.empty();
-		this.currentBarInfoEl.createEl('span', { text: info });
+		this.currentBarInfoEl.createSpan({ text: info });
 	}
 
 	private updatePlayerWithEditorValue(cursorPos?: number): void {

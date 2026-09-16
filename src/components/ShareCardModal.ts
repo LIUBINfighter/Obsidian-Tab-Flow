@@ -153,7 +153,7 @@ export class ShareCardModal extends Modal {
 			return;
 		}
 		// create container
-		this.authorContainer = document.createElement('div');
+		this.authorContainer = createDiv();
 		this.authorContainer.className = 'share-card-author-container';
 		const justifyValue =
 			this.authorAlign === 'center'
@@ -171,7 +171,7 @@ export class ShareCardModal extends Modal {
 		});
 
 		if (this.showAvatar && this.avatarDataUrl) {
-			const avatarEl = document.createElement('div');
+			const avatarEl = createDiv();
 			avatarEl.className = 'share-card-author-avatar';
 			setCssProps(avatarEl, {
 				'--share-card-author-avatar-image': `url(${this.avatarDataUrl})`,
@@ -179,17 +179,17 @@ export class ShareCardModal extends Modal {
 			this.authorContainer.appendChild(avatarEl);
 		}
 
-		const textWrap = document.createElement('div');
+		const textWrap = createDiv();
 		textWrap.className = 'share-card-author-text';
 
 		if (this.authorName) {
-			const nameEl = document.createElement('div');
+			const nameEl = createDiv();
 			nameEl.className = 'share-card-author-name';
 			nameEl.textContent = this.authorName;
 			textWrap.appendChild(nameEl);
 		}
 		if (this.authorRemark) {
-			const remarkEl = document.createElement('div');
+			const remarkEl = createDiv();
 			remarkEl.className = 'share-card-author-remark';
 			remarkEl.textContent = this.authorRemark;
 			textWrap.appendChild(remarkEl);
@@ -850,7 +850,7 @@ export class ShareCardModal extends Modal {
 				);
 			} catch (e) {
 				console.error('[ShareCardModal] 创建 playground 失败', e);
-				this.cardRoot!.createEl('div', { text: t('shareCard.previewCreateFailed') });
+				this.cardRoot!.createDiv({ text: t('shareCard.previewCreateFailed') });
 			}
 			// ensure author block is rendered after playground rebuild
 			this.renderAuthorBlock();
@@ -860,7 +860,7 @@ export class ShareCardModal extends Modal {
 			buildPlayground();
 		} catch (e) {
 			console.error('[ShareCardModal] 创建 playground 失败', e);
-			this.cardRoot.createEl('div', { text: t('shareCard.previewCreateFailed') });
+			this.cardRoot.createDiv({ text: t('shareCard.previewCreateFailed') });
 		}
 
 		// 切换懒加载选项 -> 重新构建 playground
@@ -927,7 +927,7 @@ export class ShareCardModal extends Modal {
 								new Notice(t('shareCard.notice.savedTo', { path: filePath }));
 							} else {
 								const url = URL.createObjectURL(blob);
-								const a = document.createElement('a');
+								const a = createEl('a');
 								a.href = url;
 								a.download = `${title.replace(/\s+/g, '_')}.${fmt}`;
 								document.body.appendChild(a);

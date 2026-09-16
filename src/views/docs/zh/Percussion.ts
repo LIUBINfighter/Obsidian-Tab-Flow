@@ -158,8 +158,8 @@ export default {
 		}
 
 		// Since badge
-		const sinceBadge = container.createEl('div', { cls: 'since-badge' });
-		sinceBadge.createEl('span', { text: '自 1.4.0 版本起' });
+		const sinceBadge = container.createDiv({ cls: 'since-badge' });
+		sinceBadge.createSpan({ text: '自 1.4.0 版本起' });
 
 		// 介绍
 		container.createEl('p', {
@@ -224,7 +224,7 @@ export default {
 			nameLongBtn.addEventListener('click', () => {
 				void navigator.clipboard.writeText(item[0] as string);
 				nameLongBtn.textContent = '已复制!';
-				setTimeout(() => {
+				window.setTimeout(() => {
 					nameLongBtn.textContent = item[0] as string;
 				}, 1000);
 			});
@@ -240,7 +240,7 @@ export default {
 			nameShortBtn.addEventListener('click', () => {
 				void navigator.clipboard.writeText(shortName);
 				nameShortBtn.textContent = '已复制!';
-				setTimeout(() => {
+				window.setTimeout(() => {
 					nameShortBtn.textContent = shortName;
 				}, 1000);
 			});
@@ -250,7 +250,7 @@ export default {
 		});
 
 		if (!plugin) {
-			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染示例。' });
+			container.createDiv({ text: '缺少 plugin 上下文，无法渲染示例。' });
 		}
 	},
 };

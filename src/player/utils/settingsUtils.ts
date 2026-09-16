@@ -15,7 +15,7 @@ export function exportConfigToJSON(
 	const blob = new Blob([json], { type: 'application/json' });
 	const url = URL.createObjectURL(blob);
 
-	const a = document.createElement('a');
+	const a = createEl('a');
 	a.href = url;
 	a.download = filename;
 	a.click();
@@ -28,7 +28,7 @@ export function exportConfigToJSON(
  */
 export function importConfigFromJSON(): Promise<SerializableConfig | null> {
 	return new Promise((resolve) => {
-		const input = document.createElement('input');
+		const input = createEl('input');
 		input.type = 'file';
 		input.accept = '.json';
 

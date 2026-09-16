@@ -38,7 +38,7 @@ export default {
 			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, playgroundHost, SAMPLE, {});
 		} else {
-			container.createEl('div', { text: '缺少 plugin 上下文，无法渲染。' });
+			container.createDiv({ text: '缺少 plugin 上下文，无法渲染。' });
 		}
 	},
 };

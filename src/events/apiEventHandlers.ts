@@ -64,5 +64,5 @@ export function registerApiEventHandlers(
 	});
 
 	// 初始检查
-	setTimeout(updateAudioStatus, 500);
+	window.setTimeout(updateAudioStatus, 500);
 }

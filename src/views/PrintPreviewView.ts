@@ -67,7 +67,7 @@ export class PrintPreviewView extends FileView {
 		if (!this.previewContainer) {
 			console.warn('[PrintPreview] Preview container not ready, waiting...');
 			// 等待视图打开
-			await new Promise((resolve) => setTimeout(resolve, 100));
+			await new Promise((resolve) => window.setTimeout(resolve, 100));
 		}
 
 		try {
@@ -238,7 +238,7 @@ export class PrintPreviewView extends FileView {
 	 */
 	private setupAutoResize(iframe: HTMLIFrameElement) {
 		// 初始调整
-		setTimeout(() => this.adjustIframeHeight(), 100);
+		window.setTimeout(() => this.adjustIframeHeight(), 100);
 
 		// 监听内容变化（使用 MutationObserver）
 		const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
@@ -290,7 +290,7 @@ export class PrintPreviewView extends FileView {
 		try {
 			console.debug('[PrintPreview] ensureFontsReady: start');
 			// 基础等待：给 AlphaTab 和布局引擎一点时间
-			await new Promise((resolve) => setTimeout(resolve, 150));
+			await new Promise((resolve) => window.setTimeout(resolve, 150));
 			console.debug('[PrintPreview] ensureFontsReady: done');
 		} catch (e) {
 			console.warn('[PrintPreview] ensureFontsReady error:', e);
@@ -474,7 +474,7 @@ export class PrintPreviewView extends FileView {
 			this.iframe.contentWindow.focus();
 
 			// 使用 setTimeout 确保 focus 生效
-			setTimeout(() => {
+			window.setTimeout(() => {
 				if (this.iframe?.contentWindow) {
 					this.iframe.contentWindow.print();
 				}

@@ -91,7 +91,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	let countInOn = false;
 	let layoutMode: alphaTab.LayoutMode = alphaTab.LayoutMode.Page;
 
-	const bar = document.createElement('div');
+	const bar = createDiv();
 	bar.className = 'play-bar nav-buttons-container';
 
 	// 控件引用
@@ -113,7 +113,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		while (playPauseBtn.firstChild) {
 			playPauseBtn.removeChild(playPauseBtn.firstChild);
 		}
-		const iconSpan = document.createElement('span');
+		const iconSpan = createSpan();
 		setIcon(iconSpan, playing ? 'pause' : 'play');
 		playPauseBtn.appendChild(iconSpan);
 		playPauseBtn.setAttribute('aria-label', playing ? t('playback.pause') : t('playback.play'));
@@ -125,7 +125,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		while (metronomeBtn.firstChild) {
 			metronomeBtn.removeChild(metronomeBtn.firstChild);
 		}
-		const iconSpan = document.createElement('span');
+		const iconSpan = createSpan();
 		setIcon(iconSpan, 'lucide-music-2');
 		metronomeBtn.appendChild(iconSpan);
 		metronomeBtn.setAttribute(
@@ -141,7 +141,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		while (countInBtn.firstChild) {
 			countInBtn.removeChild(countInBtn.firstChild);
 		}
-		const iconSpan = document.createElement('span');
+		const iconSpan = createSpan();
 		setIcon(iconSpan, countInOn ? 'lucide-timer' : 'lucide-timer-off');
 		countInBtn.appendChild(iconSpan);
 		countInBtn.setAttribute(
@@ -157,7 +157,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		while (layoutToggleBtn.firstChild) {
 			layoutToggleBtn.removeChild(layoutToggleBtn.firstChild);
 		}
-		const iconSpan = document.createElement('span');
+		const iconSpan = createSpan();
 		const isHorizontal = layoutMode === alphaTab.LayoutMode.Horizontal;
 		setIcon(iconSpan, isHorizontal ? 'lucide-panels-top-left' : 'lucide-layout');
 		layoutToggleBtn.appendChild(iconSpan);
@@ -262,7 +262,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 	const renderers: Record<string, () => void> = {
 		playPause: () => {
 			if (!show('playPause')) return;
-			playPauseBtn = document.createElement('button');
+			playPauseBtn = createEl('button');
 			playPauseBtn.className = 'clickable-icon';
 			playPauseBtn.setAttribute('type', 'button');
 			updatePlayPauseButton();
@@ -283,10 +283,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		stop: () => {
 			if (!show('stop')) return;
-			stopBtn = document.createElement('button');
+			stopBtn = createEl('button');
 			stopBtn.className = 'clickable-icon';
 			stopBtn.setAttribute('type', 'button');
-			const stopIcon = document.createElement('span');
+			const stopIcon = createSpan();
 			setIcon(stopIcon, 'square');
 			stopBtn.appendChild(stopIcon);
 			stopBtn.setAttribute('aria-label', t('playback.stop'));
@@ -306,7 +306,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		metronome: () => {
 			if (!show('metronome')) return;
-			metronomeBtn = document.createElement('button');
+			metronomeBtn = createEl('button');
 			metronomeBtn.className = 'clickable-icon';
 			metronomeBtn.setAttribute('type', 'button');
 			updateMetronomeBtn();
@@ -326,7 +326,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		countIn: () => {
 			if (!show('countIn')) return;
-			countInBtn = document.createElement('button');
+			countInBtn = createEl('button');
 			countInBtn.className = 'clickable-icon';
 			countInBtn.setAttribute('type', 'button');
 			updateCountInBtn();
@@ -347,10 +347,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		tracks: () => {
 			if (!show('tracks')) return;
-			const btn = document.createElement('button');
+			const btn = createEl('button');
 			btn.className = 'clickable-icon';
 			btn.setAttribute('type', 'button');
-			const icon = document.createElement('span');
+			const icon = createSpan();
 			setIcon(icon, 'lucide-layers');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('tracks.selectTracks'));
@@ -359,10 +359,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		refresh: () => {
 			if (!show('refresh')) return;
-			const btn = document.createElement('button');
+			const btn = createEl('button');
 			btn.className = 'clickable-icon';
 			btn.setAttribute('type', 'button');
-			const icon = document.createElement('span');
+			const icon = createSpan();
 			setIcon(icon, 'lucide-refresh-ccw');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.refreshPlayer'));
@@ -380,10 +380,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		locateCursor: () => {
 			if (!show('locateCursor')) return;
-			const btn = document.createElement('button');
+			const btn = createEl('button');
 			btn.className = 'clickable-icon';
 			btn.setAttribute('type', 'button');
-			const icon = document.createElement('span');
+			const icon = createSpan();
 			setIcon(icon, 'lucide-crosshair');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.scrollToCursor'));
@@ -399,7 +399,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		layoutToggle: () => {
 			if (!show('layoutToggle')) return;
-			layoutToggleBtn = document.createElement('button');
+			layoutToggleBtn = createEl('button');
 			layoutToggleBtn.className = 'clickable-icon';
 			layoutToggleBtn.setAttribute('type', 'button');
 			updateLayoutToggleBtn();
@@ -427,10 +427,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		exportMenu: () => {
 			if (!show('exportMenu')) return;
-			exportChooserBtn = document.createElement('button');
+			exportChooserBtn = createEl('button');
 			exportChooserBtn.className = 'clickable-icon';
 			exportChooserBtn.setAttribute('type', 'button');
-			const icon = document.createElement('span');
+			const icon = createSpan();
 			setIcon(icon, 'lucide-download');
 			exportChooserBtn.appendChild(icon);
 			exportChooserBtn.setAttribute('aria-label', t('export.export'));
@@ -468,10 +468,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		toTop: () => {
 			if (!show('toTop')) return;
-			const btn = document.createElement('button');
+			const btn = createEl('button');
 			btn.className = 'clickable-icon';
 			btn.setAttribute('type', 'button');
-			const icon = document.createElement('span');
+			const icon = createSpan();
 			setIcon(icon, 'lucide-chevrons-up');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.toTop'));
@@ -488,10 +488,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		toBottom: () => {
 			if (!show('toBottom')) return;
-			const btn = document.createElement('button');
+			const btn = createEl('button');
 			btn.className = 'clickable-icon';
 			btn.setAttribute('type', 'button');
-			const icon = document.createElement('span');
+			const icon = createSpan();
 			setIcon(icon, 'lucide-chevrons-down');
 			btn.appendChild(icon);
 			btn.setAttribute('aria-label', t('navigation.toBottom'));
@@ -513,10 +513,10 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		openSettings: () => {
 			if (!show('openSettings')) return;
-			openSettingsBtn = document.createElement('button');
+			openSettingsBtn = createEl('button');
 			openSettingsBtn.className = 'clickable-icon';
 			openSettingsBtn.setAttribute('type', 'button');
-			const icon = document.createElement('span');
+			const icon = createSpan();
 			setIcon(icon, 'settings');
 			openSettingsBtn.appendChild(icon);
 			openSettingsBtn.setAttribute('aria-label', t('settings.openSettings'));
@@ -528,7 +528,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 					try {
 						// 退化处理
 						openSettingsCommand(app);
-						setTimeout(() => {
+						window.setTimeout(() => {
 							try {
 								const search: HTMLInputElement | null = document.querySelector(
 									'input.setting-search-input'
@@ -551,7 +551,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		progressBar: () => {
 			if (!show('progressBar', false)) return;
-			currentTimeDisplay = document.createElement('span');
+			currentTimeDisplay = createSpan();
 			currentTimeDisplay.className = 'play-time current-time';
 			currentTimeDisplay.textContent = '0:00';
 			bar.appendChild(currentTimeDisplay);
@@ -563,20 +563,20 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			bar.appendChild(progressBar);
 			// 通知外部进度条已创建
 			options.onProgressBarCreated?.(progressBar);
-			totalTimeDisplay = document.createElement('span');
+			totalTimeDisplay = createSpan();
 			totalTimeDisplay.className = 'play-time total-time';
 			totalTimeDisplay.textContent = '0:00';
 			bar.appendChild(totalTimeDisplay);
 		},
 		speed: () => {
 			if (!show('speed')) return;
-			const speedIcon = document.createElement('span');
+			const speedIcon = createSpan();
 			speedIcon.className = 'speed-icon';
 			setIcon(speedIcon, 'lucide-gauge');
 			bar.appendChild(speedIcon);
-			const select = document.createElement('select');
+			const select = createEl('select');
 			['0.5', '0.75', '1.0', '1.25', '1.5', '2.0'].forEach((val) => {
-				const opt = document.createElement('option');
+				const opt = createEl('option');
 				opt.value = val;
 				opt.innerText = val + 'x';
 				if (val === '1.0') opt.selected = true;
@@ -595,18 +595,18 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		staveProfile: () => {
 			if (!show('staveProfile')) return;
-			const staveIcon = document.createElement('span');
+			const staveIcon = createSpan();
 			staveIcon.className = 'stave-icon';
 			setIcon(staveIcon, 'lucide-list-music');
 			bar.appendChild(staveIcon);
-			const select = document.createElement('select');
+			const select = createEl('select');
 			[
 				{ name: t('settings.scoreTab'), value: alphaTab.StaveProfile.ScoreTab },
 				{ name: t('settings.scoreOnly'), value: alphaTab.StaveProfile.Score },
 				{ name: t('settings.tabOnly'), value: alphaTab.StaveProfile.Tab },
 				{ name: t('settings.tabMixed'), value: alphaTab.StaveProfile.TabMixed },
 			].forEach((item) => {
-				const opt = document.createElement('option');
+				const opt = createEl('option');
 				opt.value = String(item.value);
 				opt.innerText = item.name;
 				select.appendChild(opt);
@@ -627,11 +627,11 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		zoom: () => {
 			if (!show('zoom')) return;
-			const zoomIcon = document.createElement('span');
+			const zoomIcon = createSpan();
 			zoomIcon.className = 'zoom-icon';
 			setIcon(zoomIcon, 'lucide-zoom-in');
 			bar.appendChild(zoomIcon);
-			const select = document.createElement('select');
+			const select = createEl('select');
 			[
 				{ label: '50%', value: 0.5 },
 				{ label: '75%', value: 0.75 },
@@ -640,7 +640,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 				{ label: '150%', value: 1.5 },
 				{ label: '200%', value: 2 },
 			].forEach(({ label: l, value }) => {
-				const opt = document.createElement('option');
+				const opt = createEl('option');
 				opt.value = String(value);
 				opt.innerText = l;
 				if (value === 1) opt.selected = true;
@@ -661,18 +661,18 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		},
 		scrollMode: () => {
 			if (!show('scrollMode')) return;
-			const scrollModeIcon = document.createElement('span');
+			const scrollModeIcon = createSpan();
 			scrollModeIcon.className = 'scroll-mode-icon';
 			setIcon(scrollModeIcon, 'lucide-scroll');
 			bar.appendChild(scrollModeIcon);
-			const select = document.createElement('select');
+			const select = createEl('select');
 			const scrollModes = [
 				{ name: t('settings.scrollContinuous'), value: 'continuous' },
 				{ name: t('settings.scrollOffScreen'), value: 'offScreen' },
 				{ name: t('settings.scrollOff'), value: 'off' },
 			];
 			scrollModes.forEach((item) => {
-				const opt = document.createElement('option');
+				const opt = createEl('option');
 				opt.value = item.value;
 				opt.innerText = item.name;
 				select.appendChild(opt);

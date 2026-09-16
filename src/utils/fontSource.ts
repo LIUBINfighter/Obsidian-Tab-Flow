@@ -2,8 +2,6 @@ import * as alphaTab from '@coderline/alphatab';
 
 export type FontSourceStrategy = 'app-url' | 'data-url' | 'unresolved';
 
-export const GLOBAL_FONT_STYLE_ID = 'alphatab-font-style-global';
-
 /**
  * Resolve the numeric `FontFileFormat.Woff2` value in a version-tolerant way.
  *
@@ -85,30 +83,47 @@ export async function verifyFontUri(uri: string, timeoutMs = 3000): Promise<bool
 }
 
 /**
- * Inject a document-level `@font-face` for the `alphaTab` family as a fallback
- * for alphaTab's own injected style element. No-op when already injected.
+ * Preload the Bravura font as a document-level `FontFace` for the `alphaTab`
+ * family, as a fallback for alphaTab's own injected style element.
+ *
+ * Uses the FontFace API instead of a `<style>` element: dynamically attaching
+ * style elements is not allowed for community plugins, and the font source is
+ * only known at runtime.
  */
-export function injectGlobalAlphaTabFontFace(
+let injectedFontFace: FontFace | null = null;
+
+// FontFaceSet.add/delete are supported at runtime but missing from the DOM lib
+// shipped with the current TypeScript version.
+interface MutableFontFaceSet extends FontFaceSet {
+	add(face: FontFace): FontFaceSet;
+	delete(face: FontFace): boolean;
+}
+
+export async function injectGlobalAlphaTabFontFace(
 	uri: string,
 	doc: Document = document
-): HTMLStyleElement | null {
-	const existing = doc.getElementById(GLOBAL_FONT_STYLE_ID);
-	if (existing instanceof HTMLStyleElement) {
-		return existing;
+): Promise<FontFace | null> {
+	if (injectedFontFace) {
+		return injectedFontFace;
 	}
-	const style = doc.createElement('style');
-	style.id = GLOBAL_FONT_STYLE_ID;
-	style.textContent = `@font-face {
-	font-family: 'alphaTab';
-	src: url(${JSON.stringify(uri)}) format('woff2');
-	font-display: block;
-	font-style: normal;
-	font-weight: 400;
-}`;
-	doc.head.appendChild(style);
-	return style;
+	try {
+		const face = new FontFace('alphaTab', `url(${JSON.stringify(uri)}) format('woff2')`, {
+			display: 'block',
+		});
+		await face.load();
+		(doc.fonts as MutableFontFaceSet).add(face);
+		injectedFontFace = face;
+		return face;
+	} catch (error) {
+		console.warn('[fontSource] Failed to preload alphaTab fallback font face', error);
+		return null;
+	}
 }
 
 export function removeGlobalAlphaTabFontFace(doc: Document = document): void {
-	doc.getElementById(GLOBAL_FONT_STYLE_ID)?.remove();
+	if (!injectedFontFace) {
+		return;
+	}
+	(doc.fonts as MutableFontFaceSet).delete(injectedFontFace);
+	injectedFontFace = null;
 }

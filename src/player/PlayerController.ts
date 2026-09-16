@@ -576,7 +576,7 @@ export class PlayerController {
 		}
 
 		// 延迟应用滚动模式和光标设置，确保 DOM 完全就绪
-		setTimeout(() => {
+		window.setTimeout(() => {
 			if (this.api?.settings.player) {
 				const globalConfig = this.stores.globalConfig.getState();
 				this.api.settings.player.scrollMode =
@@ -642,7 +642,7 @@ export class PlayerController {
 				// 那才是考虑了速度等因素的实际播放时长
 
 				// 延迟配置滚动容器，确保 DOM 就绪（参考 TabView）
-				setTimeout(() => {
+				window.setTimeout(() => {
 					this.configureScrollElement();
 				}, 100);
 			};
@@ -883,7 +883,7 @@ export class PlayerController {
 			this.api.settings.player.scrollMode = alphaTab.ScrollMode.Continuous;
 			this.api.updateSettings();
 			// 触发一次位置更新
-			setTimeout(() => {
+			window.setTimeout(() => {
 				if (this.api) {
 					this.api.settings.player.scrollMode = currentMode;
 					this.api.updateSettings();

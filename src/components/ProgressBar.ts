@@ -18,19 +18,19 @@ export function createProgressBar(options: ProgressBarOptions): HTMLDivElement {
 	const { getCurrentTime, getDuration } = options;
 
 	// 进度条容器
-	const progressContainer = document.createElement('div');
+	const progressContainer = createDiv();
 	progressContainer.className = 'progress-bar-container';
 
 	// 进度条
-	const progressBar = document.createElement('div');
+	const progressBar = createDiv();
 	progressBar.className = 'progress-bar';
 
 	// 进度条填充部分
-	const progressFill = document.createElement('div');
+	const progressFill = createDiv();
 	progressFill.className = 'progress-fill';
 
 	// 进度条拖动手柄
-	const progressHandle = document.createElement('div');
+	const progressHandle = createDiv();
 	progressHandle.className = 'progress-handle';
 
 	// 组装进度条

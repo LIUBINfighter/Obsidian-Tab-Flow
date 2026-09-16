@@ -9,7 +9,9 @@ type ProbeHost = Plugin & {
 	actualPluginDir?: string;
 };
 
-const DEBUG_DIR = '.obsidian/plugins/tab-flow/_debug';
+function getDebugDir(plugin: ProbeHost): string {
+	return `${plugin.app.vault.configDir}/plugins/${plugin.manifest.id}/_debug`;
+}
 
 function errString(e: unknown): string {
 	if (e instanceof Error) return `${e.name}: ${e.message}`;
@@ -38,21 +40,6 @@ async function probeFontFaceFromBinary(host: ProbeHost): Promise<Record<string, 
 		const face = new FontFace('tabflow-probe-bin', buf);
 		await face.load();
 		return { ok: true, status: face.status, bytes: buf.byteLength, rel };
-	} catch (e) {
-		return { ok: false, error: errString(e) };
-	}
-}
-
-async function probeFetch(uri: string): Promise<Record<string, unknown>> {
-	try {
-		const res = await fetch(uri);
-		const ab = await res.arrayBuffer();
-		return {
-			ok: res.ok,
-			status: res.status,
-			contentType: res.headers.get('content-type'),
-			bytes: ab.byteLength,
-		};
 	} catch (e) {
 		return { ok: false, error: errString(e) };
 	}
@@ -117,7 +104,7 @@ async function probeRender(
 		svgCount: 0,
 	};
 
-	const host = document.createElement('div');
+	const host = createDiv();
 	setCssProps(host, {
 		position: 'absolute',
 		left: '0',
@@ -130,7 +117,7 @@ async function probeRender(
 		overflow: 'hidden',
 	});
 	document.body.appendChild(host);
-	const scoreEl = document.createElement('div');
+	const scoreEl = createDiv();
 	host.appendChild(scoreEl);
 
 	const uniqueUri = `${uri}${uri.includes('?') ? '&' : '?'}probe=${label}`;
@@ -265,7 +252,6 @@ export function registerDebugCommands(plugin: ProbeHost) {
 			const uri = plugin.resources?.bravuraUri;
 			const workerUri = plugin.resources?.alphaTabWorkerUri ?? '';
 			if (uri) {
-				out.fetch = await probeFetch(uri);
 				out.fontFaceFromUrl = await probeFontFaceFromUrl(uri);
 				out.formatHints = await probeFormatHints(uri);
 			}
@@ -352,12 +338,13 @@ export function registerDebugCommands(plugin: ProbeHost) {
 				out.renderProbes = renders;
 			}
 
+			const debugDir = getDebugDir(plugin);
 			try {
-				await plugin.app.vault.adapter.mkdir(DEBUG_DIR);
+				await plugin.app.vault.adapter.mkdir(debugDir);
 			} catch {
 				// ignore: directory may already exist
 			}
-			const file = path.join(DEBUG_DIR, `font-probe-${Date.now()}.json`).replace(/\\/g, '/');
+			const file = path.join(debugDir, `font-probe-${Date.now()}.json`).replace(/\\/g, '/');
 			try {
 				await plugin.app.vault.adapter.write(file, JSON.stringify(out, null, 2));
 				new Notice(`Font probe written: ${file}`, 8000);

@@ -40,7 +40,7 @@ export class AudioExportModal extends Modal {
 		this.titleEl.setText(t('export.audioExportPreview'));
 		this.contentEl.empty();
 
-		const audio = document.createElement('audio');
+		const audio = createEl('audio');
 		audio.controls = true;
 		audio.src = this.audioUrl;
 		audio.classList.add('tabflow-audio-preview');
@@ -50,7 +50,7 @@ export class AudioExportModal extends Modal {
 			btn.setButtonText(t('common.save'))
 				.setCta()
 				.onClick(() => {
-					const a = document.createElement('a');
+					const a = createEl('a');
 					a.href = this.audioUrl;
 					a.download = this.fileName;
 					a.click();

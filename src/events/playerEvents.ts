@@ -64,7 +64,7 @@ export function handlePlayerEvent(api: alphaTab.AlphaTabApi, payload: PlayerEven
 				api.updateSettings();
 				api.render();
 				// 切换后强制滚动到当前光标
-				setTimeout(() => {
+				window.setTimeout(() => {
 					if (typeof api.scrollToCursor === 'function') {
 						api.scrollToCursor();
 					}

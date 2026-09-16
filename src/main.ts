@@ -382,7 +382,7 @@ export default class TabFlowPlugin extends Plugin {
 		// （CSS 变量不能用于 @font-face 的 src，因此这里直接注入 style 元素）
 		try {
 			if (this.resources.bravuraUri) {
-				injectGlobalAlphaTabFontFace(this.resources.bravuraUri);
+				void injectGlobalAlphaTabFontFace(this.resources.bravuraUri);
 			}
 		} catch {
 			// Ignore font injection errors
@@ -416,9 +416,9 @@ export default class TabFlowPlugin extends Plugin {
 				this.registerMarkdownCodeBlockProcessor('alphatex', (source, el, ctx) => {
 					// 资源缺失：在块内提示并提供下载按钮
 					if (!this.resources.bravuraUri || !this.resources.alphaTabWorkerUri) {
-						const holder = el.createEl('div');
+						const holder = el.createDiv();
 						holder.addClass('alphatex-block');
-						holder.createEl('div', {
+						holder.createDiv({
 							text: t(
 								'alphatex.missingResources',
 								undefined,
@@ -617,7 +617,7 @@ export default class TabFlowPlugin extends Plugin {
 								await this.app.workspace.revealLeaf(rightLeaf);
 
 								// 手动触发刷新事件，确保 ReactView 正确加载
-								setTimeout(() => {
+								window.setTimeout(() => {
 									// 通过全局事件总线触发刷新（如果存在的话）
 									try {
 										// 尝试获取右栏 ReactView 的事件总线并触发刷新

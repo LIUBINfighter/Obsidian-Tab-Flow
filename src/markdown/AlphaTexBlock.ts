@@ -64,13 +64,13 @@ export function mountAlphaTexBlock(
 	}
 
 	// container structure
-	const wrapper = document.createElement('div');
+	const wrapper = createDiv();
 	wrapper.className = 'alphatex-block';
-	const messagesEl = document.createElement('div');
+	const messagesEl = createDiv();
 	messagesEl.className = 'alphatex-messages';
-	const scoreEl = document.createElement('div');
+	const scoreEl = createDiv();
 	scoreEl.className = 'alphatex-score';
-	const controlsEl = document.createElement('div');
+	const controlsEl = createDiv();
 	controlsEl.className = 'alphatex-controls nav-buttons-container';
 	wrapper.appendChild(messagesEl);
 	wrapper.appendChild(scoreEl);
@@ -104,10 +104,10 @@ export function mountAlphaTexBlock(
 	const ensureCopyButton = () => {
 		if (copyBtnAdded) return;
 		copyBtnAdded = true;
-		const btn = document.createElement('button');
+		const btn = createEl('button');
 		btn.className = 'clickable-icon';
 		btn.setAttribute('type', 'button');
-		const icon = document.createElement('span');
+		const icon = createSpan();
 		setIcon(icon, 'copy');
 		btn.appendChild(icon);
 		btn.setAttribute('aria-label', '复制错误与原文');
@@ -129,7 +129,7 @@ export function mountAlphaTexBlock(
 						try {
 							setIcon(icon, 'check');
 							btn.classList.add('is-success');
-							setTimeout(() => {
+							window.setTimeout(() => {
 								setIcon(icon, 'copy');
 								btn.classList.remove('is-success');
 							}, 1200);
@@ -165,7 +165,7 @@ export function mountAlphaTexBlock(
 			rateWindowCount++;
 			if (rateWindowCount > RATE_LIMIT_PER_WINDOW) {
 				if (!suppressedBanner) {
-					suppressedBanner = document.createElement('div');
+					suppressedBanner = createDiv();
 					suppressedBanner.className = 'alphatex-error';
 					suppressedBanner.textContent = `Too many errors; further messages are temporarily suppressed`;
 					messagesEl.appendChild(suppressedBanner);
@@ -185,7 +185,7 @@ export function mountAlphaTexBlock(
 
 			if (errorMessages.length >= MAX_ERRORS_TOTAL) {
 				if (!suppressedBanner) {
-					suppressedBanner = document.createElement('div');
+					suppressedBanner = createDiv();
 					suppressedBanner.className = 'alphatex-error';
 					suppressedBanner.textContent = `Too many errors; further messages are suppressed`;
 					messagesEl.appendChild(suppressedBanner);
@@ -194,7 +194,7 @@ export function mountAlphaTexBlock(
 			}
 
 			errorMessages.push(text);
-			const errEl = document.createElement('div');
+			const errEl = createDiv();
 			errEl.className = 'alphatex-error';
 			errEl.textContent = text;
 			messagesEl.appendChild(errEl);
@@ -454,19 +454,19 @@ export function mountAlphaTexBlock(
 		if (resources.soundFontUri && playerEnabled) {
 			// attach controls container only when needed
 			wrapper.appendChild(controlsEl);
-			const playPauseBtn = document.createElement('button');
+			const playPauseBtn = createEl('button');
 			playPauseBtn.className = 'clickable-icon';
 			playPauseBtn.setAttribute('type', 'button');
-			const playIcon = document.createElement('span');
+			const playIcon = createSpan();
 			setIcon(playIcon, 'play');
 			playPauseBtn.appendChild(playIcon);
 			playPauseBtn.setAttribute('aria-label', '播放/暂停');
 			playPauseBtn.addEventListener('click', () => api!.playPause());
 
-			const stopBtn = document.createElement('button');
+			const stopBtn = createEl('button');
 			stopBtn.className = 'clickable-icon';
 			stopBtn.setAttribute('type', 'button');
-			const stopIcon = document.createElement('span');
+			const stopIcon = createSpan();
 			setIcon(stopIcon, 'square');
 			stopBtn.appendChild(stopIcon);
 			stopBtn.setAttribute('aria-label', '停止');
@@ -517,10 +517,10 @@ export function mountAlphaTexBlock(
 			// zoomInput.addEventListener("change", applyScale);
 			// zoomInput.addEventListener("blur", applyScale);
 
-			const metroBtn = document.createElement('button');
+			const metroBtn = createEl('button');
 			metroBtn.className = 'clickable-icon';
 			metroBtn.setAttribute('type', 'button');
-			const metroIcon = document.createElement('span');
+			const metroIcon = createSpan();
 			setIcon(metroIcon, 'lucide-music-2');
 			metroBtn.appendChild(metroIcon);
 			metroBtn.setAttribute('aria-label', '节拍器');
@@ -547,10 +547,10 @@ export function mountAlphaTexBlock(
 				stop: () => controlsEl.appendChild(stopBtn),
 				metronome: () => controlsEl.appendChild(metroBtn),
 				locateCursor: () => {
-					const btn = document.createElement('button');
+					const btn = createEl('button');
 					btn.className = 'clickable-icon';
 					btn.setAttribute('type', 'button');
-					const icon = document.createElement('span');
+					const icon = createSpan();
 					setIcon(icon, 'lucide-crosshair');
 					btn.appendChild(icon);
 					btn.setAttribute('aria-label', '滚动到光标');
@@ -567,10 +567,10 @@ export function mountAlphaTexBlock(
 					controlsEl.appendChild(btn);
 				},
 				layoutToggle: () => {
-					const btn = document.createElement('button');
+					const btn = createEl('button');
 					btn.className = 'clickable-icon';
 					btn.setAttribute('type', 'button');
-					const icon = document.createElement('span');
+					const icon = createSpan();
 					type DisplaySettingsWithLayoutMode = alphaTab.DisplaySettings & {
 						layoutMode?: number;
 					};
@@ -620,10 +620,10 @@ export function mountAlphaTexBlock(
 					controlsEl.appendChild(btn);
 				},
 				toTop: () => {
-					const btn = document.createElement('button');
+					const btn = createEl('button');
 					btn.className = 'clickable-icon';
 					btn.setAttribute('type', 'button');
-					const icon = document.createElement('span');
+					const icon = createSpan();
 					setIcon(icon, 'lucide-chevrons-up');
 					btn.appendChild(icon);
 					btn.setAttribute('aria-label', '回到顶部');
@@ -643,10 +643,10 @@ export function mountAlphaTexBlock(
 					controlsEl.appendChild(btn);
 				},
 				toBottom: () => {
-					const btn = document.createElement('button');
+					const btn = createEl('button');
 					btn.className = 'clickable-icon';
 					btn.setAttribute('type', 'button');
-					const icon = document.createElement('span');
+					const icon = createSpan();
 					setIcon(icon, 'lucide-chevrons-down');
 					btn.appendChild(icon);
 					btn.setAttribute('aria-label', '回到底部');
@@ -737,7 +737,7 @@ export function mountAlphaTexBlock(
 			// metronome already added by ordered renderers when requested
 		} else if (playerEnabled && !resources.soundFontUri) {
 			// compact note, no controls container
-			const note = document.createElement('div');
+			const note = createDiv();
 			note.className = 'alphatex-note';
 			note.textContent = 'Soundfont missing: playback disabled. Rendering only.';
 			wrapper.appendChild(note);

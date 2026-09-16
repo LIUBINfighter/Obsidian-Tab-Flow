@@ -49,7 +49,7 @@ export default {
 			const playgroundHost2 = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, playgroundHost2, SAMPLE2, {});
 		} else {
-			container.createEl('div', { text: 'Plugin context missing, cannot render.' });
+			container.createDiv({ text: 'Plugin context missing, cannot render.' });
 		}
 	},
 };

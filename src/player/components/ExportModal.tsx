@@ -128,7 +128,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 		// 提示用户使用在线工具转换
 		new Notice(
-			'WAV exported. To convert to MP3, use https://cloudconvert.com/wav-to-mp3 or https://convertio.co/wav-mp3/',
+			'Audio exported. Convert the wav file to mp3 with an online tool, for example cloudconvert.com or convertio.co.',
 			9000
 		);
 	};
@@ -242,7 +242,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 	 */
 	const downloadBlob = (blob: Blob, fileName: string) => {
 		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
+		const a = createEl('a');
 		a.href = url;
 		a.download = fileName;
 		document.body.appendChild(a);

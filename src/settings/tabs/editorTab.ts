@@ -284,11 +284,11 @@ export function renderEditorTab(
 
 		// Helper: render a compact preview for each highlight type using existing CSS classes
 		const renderHighlightPreview = (key: string): DocumentFragment => {
-			const wrap = document.createElement('div');
+			const wrap = createDiv();
 			wrap.classList.add('cm-content', 'tabflow-highlight-preview');
 
 			const span = (cls: string, text?: string) => {
-				const el = document.createElement('span');
+				const el = createSpan();
 				el.className = cls;
 				if (text != null) el.textContent = text;
 				return el;
@@ -348,10 +348,10 @@ export function renderEditorTab(
 					break;
 				}
 				case 'whitespace': {
-					const a = document.createElement('span');
+					const a = createSpan();
 					a.textContent = 'A';
 					const space = span('cm-whitespace-space', ' '); // render visible dot via ::before
-					const b = document.createElement('span');
+					const b = createSpan();
 					b.textContent = 'B';
 					wrap.append(span('', 'Example: '), a, space, b);
 					break;
@@ -398,7 +398,7 @@ export function renderEditorTab(
 					wrap.append(span('', 'Example')); // fallback
 				}
 			}
-			const frag = document.createDocumentFragment();
+			const frag = createFragment();
 			frag.appendChild(wrap);
 			return frag;
 		};

@@ -93,7 +93,7 @@ export default {
 		}
 
 		if (!plugin) {
-			container.createEl('div', {
+			container.createDiv({
 				text: 'Plugin context missing, cannot render examples.',
 			});
 		}

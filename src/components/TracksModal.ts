@@ -84,15 +84,15 @@ export class TracksModal extends Modal {
 		}
 
 		// 标题栏（精简，无 Apply/Cancel）
-		const titleBar = document.createElement('div');
+		const titleBar = createDiv();
 		titleBar.className = 'modal-title-bar';
-		const titleText = document.createElement('span');
+		const titleText = createSpan();
 		titleText.className = 'modal-title-text';
 		titleText.textContent = t('tracks.chooseTracksToDisplay');
 		titleBar.appendChild(titleText);
 		this.titleEl.appendChild(titleBar);
 
-		const scrollContainer = document.createElement('div');
+		const scrollContainer = createDiv();
 		scrollContainer.className = 'tracks-scroll-container';
 		this.contentEl.appendChild(scrollContainer);
 
@@ -202,11 +202,11 @@ export class TracksModal extends Modal {
 			});
 
 			// === 音量 ===
-			const volWrapper = document.createElement('div');
+			const volWrapper = createDiv();
 			volWrapper.className = 'track-param-row';
-			const volLabel = document.createElement('span');
+			const volLabel = createSpan();
 			volLabel.textContent = t('tracks.volume');
-			const volSlider = document.createElement('input');
+			const volSlider = createEl('input');
 			volSlider.type = 'range';
 			volSlider.min = '0';
 			volSlider.max = '16';
@@ -215,9 +215,9 @@ export class TracksModal extends Modal {
 					? savedTrackSettings[String(track.index)].volume
 					: (track.playbackInfo as ExtendedPlaybackInfo).volume;
 			volSlider.value = String(curVol ?? 8);
-			const volValue = document.createElement('span');
+			const volValue = createSpan();
 			volValue.textContent = volSlider.value;
-			const volInput = document.createElement('input');
+			const volInput = createEl('input');
 			volInput.type = 'number';
 			volInput.min = '0';
 			volInput.max = '16';
@@ -252,11 +252,11 @@ export class TracksModal extends Modal {
 			}
 
 			// === 全局移调 ===
-			const trWrapper = document.createElement('div');
+			const trWrapper = createDiv();
 			trWrapper.className = 'track-param-row';
-			const trLabel = document.createElement('span');
+			const trLabel = createSpan();
 			trLabel.textContent = t('tracks.globalTranspose');
-			const trSlider = document.createElement('input');
+			const trSlider = createEl('input');
 			trSlider.type = 'range';
 			trSlider.min = '-12';
 			trSlider.max = '12';
@@ -266,9 +266,9 @@ export class TracksModal extends Modal {
 					? savedTrackSettings[String(track.index)].transpose
 					: 0;
 			trSlider.value = String(curTr);
-			const trValue = document.createElement('span');
+			const trValue = createSpan();
 			trValue.textContent = trSlider.value;
-			const trInput = document.createElement('input');
+			const trInput = createEl('input');
 			trInput.type = 'number';
 			trInput.min = '-12';
 			trInput.max = '12';
@@ -302,11 +302,11 @@ export class TracksModal extends Modal {
 			}
 
 			// === 音频移调（逻辑） ===
-			const taWrapper = document.createElement('div');
+			const taWrapper = createDiv();
 			taWrapper.className = 'track-param-row';
-			const taLabel = document.createElement('span');
+			const taLabel = createSpan();
 			taLabel.textContent = t('tracks.audioTranspose');
-			const taSlider = document.createElement('input');
+			const taSlider = createEl('input');
 			taSlider.type = 'range';
 			taSlider.min = '-12';
 			taSlider.max = '12';
@@ -316,9 +316,9 @@ export class TracksModal extends Modal {
 					? savedTrackSettings[String(track.index)].transposeAudio
 					: 0;
 			taSlider.value = String(curTa);
-			const taValue = document.createElement('span');
+			const taValue = createSpan();
 			taValue.textContent = taSlider.value;
-			const taInput = document.createElement('input');
+			const taInput = createEl('input');
 			taInput.type = 'number';
 			taInput.min = '-12';
 			taInput.max = '12';
@@ -354,9 +354,9 @@ export class TracksModal extends Modal {
 		});
 
 		// === 底部操作区：恢复默认按钮（仅清除存储，不主动改动当前播放状态） ===
-		const footer = document.createElement('div');
+		const footer = createDiv();
 		footer.className = 'tracks-footer-actions';
-		const resetBtn = document.createElement('button');
+		const resetBtn = createEl('button');
 		resetBtn.className = 'mod-warning';
 		resetBtn.textContent = t('tracks.resetToDefaults', undefined, '恢复默认');
 		resetBtn.onclick = () => {

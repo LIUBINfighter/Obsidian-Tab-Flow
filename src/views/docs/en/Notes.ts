@@ -115,7 +115,7 @@ export default {
 		}
 
 		if (!plugin) {
-			container.createEl('div', { text: 'Plugin context missing, cannot render examples.' });
+			container.createDiv({ text: 'Plugin context missing, cannot render examples.' });
 		}
 	},
 };

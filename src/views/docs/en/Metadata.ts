@@ -39,14 +39,14 @@ export default {
 		});
 		const ul = container.createEl('ul');
 		ul.createEl('li', {
-			text: '\\title / \\subtitle / \\artist / \\album etc.: song information displayed on the score.',
+			text: '\\title / \\subtitle / \\artist / \\album etc.: Song information displayed on the score.',
 		});
 		ul.createEl('li', { text: '\\tempo: global tempo (bpm), with optional label text.' });
 		ul.createEl('li', {
 			text: '\\instrument: specify timbre using gm number or name; attempts to infer default tuning when \\tuning is not specified.',
 		});
 		ul.createEl('li', {
-			text: '\\tuning: Specify pitch for each string (e.g., E4 B3 G3 D3 A2 E2).',
+			text: '\\tuning: Specify pitch for each string (e.g., e4 b3 g3 d3 a2 e2).',
 		});
 		container.createEl('p', {
 			text: 'The example below includes common metadata fields, followed by two bars of content after the dot (.) for quick verification.',
@@ -56,7 +56,7 @@ export default {
 			const playgroundHost = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, playgroundHost, SAMPLE, {});
 		} else {
-			container.createEl('div', { text: 'Plugin context missing, cannot render.' });
+			container.createDiv({ text: 'Plugin context missing, cannot render.' });
 		}
 	},
 };

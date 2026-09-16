@@ -33,7 +33,7 @@ export function normalizeColorToHex(
 		}
 	}
 	try {
-		const el = document.createElement('div');
+		const el = createDiv();
 		setCssProps(el, { color: s });
 		document.body.appendChild(el);
 		const cs = getComputedStyle(el).color;
@@ -110,7 +110,8 @@ export function measureCaptureDimensions(
 			setCssProps(panWrapper, { transform: 'none' });
 		}
 
-		const _forceReflow = captureEl.offsetHeight;
+		// 强制回流，确保后续读取到最新的布局尺寸
+		void captureEl.offsetHeight;
 		const rawW = captureEl.scrollWidth || captureEl.clientWidth;
 		const rawH = captureEl.scrollHeight || captureEl.clientHeight;
 		width = Math.ceil(rawW * resolution);

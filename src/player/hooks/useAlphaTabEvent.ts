@@ -26,6 +26,7 @@
  */
 
 import { useEffect, useRef } from 'react';
+import type { DependencyList } from 'react';
 import type { AlphaTabApi } from '@coderline/alphatab';
 
 /**
@@ -104,7 +105,7 @@ export function useAlphaTabEvent<TEventArgs = void>(
 	api: AlphaTabApi | null,
 	eventName: string,
 	handler: AlphaTabEventHandler<TEventArgs>,
-	deps: React.DependencyList = []
+	deps: DependencyList = []
 ): void {
 	// 使用 useRef 保存最新的 handler，避免频繁重新注册事件
 	const handlerRef = useRef(handler);
@@ -300,7 +301,7 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
 	handler: AlphaTabEventHandler<TEventArgs>,
 	delay: number
 ): void {
-	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const timeoutRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (!api) {
@@ -318,11 +319,11 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
 		const eventHandler = (args?: TEventArgs) => {
 			// 清除之前的定时器
 			if (timeoutRef.current) {
-				clearTimeout(timeoutRef.current);
+				window.clearTimeout(timeoutRef.current);
 			}
 
 			// 设置新的定时器
-			timeoutRef.current = setTimeout(() => {
+			timeoutRef.current = window.setTimeout(() => {
 				handler(args as TEventArgs);
 			}, delay);
 		};
@@ -331,7 +332,7 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
 
 		return () => {
 			if (timeoutRef.current) {
-				clearTimeout(timeoutRef.current);
+				window.clearTimeout(timeoutRef.current);
 			}
 			eventEmitter.off(eventHandler);
 		};
@@ -359,7 +360,7 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 	interval: number
 ): void {
 	const lastExecutionRef = useRef<number>(0);
-	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const timeoutRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (!api) {
@@ -387,10 +388,10 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 			} else {
 				// 延迟执行（确保最后一次调用被执行）
 				if (timeoutRef.current) {
-					clearTimeout(timeoutRef.current);
+					window.clearTimeout(timeoutRef.current);
 				}
 
-				timeoutRef.current = setTimeout(() => {
+				timeoutRef.current = window.setTimeout(() => {
 					handler(args as TEventArgs);
 					lastExecutionRef.current = Date.now();
 				}, interval - timeSinceLastExecution);
@@ -401,7 +402,7 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 
 		return () => {
 			if (timeoutRef.current) {
-				clearTimeout(timeoutRef.current);
+				window.clearTimeout(timeoutRef.current);
 			}
 			eventEmitter.off(eventHandler);
 		};

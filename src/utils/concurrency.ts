@@ -7,7 +7,7 @@ export function requestIdle(fn: () => void) {
 	if (typeof window.requestIdleCallback === 'function') {
 		window.requestIdleCallback(() => fn());
 	} else {
-		setTimeout(fn, 0);
+		window.setTimeout(fn, 0);
 	}
 }
 

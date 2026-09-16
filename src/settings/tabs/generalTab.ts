@@ -86,7 +86,7 @@ export async function renderGeneralTab(
 	const list = assetsStatusContainer.createEl('ul', {
 		cls: 'tabflow-assets-status__list',
 	});
-	tabContents.createEl('div', {
+	tabContents.createDiv({
 		text: t('status.expectedFileStructure'),
 		cls: 'tabflow-setting-description tabflow-assets-structure-heading',
 	});
@@ -103,7 +103,7 @@ export async function renderGeneralTab(
 		const statusClass = s.exists ? 'is-success' : 'is-error';
 
 		// 创建第一个span元素（文件名和图标）
-		const fileSpan = document.createElement('span');
+		const fileSpan = createSpan();
 		fileSpan.classList.add('tabflow-assets-status__file', statusClass);
 		fileSpan.textContent = `${icon} ${s.file}`;
 		li.appendChild(fileSpan);
@@ -116,7 +116,7 @@ export async function renderGeneralTab(
 		);
 
 		// 创建第二个span元素（状态）
-		const statusSpan = document.createElement('span');
+		const statusSpan = createSpan();
 		statusSpan.classList.add('tabflow-assets-status__state', statusClass);
 		statusSpan.textContent = `(${s.exists ? t('status.installed') : t('status.notInstalled')})`;
 		li.appendChild(statusSpan);

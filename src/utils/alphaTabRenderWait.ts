@@ -174,7 +174,7 @@ export async function waitAlphaTabFullRender(
 		while (!cond()) {
 			abortIf();
 			if (performance.now() - start > timeoutMs) throw new Error('timeout');
-			await new Promise((r) => setTimeout(r, 50));
+			await new Promise((r) => window.setTimeout(r, 50));
 		}
 		if (debug) {
 			console.debug(
@@ -213,13 +213,13 @@ export async function waitAlphaTabFullRender(
 			if (Math.abs(rect.height - lastH) < 0.5) stableCount++;
 			else stableCount = 0;
 			lastH = rect.height;
-			await new Promise((r) => setTimeout(r, frameIntervalMs));
+			await new Promise((r) => window.setTimeout(r, frameIntervalMs));
 		}
 
 		// Fonts ready (do not throw if fails)
 		await Promise.race([
 			onceFontReady(debug),
-			new Promise((r) => setTimeout(r, 1000)), // cap wait 1s for fonts to avoid long delays
+			new Promise((r) => window.setTimeout(r, 1000)), // cap wait 1s for fonts to avoid long delays
 		]);
 
 		cleanup();

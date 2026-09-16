@@ -207,7 +207,7 @@ export function createAlphaTexPlayground(
 			attr: { type: 'button' },
 			cls: 'clickable-icon',
 		});
-		const iCopy = document.createElement('span');
+		const iCopy = createSpan();
 		setIcon(iCopy, 'copy');
 		btnCopy.appendChild(iCopy);
 		btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
@@ -226,7 +226,7 @@ export function createAlphaTexPlayground(
 						setIcon(iCopy, 'check');
 						btnCopy.classList.add('is-success');
 						btnCopy.setAttr('aria-label', t('playground.copied'));
-						setTimeout(() => {
+						window.setTimeout(() => {
 							setIcon(iCopy, 'copy');
 							btnCopy.classList.remove('is-success');
 							btnCopy.setAttr('aria-label', t('playground.copyToClipboard'));
@@ -241,7 +241,7 @@ export function createAlphaTexPlayground(
 			attr: { type: 'button' },
 			cls: 'clickable-icon',
 		});
-		const iReset = document.createElement('span');
+		const iReset = createSpan();
 		setIcon(iReset, 'rotate-ccw');
 		btnReset.appendChild(iReset);
 		btnReset.setAttr('aria-label', t('playground.resetToDefault'));
@@ -259,7 +259,7 @@ export function createAlphaTexPlayground(
 			attr: { type: 'button' },
 			cls: 'clickable-icon',
 		});
-		const iNew = document.createElement('span');
+		const iNew = createSpan();
 		setIcon(iNew, 'file-plus');
 		btnNewNote.appendChild(iNew);
 		btnNewNote.setAttr('aria-label', t('playground.createNewNote'));
@@ -303,7 +303,7 @@ export function createAlphaTexPlayground(
 			attr: { type: 'button' },
 			cls: 'clickable-icon',
 		});
-		const iFmt = document.createElement('span');
+		const iFmt = createSpan();
 		setIcon(iFmt, 'code');
 		btnFormat.appendChild(iFmt);
 		btnFormat.setAttr('aria-label', t('playground.formatInitJson'));
@@ -339,7 +339,7 @@ export function createAlphaTexPlayground(
 	// 在 single-bar 模式下显示当前小节信息
 	if (layout === 'single-bar' && currentBarInfo) {
 		const infoBar = previewWrap.createDiv({ cls: 'alphatex-bar-info' });
-		infoBar.createEl('span', { text: currentBarInfo });
+		infoBar.createSpan({ text: currentBarInfo });
 	}
 
 	let mounted: AlphaTexMountHandle | null = null;
@@ -369,13 +369,13 @@ export function createAlphaTexPlayground(
 		// 在 single-bar 模式下重新添加当前小节信息栏
 		if (layout === 'single-bar' && currentBarInfo) {
 			const infoBar = previewWrap.createDiv({ cls: 'alphatex-bar-info' });
-			infoBar.createEl('span', { text: currentBarInfo });
+			infoBar.createSpan({ text: currentBarInfo });
 		}
 
 		const resources = plugin.resources;
 		if (!resources?.bravuraUri || !resources.alphaTabWorkerUri) {
 			const holder = previewWrap.createDiv({ cls: 'alphatex-block' });
-			holder.createEl('div', { text: t('playground.resourcesMissing') });
+			holder.createDiv({ text: t('playground.resourcesMissing') });
 			const btn = holder.createEl('button', { text: t('playground.downloadResources') });
 			btn.addEventListener(
 				'click',
@@ -414,7 +414,7 @@ export function createAlphaTexPlayground(
 			console.warn('[Playground] AlphaTex 渲染失败:', e);
 			const err = previewWrap.createDiv({ cls: 'alphatex-block' });
 			const msg = e instanceof Error ? e.message : String(e);
-			err.createEl('div', {
+			err.createDiv({
 				cls: 'alphatex-error',
 				text: t('playground.engineError') + msg,
 			});
@@ -536,7 +536,7 @@ export function createAlphaTexPlayground(
 			} else if (layout === 'single-bar' && info) {
 				// 如果信息栏不存在但应该存在，重新创建
 				const newInfoBar = previewWrap.createDiv({ cls: 'alphatex-bar-info' });
-				newInfoBar.createEl('span', { text: info });
+				newInfoBar.createSpan({ text: info });
 			}
 		},
 	};

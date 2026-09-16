@@ -33,7 +33,7 @@ export interface DebugBarOptions {
 
 export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	const { app, api, isAudioLoaded, eventBus, getScoreTitle } = options;
-	const debugBar = document.createElement('div');
+	const debugBar = createDiv();
 	debugBar.className = 'debug-bar';
 
 	// 创建滚动配置管理器
@@ -46,11 +46,11 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	});
 
 	// 布局模式切换按钮
-	const layoutLabel = document.createElement('label');
+	const layoutLabel = createEl('label');
 	layoutLabel.className = 'control-label';
 	layoutLabel.innerText = t('settings.layout');
 	debugBar.appendChild(layoutLabel);
-	const layoutSelect = document.createElement('select');
+	const layoutSelect = createEl('select');
 	const layoutModes = [
 		{ name: t('settings.pageLayout'), value: window.alphaTab?.LayoutMode?.Page ?? 0 },
 		{
@@ -59,7 +59,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 		},
 	];
 	layoutModes.forEach((item, idx) => {
-		const opt = document.createElement('option');
+		const opt = createEl('option');
 		opt.value = String(item.value);
 		opt.innerText = item.name;
 		if (idx === 0) opt.selected = true;
@@ -73,7 +73,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(layoutSelect);
 
 	// TrackModal 按钮
-	const tracksBtn = document.createElement('button');
+	const tracksBtn = createEl('button');
 	tracksBtn.innerText = t('tracks.selectTracks');
 	tracksBtn.onclick = () => {
 		eventBus.publish('命令:选择音轨');
@@ -81,7 +81,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(tracksBtn);
 
 	// 播放/暂停按钮
-	const playPause = document.createElement('button');
+	const playPause = createEl('button');
 	playPause.innerText = t('playback.playPause');
 	playPause.onclick = () => {
 		if (!api) {
@@ -97,7 +97,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(playPause);
 
 	// 停止按钮
-	const stopBtn = document.createElement('button');
+	const stopBtn = createEl('button');
 	stopBtn.innerText = t('playback.stop');
 	stopBtn.onclick = () => {
 		if (!api) {
@@ -113,13 +113,13 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(stopBtn);
 
 	// 速度选择
-	const speedLabel = document.createElement('label');
+	const speedLabel = createEl('label');
 	speedLabel.innerText = t('settings.speed');
 	speedLabel.classList.add('control-label');
 	debugBar.appendChild(speedLabel);
-	const speedSelect = document.createElement('select');
+	const speedSelect = createEl('select');
 	['0.5', '0.75', '1.0', '1.25', '1.5', '2.0'].forEach((val) => {
-		const opt = document.createElement('option');
+		const opt = createEl('option');
 		opt.value = val;
 		opt.innerText = val + 'x';
 		if (val === '1.0') opt.selected = true;
@@ -133,11 +133,11 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(speedSelect);
 
 	// 谱表模式切换
-	const staveLabel = document.createElement('label');
+	const staveLabel = createEl('label');
 	staveLabel.innerText = t('settings.stave');
 	staveLabel.classList.add('control-label');
 	debugBar.appendChild(staveLabel);
-	const staveSelect = document.createElement('select');
+	const staveSelect = createEl('select');
 	const staveProfiles = [
 		{ name: t('settings.scoreTab'), value: alphaTab.StaveProfile.ScoreTab },
 		{ name: t('settings.scoreOnly'), value: alphaTab.StaveProfile.Score },
@@ -145,7 +145,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 		{ name: t('settings.tabMixed'), value: alphaTab.StaveProfile.TabMixed },
 	];
 	staveProfiles.forEach((item, idx) => {
-		const opt = document.createElement('option');
+		const opt = createEl('option');
 		opt.value = String(item.value);
 		opt.innerText = item.name;
 		if (idx === 0) opt.selected = true;
@@ -159,11 +159,11 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(staveSelect);
 
 	// Metronome 节拍器开关
-	const metronomeLabel = document.createElement('label');
+	const metronomeLabel = createEl('label');
 	metronomeLabel.innerText = t('settings.metronome');
 	metronomeLabel.classList.add('control-label');
 	debugBar.appendChild(metronomeLabel);
-	const metronomeToggle = document.createElement('input');
+	const metronomeToggle = createEl('input');
 	metronomeToggle.type = 'checkbox';
 	metronomeToggle.checked = false;
 	// 初始同步 API
@@ -175,11 +175,11 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(metronomeToggle);
 
 	// Count-in 预备拍开关
-	const countInLabel = document.createElement('label');
+	const countInLabel = createEl('label');
 	countInLabel.innerText = t('settings.countIn');
 	countInLabel.classList.add('control-label');
 	debugBar.appendChild(countInLabel);
-	const countInToggle = document.createElement('input');
+	const countInToggle = createEl('input');
 	countInToggle.type = 'checkbox';
 	countInToggle.checked = false;
 	// 初始同步 API
@@ -191,11 +191,11 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(countInToggle);
 
 	// Zoom 缩放滑块
-	const zoomLabel = document.createElement('label');
+	const zoomLabel = createEl('label');
 	zoomLabel.innerText = t('settings.zoom');
 	zoomLabel.classList.add('control-label');
 	debugBar.appendChild(zoomLabel);
-	const zoomSlider = document.createElement('input');
+	const zoomSlider = createEl('input');
 	zoomSlider.type = 'range';
 	zoomSlider.min = '0.5';
 	zoomSlider.max = '2.0';
@@ -210,7 +210,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(zoomSlider);
 
 	// 导出相关按钮
-	const exportLabel = document.createElement('label');
+	const exportLabel = createEl('label');
 	exportLabel.innerText = t('export.export') + ':';
 	exportLabel.classList.add('control-label');
 	debugBar.appendChild(exportLabel);
@@ -262,7 +262,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	}
 
 	// 音频导出按钮
-	const audioBtn = document.createElement('button');
+	const audioBtn = createEl('button');
 	audioBtn.innerText = t('export.exportAudio');
 	audioBtn.onclick = () => {
 		void (async () => {
@@ -272,7 +272,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(audioBtn);
 
 	// MIDI 导出按钮
-	const midiBtn = document.createElement('button');
+	const midiBtn = createEl('button');
 	midiBtn.innerText = t('export.exportMidi');
 	midiBtn.onclick = () => {
 		void (async () => {
@@ -282,7 +282,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(midiBtn);
 
 	// GP 导出按钮
-	const gpBtn = document.createElement('button');
+	const gpBtn = createEl('button');
 	gpBtn.innerText = t('export.exportGp');
 	gpBtn.onclick = () => {
 		void (async () => {
@@ -292,7 +292,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(gpBtn);
 
 	// PDF 打印按钮
-	const pdfBtn = document.createElement('button');
+	const pdfBtn = createEl('button');
 	pdfBtn.innerText = t('export.printPdf');
 	pdfBtn.onclick = () => {
 		void (async () => {
@@ -302,7 +302,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(pdfBtn);
 
 	// 音频状态（由外部负责更新）
-	const audioStatus = document.createElement('span');
+	const audioStatus = createSpan();
 	audioStatus.classList.add('audio-status');
 	audioStatus.innerText = t('settings.audioStatusNotLoaded');
 	debugBar.appendChild(audioStatus);
@@ -312,25 +312,25 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 
 	// 在现有控件后添加滚动控制区域
 	// 滚动控制分隔符
-	const scrollSeparator = document.createElement('span');
+	const scrollSeparator = createSpan();
 	scrollSeparator.innerText = ' | ';
 	scrollSeparator.classList.add('scroll-separator');
 	debugBar.appendChild(scrollSeparator);
 
 	// 滚动模式选择
-	const scrollModeLabel = document.createElement('label');
+	const scrollModeLabel = createEl('label');
 	scrollModeLabel.innerText = t('settings.scroll');
 	scrollModeLabel.classList.add('control-label--tight');
 	debugBar.appendChild(scrollModeLabel);
 
-	const scrollModeSelect = document.createElement('select');
+	const scrollModeSelect = createEl('select');
 	const scrollModes = [
 		{ name: t('settings.scrollOff'), value: alphaTab.ScrollMode.Off },
 		{ name: t('settings.scrollContinuous'), value: alphaTab.ScrollMode.Continuous },
 		{ name: t('settings.scrollOffScreen'), value: alphaTab.ScrollMode.OffScreen },
 	];
 	scrollModes.forEach((item, idx) => {
-		const opt = document.createElement('option');
+		const opt = createEl('option');
 		opt.value = String(item.value);
 		opt.innerText = item.name;
 		// 默认选择连续滚动
@@ -344,12 +344,12 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(scrollModeSelect);
 
 	// 滚动速度控制
-	const scrollSpeedLabel = document.createElement('label');
+	const scrollSpeedLabel = createEl('label');
 	scrollSpeedLabel.innerText = t('settings.scrollSpeed');
 	scrollSpeedLabel.classList.add('control-label--tight');
 	debugBar.appendChild(scrollSpeedLabel);
 
-	const scrollSpeedSlider = document.createElement('input');
+	const scrollSpeedSlider = createEl('input');
 	scrollSpeedSlider.type = 'range';
 	scrollSpeedSlider.min = '100';
 	scrollSpeedSlider.max = '1000';
@@ -365,12 +365,12 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(scrollSpeedSlider);
 
 	// Y轴偏移控制
-	const offsetYLabel = document.createElement('label');
+	const offsetYLabel = createEl('label');
 	offsetYLabel.innerText = t('settings.yOffset');
 	offsetYLabel.classList.add('control-label--tight');
 	debugBar.appendChild(offsetYLabel);
 
-	const offsetYSlider = document.createElement('input');
+	const offsetYSlider = createEl('input');
 	offsetYSlider.type = 'range';
 	offsetYSlider.min = '-100';
 	offsetYSlider.max = '100';
@@ -385,12 +385,12 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(offsetYSlider);
 
 	// X轴偏移控制
-	const offsetXLabel = document.createElement('label');
+	const offsetXLabel = createEl('label');
 	offsetXLabel.innerText = t('settings.xOffset');
 	offsetXLabel.classList.add('control-label--tight');
 	debugBar.appendChild(offsetXLabel);
 
-	const offsetXSlider = document.createElement('input');
+	const offsetXSlider = createEl('input');
 	offsetXSlider.type = 'range';
 	offsetXSlider.min = '-100';
 	offsetXSlider.max = '100';
@@ -405,12 +405,12 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(offsetXSlider);
 
 	// 原生滚动开关
-	const nativeScrollLabel = document.createElement('label');
+	const nativeScrollLabel = createEl('label');
 	nativeScrollLabel.innerText = t('settings.nativeScroll');
 	nativeScrollLabel.classList.add('control-label--tight');
 	debugBar.appendChild(nativeScrollLabel);
 
-	const nativeScrollToggle = document.createElement('input');
+	const nativeScrollToggle = createEl('input');
 	nativeScrollToggle.type = 'checkbox';
 	nativeScrollToggle.checked = false; // 默认使用自定义滚动
 	nativeScrollToggle.title = '使用浏览器原生平滑滚动';
@@ -423,7 +423,7 @@ export function createDebugBar(options: DebugBarOptions): HTMLDivElement {
 	debugBar.appendChild(nativeScrollToggle);
 
 	// 手动滚动到光标按钮
-	const scrollToCursorBtn = document.createElement('button');
+	const scrollToCursorBtn = createEl('button');
 	scrollToCursorBtn.innerText = t('settings.scrollToCursor');
 	scrollToCursorBtn.title = t('settings.scrollToCursorTitle');
 	scrollToCursorBtn.onclick = () => {

@@ -424,7 +424,7 @@ export function renderPlayerTab(
 
 	// Debug Bar section
 	new Setting(tabContents).setName(t('settings.player.debugBar.title')).setHeading();
-	tabContents.createEl('div', {
+	tabContents.createDiv({
 		text: t('settings.player.debugBar.description'),
 		cls: 'tabflow-setting-description',
 	});

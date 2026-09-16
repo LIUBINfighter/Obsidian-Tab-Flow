@@ -47,7 +47,7 @@ export function barHighlightPlugin() {
 			super();
 		}
 		toDOM() {
-			const span = document.createElement('span');
+			const span = createSpan();
 			span.className = 'bar-number';
 			span.setAttribute('aria-hidden', 'true');
 			span.textContent = this.number.toString();

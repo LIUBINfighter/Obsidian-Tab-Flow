@@ -7,11 +7,11 @@ export type CssProps = Record<string, string | null | undefined>;
 export function setCssProps(element: HTMLElement | SVGElement, props: CssProps): void {
 	Object.entries(props).forEach(([property, value]) => {
 		if (value === undefined || value === null || value === '') {
-			if (element instanceof HTMLElement || element instanceof SVGElement) {
+			if (element.instanceOf(HTMLElement) || element.instanceOf(SVGElement)) {
 				element.style.removeProperty(property);
 			}
 		} else {
-			if (element instanceof HTMLElement || element instanceof SVGElement) {
+			if (element.instanceOf(HTMLElement) || element.instanceOf(SVGElement)) {
 				element.style.setProperty(property, value);
 			}
 		}
