@@ -2,9 +2,9 @@ name: CI
 
 on:
     push:
-        branches: [master, dev]
+        branches: [master, dev, vibe]
     pull_request:
-        branches: [master, dev]
+        branches: [master, dev, vibe]
     workflow_dispatch:
 
 jobs:
@@ -35,7 +35,7 @@ jobs:
             - name: Run formatting
               run: npm run format
             - name: Commit and push formatted code
-              if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev') }}
+              if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/vibe') }}
               run: |
                   git config user.name "github-actions[bot]"
                   git config user.email "github-actions[bot]@users.noreply.github.com"
