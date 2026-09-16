@@ -1,0 +1,15 @@
+[   25612ms] [ERROR] Not allowed to load local resource: file:///F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/styles.css @ :3
+[   25774ms] [ERROR] Not allowed to load local resource: file:///F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/font/Bravura.woff2 @ F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:30281
+[   25780ms] [ERROR] [AlphaTab][Player] Failed to create worker for synthesizing audio AlphaTabError: Could not detect alphaTab script file, cannot initialize renderer
+    at F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:69299:40
+    at BrowserUiFacade.createAlphaSynthWebWorker (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:65211:55)
+    at BrowserUiFacade.createWorkerPlayer (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:41275:31)
+    at AlphaTabApi._setupOrDestroyPlayer (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:46700:33)
+    at AlphaTabApi._onScoreLoaded (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:48032:14)
+    at AlphaTabApi._internalRenderTracks (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:45848:10)
+    at AlphaTabApi.renderScore (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:45793:9)
+    at AlphaTabApi.tex (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:45932:10)
+    at AlphaTabApi.tex (F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:49052:10)
+    at eval (eval at evaluate (:302:30), <anonymous>:22:9) @ F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:1668
+[   25830ms] [ERROR] [AlphaTab][Font] [alphaTab] Loading Failed, rendering cannot start NetworkError: A network error occurred. @ F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:1668
+[   26035ms] [ERROR] [AlphaTab][Font] [alphaTab] Loading Failed, rendering cannot start Font not available @ F:/Guitar-Workspace/.obsidian/plugins/Obsidian-Tab-Flow/node_modules/@coderline/alphatab/dist/alphaTab.js:1668

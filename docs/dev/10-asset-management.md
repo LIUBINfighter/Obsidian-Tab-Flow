@@ -15,7 +15,8 @@
 #### 资源接口定义
 ```typescript
 export interface AlphaTabResources {
-  bravuraUri?: string;        // Bravura 字体文件 URL
+  bravuraUri?: string;        // 可直接用于 url() 的字体地址（app:// 或 data URL）
+  bravuraSource?: 'app-url' | 'data-url' | 'unresolved'; // 字体地址来源策略
   alphaTabWorkerUri?: string; // AlphaTab worker 脚本 URL
   soundFontUri?: string;      // SoundFont 音色库 URL
   resourcesComplete: boolean; // 资源是否完整
@@ -70,7 +71,10 @@ if (!bravuraExists || !alphaTabExists || !soundFontExists) {
 ```typescript
 // 使用 Obsidian 资源 URL（可被缓存/共享）
 if (bravuraExists) {
-  resources.bravuraUri = this.app.vault.adapter.getResourcePath(bravuraPath);
+  const appUri = this.app.vault.adapter.getResourcePath(bravuraPath);
+  const resolved = await this.resolveBravuraUri(appUri, bravuraPath);
+  resources.bravuraUri = resolved.uri;
+  resources.bravuraSource = resolved.strategy; // 'app-url' | 'data-url' | 'unresolved'
 }
 
 if (alphaTabExists) {
@@ -81,6 +85,23 @@ if (soundFontExists) {
   resources.soundFontUri = this.app.vault.adapter.getResourcePath(soundFontPath);
 }
 ```
+
+### 字体源运行时验证与降级
+
+Obsidian 的 `app://` 资源 URL 行为不在公开契约内，历史上多次随版本更新变化并导致
+`@font-face` 加载失败（音符符号显示为豆腐块）。因此字体源在插件启动时会做一次
+运行时验证（见 `src/utils/fontSource.ts`）：
+
+1. `getResourcePath()` 得到 `app://` URL；
+2. 用 `new FontFace(..., url(...) format('woff2')).load()` 验证能否解码（带超时）；
+3. 失败则通过 `vault.adapter.readBinary()` 读取字体，转成 data URL 再验证；
+4. 结果写入 `AlphaTabResources.bravuraSource` 供诊断。
+
+所有视图必须通过 `createSmuflFontSources(bravuraUri)` 构造 `smuflFontSources`
+（key 固定为 `FontFileFormat.Woff2`），不要手写枚举或做 `?? 0` 降级。
+
+诊断命令：`tab-flow:debug-font-probe` 会把字体链路证据写入
+`.obsidian/plugins/tab-flow/_debug/font-probe-*.json`。
 
 ## 资源类型定义
 

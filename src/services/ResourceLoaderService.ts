@@ -1,9 +1,11 @@
 import { App } from 'obsidian';
 import * as path from 'path';
 import { fileExists } from '../utils';
+import { FontSourceStrategy, toFontDataUrl, verifyFontUri } from '../utils/fontSource';
 
 export interface AlphaTabResources {
-	bravuraUri?: string; // 使用文件 URL（app 资源路径）
+	bravuraUri?: string; // 可直接用于 url() 的字体地址（app:// 资源路径或 data URL）
+	bravuraSource?: FontSourceStrategy; // 字体地址的来源策略（用于诊断）
 	alphaTabWorkerUri?: string; // 使用文件 URL（app 资源路径）
 	soundFontUri?: string; // 使用文件 URL（app 资源路径）
 	resourcesComplete: boolean;
@@ -65,7 +67,10 @@ export class ResourceLoaderService {
 
 			// 使用 Obsidian 资源 URL（可被缓存/共享）
 			if (bravuraExists) {
-				resources.bravuraUri = this.app.vault.adapter.getResourcePath(bravuraPath);
+				const appUri = this.app.vault.adapter.getResourcePath(bravuraPath);
+				const resolved = await this.resolveBravuraUri(appUri, bravuraPath);
+				resources.bravuraUri = resolved.uri;
+				resources.bravuraSource = resolved.strategy;
 			}
 
 			if (alphaTabExists) {
@@ -97,6 +102,40 @@ export class ResourceLoaderService {
 
 	// file existence check delegated to `src/utils/fileUtils.ts` which
 	// supports both Obsidian adapters and Node fs.
+
+	/**
+	 * Resolve a usable Bravura font URI.
+	 *
+	 * Obsidian's `app://` resource URLs have broken `@font-face` loading more
+	 * than once across app updates, so verify the URL at runtime and fall back
+	 * to an in-memory data URL (read through the vault adapter) when it fails.
+	 */
+	private async resolveBravuraUri(
+		appUri: string,
+		relativePath: string
+	): Promise<{ uri: string; strategy: FontSourceStrategy }> {
+		if (await verifyFontUri(appUri)) {
+			console.debug('[ResourceLoaderService] Bravura verified via app resource URL');
+			return { uri: appUri, strategy: 'app-url' };
+		}
+
+		console.warn(
+			'[ResourceLoaderService] Bravura app resource URL failed verification, falling back to data URL'
+		);
+		try {
+			const buffer = await this.app.vault.adapter.readBinary(relativePath);
+			const dataUrl = toFontDataUrl(buffer);
+			if (await verifyFontUri(dataUrl)) {
+				console.debug('[ResourceLoaderService] Bravura verified via data URL fallback');
+				return { uri: dataUrl, strategy: 'data-url' };
+			}
+			console.error('[ResourceLoaderService] Bravura data URL fallback failed verification');
+		} catch (error) {
+			console.error('[ResourceLoaderService] Bravura data URL fallback failed:', error);
+		}
+
+		return { uri: appUri, strategy: 'unresolved' };
+	}
 
 	// 兼容旧实现保留方法（未使用）
 	// private arrayBufferToBase64(buffer: ArrayBuffer): string {

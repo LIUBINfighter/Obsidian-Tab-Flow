@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
 import { PrintTracksPanelDom } from '../player/components/PrintTracksPanel';
 import { setCssProps, toggleHidden } from '../utils/styleUtils';
+import { createSmuflFontSources, isDataUrl } from '../utils/fontSource';
 
 export const VIEW_TYPE_PRINT_PREVIEW = 'tab-flow-print-preview';
 
@@ -392,9 +393,12 @@ export class PrintPreviewView extends FileView {
 		// 为打印视图单独构造一个带时间戳的 Bravura 字体 URL，避免与其他视图共享缓存
 		// 这样每次打开 PrintPreview，浏览器都会认为是一个"新"的字体请求，
 		// 有助于稳定触发一次完整的字体加载流程，降低首开豆腐块概率。
+		// 注意：data URL 追加查询串会破坏字体数据，必须原样使用。
 		const ts = Date.now();
 		const sep = resources.bravuraUri.includes('?') ? '&' : '?';
-		const bravuraWithTs = `${resources.bravuraUri}${sep}_print_ts=${ts}`;
+		const bravuraWithTs = isDataUrl(resources.bravuraUri)
+			? resources.bravuraUri
+			: `${resources.bravuraUri}${sep}_print_ts=${ts}`;
 
 		const settingsJson = {
 			core: {
@@ -432,9 +436,7 @@ export class PrintPreviewView extends FileView {
 
 		// 配置字体：使用带时间戳的 Bravura URL，强制 PrintPreview 每次打开都触发一次字体加载
 		if (resources.bravuraUri) {
-			settings.core.smuflFontSources = new Map([
-				[alphaTab.FontFileFormat.Woff2, bravuraWithTs],
-			]);
+			settings.core.smuflFontSources = createSmuflFontSources(bravuraWithTs);
 		}
 
 		console.debug('[PrintPreview] Print-optimized settings created:', {

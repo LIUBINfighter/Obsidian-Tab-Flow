@@ -12,6 +12,9 @@ merged-*.mix.txt
 */.obsidian
 data.json
 
+# debug probe output (tab-flow:debug-font-probe)
+_debug/
+
 # vscode
 .vscode 
 

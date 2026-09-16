@@ -17,6 +17,7 @@ import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
 import { TrackStateStore } from './state/TrackStateStore';
 import { setCssProps } from './utils/styleUtils';
+import { injectGlobalAlphaTabFontFace, removeGlobalAlphaTabFontFace } from './utils/fontSource';
 
 type SettingManager = {
 	activeTab?: { id?: string };
@@ -183,23 +184,21 @@ export default class TabFlowPlugin extends Plugin {
 				console.debug('创建目录时出错（可能已存在）:', err);
 			}
 
-			// 使用固定版本号0.0.5，而不是当前插件版本
-			// 因为您提到日志中显示的是从0.0.5版本下载的资产
-			const version = '0.0.5';
-			const baseUrl = `https://github.com/LIUBINfighter/Obsidian-Tab-Flow/releases/download/${version}`;
+			const alphaTabVersion = '1.8.3';
+			const alphaTabPackageBaseUrl = `https://cdn.jsdelivr.net/npm/@coderline/alphatab@${alphaTabVersion}/dist`;
 
 			// 定义要下载的资产
 			const assets = [
 				{
-					url: `${baseUrl}/${ASSET_FILES.ALPHA_TAB}`,
+					url: `${alphaTabPackageBaseUrl}/${ASSET_FILES.ALPHA_TAB}`,
 					path: path.join(assetsDir, ASSET_FILES.ALPHA_TAB),
 				},
 				{
-					url: `${baseUrl}/${ASSET_FILES.BRAVURA}`,
+					url: `${alphaTabPackageBaseUrl}/font/${ASSET_FILES.BRAVURA}`,
 					path: path.join(assetsDir, ASSET_FILES.BRAVURA),
 				},
 				{
-					url: `${baseUrl}/${ASSET_FILES.SOUNDFONT}`,
+					url: `${alphaTabPackageBaseUrl}/soundfont/${ASSET_FILES.SOUNDFONT}`,
 					path: path.join(assetsDir, ASSET_FILES.SOUNDFONT),
 				},
 			];
@@ -381,15 +380,14 @@ export default class TabFlowPlugin extends Plugin {
 			);
 		}
 
-		// 配置字体资源路径（在 styles.css 中通过 CSS 变量引用）
+		// 注入全局 @font-face 作为 AlphaTab 字体样式的后备
+		// （CSS 变量不能用于 @font-face 的 src，因此这里直接注入 style 元素）
 		try {
 			if (this.resources.bravuraUri) {
-				setCssProps(document.documentElement, {
-					'--tabflow-bravura-font-src': `url(${this.resources.bravuraUri}) format('woff2')`,
-				});
+				injectGlobalAlphaTabFontFace(this.resources.bravuraUri);
 			}
 		} catch {
-			// Ignore font loading errors
+			// Ignore font injection errors
 		}
 
 		// 只在有足够资源的情况下注册视图
@@ -676,9 +674,9 @@ export default class TabFlowPlugin extends Plugin {
 			this.languageChangeCleanup = undefined;
 		}
 
-		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
+		// 清理全局字体样式（bravuraUri 为 app:// 或 data URL，均无需额外清理）
 		try {
-			document.documentElement.style.removeProperty('--tabflow-bravura-font-src');
+			removeGlobalAlphaTabFontFace();
 		} catch {
 			// ignore removal errors
 		}
