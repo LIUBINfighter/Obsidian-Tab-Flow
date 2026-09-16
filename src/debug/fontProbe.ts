@@ -17,7 +17,10 @@ function errString(e: unknown): string {
 
 async function probeFontFaceFromUrl(uri: string): Promise<Record<string, unknown>> {
 	try {
-		const face = new FontFace('tabflow-probe-url', `url(${JSON.stringify(uri)}) format('woff2')`);
+		const face = new FontFace(
+			'tabflow-probe-url',
+			`url(${JSON.stringify(uri)}) format('woff2')`
+		);
 		await face.load();
 		return { ok: true, status: face.status };
 	} catch (e) {
@@ -135,9 +138,7 @@ async function probeRender(
 			core: { scriptFile: workerUri, fontDirectory: '', useWorkers: false },
 			player: { enablePlayer: false, playerMode: alphaTab.PlayerMode.Disabled },
 		});
-		settings.core.smuflFontSources = new Map([
-			[key as alphaTab.FontFileFormat, uniqueUri],
-		]);
+		settings.core.smuflFontSources = new Map([[key as alphaTab.FontFileFormat, uniqueUri]]);
 
 		api = new alphaTab.AlphaTabApi(scoreEl, settings);
 		const events: string[] = [];

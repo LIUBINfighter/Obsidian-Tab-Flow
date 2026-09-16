@@ -37,9 +37,7 @@ export function resolveWoff2FontFormat(): alphaTab.FontFileFormat {
  *
  * Always keyed by `FontFileFormat.Woff2`; never guess a format from the URI.
  */
-export function createSmuflFontSources(
-	bravuraUri: string
-): Map<alphaTab.FontFileFormat, string> {
+export function createSmuflFontSources(bravuraUri: string): Map<alphaTab.FontFileFormat, string> {
 	return new Map([[resolveWoff2FontFormat(), bravuraUri]]);
 }
 
