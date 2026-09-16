@@ -7,6 +7,7 @@ export default defineConfig(
 	globalIgnores([
 		'node_modules',
 		'dist',
+		'assets',
 		'main.js',
 		'styles.css',
 		'esbuild.config.mjs',
@@ -16,7 +17,6 @@ export default defineConfig(
 		'scripts',
 		'_debug',
 		'.playwright-mcp',
-		'.obsidian',
 		'docs',
 	]),
 	{
@@ -35,5 +35,5 @@ export default defineConfig(
 		},
 	},
 	...obsidianmd.configs.recommended,
-	prettierRecommended,
+	prettierRecommended
 );
