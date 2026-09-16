@@ -25,7 +25,7 @@ export const ScrollModeControl: React.FC<ScrollModeControlProps> = ({ controller
 	const [currentMode, setCurrentMode] = useState<alphaTab.ScrollMode>(initialMode);
 
 	const handleModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const mode = parseInt(e.target.value) as alphaTab.ScrollMode;
+		const mode = parseInt(e.target.value);
 		setCurrentMode(mode);
 
 		// 更新全局配置（持久化）

@@ -26,7 +26,7 @@ export const StaveProfileControl: React.FC<StaveProfileControlProps> = ({ contro
 	const [profile, setProfile] = useState<alphaTab.StaveProfile>(initialProfile);
 
 	const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newProfile = parseInt(e.target.value) as alphaTab.StaveProfile;
+		const newProfile = parseInt(e.target.value);
 		setProfile(newProfile);
 
 		// 更新全局配置（持久化）

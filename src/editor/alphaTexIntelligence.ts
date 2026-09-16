@@ -53,7 +53,21 @@ interface AlphaTexSnippet {
 	description: string;
 }
 
-const alphaTexDocumentation = documentation;
+// The language server package types these maps loosely; normalize them once so the
+// documentation panels can use a single definition shape.
+function asDefinitionMap(map: unknown): Map<string, AlphaTexDefinition> {
+	return map as Map<string, AlphaTexDefinition>;
+}
+
+const alphaTexDocumentation = {
+	structuralMetaData: asDefinitionMap(documentation.structuralMetaData),
+	scoreMetaData: asDefinitionMap(documentation.scoreMetaData),
+	staffMetaData: asDefinitionMap(documentation.staffMetaData),
+	barMetaData: asDefinitionMap(documentation.barMetaData),
+	beatProperties: asDefinitionMap(documentation.beatProperties),
+	noteProperties: asDefinitionMap(documentation.noteProperties),
+	durationChangeProperties: asDefinitionMap(documentation.durationChangeProperties),
+};
 
 const metadataSections: Array<[string, Map<string, AlphaTexDefinition>, number]> = [
 	['Structure', alphaTexDocumentation.structuralMetaData, 12],

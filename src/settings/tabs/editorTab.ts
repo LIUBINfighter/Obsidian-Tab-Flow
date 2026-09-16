@@ -501,8 +501,8 @@ export function renderEditorTab(
 					t('settings.editor.resetHighlightToDefault', undefined, '重置高亮为默认')
 				).onClick(async () => {
 					try {
-						plugin.settings.editorHighlights = JSON.parse(
-							JSON.stringify(DEFAULT_SETTINGS.editorHighlights || {})
+						plugin.settings.editorHighlights = structuredClone(
+							DEFAULT_SETTINGS.editorHighlights || {}
 						);
 						await plugin.saveSettings();
 						// Refresh preview to show default highlight settings
@@ -576,9 +576,9 @@ export function renderEditorTab(
 				async () => {
 					try {
 						plugin.settings.editorBar = {
-							components: JSON.parse(
-								JSON.stringify(DEFAULT_SETTINGS.editorBar?.components || {})
-							),
+							components: structuredClone(
+								DEFAULT_SETTINGS.editorBar?.components ?? {}
+							) as EditorBarComponentVisibility,
 							order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
 						};
 						await plugin.saveSettings();

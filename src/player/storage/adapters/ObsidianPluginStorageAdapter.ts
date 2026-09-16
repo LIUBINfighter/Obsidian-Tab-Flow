@@ -13,7 +13,8 @@ export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 
 	async save<T>(key: string, data: T): Promise<void> {
 		try {
-			const current = (await this.plugin.loadData()) || {};
+			const current: Record<string, unknown> =
+				((await this.plugin.loadData()) as Record<string, unknown> | null) ?? {};
 			current[key] = data;
 			await this.plugin.saveData(current);
 			console.debug('[PluginStorage] Saved:', key);
@@ -25,10 +26,10 @@ export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 
 	async load<T>(key: string): Promise<T | null> {
 		try {
-			const data = await this.plugin.loadData();
+			const data = (await this.plugin.loadData()) as Record<string, unknown> | null;
 			const value = data?.[key] ?? null;
 			console.debug('[PluginStorage] Loaded:', key, value ? 'found' : 'not found');
-			return value;
+			return value as T | null;
 		} catch (error) {
 			console.error('[PluginStorage] Load failed:', key, error);
 			return null;
@@ -37,7 +38,8 @@ export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 
 	async remove(key: string): Promise<void> {
 		try {
-			const current = (await this.plugin.loadData()) || {};
+			const current: Record<string, unknown> =
+				((await this.plugin.loadData()) as Record<string, unknown> | null) ?? {};
 			delete current[key];
 			await this.plugin.saveData(current);
 			console.debug('[PluginStorage] Removed:', key);

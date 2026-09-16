@@ -762,12 +762,5 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 		updateProgress();
 	}
 
-	const originalRemove = bar.remove.bind(bar);
-	// Use arrow function to avoid unintentional `this` scoping when the method
-	// is referenced separately from the element.
-	bar.remove = () => {
-		originalRemove();
-	};
-
 	return bar;
 }

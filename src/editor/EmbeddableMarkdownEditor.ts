@@ -124,7 +124,7 @@ export class EmbeddableMarkdownEditor {
 		const rawUninstaller = around(EditorClass.prototype, {
 			buildLocalExtensions: (originalMethod: (this: InternalMarkdownEditor) => unknown[]) =>
 				function (this: InternalMarkdownEditor) {
-					const extensions = originalMethod.call(this) || [];
+					const extensions: unknown[] = originalMethod.call(this) ?? [];
 					// For now, we'll apply extensions to all instances and rely on the editor being set correctly
 					const owner = getOwner();
 					const editorRef = owner.editor;
@@ -495,7 +495,9 @@ function resolveEditorPrototype(app: App): unknown {
 	const widget = widgetEditorView as WidgetEditorView;
 	widget.editable = true;
 	widget.showEditor?.();
-	const MarkdownEditor = Object.getPrototypeOf(Object.getPrototypeOf(widget.editMode!));
+	const MarkdownEditor = Object.getPrototypeOf(Object.getPrototypeOf(widget.editMode!)) as {
+		constructor: unknown;
+	};
 	widget.unload?.();
 	return MarkdownEditor.constructor;
 }

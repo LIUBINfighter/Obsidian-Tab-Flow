@@ -233,7 +233,9 @@ const factory = {
 					const currentSettings = context.controller
 						.getGlobalConfigStore()
 						.getState().alphaTabSettings;
-					const updatedSettings = JSON.parse(JSON.stringify(currentSettings));
+					const updatedSettings = JSON.parse(
+						JSON.stringify(currentSettings)
+					) as GlobalAlphaTabSettings;
 
 					let target: Indexable = updatedSettings as unknown as Indexable;
 					for (let i = 0; i < settingPath.length - 1; i++) {

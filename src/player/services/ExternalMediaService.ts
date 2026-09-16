@@ -116,7 +116,8 @@ export class ExternalMediaService {
 
 		const mediaElement = this.mediaElement;
 		const options = this.options;
-		const log = this.log.bind(this);
+		const log = (message: string, data?: unknown, throttle = false) =>
+			this.log(message, data, throttle);
 
 		const handler: AlphaTab.synth.IExternalMediaHandler = {
 			// 获取 backing track 时长（毫秒）

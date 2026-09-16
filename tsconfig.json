@@ -1,32 +1,25 @@
 {
-  "compilerOptions": {
-    "baseUrl": "./src/",
-    "paths": {
-      "@/*": ["*"]
-    },
-    "inlineSourceMap": true,
-    "inlineSources": true,
-    "module": "ESNext",
-    "target": "ES2020",
-    "allowJs": true,
-    "noImplicitAny": true,
-    "moduleResolution": "node",
-    "importHelpers": true,
-    "isolatedModules": true,
-    "strictNullChecks": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "jsx": "react",
-    "lib": [
-      "DOM",
-	  "ES2020"
-    ]
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "tests"
-  ]
+	"compilerOptions": {
+		"baseUrl": "./src/",
+		"paths": {
+			"@/*": ["*"]
+		},
+		"inlineSourceMap": true,
+		"inlineSources": true,
+		"module": "ESNext",
+		"target": "ES2020",
+		"allowJs": true,
+		"noImplicitAny": true,
+		"moduleResolution": "node",
+		"importHelpers": true,
+		"isolatedModules": true,
+		"strictNullChecks": true,
+		"strictBindCallApply": true,
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"jsx": "react",
+		"lib": ["DOM", "ES2020"]
+	},
+	"include": ["**/*.ts", "**/*.tsx"],
+	"exclude": ["tests"]
 }

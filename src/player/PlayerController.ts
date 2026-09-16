@@ -1153,7 +1153,7 @@ export class PlayerController {
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
 			this.stores.ui.getState().showToast('error', 'Failed to load score');
-			return Promise.reject(error);
+			return Promise.reject(error instanceof Error ? error : new Error(String(error)));
 		} finally {
 			this.stores.ui.getState().setLoading(false);
 		}

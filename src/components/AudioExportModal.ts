@@ -31,7 +31,8 @@ export class AudioExportModal extends Modal {
 			await clipboard.write([new ClipboardItemCtor({ [blob.type]: blob })]);
 			new Notice(t('export.audioCopied'));
 		} catch (e) {
-			new Notice(t('export.copyFailed') + ': ' + (e?.message || e));
+			const message = e instanceof Error ? e.message : String(e);
+			new Notice(t('export.copyFailed') + ': ' + message);
 		}
 	}
 

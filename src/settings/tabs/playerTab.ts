@@ -29,9 +29,9 @@ export function renderPlayerTab(
 			btn.setButtonText(t('settings.player.resetToDefault')).onClick(async () => {
 				try {
 					plugin.settings.playBar = {
-						components: JSON.parse(
-							JSON.stringify(DEFAULT_SETTINGS.playBar?.components || {})
-						),
+						components: structuredClone(
+							DEFAULT_SETTINGS.playBar?.components ?? {}
+						) as PlayBarComponentVisibility,
 						order: (DEFAULT_SETTINGS.playBar?.order || []).slice(),
 					};
 					await plugin.saveSettings();

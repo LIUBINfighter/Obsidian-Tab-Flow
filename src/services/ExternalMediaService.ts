@@ -136,26 +136,32 @@ export class ExternalMediaService {
 			updatePosition?: (positionMs: number) => void;
 		};
 		const externalOutput = this.api.player.output as ExternalMediaOutputLike;
+		// 访问器（getter/setter）无法使用箭头函数，用箭头访问器捕获服务实例，
+		// 否则 this 会指向 handler 对象而读不到 mediaElement。
+		const getMediaElement = () => this.mediaElement;
 		const handler: alphaTab.synth.IExternalMediaHandler = {
 			get backingTrackDuration() {
-				if (!this.mediaElement) return 0;
-				const duration = this.mediaElement.duration;
+				const mediaElement = getMediaElement();
+				if (!mediaElement) return 0;
+				const duration = mediaElement.duration;
 				return Number.isFinite(duration) ? duration * 1000 : 0;
 			},
 			get playbackRate() {
-				return this.mediaElement?.playbackRate || 1;
+				return getMediaElement()?.playbackRate || 1;
 			},
 			set playbackRate(value: number) {
-				if (this.mediaElement) {
-					this.mediaElement.playbackRate = value;
+				const mediaElement = getMediaElement();
+				if (mediaElement) {
+					mediaElement.playbackRate = value;
 				}
 			},
 			get masterVolume() {
-				return this.mediaElement?.volume || 1;
+				return getMediaElement()?.volume || 1;
 			},
 			set masterVolume(value: number) {
-				if (this.mediaElement) {
-					this.mediaElement.volume = value;
+				const mediaElement = getMediaElement();
+				if (mediaElement) {
+					mediaElement.volume = value;
 				}
 			},
 			seekTo: (time: number) => {

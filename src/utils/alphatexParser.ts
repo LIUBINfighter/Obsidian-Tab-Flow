@@ -51,7 +51,7 @@ export function parseInlineInit(source: string): { opts: AlphaTexInitOptions; bo
 	const jsonText = s.slice(objStart, i);
 	let opts: AlphaTexInitOptions = {};
 	try {
-		opts = JSON.parse(jsonText) || {};
+		opts = (JSON.parse(jsonText) as AlphaTexInitOptions | null) ?? {};
 	} catch {
 		return { opts: {}, body: source };
 	}

@@ -482,9 +482,9 @@ export class TabView extends FileView {
 			const debugBar = createDebugBar({
 				app: this.app,
 				api: this.alphaTabService.getApi(),
-				isAudioLoaded: this.isAudioLoaded.bind(this),
+				isAudioLoaded: () => this.isAudioLoaded(),
 				eventBus: this.eventBus,
-				getScoreTitle: this.getScoreTitle.bind(this),
+				getScoreTitle: () => this.getScoreTitle(),
 			});
 			this.contentEl.insertBefore(debugBar, this.contentEl.firstChild);
 		} catch (e) {
@@ -618,7 +618,9 @@ export class TabView extends FileView {
 			// console.debug(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error('[TabView] Failed to load file:', error);
-			new Notice(`加载乐谱文件失败: ${error.message || '未知错误'}`);
+			new Notice(
+				`加载乐谱文件失败: ${error instanceof Error ? error.message : String(error)}`
+			);
 		}
 	}
 

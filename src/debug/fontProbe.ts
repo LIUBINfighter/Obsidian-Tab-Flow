@@ -1,6 +1,7 @@
-import { Notice, Plugin } from 'obsidian';
+import { Notice, Platform, Plugin } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { AlphaTabResources, ASSET_FILES } from '../services/ResourceLoaderService';
+import { setCssProps } from '../utils/styleUtils';
 import * as path from 'path';
 
 type ProbeHost = Plugin & {
@@ -66,22 +67,15 @@ async function probeFormatHints(uri: string): Promise<Record<string, unknown>> {
 	];
 	for (const [name, src] of variants) {
 		const family = `tabflow-probe-${name}`;
-		const style = document.createElement('style');
-		style.textContent = `@font-face { font-family: '${family}'; src: ${src}; }`;
-		document.head.appendChild(style);
-		const registered: Array<Record<string, string>> = [];
-		document.fonts.forEach((f) => {
-			if (f.family === family) registered.push({ family: f.family, status: f.status });
-		});
 		let load: Record<string, unknown>;
 		try {
-			const loaded = await document.fonts.load(`21px ${family}`);
-			load = { ok: true, count: loaded.length, statuses: loaded.map((f) => f.status) };
+			const face = new FontFace(family, src);
+			await face.load();
+			load = { ok: true, status: face.status };
 		} catch (e) {
 			load = { ok: false, error: errString(e) };
 		}
-		results[name] = { registered, load };
-		style.remove();
+		results[name] = { load };
 	}
 	return results;
 }
@@ -124,8 +118,17 @@ async function probeRender(
 	};
 
 	const host = document.createElement('div');
-	host.style.cssText =
-		'position:absolute;left:0;top:0;width:640px;height:320px;opacity:0.01;pointer-events:none;z-index:-1;overflow:hidden;';
+	setCssProps(host, {
+		position: 'absolute',
+		left: '0',
+		top: '0',
+		width: '640px',
+		height: '320px',
+		opacity: '0.01',
+		'pointer-events': 'none',
+		'z-index': '-1',
+		overflow: 'hidden',
+	});
 	document.body.appendChild(host);
 	const scoreEl = document.createElement('div');
 	host.appendChild(scoreEl);
@@ -238,8 +241,16 @@ export function registerDebugCommands(plugin: ProbeHost) {
 			const doc = document;
 			const out: Record<string, unknown> = {
 				time: new Date().toISOString(),
-				userAgent: navigator.userAgent,
+				runtime: {
+					electron: process.versions.electron,
+					chrome: process.versions.chrome,
+					node: process.versions.node,
+				},
 				platform: {
+					isDesktopApp: Platform.isDesktopApp,
+					isWin: Platform.isWin,
+					isMacOS: Platform.isMacOS,
+					isLinux: Platform.isLinux,
 					origin: location.origin,
 					href: location.href,
 					isSecureContext: window.isSecureContext,

@@ -1,4 +1,4 @@
-import { App, PluginSettingTab } from 'obsidian';
+import { App, EventRef, PluginSettingTab } from 'obsidian';
 import TabFlowPlugin from '../main';
 import { t } from '../i18n';
 
@@ -7,6 +7,10 @@ type AppWithSetting = App & {
 		open?: () => void;
 		openTabById?: (id: string) => void;
 	};
+};
+
+type WorkspaceWithCustomEvents = {
+	on(name: string, callback: (...data: unknown[]) => unknown, ctx?: unknown): EventRef;
 };
 
 /**
@@ -23,80 +27,45 @@ export class SettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 
 		if (!this._eventBound) {
-			const workspaceOn = (this.app.workspace as { on?: unknown }).on as
-				| ((name: string, callback: (...args: unknown[]) => void, ctx?: unknown) => unknown)
-				| undefined;
-			if (typeof workspaceOn === 'function') {
-				const playerRef = workspaceOn.call(
-					this.app.workspace,
+			const workspace = this.app.workspace as unknown as WorkspaceWithCustomEvents;
+			const openSettingsTab = async (tab: string) => {
+				try {
+					const settingManager = (this.app as AppWithSetting).setting;
+					settingManager?.open?.();
+					settingManager?.openTabById?.(this.plugin.manifest.id);
+					// 标记强制激活目标子页签
+					this.forcedTab = tab;
+					try {
+						await this.renderDisplay();
+					} catch {
+						// Ignore display errors
+					}
+				} catch {
+					// Ignore event binding errors
+				}
+			};
+
+			this.plugin.registerEvent(
+				workspace.on(
 					'tabflow:open-plugin-settings-player',
-					async () => {
-						try {
-							const settingManager = (this.app as AppWithSetting).setting;
-							settingManager?.open?.();
-							const setting = settingManager;
-							if (setting?.openTabById) {
-								setting.openTabById(this.plugin.manifest.id);
-							}
-							// 标记强制激活 player 子页签
-							this.forcedTab = 'player';
-							try {
-								await this.renderDisplay();
-							} catch {
-								// Ignore display errors
-							}
-						} catch {
-							// Ignore event binding errors
-						}
-					},
+					() => void openSettingsTab('player'),
 					this
-				);
-				this.plugin.registerEvent(playerRef);
-
-				const editorRef = workspaceOn.call(
-					this.app.workspace,
+				)
+			);
+			this.plugin.registerEvent(
+				workspace.on(
 					'tabflow:open-plugin-settings-editor',
-					async () => {
-						try {
-							const settingManager = (this.app as AppWithSetting).setting;
-							settingManager?.open?.();
-							settingManager?.openTabById?.(this.plugin.manifest.id);
-							this.forcedTab = 'editor';
-							try {
-								await this.renderDisplay();
-							} catch {
-								// Ignore display errors
-							}
-						} catch {
-							// Ignore event binding errors
-						}
-					},
+					() => void openSettingsTab('editor'),
 					this
-				);
-				this.plugin.registerEvent(editorRef);
-
-				const aboutRef = workspaceOn.call(
-					this.app.workspace,
+				)
+			);
+			this.plugin.registerEvent(
+				workspace.on(
 					'tabflow:open-plugin-settings-about',
-					async () => {
-						try {
-							const settingManager = (this.app as AppWithSetting).setting;
-							settingManager?.open?.();
-							settingManager?.openTabById?.(this.plugin.manifest.id);
-							this.forcedTab = 'about';
-							try {
-								await this.renderDisplay();
-							} catch {
-								// Ignore display errors
-							}
-						} catch {
-							// Ignore event binding errors
-						}
-					},
+					() => void openSettingsTab('about'),
 					this
-				);
-				this.plugin.registerEvent(aboutRef);
-			}
+				)
+			);
 			this._eventBound = true;
 		}
 	}

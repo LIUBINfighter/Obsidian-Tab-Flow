@@ -145,7 +145,7 @@ export class MediaSyncService {
 
 		const mediaElement = this.mediaElement;
 		const timeOffset = this.timeOffset;
-		const log = this.log.bind(this);
+		const log = (message: string, data?: unknown) => this.log(message, data);
 		const config = this.syncModeConfig;
 
 		const handler: AlphaTab.synth.IExternalMediaHandler = {

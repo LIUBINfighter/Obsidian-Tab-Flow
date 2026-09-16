@@ -76,21 +76,20 @@ export function formatSettingValue(value: unknown): string {
 		return 'N/A';
 	}
 
-	if (typeof value === 'boolean') {
-		return value ? 'Enabled' : 'Disabled';
+	switch (typeof value) {
+		case 'boolean':
+			return value ? 'Enabled' : 'Disabled';
+		case 'number':
+			return value.toFixed(2);
+		case 'string':
+			return value;
+		case 'bigint':
+			return value.toString();
+		case 'symbol':
+			return value.description ?? 'symbol';
+		case 'object':
+			return JSON.stringify(value);
+		default:
+			return '';
 	}
-
-	if (typeof value === 'number') {
-		return value.toFixed(2);
-	}
-
-	if (typeof value === 'string') {
-		return value;
-	}
-
-	if (typeof value === 'object') {
-		return JSON.stringify(value);
-	}
-
-	return String(value);
 }

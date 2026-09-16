@@ -43,7 +43,8 @@ export default class TabFlowPlugin extends Plugin {
 
 	// 加载和保存设置的方法
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const data = (await this.loadData()) as Partial<TabFlowSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
 	}
 
 	async saveSettings() {
@@ -283,12 +284,9 @@ export default class TabFlowPlugin extends Plugin {
 			return success;
 		} catch (error) {
 			console.error('[TabFlowPlugin] Error downloading assets:', error);
+			const message = error instanceof Error ? error.message : String(error);
 			new Notice(
-				t(
-					'assets.download.failed',
-					{ error: error.message },
-					`下载资产文件失败: ${error.message}`
-				)
+				t('assets.download.failed', { error: message }, `下载资产文件失败: ${message}`)
 			);
 			return false;
 		}

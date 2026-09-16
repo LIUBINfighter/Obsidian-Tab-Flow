@@ -66,7 +66,7 @@ export class ShareCardStateManager {
 		this.state = {
 			activePresetId: active.id,
 			base: core,
-			working: JSON.parse(JSON.stringify(core)),
+			working: structuredClone(core),
 			dirty: false,
 			autosaveEnabled,
 			pendingTimer: null,
@@ -131,7 +131,7 @@ export class ShareCardStateManager {
 		if (!preset) return;
 		const patch: Partial<ShareCardPresetV1> = { ...s.working, updatedAt: Date.now() };
 		this.presetService.update(s.activePresetId, patch);
-		s.base = JSON.parse(JSON.stringify(s.working));
+		s.base = structuredClone(s.working);
 		s.dirty = false;
 		if (s.pendingTimer) {
 			window.clearTimeout(s.pendingTimer);
@@ -145,7 +145,7 @@ export class ShareCardStateManager {
 
 	resetWorking() {
 		const s = this.state;
-		s.working = JSON.parse(JSON.stringify(s.base));
+		s.working = structuredClone(s.base);
 		s.dirty = false;
 		if (s.pendingTimer) {
 			window.clearTimeout(s.pendingTimer);
@@ -162,7 +162,7 @@ export class ShareCardStateManager {
 		const core = this.strip(target);
 		s.suppressDirty = true;
 		s.base = core;
-		s.working = JSON.parse(JSON.stringify(core));
+		s.working = structuredClone(core);
 		s.dirty = false;
 		s.suppressDirty = false;
 		const all = this.presetService.list();

@@ -54,7 +54,7 @@ export class StaveProfileButton {
 		});
 
 		this.updateButtonDisplay();
-		this.element.addEventListener('click', this.handleClick.bind(this));
+		this.element.addEventListener('click', () => this.handleClick());
 	}
 
 	private getCurrentProfileLabel(): string {
