@@ -307,12 +307,17 @@ export function registerDebugCommands(plugin: ProbeHost) {
 				};
 			}
 
-			const liveGlyph = doc.querySelector<SVGTextElement>('.at-surface svg text');
-			if (liveGlyph) {
-				const cs = getComputedStyle(liveGlyph);
+			const glyphTexts = Array.from(
+				doc.querySelectorAll<SVGTextElement>('.at-surface svg text')
+			);
+			const musicGlyph = glyphTexts.find((el) =>
+				Array.from(el.textContent ?? '').some((c) => (c.codePointAt(0) ?? 0) >= 0xe000)
+			);
+			if (musicGlyph) {
+				const cs = getComputedStyle(musicGlyph);
 				let textLength: number | null = null;
 				try {
-					textLength = liveGlyph.getComputedTextLength();
+					textLength = musicGlyph.getComputedTextLength();
 				} catch {
 					textLength = null;
 				}
@@ -320,11 +325,12 @@ export function registerDebugCommands(plugin: ProbeHost) {
 					fontFamily: cs.fontFamily,
 					fontSize: cs.fontSize,
 					textLength,
-					codepoints: Array.from(liveGlyph.textContent ?? '')
+					codepoints: Array.from(musicGlyph.textContent ?? '')
 						.slice(0, 6)
 						.map((c) => `U+${c.codePointAt(0)?.toString(16).toUpperCase()}`),
 				};
 			}
+			out.liveGlyphCount = glyphTexts.length;
 			out.liveSurfaces = doc.querySelectorAll('.at-surface').length;
 
 			if (uri && workerUri) {
