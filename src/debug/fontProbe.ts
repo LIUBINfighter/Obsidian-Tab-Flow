@@ -200,7 +200,7 @@ async function probeRender(
 			}
 		}
 
-		const glyph = scoreEl.querySelector('svg text') as SVGTextElement | null;
+		const glyph = scoreEl.querySelector<SVGTextElement>('svg text');
 		if (glyph) {
 			const cs = getComputedStyle(glyph);
 			res.atComputedFontFamily = cs.fontFamily;
@@ -299,7 +299,7 @@ export function registerDebugCommands(plugin: ProbeHost) {
 
 			const sampleAt = doc.querySelector('.at');
 			if (sampleAt) {
-				const cs = getComputedStyle(sampleAt as Element);
+				const cs = getComputedStyle(sampleAt);
 				out.sampleAtComputed = {
 					fontFamily: cs.fontFamily,
 					fontSize: cs.fontSize,
@@ -307,7 +307,7 @@ export function registerDebugCommands(plugin: ProbeHost) {
 				};
 			}
 
-			const liveGlyph = doc.querySelector('.at-surface svg text') as SVGTextElement | null;
+			const liveGlyph = doc.querySelector<SVGTextElement>('.at-surface svg text');
 			if (liveGlyph) {
 				const cs = getComputedStyle(liveGlyph);
 				let textLength: number | null = null;
