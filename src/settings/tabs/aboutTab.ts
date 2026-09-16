@@ -59,14 +59,12 @@ export function renderAboutTab(
 					// 尝试关闭设置面板以便文档视图可见
 					try {
 						const settingManager = Reflect.get(app, 'setting') as
-							| SettingManager
-							| undefined;
+							SettingManager | undefined;
 						if (typeof settingManager?.close === 'function') {
 							settingManager.close();
 						} else {
 							const workspaceExtra = Reflect.get(app, 'workspace') as
-								| WorkspaceExtra
-								| undefined;
+								WorkspaceExtra | undefined;
 							if (typeof workspaceExtra?.detachLeavesOfType === 'function') {
 								workspaceExtra.detachLeavesOfType('settings');
 							}

@@ -102,8 +102,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			if (!api.score) throw new Error('乐谱未加载');
 			// AlphaTab exporter types are not fully exported
 			const exporterModule = Reflect.get(alphaTab, 'exporter') as
-				| GpExporterModule
-				| undefined;
+				GpExporterModule | undefined;
 			if (!exporterModule?.Gp7Exporter) {
 				throw new Error('Gp7Exporter 不可用');
 			}

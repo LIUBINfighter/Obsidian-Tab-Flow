@@ -154,8 +154,7 @@ export function createPlayBar(options: PlayBarOptions): HTMLDivElement {
 	// 从运行期覆盖或全局设置读取可见性（覆盖优先）
 	let visibility: Record<string, boolean> | undefined = undefined;
 	let runtimeOverride:
-		| { components?: Record<string, boolean>; order?: string[] | string }
-		| undefined = undefined;
+		{ components?: Record<string, boolean>; order?: string[] | string } | undefined = undefined;
 	let plugin: TabFlowPluginLike | null = null;
 	try {
 		const pluginId = 'tab-flow';
