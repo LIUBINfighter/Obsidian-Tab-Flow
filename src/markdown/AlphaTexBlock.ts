@@ -3,6 +3,7 @@ import { setIcon } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { parseInlineInit, toScrollMode, scheduleInit } from '../utils';
 import { createSmuflFontSources } from '../utils/fontSource';
+import { getAlphaTexDiagnosticMessages } from '../editor/alphaTexDiagnostics';
 
 export interface AlphaTexInitOptions {
 	// display
@@ -340,7 +341,7 @@ export function mountAlphaTexBlock(
 		}
 
 		// render via convenient tex method; fallback to manual importer if needed
-		const renderFromTex = () => {
+		const renderFromTex = (): boolean => {
 			// reset per-render rate window
 			rateWindowStart = Date.now();
 			rateWindowCount = 0;
@@ -354,6 +355,16 @@ export function mountAlphaTexBlock(
 			}
 			errorMessages = [];
 			errorIndex.clear();
+			messagesEl.empty();
+			copyBtnAdded = false;
+
+			const diagnosticMessages = getAlphaTexDiagnosticMessages(body);
+			if (diagnosticMessages.length > 0) {
+				appendError('AlphaTex preview was not rendered because the source has errors.');
+				diagnosticMessages.forEach(appendError);
+				return false;
+			}
+
 			try {
 				type AlphaTabApiWithTex = alphaTab.AlphaTabApi & {
 					tex?: (text: string) => void | Promise<void>;
@@ -361,7 +372,7 @@ export function mountAlphaTexBlock(
 				const apiWithTex = api as AlphaTabApiWithTex;
 				if (typeof apiWithTex.tex === 'function') {
 					apiWithTex.tex(body);
-					return;
+					return true;
 				}
 				type AlphaTabWithImporter = {
 					importer?: {
@@ -382,6 +393,7 @@ export function mountAlphaTexBlock(
 					const score = imp.readScore?.();
 					if (score) {
 						api!.renderScore(score as alphaTab.model.Score);
+						return true;
 					}
 					// Best-effort: surface importer-reported errors if available
 					try {
@@ -396,7 +408,9 @@ export function mountAlphaTexBlock(
 			} catch (e) {
 				appendError(`AlphaTex render error: ${formatError(e)}`);
 				stopAlphaEngine();
+				return false;
 			}
+			return false;
 		};
 
 		// Apply track filtering after score loaded if requested
@@ -433,7 +447,8 @@ export function mountAlphaTexBlock(
 			// Ignore score loaded event subscription errors
 		}
 
-		renderFromTex();
+		const rendered = renderFromTex();
+		if (!rendered) return;
 
 		// controls — only when player is enabled
 		if (resources.soundFontUri && playerEnabled) {

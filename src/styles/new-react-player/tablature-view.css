@@ -6,6 +6,7 @@
 	height: 100%;
 	position: relative;
 	overflow: hidden;
+	isolation: isolate;
 	display: flex;
 	flex-direction: column;
 	background: var(--background-primary);
@@ -18,6 +19,7 @@
 	overflow-y: auto; /* 允许垂直滚动 */
 	overflow-x: hidden; /* 水平方向由 alphaTab 的 layoutMode 控制 */
 	position: relative;
+	z-index: 0;
 	min-height: 0; /* 重要：flex 子元素需要这个才能正确收缩和滚动 */
 
 	/* 确保内容可以滚动 */
@@ -26,6 +28,8 @@
 
 /* AlphaTab 渲染容器 - 对应官方文档的 .at-main */
 .tablature-view .alphatab-main {
+	position: relative;
+	z-index: 0;
 	width: 100%;
 	min-height: 100%; /* 确保至少占满视口 */
 	/* AlphaTab 会在这里添加渲染内容 */
@@ -69,7 +73,7 @@
 .tablature-view .loading-overlay,
 .tablature-view .error-overlay {
 	position: absolute;
-	z-index: 999;
+	z-index: 100;
 	pointer-events: auto; /* 覆盖层可以捕获点击 */
 }
 
@@ -83,7 +87,7 @@
 	align-items: center;
 	justify-content: center;
 	background: var(--background-primary);
-	z-index: 1000;
+	z-index: 100;
 }
 
 .tablature-view .loading-message {
@@ -107,18 +111,85 @@
 }
 
 .tablature-view .error-overlay {
-	top: 20px;
-	left: 50%;
-	transform: translateX(-50%);
-	max-width: 80%;
-	padding: 10px 20px;
-	background: var(--background-modifier-error);
-	border: 1px solid var(--background-modifier-error-border);
-	border-radius: 4px;
+	top: 10px;
+	left: 10px;
+	right: 10px;
+	max-height: min(34%, 180px);
+	padding: 10px 12px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-left: 3px solid var(--text-error);
+	border-radius: 10px;
+	box-shadow: var(--shadow-s);
+	overflow: auto;
+}
+
+.tablature-view .error-card-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 6px;
+}
+
+.tablature-view .error-title {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	color: var(--text-normal);
+	font-weight: 700;
+	font-size: 0.92em;
+}
+
+.tablature-view .error-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--text-error);
+	flex: 0 0 auto;
+}
+
+.tablature-view .error-hint {
+	color: var(--text-muted);
+	font-size: 0.82em;
+	margin-top: 2px;
 }
 
 .tablature-view .error-message {
-	color: var(--text-error);
+	color: var(--text-normal);
+	font-family: var(--font-monospace);
+	font-size: 0.82em;
+	line-height: 1.45;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.tablature-view .error-detail {
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 5px 7px;
+}
+
+.tablature-view .error-detail + .error-detail {
+	margin-top: 4px;
+}
+
+.tablature-view .error-dismiss {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 999px;
+	background: var(--background-primary);
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 0.75em;
+	line-height: 1;
+	padding: 4px 8px;
+}
+
+.tablature-view .error-dismiss:hover,
+.tablature-view .error-dismiss:focus-visible {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
 }
 
 /* AlphaTab 内部样式覆盖（如果需要） */
@@ -130,7 +201,11 @@
 /* 确保 alphaTab 的光标可见 */
 .tablature-view .at-cursor-bar,
 .tablature-view .at-cursor-beat {
-	z-index: 10; /* 确保光标在内容之上 */
+	z-index: 2 !important; /* Stay above the score, below panels and overlays. */
+}
+
+.tablature-view .at-selection div {
+	z-index: 1 !important;
 }
 
 /* 打印时隐藏滚动条 */

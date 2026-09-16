@@ -301,6 +301,103 @@
 	color: var(--text-muted);
 }
 
+/* AlphaTex completion and hover tooltips for embedded CodeMirror editors. */
+.inmarkdown-editor-cm .cm-tooltip,
+.inmarkdown-editor-cm .cm-tooltip-autocomplete,
+.inmarkdown-editor-cm .cm-tooltip.cm-tooltip-hover,
+.cm-tooltip.alphatex-intelligence-tooltip,
+.cm-tooltip:has(.alphatex-intelligence-info),
+.alphatex-intelligence-hover {
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+	box-shadow: var(--shadow-s);
+	z-index: var(--layer-popover, 1000);
+}
+
+.inmarkdown-editor-cm .cm-tooltip-autocomplete ul li[aria-selected],
+.cm-tooltip.alphatex-intelligence-tooltip ul li[aria-selected] {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.inmarkdown-editor-cm .cm-tooltip.cm-tooltip-lint,
+.cm-tooltip.cm-tooltip-lint,
+.cm-tooltip-lint {
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+	box-shadow: var(--shadow-s);
+}
+
+.inmarkdown-editor-cm .cm-tooltip-lint .cm-diagnostic,
+.cm-tooltip-lint .cm-diagnostic {
+	background: transparent;
+	border: none;
+	color: var(--text-normal);
+	padding: 6px 8px;
+}
+
+.inmarkdown-editor-cm .cm-tooltip-lint .cm-diagnosticText,
+.cm-tooltip-lint .cm-diagnosticText {
+	color: var(--text-normal);
+	white-space: pre-wrap;
+}
+
+.inmarkdown-editor-cm .cm-tooltip-lint .cm-diagnosticSource,
+.cm-tooltip-lint .cm-diagnosticSource {
+	color: var(--text-muted);
+}
+
+.inmarkdown-editor-cm .cm-tooltip-lint .cm-diagnostic-error,
+.cm-tooltip-lint .cm-diagnostic-error {
+	border-left: 3px solid var(--text-error);
+}
+
+.inmarkdown-editor-cm .cm-completionDetail,
+.cm-tooltip.alphatex-intelligence-tooltip .cm-completionDetail {
+	color: var(--text-muted);
+}
+
+.inmarkdown-editor-cm .alphatex-intelligence-info,
+.cm-tooltip .alphatex-intelligence-info,
+.cm-tooltip.alphatex-intelligence-info,
+.alphatex-intelligence-info {
+	max-width: 460px;
+	padding: 8px 10px;
+	font-size: 0.9em;
+	line-height: 1.45;
+}
+
+.inmarkdown-editor-cm .alphatex-intelligence-title,
+.cm-tooltip .alphatex-intelligence-title,
+.alphatex-intelligence-title {
+	font-weight: 700;
+	color: var(--text-accent, var(--color-accent));
+	margin-bottom: 4px;
+}
+
+.inmarkdown-editor-cm .alphatex-intelligence-description,
+.cm-tooltip .alphatex-intelligence-description,
+.alphatex-intelligence-description {
+	color: var(--text-normal);
+	white-space: pre-wrap;
+}
+
+.inmarkdown-editor-cm .alphatex-intelligence-syntax,
+.inmarkdown-editor-cm .alphatex-intelligence-example,
+.cm-tooltip .alphatex-intelligence-syntax,
+.cm-tooltip .alphatex-intelligence-example,
+.alphatex-intelligence-syntax,
+.alphatex-intelligence-example {
+	margin: 8px 0 0;
+	padding: 6px 8px;
+	background: var(--background-secondary);
+	border-radius: 4px;
+	color: var(--text-normal);
+	white-space: pre-wrap;
+}
+
 /* 错误消息容器使用flexbox布局 */
 .alphatex-messages {
 	display: flex;
