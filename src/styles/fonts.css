@@ -1,12 +1,3 @@
-/* Font face declarations and related CSS variables */
-:root {
-	--tabflow-bravura-font-src: local('alphaTab');
-}
-
-@font-face {
-	font-family: 'alphaTab';
-	src: var(--tabflow-bravura-font-src, local('alphaTab'));
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
-}
+/* Font face declarations are injected at runtime (see src/utils/fontSource.ts).
+   CSS variables cannot be used inside @font-face src descriptors, so the font
+   source is applied through a <style> element instead of styles.css. */

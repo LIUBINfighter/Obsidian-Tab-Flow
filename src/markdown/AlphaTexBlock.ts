@@ -2,6 +2,7 @@ import * as alphaTab from '@coderline/alphatab';
 import { setIcon } from 'obsidian';
 import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { parseInlineInit, toScrollMode, scheduleInit } from '../utils';
+import { createSmuflFontSources } from '../utils/fontSource';
 
 export interface AlphaTexInitOptions {
 	// display
@@ -261,19 +262,8 @@ export function mountAlphaTexBlock(
 			core: {
 				scriptFile: resources.alphaTabWorkerUri || '',
 				smuflFontSources: resources.bravuraUri
-					? new Map<number, string>([
-							[
-								(
-									alphaTab as {
-										rendering?: {
-											glyphs?: { FontFileFormat?: { Woff2?: number } };
-										};
-									}
-								).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
-								resources.bravuraUri,
-							],
-						])
-					: new Map<number, string>(),
+					? createSmuflFontSources(resources.bravuraUri)
+					: new Map<alphaTab.FontFileFormat, string>(),
 				fontDirectory: '',
 				// 非公开字段：尝试传递给 alphaTab (若版本忽略则无副作用)
 				enableLazyLoading: disableLazyLoading ? false : undefined,

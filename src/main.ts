@@ -17,6 +17,7 @@ import { AssetStatus } from './types/assets';
 import { loadTranslations, addLanguageChangeListener, getCurrentLanguageCode, t } from './i18n';
 import { TrackStateStore } from './state/TrackStateStore';
 import { setCssProps } from './utils/styleUtils';
+import { injectGlobalAlphaTabFontFace, removeGlobalAlphaTabFontFace } from './utils/fontSource';
 
 type SettingManager = {
 	activeTab?: { id?: string };
@@ -381,15 +382,14 @@ export default class TabFlowPlugin extends Plugin {
 			);
 		}
 
-		// 配置字体资源路径（在 styles.css 中通过 CSS 变量引用）
+		// 注入全局 @font-face 作为 AlphaTab 字体样式的后备
+		// （CSS 变量不能用于 @font-face 的 src，因此这里直接注入 style 元素）
 		try {
 			if (this.resources.bravuraUri) {
-				setCssProps(document.documentElement, {
-					'--tabflow-bravura-font-src': `url(${this.resources.bravuraUri}) format('woff2')`,
-				});
+				injectGlobalAlphaTabFontFace(this.resources.bravuraUri);
 			}
 		} catch {
-			// Ignore font loading errors
+			// Ignore font injection errors
 		}
 
 		// 只在有足够资源的情况下注册视图
@@ -676,9 +676,9 @@ export default class TabFlowPlugin extends Plugin {
 			this.languageChangeCleanup = undefined;
 		}
 
-		// bravuraUri 和 alphaTabWorkerUri 现在都是 Data URL，不需要清理
+		// 清理全局字体样式（bravuraUri 为 app:// 或 data URL，均无需额外清理）
 		try {
-			document.documentElement.style.removeProperty('--tabflow-bravura-font-src');
+			removeGlobalAlphaTabFontFace();
 		} catch {
 			// ignore removal errors
 		}

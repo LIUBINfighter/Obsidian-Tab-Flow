@@ -4,6 +4,7 @@ import * as alphaTab from '@coderline/alphatab';
 import { App } from 'obsidian';
 import { EventBus, convertSamplesToWavBlobUrl, toFiniteClampedNumber } from '../utils';
 import { ScrollEventManager } from '../events/scrollEvents';
+import { createSmuflFontSources } from '../utils/fontSource';
 import * as convert from 'color-convert';
 
 export class AlphaTabService {
@@ -67,19 +68,8 @@ export class AlphaTabService {
 			core: {
 				scriptFile: resources.alphaTabWorkerUri,
 				smuflFontSources: resources.bravuraUri
-					? new Map<number, string>([
-							[
-								(
-									alphaTab as {
-										rendering?: {
-											glyphs?: { FontFileFormat?: { Woff2?: number } };
-										};
-									}
-								).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
-								resources.bravuraUri,
-							],
-						])
-					: new Map<number, string>(),
+					? createSmuflFontSources(resources.bravuraUri)
+					: new Map<alphaTab.FontFileFormat, string>(),
 				fontDirectory: '',
 			},
 			player: {
@@ -406,19 +396,8 @@ export class AlphaTabService {
 				core: {
 					scriptFile: this.resources.alphaTabWorkerUri,
 					smuflFontSources: this.resources.bravuraUri
-						? new Map<number, string>([
-								[
-									(
-										alphaTab as {
-											rendering?: {
-												glyphs?: { FontFileFormat?: { Woff2?: number } };
-											};
-										}
-									).rendering?.glyphs?.FontFileFormat?.Woff2 ?? 0,
-									this.resources.bravuraUri,
-								],
-							])
-						: new Map<number, string>(),
+						? createSmuflFontSources(this.resources.bravuraUri)
+						: new Map<alphaTab.FontFileFormat, string>(),
 					fontDirectory: '',
 				},
 				player: {

@@ -10,10 +10,6 @@ import { VIEW_TYPE_PRINT_PREVIEW } from '../views/PrintPreviewView';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
-// 全局字体注入标记（避免多次注入冲突）
-let fontStyleInjected = false;
-let globalFontStyle: HTMLStyleElement | null = null;
-
 export class ReactView extends FileView {
 	private currentFile: TFile | null = null;
 	private plugin: TabFlowPlugin;
@@ -62,24 +58,7 @@ export class ReactView extends FileView {
 			ui: !!this.stores.ui,
 		});
 
-		// 2. 全局只注入一次 CSS @font-face（作为 AlphaTab 的备用方案）
-		// AlphaTab 主要通过 smuflFontSources 加载字体,但 CSS 可提供后备
-		if (!fontStyleInjected && this.resources.bravuraUri) {
-			const fontFaceRule = `
-				@font-face {
-					font-family: 'alphaTab';
-					src: url(${this.resources.bravuraUri});
-					font-weight: normal;
-					font-style: normal;
-				}
-			`;
-			globalFontStyle = this.containerEl.ownerDocument.createElement('style');
-			globalFontStyle.id = 'alphatab-font-style-global';
-			globalFontStyle.appendChild(document.createTextNode(fontFaceRule));
-			this.containerEl.ownerDocument.head.appendChild(globalFontStyle);
-			fontStyleInjected = true;
-			console.debug('[ReactView] Global @font-face injected');
-		}
+		// 2. 全局 @font-face 由插件 onload 统一注入（见 main.ts），此处不再重复注入
 
 		// 3. 创建 PlayerController（传递 resources 和 stores）
 		if (!this.stores) {

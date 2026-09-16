@@ -10,12 +10,12 @@
  * 独立于 React 组件，可被任何视图层使用
  */
 
-import { FontFileFormat } from '@coderline/alphatab';
 import type { AlphaTabApi, synth } from '@coderline/alphatab';
 import type { StoreCollection } from './store/StoreFactory';
 import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
+import { createSmuflFontSources } from '../utils/fontSource';
 
 type AlphaTabSettingsInput = alphaTab.Settings;
 type AlphaTabSettingsJson = Parameters<alphaTab.Settings['fillFromJson']>[0];
@@ -431,16 +431,9 @@ export class PlayerController {
 			},
 		});
 
-		// 配置字体源 - 使用正确的字体格式枚举
-		// AlphaTab 的 FontFileFormat 枚举值：Woff2 = 0, Woff = 1, Ttf = 2
+		// 配置字体源：统一走 createSmuflFontSources，避免手写 FontFileFormat 键值
 		if (this.resources.bravuraUri) {
-			// 使用 AlphaTab 内部的枚举值（向后兼容）
-			coreSettings.smuflFontSources = new Map<
-				| FontFileFormat
-				| keyof typeof FontFileFormat
-				| Lowercase<keyof typeof FontFileFormat>,
-				string
-			>([[FontFileFormat.Woff2, this.resources.bravuraUri]]);
+			coreSettings.smuflFontSources = createSmuflFontSources(this.resources.bravuraUri);
 			console.debug(
 				`[PlayerController #${this.instanceId}] Font configured:`,
 				this.resources.bravuraUri
