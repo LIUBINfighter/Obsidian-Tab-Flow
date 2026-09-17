@@ -13,6 +13,7 @@ import { X } from 'lucide-react';
 import { useAlphaTabEvent } from '../hooks';
 import { TrackItem } from './TrackItem';
 import type { PlayerController } from '../PlayerController';
+import { debugLog } from '../../utils/logger';
 
 /**
  * 音轨选择器属性
@@ -97,7 +98,7 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 	 * 处理音轨选择变化
 	 */
 	const handleTrackSelectionChange = (track: AlphaTab.model.Track, selected: boolean) => {
-		console.debug('[TracksModal] 音轨选择变化', {
+		debugLog('[TracksModal] 音轨选择变化', {
 			track: track.name,
 			index: track.index,
 			selected,

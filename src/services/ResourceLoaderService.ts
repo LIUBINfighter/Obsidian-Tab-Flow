@@ -2,6 +2,7 @@ import { App } from 'obsidian';
 import * as path from 'path';
 import { fileExists } from '../utils';
 import { FontSourceStrategy, toFontDataUrl, verifyFontUri } from '../utils/fontSource';
+import { debugLog } from '../utils/logger';
 
 export interface AlphaTabResources {
 	bravuraUri?: string; // 可直接用于 url() 的字体地址（app:// 资源路径或 data URL）
@@ -53,16 +54,16 @@ export class ResourceLoaderService {
 				resources.resourcesComplete = false;
 				// TO FIX: 应该限制 console.debug 的数量，避免污染开发者控制台
 				// 原因: 过多的日志会影响性能并使调试变得困难
-				console.debug(
+				debugLog(
 					'[ResourceLoaderService] Some resources are missing. Plugin will load with limited functionality.'
 				);
 
 				if (!bravuraExists)
-					console.debug(`[ResourceLoaderService] Missing: ${ASSET_FILES.BRAVURA}`);
+					debugLog(`[ResourceLoaderService] Missing: ${ASSET_FILES.BRAVURA}`);
 				if (!alphaTabExists)
-					console.debug(`[ResourceLoaderService] Missing: ${ASSET_FILES.ALPHA_TAB}`);
+					debugLog(`[ResourceLoaderService] Missing: ${ASSET_FILES.ALPHA_TAB}`);
 				if (!soundFontExists)
-					console.debug(`[ResourceLoaderService] Missing: ${ASSET_FILES.SOUNDFONT}`);
+					debugLog(`[ResourceLoaderService] Missing: ${ASSET_FILES.SOUNDFONT}`);
 			}
 
 			// 使用 Obsidian 资源 URL（可被缓存/共享）
@@ -81,13 +82,13 @@ export class ResourceLoaderService {
 				resources.soundFontUri = this.app.vault.adapter.getResourcePath(soundFontPath);
 				// TO FIX: 应该限制 console.debug 的数量，避免污染开发者控制台
 				// 原因: 过多的日志会影响性能并使调试变得困难
-				console.debug('[ResourceLoaderService] SoundFont URI: ', resources.soundFontUri);
+				debugLog('[ResourceLoaderService] SoundFont URI: ', resources.soundFontUri);
 			}
 
 			if (resources.resourcesComplete) {
 				// TO FIX: 应该限制 console.debug 的数量，避免污染开发者控制台
 				// 原因: 过多的日志会影响性能并使调试变得困难
-				console.debug('[ResourceLoaderService] All resources loaded successfully.');
+				debugLog('[ResourceLoaderService] All resources loaded successfully.');
 			}
 
 			return resources;
@@ -115,7 +116,7 @@ export class ResourceLoaderService {
 		relativePath: string
 	): Promise<{ uri: string; strategy: FontSourceStrategy }> {
 		if (await verifyFontUri(appUri)) {
-			console.debug('[ResourceLoaderService] Bravura verified via app resource URL');
+			debugLog('[ResourceLoaderService] Bravura verified via app resource URL');
 			return { uri: appUri, strategy: 'app-url' };
 		}
 
@@ -126,7 +127,7 @@ export class ResourceLoaderService {
 			const buffer = await this.app.vault.adapter.readBinary(relativePath);
 			const dataUrl = toFontDataUrl(buffer);
 			if (await verifyFontUri(dataUrl)) {
-				console.debug('[ResourceLoaderService] Bravura verified via data URL fallback');
+				debugLog('[ResourceLoaderService] Bravura verified via data URL fallback');
 				return { uri: dataUrl, strategy: 'data-url' };
 			}
 			console.error('[ResourceLoaderService] Bravura data URL fallback failed verification');

@@ -14,6 +14,7 @@ import { createUIStore, type UIStore } from './uiStore';
 import type TabFlowPlugin from '../../main';
 import type { ItemView } from 'obsidian';
 import type { StoreApi, UseBoundStore } from 'zustand';
+import { debugLog } from '../../utils/logger';
 
 type ViewStateBridge = ItemView & {
 	setState: (state: unknown, result?: unknown) => Promise<void>;
@@ -64,7 +65,7 @@ export class StoreFactory {
 	 * @returns Store 集合
 	 */
 	createStores(view: ItemView): StoreCollection {
-		console.debug('[StoreFactory] Creating stores for view:', view.getViewType());
+		debugLog('[StoreFactory] Creating stores for view:', view.getViewType());
 
 		// 1. 创建存储适配器
 		const pluginAdapter = new ObsidianPluginStorageAdapter(this.plugin);
@@ -110,7 +111,7 @@ export class StoreFactory {
 	 * @param stores - Store 集合
 	 */
 	destroyStores(stores: StoreCollection): void {
-		console.debug('[StoreFactory] Destroying stores');
+		debugLog('[StoreFactory] Destroying stores');
 
 		// 1. 清除 workspace adapter 的回调
 		stores.adapters.workspace.clearCallbacks();
@@ -119,6 +120,6 @@ export class StoreFactory {
 		// 注意：Zustand 不需要手动 destroy，但可以清除订阅
 
 		// 3. 清理完成
-		console.debug('[StoreFactory] Stores destroyed');
+		debugLog('[StoreFactory] Stores destroyed');
 	}
 }

@@ -11,6 +11,7 @@ import { PlayerMode } from '@coderline/alphatab';
 import type * as AlphaTab from '@coderline/alphatab';
 import type { MediaElementLike } from '../types/media-sync';
 import { SyncMode, getSyncModeConfig, type SyncModeConfig } from '../types/sync-mode';
+import { debugLog } from '../../utils/logger';
 
 /**
  * 媒体同步服务类
@@ -403,7 +404,7 @@ export class MediaSyncService {
 		if (!this.debugMode) {
 			return;
 		}
-		console.debug(`[MediaSyncService] ${message}`, data ?? '');
+		debugLog(`[MediaSyncService] ${message}`, data ?? '');
 	}
 
 	/**

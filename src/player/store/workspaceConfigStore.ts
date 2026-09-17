@@ -11,6 +11,7 @@ import { storageAdapter } from './middleware/storageAdapter';
 import type { WorkspaceSessionConfig, TrackConfig } from '../types/workspace-config-schema';
 import { getDefaultWorkspaceSessionConfig } from '../types/workspace-config-schema';
 import type { ObsidianWorkspaceStorageAdapter } from '../storage/adapters/ObsidianWorkspaceStorageAdapter';
+import { debugLog } from '../../utils/logger';
 
 // Store state interface
 interface WorkspaceConfigState extends WorkspaceSessionConfig {
@@ -48,7 +49,7 @@ export const createWorkspaceConfigStore = (adapter: ObsidianWorkspaceStorageAdap
 				version: CURRENT_VERSION,
 				// 迁移函数（未来版本变更时使用）
 				migrate: (persistedState: WorkspaceConfigState, version: number) => {
-					console.debug(
+					debugLog(
 						'[WorkspaceConfigStore] Migrating from version',
 						version,
 						'to',

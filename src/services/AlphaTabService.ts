@@ -320,7 +320,7 @@ export class AlphaTabService {
 		// 监听手动刷新事件 - 使用事件总线而不是 workspace
 		this.subscribe('命令:手动刷新', () => {
 			try {
-				// console.debug('[AlphaTabService] 收到手动刷新事件');
+				// debugLog('[AlphaTabService] 收到手动刷新事件');
 				// 强制重新渲染
 				if (this.api?.score) {
 					this.api.render();
@@ -433,7 +433,7 @@ export class AlphaTabService {
 		if (this.api.settings.player) {
 			this.api.settings.player.scrollElement = scrollElement || 'html,body';
 			this.api.updateSettings();
-			// console.debug('[AlphaTabService] 滚动元素已配置:', scrollElement);
+			// debugLog('[AlphaTabService] 滚动元素已配置:', scrollElement);
 		}
 	}
 	/**

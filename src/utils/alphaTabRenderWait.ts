@@ -2,6 +2,7 @@
 // It observes alphaTab API / renderer events, fonts readiness, and multi-frame layout stability.
 
 import type * as alphaTab from '@coderline/alphatab';
+import { debugLog } from './logger';
 
 interface AlphaTabRenderer {
 	on?: (event: string, callback: (...args: unknown[]) => void) => void;
@@ -40,7 +41,7 @@ function onceFontReady(debug?: boolean): Promise<void> {
 	const fonts = Reflect.get(document, 'fonts') as FontFaceSet | undefined;
 	if (!fonts || typeof fonts.ready?.then !== 'function') {
 		if (debug) {
-			console.debug('[AlphaTabWait] Font API not supported; skip');
+			debugLog('[AlphaTabWait] Font API not supported; skip');
 		}
 		return Promise.resolve();
 	}
@@ -108,7 +109,7 @@ export async function waitAlphaTabFullRender(
 	// preRender clears previous state
 	add(renderer, 'preRender', () => {
 		if (debug) {
-			console.debug('[AlphaTabWait] preRender');
+			debugLog('[AlphaTabWait] preRender');
 		}
 		partialIds = new Set();
 		renderedPartials = new Set();
@@ -151,7 +152,7 @@ export async function waitAlphaTabFullRender(
 		totalWidth = result.totalWidth ?? 0;
 		totalHeight = result.totalHeight ?? 0;
 		if (debug) {
-			console.debug(
+			debugLog(
 				'[AlphaTabWait] renderFinished layout complete',
 				result.totalWidth,
 				result.totalHeight
@@ -177,7 +178,7 @@ export async function waitAlphaTabFullRender(
 			await new Promise((r) => window.setTimeout(r, 50));
 		}
 		if (debug) {
-			console.debug(
+			debugLog(
 				`[AlphaTabWait] condition satisfied: ${label} in ${Math.round(performance.now() - pollStart)}ms`
 			);
 		}

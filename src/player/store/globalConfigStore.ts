@@ -10,6 +10,7 @@ import { storageAdapter } from './middleware/storageAdapter';
 import type { GlobalConfig } from '../types/global-config-schema';
 import { getDefaultGlobalConfig } from '../types/global-config-schema';
 import type { ObsidianPluginStorageAdapter } from '../storage/adapters/ObsidianPluginStorageAdapter';
+import { debugLog } from '../../utils/logger';
 
 // Store state interface
 interface GlobalConfigState extends GlobalConfig {
@@ -40,7 +41,7 @@ export const createGlobalConfigStore = (adapter: ObsidianPluginStorageAdapter) =
 				version: CURRENT_VERSION,
 				// 迁移函数（未来版本变更时使用）
 				migrate: (persistedState: GlobalConfigState, version: number) => {
-					console.debug(
+					debugLog(
 						'[GlobalConfigStore] Migrating from version',
 						version,
 						'to',

@@ -21,6 +21,7 @@
 import { useEffect, useState } from 'react';
 import type { AlphaTabApi } from '@coderline/alphatab';
 import { LayoutMode, PlayerMode, ScrollMode, Settings, StaveProfile } from '@coderline/alphatab';
+import { debugLog } from '../../utils/logger';
 
 /**
  * AlphaTab 播放器配置选项
@@ -137,7 +138,7 @@ export function useAlphaTabPlayer(
 
 		let currentApi: AlphaTabApi | null = null;
 
-		console.debug('[useAlphaTabPlayer] 初始化 AlphaTab API', {
+		debugLog('[useAlphaTabPlayer] 初始化 AlphaTab API', {
 			container,
 			config,
 		});
@@ -151,7 +152,7 @@ export function useAlphaTabPlayer(
 					currentApi = new AlphaTabApi(container, settings);
 					setApi(currentApi);
 
-					console.debug('[useAlphaTabPlayer] AlphaTab API 创建成功', currentApi);
+					debugLog('[useAlphaTabPlayer] AlphaTab API 创建成功', currentApi);
 				})
 				.catch((error) => {
 					console.error('[useAlphaTabPlayer] AlphaTab 模块加载失败', error);
@@ -163,7 +164,7 @@ export function useAlphaTabPlayer(
 		// 清理函数：销毁 API
 		return () => {
 			if (currentApi) {
-				console.debug('[useAlphaTabPlayer] 销毁 AlphaTab API');
+				debugLog('[useAlphaTabPlayer] 销毁 AlphaTab API');
 				currentApi.destroy();
 				currentApi = null;
 			}
@@ -176,7 +177,7 @@ export function useAlphaTabPlayer(
 			return;
 		}
 
-		console.debug('[useAlphaTabPlayer] 更新 AlphaTab 配置', config);
+		debugLog('[useAlphaTabPlayer] 更新 AlphaTab 配置', config);
 
 		// 更新可变配置
 		let needsUpdate = false;
@@ -223,7 +224,7 @@ export function useAlphaTabPlayer(
 
 		// 批量更新配置（避免多次调用 updateSettings）
 		if (needsUpdate) {
-			console.debug('[useAlphaTabPlayer] 应用配置更新');
+			debugLog('[useAlphaTabPlayer] 应用配置更新');
 			api.updateSettings();
 		}
 	}, [api, config]);

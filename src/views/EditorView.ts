@@ -19,6 +19,7 @@ import { StoreFactory, type StoreCollection } from '../player/store/StoreFactory
 import { TablatureView } from '../player/components/TablatureView';
 import { VIEW_TYPE_REACT } from '../player/ReactView';
 import { VIEW_TYPE_PRINT_PREVIEW } from './PrintPreviewView';
+import { debugLog } from '../utils/logger';
 
 export const VIEW_TYPE_ALPHATEX_EDITOR = 'alphatex-editor-view';
 
@@ -78,7 +79,7 @@ export class EditorView extends FileView {
 
 			if (result === content) {
 				this.lastSavedContent = content;
-				// console.debug('[EditorView] flushSave: 保存已完成');
+				// debugLog('[EditorView] flushSave: 保存已完成');
 			} else {
 				console.warn('[EditorView] flushSave: 磁盘文件已变更，未覆盖。');
 				// new Notice(
@@ -134,9 +135,7 @@ export class EditorView extends FileView {
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.file && file && file.path === this.file.path) {
 				try {
-					console.debug(
-						`[EditorView] 检测到文件变化: ${file.basename}，正在同步最新内容...`
-					);
+					debugLog(`[EditorView] 检测到文件变化: ${file.basename}，正在同步最新内容...`);
 					this.app.vault
 						.cachedRead(file)
 						.then((latest) => {
@@ -157,7 +156,7 @@ export class EditorView extends FileView {
 								// 		'文件已在磁盘上更改，视图已同步'
 								// 	)
 								// );
-								console.debug('[EditorView] 已将编辑器与磁盘最新内容同步');
+								debugLog('[EditorView] 已将编辑器与磁盘最新内容同步');
 							}
 						})
 						.catch((e) => {
@@ -360,7 +359,7 @@ export class EditorView extends FileView {
 					this.scheduleSave(1000);
 				} catch (error) {
 					// 静默处理编辑器未就绪时的错误
-					console.debug('[EditorView] onChange callback skipped:', error);
+					debugLog('[EditorView] onChange callback skipped:', error);
 				}
 			},
 			highlightSettings: this.plugin.settings.editorHighlights || {},

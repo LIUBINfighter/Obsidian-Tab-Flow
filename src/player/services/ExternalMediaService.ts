@@ -8,6 +8,7 @@
 import type { AlphaTabApi } from '@coderline/alphatab';
 import { PlayerMode } from '@coderline/alphatab';
 import type * as AlphaTab from '@coderline/alphatab';
+import { debugLog } from '../../utils/logger';
 
 /**
  * 外部媒体元素类型（兼容 HTMLMediaElement 接口）
@@ -337,7 +338,7 @@ export class ExternalMediaService {
 			return;
 		}
 
-		console.debug(`[ExternalMediaService] ${message}`, data ?? '');
+		debugLog(`[ExternalMediaService] ${message}`, data ?? '');
 	}
 }
 

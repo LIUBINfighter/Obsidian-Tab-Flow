@@ -7,6 +7,7 @@
 
 import type { Plugin } from 'obsidian';
 import type { IStorageAdapter } from '../IStorageAdapter';
+import { debugLog } from '../../../utils/logger';
 
 export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 	constructor(private plugin: Plugin) {}
@@ -17,7 +18,7 @@ export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 				((await this.plugin.loadData()) as Record<string, unknown> | null) ?? {};
 			current[key] = data;
 			await this.plugin.saveData(current);
-			console.debug('[PluginStorage] Saved:', key);
+			debugLog('[PluginStorage] Saved:', key);
 		} catch (error) {
 			console.error('[PluginStorage] Save failed:', key, error);
 			throw error;
@@ -28,7 +29,7 @@ export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 		try {
 			const data = (await this.plugin.loadData()) as Record<string, unknown> | null;
 			const value = data?.[key] ?? null;
-			console.debug('[PluginStorage] Loaded:', key, value ? 'found' : 'not found');
+			debugLog('[PluginStorage] Loaded:', key, value ? 'found' : 'not found');
 			return value as T | null;
 		} catch (error) {
 			console.error('[PluginStorage] Load failed:', key, error);
@@ -42,7 +43,7 @@ export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 				((await this.plugin.loadData()) as Record<string, unknown> | null) ?? {};
 			delete current[key];
 			await this.plugin.saveData(current);
-			console.debug('[PluginStorage] Removed:', key);
+			debugLog('[PluginStorage] Removed:', key);
 		} catch (error) {
 			console.error('[PluginStorage] Remove failed:', key, error);
 			throw error;
@@ -52,7 +53,7 @@ export class ObsidianPluginStorageAdapter implements IStorageAdapter {
 	async clear(): Promise<void> {
 		try {
 			await this.plugin.saveData({});
-			console.debug('[PluginStorage] Cleared all data');
+			debugLog('[PluginStorage] Cleared all data');
 		} catch (error) {
 			console.error('[PluginStorage] Clear failed:', error);
 			throw error;

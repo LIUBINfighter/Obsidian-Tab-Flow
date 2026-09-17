@@ -19,6 +19,7 @@ import type {
 	GlobalPlayerExtensions,
 	UIConfig,
 } from '../types/global-config-schema';
+import { debugLog } from '../../utils/logger';
 
 // ========== Context ==========
 
@@ -806,12 +807,12 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							className="settings-tool-button"
 							onClick={() => {
 								if (api) {
-									console.debug('[Settings] Current API Settings:', api.settings);
-									console.debug(
+									debugLog('[Settings] Current API Settings:', api.settings);
+									debugLog(
 										'[Settings] Current Global Config:',
 										controller.getGlobalConfigStore().getState()
 									);
-									console.debug(
+									debugLog(
 										'[Settings] Current Workspace Config:',
 										controller.getWorkspaceConfigStore().getState()
 									);

@@ -6,6 +6,7 @@
  */
 
 import type { IStorageAdapter } from '../IStorageAdapter';
+import { debugLog } from '../../../utils/logger';
 
 export interface WorkspaceStorageCallbacks {
 	getViewState: () => Record<string, unknown> | null;
@@ -24,7 +25,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 	 */
 	setCallbacks(callbacks: WorkspaceStorageCallbacks): void {
 		this.callbacks = callbacks;
-		console.debug('[WorkspaceStorage] Callbacks registered');
+		debugLog('[WorkspaceStorage] Callbacks registered');
 	}
 
 	/**
@@ -32,7 +33,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 	 */
 	clearCallbacks(): void {
 		this.callbacks = null;
-		console.debug('[WorkspaceStorage] Callbacks cleared');
+		debugLog('[WorkspaceStorage] Callbacks cleared');
 	}
 
 	async save<T>(key: string, data: T): Promise<void> {
@@ -45,7 +46,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 			const current = { ...(this.callbacks.getViewState() ?? {}) };
 			current[key] = data;
 			await this.callbacks.setViewState(current, {});
-			console.debug('[WorkspaceStorage] Saved to workspace:', key);
+			debugLog('[WorkspaceStorage] Saved to workspace:', key);
 		} catch (error) {
 			console.error('[WorkspaceStorage] Save failed:', key, error);
 			throw error;
@@ -61,7 +62,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 		try {
 			const state = this.callbacks.getViewState();
 			const value = state?.[key] ?? null;
-			console.debug(
+			debugLog(
 				'[WorkspaceStorage] Loaded from workspace:',
 				key,
 				value ? 'found' : 'not found'
@@ -83,7 +84,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 			const current = { ...(this.callbacks.getViewState() ?? {}) };
 			delete current[key];
 			await this.callbacks.setViewState(current, {});
-			console.debug('[WorkspaceStorage] Removed from workspace:', key);
+			debugLog('[WorkspaceStorage] Removed from workspace:', key);
 		} catch (error) {
 			console.error('[WorkspaceStorage] Remove failed:', key, error);
 			throw error;
@@ -98,7 +99,7 @@ export class ObsidianWorkspaceStorageAdapter implements IStorageAdapter {
 
 		try {
 			await this.callbacks.setViewState({}, {});
-			console.debug('[WorkspaceStorage] Workspace state cleared');
+			debugLog('[WorkspaceStorage] Workspace state cleared');
 		} catch (error) {
 			console.error('[WorkspaceStorage] Clear failed:', error);
 			throw error;

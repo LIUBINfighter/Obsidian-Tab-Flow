@@ -6,6 +6,7 @@ import { DebugBar } from './DebugBar';
 import { SettingsPanel } from './SettingsPanel';
 import { TracksPanel } from './TracksPanel';
 import { MediaSync } from './MediaSync';
+import { debugLog } from '../../utils/logger';
 
 /**
  * TablatureView 配置选项
@@ -135,14 +136,14 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 			const viewportReady = Number.isFinite(viewportRect.width) && viewportRect.width > 0;
 
 			if (!containerReady || !viewportReady) {
-				console.debug('[TablatureView] Waiting for non-zero layout before init', {
+				debugLog('[TablatureView] Waiting for non-zero layout before init', {
 					containerWidth: containerRect.width,
 					viewportWidth: viewportRect.width,
 				});
 				return;
 			}
 
-			console.debug('[TablatureView] Initializing controller...');
+			debugLog('[TablatureView] Initializing controller...');
 			initialized = true;
 			void controller.init(containerRef.current, viewportRef.current);
 		};
@@ -163,7 +164,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 			disposed = true;
 			window.cancelAnimationFrame(rafId);
 			resizeObserver.disconnect();
-			console.debug('[TablatureView] Cleaning up controller...');
+			debugLog('[TablatureView] Cleaning up controller...');
 			if (initialized) {
 				controller.destroy();
 			}

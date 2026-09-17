@@ -1,4 +1,5 @@
 import * as alphaTab from '@coderline/alphatab';
+import { debugLog } from '../utils/logger';
 
 export function registerApiEventHandlers(
 	api: alphaTab.AlphaTabApi,
@@ -38,16 +39,14 @@ export function registerApiEventHandlers(
 	api.error.on((err) => console.error('[AlphaTab] Error occurred:', err));
 
 	// 渲染事件
-	api.renderStarted.on((isResize) =>
-		console.debug('[AlphaTab] Render started, isResize:', isResize)
-	);
-	api.renderFinished.on(() => console.debug('[AlphaTab] Render finished'));
+	api.renderStarted.on((isResize) => debugLog('[AlphaTab] Render started, isResize:', isResize));
+	api.renderFinished.on(() => debugLog('[AlphaTab] Render finished'));
 
 	// 播放器事件
-	// api.playerReady.on(() => console.debug("[AlphaTab] Player ready"));
-	// api.playerStateChanged.on((args) => console.debug("[AlphaTab] Player state changed:", args.state));
-	// api.playerPositionChanged.on((args) => console.debug(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`));
-	// api.playerFinished.on(() => console.debug("[AlphaTab] Playback finished"));
+	// api.playerReady.on(() => debugLog("[AlphaTab] Player ready"));
+	// api.playerStateChanged.on((args) => debugLog("[AlphaTab] Player state changed:", args.state));
+	// api.playerPositionChanged.on((args) => debugLog(`[AlphaTab] Position changed: ${args.currentTime} / ${args.endTime}`));
+	// api.playerFinished.on(() => debugLog("[AlphaTab] Playback finished"));
 	api.midiEventsPlayed.on((evt) => {
 		// 低级 MIDI 事件，可选处理
 		// AlphaTab MIDI event types are not exported, use type assertion
@@ -58,7 +57,7 @@ export function registerApiEventHandlers(
 		evt.events.forEach((midi: unknown) => {
 			const midiEvent = midi as AlphaTabMidiEvent;
 			if (midiEvent.isMetronome) {
-				console.debug('[AlphaTab] Metronome tick:', midiEvent.metronomeNumerator);
+				debugLog('[AlphaTab] Metronome tick:', midiEvent.metronomeNumerator);
 			}
 		});
 	});

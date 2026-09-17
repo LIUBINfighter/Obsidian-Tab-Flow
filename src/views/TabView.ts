@@ -15,6 +15,7 @@ import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
 import { t } from 'i18n';
 import type TabFlowPlugin from '../main';
+import { debugLog } from '../utils/logger';
 
 export type AlphaTabResources = {
 	bravuraUri: string;
@@ -180,7 +181,7 @@ export class TabView extends FileView {
 
 		this.fileModifyHandler = (file: TFile) => {
 			if (this.currentFile && file && file.path === this.currentFile.path) {
-				// console.debug(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
+				// debugLog(`[TabView] 检测到文件变化: ${file.basename}，正在重新加载...`);
 				void this.reloadFile();
 			}
 		};
@@ -544,7 +545,7 @@ export class TabView extends FileView {
 	}
 
 	async onClose(): Promise<void> {
-		// console.debug('[TabView] Starting cleanup process');
+		// debugLog('[TabView] Starting cleanup process');
 
 		document.body.classList.remove('tabflow-hide-statusbar');
 
@@ -556,7 +557,7 @@ export class TabView extends FileView {
 		if (this._api) {
 			try {
 				this._api.destroy();
-				// console.debug('[TabView] AlphaTab API destroyed successfully');
+				// debugLog('[TabView] AlphaTab API destroyed successfully');
 			} catch (error) {
 				console.error('[TabView] Error destroying AlphaTab API:', error);
 			}
@@ -603,7 +604,7 @@ export class TabView extends FileView {
 	async onLoadFile(file: TFile): Promise<void> {
 		this.currentFile = file;
 		try {
-			// console.debug(`[TabView] Loading file: ${file.name}`);
+			// debugLog(`[TabView] Loading file: ${file.name}`);
 
 			// 使用 AlphaTabService 加载文件
 			if (file.extension && ['atex', 'alphatex'].includes(file.extension.toLowerCase())) {
@@ -615,7 +616,7 @@ export class TabView extends FileView {
 			}
 			// 配置滚动元素 - 在乐谱加载后设置
 			this.configureScrollElement();
-			// console.debug(`[TabView] File loaded successfully: ${file.name}`);
+			// debugLog(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error('[TabView] Failed to load file:', error);
 			new Notice(
@@ -657,10 +658,10 @@ export class TabView extends FileView {
 
 		if (scrollElement) {
 			this._api.settings.player.scrollElement = scrollElement;
-			console.debug('[TabView] 设置滚动容器:', scrollElement.className, scrollElement);
+			debugLog('[TabView] 设置滚动容器:', scrollElement.className, scrollElement);
 		} else {
 			this._api.settings.player.scrollElement = 'html,body';
-			console.debug('[TabView] 使用默认滚动容器: html,body');
+			debugLog('[TabView] 使用默认滚动容器: html,body');
 		}
 
 		this._api.updateSettings();
@@ -679,7 +680,7 @@ export class TabView extends FileView {
 				this._api.settings.player.enableCursor = true;
 
 				this._api.updateSettings();
-				console.debug(
+				debugLog(
 					'[TabView] 滚动配置:',
 					'mode=Continuous',
 					'nativeBrowserSmoothScroll=false',
@@ -700,12 +701,12 @@ export class TabView extends FileView {
 
 	private registerFileWatcher(): void {
 		this.app.vault.on('modify', this.fileModifyHandler);
-		// console.debug('[TabView] 已注册文件监听');
+		// debugLog('[TabView] 已注册文件监听');
 	}
 
 	private unregisterFileWatcher(): void {
 		this.app.vault.off('modify', this.fileModifyHandler);
-		// console.debug('[TabView] 已注销文件监听');
+		// debugLog('[TabView] 已注销文件监听');
 	}
 
 	private async reloadFile(): Promise<void> {
@@ -724,14 +725,14 @@ export class TabView extends FileView {
 				const inputFile = await this.app.vault.readBinary(this.currentFile);
 				this._api.load(new Uint8Array(inputFile));
 			}
-			// console.debug(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
+			// debugLog(`[TabView] 已重新加载文件: ${this.currentFile.basename}`);
 		} catch (error) {
 			console.error('[TabView] 重新加载文件失败', error);
 		}
 	}
 
 	override async onUnloadFile(file: TFile): Promise<void> {
-		// console.debug(`[TabView] Unloading file: ${file.name}`);
+		// debugLog(`[TabView] Unloading file: ${file.name}`);
 		this.currentFile = null;
 		await super.onUnloadFile(file);
 	}

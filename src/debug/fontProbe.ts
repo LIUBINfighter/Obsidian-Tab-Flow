@@ -2,6 +2,7 @@ import { Notice, Platform, Plugin } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { AlphaTabResources, ASSET_FILES } from '../services/ResourceLoaderService';
 import { setCssProps } from '../utils/styleUtils';
+import { isDebugLoggingEnabled, setDebugLoggingEnabled } from '../utils/logger';
 import * as path from 'path';
 
 type ProbeHost = Plugin & {
@@ -221,6 +222,16 @@ async function probeRender(
 }
 
 export function registerDebugCommands(plugin: ProbeHost) {
+	plugin.addCommand({
+		id: 'debug-toggle-logging',
+		name: 'Debug: toggle debug logging',
+		callback: () => {
+			const enabled = !isDebugLoggingEnabled();
+			setDebugLoggingEnabled(enabled);
+			new Notice(`TabFlow debug logging ${enabled ? 'enabled' : 'disabled'}`);
+		},
+	});
+
 	plugin.addCommand({
 		id: 'debug-font-probe',
 		name: 'Debug: font probe',

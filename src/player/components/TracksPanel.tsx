@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import type { PlayerController } from '../PlayerController';
 import { useAlphaTabEvent } from '../hooks';
 import { TrackItem } from './TrackItem';
+import { debugLog } from '../../utils/logger';
 
 export interface TracksPanelProps {
 	controller: PlayerController;
@@ -73,7 +74,7 @@ export const TracksPanel: React.FC<TracksPanelProps> = ({ controller, isOpen, on
 
 	// 事件处理
 	const handleTrackSelectionChange = (track: AlphaTab.model.Track, selected: boolean) => {
-		console.debug('[TracksPanel] 音轨选择变化', {
+		debugLog('[TracksPanel] 音轨选择变化', {
 			track: track.name,
 			index: track.index,
 			selected,

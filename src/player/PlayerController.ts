@@ -17,6 +17,7 @@ import * as alphaTab from '@coderline/alphatab';
 import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
 import { createSmuflFontSources } from '../utils/fontSource';
 import { getAlphaTexDiagnosticMessages } from '../editor/alphaTexDiagnostics';
+import { debugLog } from '../utils/logger';
 
 type AlphaTabSettingsInput = alphaTab.Settings;
 type AlphaTabSettingsJson = Parameters<alphaTab.Settings['fillFromJson']>[0];
@@ -101,7 +102,7 @@ export class PlayerController {
 		this.stores = stores;
 		this.instanceId = ++PlayerController.instanceCounter;
 
-		console.debug(`[PlayerController #${this.instanceId}] Initialized with stores:`, {
+		debugLog(`[PlayerController #${this.instanceId}] Initialized with stores:`, {
 			globalConfig: !!stores.globalConfig,
 			workspaceConfig: !!stores.workspaceConfig,
 			runtime: !!stores.runtime,
@@ -118,7 +119,7 @@ export class PlayerController {
 	private initializeResourcePaths(): void {
 		// 资源路径（worker、soundFont、font）在 createAlphaTabSettings 中直接使用
 		// 这里只记录日志
-		console.debug(`[PlayerController #${this.instanceId}] Resources initialized:`, {
+		debugLog(`[PlayerController #${this.instanceId}] Resources initialized:`, {
 			worker: this.resources.alphaTabWorkerUri,
 			soundFont: this.resources.soundFontUri,
 			font: this.resources.bravuraUri,
@@ -175,13 +176,13 @@ export class PlayerController {
 	 * 销毁控制器
 	 */
 	destroy(): void {
-		console.debug(`[PlayerController #${this.instanceId}] Destroying controller...`);
+		debugLog(`[PlayerController #${this.instanceId}] Destroying controller...`);
 
 		// 清理 IntersectionObserver
 		if (this.intersectionObserver) {
 			this.intersectionObserver.disconnect();
 			this.intersectionObserver = null;
-			console.debug(`[PlayerController #${this.instanceId}] IntersectionObserver cleaned up`);
+			debugLog(`[PlayerController #${this.instanceId}] IntersectionObserver cleaned up`);
 		}
 
 		// 销毁 AlphaTab API
@@ -195,7 +196,7 @@ export class PlayerController {
 		this.container = null;
 		this.scrollViewport = null;
 
-		console.debug(`[PlayerController #${this.instanceId}] Controller destroyed`);
+		debugLog(`[PlayerController #${this.instanceId}] Controller destroyed`);
 	}
 
 	// ========== Config Subscription ==========
@@ -207,7 +208,7 @@ export class PlayerController {
 
 			// 仅当配置真正改变时重建
 			if (this.shouldRebuildApi(newConfigHash)) {
-				console.debug(
+				debugLog(
 					`[PlayerController #${this.instanceId}] Global config changed, rebuilding API`
 				);
 				void this.rebuildApi();
@@ -238,7 +239,7 @@ export class PlayerController {
 			return;
 		}
 
-		console.debug(`[PlayerController #${this.instanceId}] Rebuilding API...`);
+		debugLog(`[PlayerController #${this.instanceId}] Rebuilding API...`);
 		this.stores.ui.getState().setLoading(true, 'Loading score...');
 		this.stores.runtime.getState().setApiReady(false);
 
@@ -250,9 +251,7 @@ export class PlayerController {
 			const settings = this.createAlphaTabSettings();
 
 			// 创建新 API（直接使用静态导入的 alphaTab 模块）
-			console.debug(
-				`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`
-			);
+			debugLog(`[PlayerController #${this.instanceId}] Creating AlphaTabApi instance...`);
 			this.api = new alphaTab.AlphaTabApi(this.container, settings);
 			this.api.playbackSpeed = toFiniteClampedNumber(
 				this.stores.globalConfig.getState().alphaTabSettings.player.playbackSpeed,
@@ -270,7 +269,7 @@ export class PlayerController {
 			// 更新最后配置哈希
 			this.lastConfigHash = this.getCurrentConfigHash();
 
-			console.debug(`[PlayerController #${this.instanceId}] API rebuilt successfully`);
+			debugLog(`[PlayerController #${this.instanceId}] API rebuilt successfully`);
 
 			// API 准备好后，检查是否有待加载的文件
 			if (this.pendingFileLoad) {
@@ -280,7 +279,7 @@ export class PlayerController {
 				// 如果有之前加载的乐谱，重新加载
 				const lastScore = this.stores.runtime.getState().lastLoadedScore;
 				if (lastScore.type && lastScore.data) {
-					console.debug(
+					debugLog(
 						`[PlayerController #${this.instanceId}] Reloading last score after rebuild...`
 					);
 					try {
@@ -289,7 +288,7 @@ export class PlayerController {
 						} else if (lastScore.type === 'binary') {
 							this.api.load(lastScore.data);
 						}
-						console.debug(
+						debugLog(
 							`[PlayerController #${this.instanceId}] Last score reloaded successfully`
 						);
 					} catch (error) {
@@ -342,7 +341,7 @@ export class PlayerController {
 		if (this.scrollViewport) {
 			// 1. 使用显式提供的滚动视口
 			scrollElement = this.scrollViewport;
-			console.debug(`[PlayerController #${this.instanceId}] Using provided scrollViewport`);
+			debugLog(`[PlayerController #${this.instanceId}] Using provided scrollViewport`);
 		} else if (this.container) {
 			// 2. 从 container 向上查找第一个可滚动的父元素
 			let parent = this.container.parentElement;
@@ -350,7 +349,7 @@ export class PlayerController {
 				const overflowY = window.getComputedStyle(parent).overflowY;
 				if (overflowY === 'auto' || overflowY === 'scroll') {
 					scrollElement = parent;
-					console.debug(
+					debugLog(
 						`[PlayerController #${this.instanceId}] Found scrollable parent:`,
 						parent.className
 					);
@@ -364,9 +363,7 @@ export class PlayerController {
 				const workspaceLeaf = this.container.closest('.workspace-leaf-content');
 				if (workspaceLeaf) {
 					scrollElement = workspaceLeaf as HTMLElement;
-					console.debug(
-						`[PlayerController #${this.instanceId}] Using workspace-leaf-content`
-					);
+					debugLog(`[PlayerController #${this.instanceId}] Using workspace-leaf-content`);
 				}
 			}
 		}
@@ -420,7 +417,7 @@ export class PlayerController {
 		const playerSettings = settingsJson.player!;
 
 		// 调试：输出布局和滚动相关配置
-		console.debug(`[PlayerController #${this.instanceId}] AlphaTab settings configured:`, {
+		debugLog(`[PlayerController #${this.instanceId}] AlphaTab settings configured:`, {
 			layout: {
 				layoutMode: displaySettings.layoutMode,
 				barsPerRow: displaySettings.barsPerRow,
@@ -500,7 +497,7 @@ export class PlayerController {
 				scoreInfoColor: style.getPropertyValue('--color-base-100') || '#000',
 			};
 
-			console.debug(
+			debugLog(
 				`[PlayerController #${this.instanceId}] Color resources configured:`,
 				displaySettings.resources
 			);
@@ -523,7 +520,7 @@ export class PlayerController {
 		settings.fillFromJson(settingsJson);
 		if (this.resources.bravuraUri) {
 			settings.core.smuflFontSources = createSmuflFontSources(this.resources.bravuraUri);
-			console.debug(
+			debugLog(
 				`[PlayerController #${this.instanceId}] Font configured:`,
 				this.resources.bravuraUri
 			);
@@ -547,10 +544,7 @@ export class PlayerController {
 
 		// 验证滚动元素配置
 		if (typeof currentScrollElement === 'string') {
-			console.debug(
-				'[PlayerController] Scroll element is CSS selector:',
-				currentScrollElement
-			);
+			debugLog('[PlayerController] Scroll element is CSS selector:', currentScrollElement);
 		} else {
 			const scrollInfo = {
 				element: currentScrollElement.tagName,
@@ -560,7 +554,7 @@ export class PlayerController {
 				canScroll: currentScrollElement.scrollHeight > currentScrollElement.clientHeight,
 				overflowY: window.getComputedStyle(currentScrollElement).overflowY,
 			};
-			console.debug('[PlayerController] Scroll element configured:', scrollInfo);
+			debugLog('[PlayerController] Scroll element configured:', scrollInfo);
 
 			// 警告：如果容器不可滚动
 			if (
@@ -584,7 +578,7 @@ export class PlayerController {
 				this.api.settings.player.enableCursor =
 					globalConfig.alphaTabSettings.player.enableCursor;
 				this.api.updateSettings();
-				console.debug('[PlayerController] Scroll mode applied:', {
+				debugLog('[PlayerController] Scroll mode applied:', {
 					scrollMode: globalConfig.alphaTabSettings.player.scrollMode,
 					enableCursor: globalConfig.alphaTabSettings.player.enableCursor,
 				});
@@ -660,7 +654,7 @@ export class PlayerController {
 
 			// Player Ready
 			const playerReadyHandler = () => {
-				console.debug('[PlayerController] Player ready - can now play music');
+				debugLog('[PlayerController] Player ready - can now play music');
 				this.stores.runtime.getState().setApiReady(true);
 
 				// 播放器就绪后，检查是否有待加载的文件
@@ -769,7 +763,7 @@ export class PlayerController {
 		this.api.timePosition = positionMs;
 
 		// 调试日志（开发时可取消注释）
-		// console.debug('[PlayerController] Seek to:', {
+		// debugLog('[PlayerController] Seek to:', {
 		// 	positionMs,
 		// 	positionSec: (positionMs / 1000).toFixed(2) + 's',
 		// });
@@ -915,7 +909,7 @@ export class PlayerController {
 						computedOverflow: window.getComputedStyle(scrollElement).overflow,
 					};
 
-		console.debug('[PlayerController] Scroll Configuration Debug:', {
+		debugLog('[PlayerController] Scroll Configuration Debug:', {
 			scrollElement: scrollElementInfo,
 			scrollMode: this.api.settings.player.scrollMode,
 			scrollSpeed: this.api.settings.player.scrollSpeed,
@@ -931,7 +925,7 @@ export class PlayerController {
 	 * 在曲谱加载后调用，为吉他类乐器设置默认显示为仅六线谱
 	 */
 	private applyDefaultStaffDisplay(score: alphaTab.model.Score): void {
-		console.debug(
+		debugLog(
 			`[PlayerController #${this.instanceId}] Applying default staff display for guitar tracks`
 		);
 
@@ -953,7 +947,7 @@ export class PlayerController {
 					staff.showSlash = false;
 					staff.showNumbered = false;
 
-					console.debug(
+					debugLog(
 						`[PlayerController #${this.instanceId}] Set guitar track ${track.index} staff ${staff.index} to tab-only`
 					);
 				}
@@ -970,16 +964,11 @@ export class PlayerController {
 		const savedConfigs = workspaceConfig.sessionPlayerState.trackConfigs || [];
 
 		if (savedConfigs.length === 0) {
-			console.debug(
-				`[PlayerController #${this.instanceId}] No saved track configs to restore`
-			);
+			debugLog(`[PlayerController #${this.instanceId}] No saved track configs to restore`);
 			return;
 		}
 
-		console.debug(
-			`[PlayerController #${this.instanceId}] Restoring track configs:`,
-			savedConfigs
-		);
+		debugLog(`[PlayerController #${this.instanceId}] Restoring track configs:`, savedConfigs);
 
 		for (const config of savedConfigs) {
 			const track = score.tracks.find((t) => t.index === config.trackIndex);
@@ -1026,7 +1015,7 @@ export class PlayerController {
 		// 应用移调设置
 		if (this.api && savedConfigs.some((c) => c.transposeFull !== undefined)) {
 			this.api.updateSettings();
-			console.debug(
+			debugLog(
 				`[PlayerController #${this.instanceId}] Applied transposition settings, triggering re-render`
 			);
 			// 注意：这里不需要调用 render()，因为 scoreLoaded 之后会自动渲染
@@ -1062,7 +1051,7 @@ export class PlayerController {
 			throw new Error('API not initialized');
 		}
 
-		console.debug(`[PlayerController #${this.instanceId}] Loading score from URL:`, url);
+		debugLog(`[PlayerController #${this.instanceId}] Loading score from URL:`, url);
 		this.stores.ui.getState().setLoading(true, 'Loading score...');
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();

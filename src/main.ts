@@ -25,6 +25,7 @@ type SettingManager = {
 };
 
 import { registerCommands } from './commands';
+import { debugLog } from './utils/logger';
 
 // AssetStatus moved to src/types/assets.ts
 
@@ -69,8 +70,8 @@ export default class TabFlowPlugin extends Plugin {
 		const normalizedPath = absolutePath.replace(/\\/g, '/');
 
 		// 打印调试信息
-		console.debug(t('debug.pluginPath', { path: normalizedPluginDir }, '插件路径: {path}'));
-		console.debug(t('debug.targetPath', { path: normalizedPath }, '目标路径: {path}'));
+		debugLog(t('debug.pluginPath', { path: normalizedPluginDir }, '插件路径: {path}'));
+		debugLog(t('debug.targetPath', { path: normalizedPath }, '目标路径: {path}'));
 
 		// 预期的结果是：.obsidian/plugins/obsidian-tab-flow/assets/文件名
 		if (normalizedPath.startsWith(normalizedPluginDir)) {
@@ -105,10 +106,7 @@ export default class TabFlowPlugin extends Plugin {
 			// 检查assets目录是否存在
 			const assetsDirExists = await this.app.vault.adapter.exists(assetsDirRelative);
 			if (!assetsDirExists) {
-				console.debug(
-					'[TabFlowPlugin] Assets directory does not exist:',
-					assetsDirRelative
-				);
+				debugLog('[TabFlowPlugin] Assets directory does not exist:', assetsDirRelative);
 				return false;
 			}
 
@@ -122,9 +120,9 @@ export default class TabFlowPlugin extends Plugin {
 					const exists = await this.app.vault.adapter.exists(filePath);
 
 					if (!exists) {
-						console.debug(`[TabFlowPlugin] Missing asset file: ${filePath}`);
+						debugLog(`[TabFlowPlugin] Missing asset file: ${filePath}`);
 					} else {
-						console.debug(`[TabFlowPlugin] Found asset file: ${filePath}`);
+						debugLog(`[TabFlowPlugin] Found asset file: ${filePath}`);
 					}
 
 					return {
@@ -159,7 +157,7 @@ export default class TabFlowPlugin extends Plugin {
 				);
 				return false;
 			}
-			console.debug(
+			debugLog(
 				t('debug.currentPluginPath', { path: this.actualPluginDir }, '当前插件路径: {path}')
 			);
 
@@ -174,7 +172,7 @@ export default class TabFlowPlugin extends Plugin {
 
 			try {
 				await this.app.vault.adapter.mkdir(assetsDirRelative);
-				console.debug(
+				debugLog(
 					t(
 						'debug.assetsDirCreated',
 						{ path: assetsDirRelative },
@@ -182,7 +180,7 @@ export default class TabFlowPlugin extends Plugin {
 					)
 				);
 			} catch (err) {
-				console.debug('创建目录时出错（可能已存在）:', err);
+				debugLog('创建目录时出错（可能已存在）:', err);
 			}
 
 			const alphaTabVersion = '1.8.3';
@@ -205,7 +203,7 @@ export default class TabFlowPlugin extends Plugin {
 			];
 
 			// 获取plugins目录的完整路径
-			console.debug('插件目录:', this.actualPluginDir);
+			debugLog('插件目录:', this.actualPluginDir);
 
 			// 并行下载所有资产文件
 			const downloadPromises = assets.map(async (asset) => {
@@ -241,7 +239,7 @@ export default class TabFlowPlugin extends Plugin {
 							response.arrayBuffer
 						);
 
-						console.debug(`Downloaded ${asset.url} to ${relativeToVault}`);
+						debugLog(`Downloaded ${asset.url} to ${relativeToVault}`);
 
 						// 检查文件是否确实写入成功
 						const exists = await this.app.vault.adapter.exists(relativeToVault);
@@ -322,7 +320,7 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 设置语言变化监听器
 		this.languageChangeCleanup = addLanguageChangeListener((language) => {
-			console.debug(`[TabFlow] Language changed to: ${language}`);
+			debugLog(`[TabFlow] Language changed to: ${language}`);
 			// 当语言变化时，可以在这里添加刷新UI或重新加载组件的逻辑
 			// 例如：刷新设置面板、更新菜单项文本等
 			this.refreshLanguageDependentUI();
@@ -330,8 +328,8 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 存储实际的插件目录路径
 		this.actualPluginDir = this.manifest.dir || '';
-		console.debug('插件实际路径:', this.actualPluginDir);
-		console.debug('Manifest ID:', this.manifest.id);
+		debugLog('插件实际路径:', this.actualPluginDir);
+		debugLog('Manifest ID:', this.manifest.id);
 
 		// 注册设置面板
 		this.addSettingTab(new SettingTab(this.app, this));
@@ -627,7 +625,7 @@ export default class TabFlowPlugin extends Plugin {
 											const view = leaf.view as ReactView;
 											if (view) {
 												// ReactView 使用 React 状态管理，不需要手动刷新
-												console.debug('[Main] ReactView loaded');
+												debugLog('[Main] ReactView loaded');
 											}
 										});
 									} catch (e) {
@@ -659,7 +657,7 @@ export default class TabFlowPlugin extends Plugin {
 				language: getCurrentLanguageCode(),
 			});
 
-			console.debug('[TabFlow] Language-dependent UI refreshed');
+			debugLog('[TabFlow] Language-dependent UI refreshed');
 		} catch (error) {
 			console.warn('[TabFlow] Failed to refresh language-dependent UI:', error);
 		}
@@ -679,6 +677,6 @@ export default class TabFlowPlugin extends Plugin {
 			// ignore removal errors
 		}
 		// 不再在 onunload 时主动 detach leaves，避免插件更新导致视图位置丢失
-		console.debug('AlphaTab Plugin Unloaded');
+		debugLog('AlphaTab Plugin Unloaded');
 	}
 }

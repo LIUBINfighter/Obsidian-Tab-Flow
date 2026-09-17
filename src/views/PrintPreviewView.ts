@@ -5,6 +5,7 @@ import * as alphaTab from '@coderline/alphatab';
 import { PrintTracksPanelDom } from '../player/components/PrintTracksPanel';
 import { setCssProps, toggleHidden } from '../utils/styleUtils';
 import { createSmuflFontSources, isDataUrl } from '../utils/fontSource';
+import { debugLog } from '../utils/logger';
 
 export const VIEW_TYPE_PRINT_PREVIEW = 'tab-flow-print-preview';
 
@@ -61,7 +62,7 @@ export class PrintPreviewView extends FileView {
 
 	// FileView 要求实现：加载文件
 	async onLoadFile(file: TFile): Promise<void> {
-		console.debug('[PrintPreview] Loading file:', file.path);
+		debugLog('[PrintPreview] Loading file:', file.path);
 
 		// 确保视图已经打开
 		if (!this.previewContainer) {
@@ -89,7 +90,7 @@ export class PrintPreviewView extends FileView {
 
 	// FileView 要求实现：卸载文件
 	async onUnloadFile(file: TFile): Promise<void> {
-		console.debug('[PrintPreview] Unloading file:', file.path);
+		debugLog('[PrintPreview] Unloading file:', file.path);
 		// 清理 API
 		if (this.api) {
 			try {
@@ -275,7 +276,7 @@ export class PrintPreviewView extends FileView {
 			height: `${height}px`,
 		});
 
-		console.debug('[PrintPreview] Iframe height adjusted to:', height);
+		debugLog('[PrintPreview] Iframe height adjusted to:', height);
 	}
 
 	/**
@@ -288,10 +289,10 @@ export class PrintPreviewView extends FileView {
 		if (!iframeDoc) return;
 
 		try {
-			console.debug('[PrintPreview] ensureFontsReady: start');
+			debugLog('[PrintPreview] ensureFontsReady: start');
 			// 基础等待：给 AlphaTab 和布局引擎一点时间
 			await new Promise((resolve) => window.setTimeout(resolve, 150));
-			console.debug('[PrintPreview] ensureFontsReady: done');
+			debugLog('[PrintPreview] ensureFontsReady: done');
 		} catch (e) {
 			console.warn('[PrintPreview] ensureFontsReady error:', e);
 		}
@@ -304,7 +305,7 @@ export class PrintPreviewView extends FileView {
 
 		// 检查资源是否可用
 		const resources = this.plugin.resources;
-		console.debug('[PrintPreview] renderScore resources snapshot:', resources);
+		debugLog('[PrintPreview] renderScore resources snapshot:', resources);
 		if (!resources?.bravuraUri || !resources.alphaTabWorkerUri || !resources.soundFontUri) {
 			const errorDiv = this.previewContainer.createDiv({ cls: 'print-error' });
 			errorDiv.setText(t('playground.resourcesMissing'));
@@ -334,7 +335,7 @@ export class PrintPreviewView extends FileView {
 			});
 
 			// 创建 AlphaTab API 实例
-			console.debug('[PrintPreview] Creating AlphaTab API with print-optimized settings');
+			debugLog('[PrintPreview] Creating AlphaTab API with print-optimized settings');
 			this.api = new alphaTab.AlphaTabApi(this.previewContainer, settings);
 
 			// 初始化或更新左侧 Track/Staff 面板
@@ -344,7 +345,7 @@ export class PrintPreviewView extends FileView {
 
 			// 监听渲染完成事件
 			this.api.renderFinished.on(() => {
-				console.debug('[PrintPreview] Render finished');
+				debugLog('[PrintPreview] Render finished');
 				this.adjustIframeHeight();
 			});
 
@@ -356,14 +357,11 @@ export class PrintPreviewView extends FileView {
 			// 加载乐谱
 			if (type === 'alphatex') {
 				const textContent = content as string;
-				console.debug('[PrintPreview] Loading AlphaTex score, length:', textContent.length);
+				debugLog('[PrintPreview] Loading AlphaTex score, length:', textContent.length);
 				this.api.tex(textContent);
 			} else if (type === 'binary') {
 				const binaryContent = content as Uint8Array;
-				console.debug(
-					'[PrintPreview] Loading binary score, size:',
-					binaryContent.byteLength
-				);
+				debugLog('[PrintPreview] Loading binary score, size:', binaryContent.byteLength);
 				await Promise.resolve(this.api.load(binaryContent));
 			}
 		} catch (error) {
@@ -439,7 +437,7 @@ export class PrintPreviewView extends FileView {
 			settings.core.smuflFontSources = createSmuflFontSources(bravuraWithTs);
 		}
 
-		console.debug('[PrintPreview] Print-optimized settings created:', {
+		debugLog('[PrintPreview] Print-optimized settings created:', {
 			scale: settings.display.scale,
 			stretchForce: settings.display.stretchForce,
 			layoutMode: settings.display.layoutMode,
@@ -457,7 +455,7 @@ export class PrintPreviewView extends FileView {
 		}
 
 		try {
-			console.debug('[PrintPreview] Triggering print dialog...');
+			debugLog('[PrintPreview] Triggering print dialog...');
 
 			// 确保 iframe 内容已完全加载
 			const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
@@ -468,7 +466,7 @@ export class PrintPreviewView extends FileView {
 
 			// 打印前确保所有 SVG 元素可见
 			const svgElements = iframeDoc.querySelectorAll('svg');
-			console.debug('[PrintPreview] Found SVG elements:', svgElements.length);
+			debugLog('[PrintPreview] Found SVG elements:', svgElements.length);
 
 			// 聚焦 iframe 窗口并触发打印
 			this.iframe.contentWindow.focus();

@@ -6,6 +6,7 @@
 
 import type { StateCreator, StoreMutatorIdentifier } from 'zustand';
 import type { IStorageAdapter } from '../../storage/IStorageAdapter';
+import { debugLog } from '../../../utils/logger';
 
 export interface StorageAdapterOptions<TState> {
 	name: string; // 存储键名
@@ -47,21 +48,21 @@ const storageAdapterImpl = <
 				const persistedState = await adapter.load<T | null>(name);
 
 				if (!persistedState) {
-					console.debug('[StorageAdapter] No persisted state found for:', name);
+					debugLog('[StorageAdapter] No persisted state found for:', name);
 					return;
 				}
 
 				let activeState: T = persistedState;
 
 				if (migrate && persistedVersion !== null && persistedVersion < version) {
-					console.debug(
+					debugLog(
 						`[StorageAdapter] Migrating ${name} from version ${persistedVersion} to ${version}`
 					);
 					activeState = migrate(activeState, persistedVersion);
 				}
 
 				set(activeState, true);
-				console.debug('[StorageAdapter] State loaded for:', name);
+				debugLog('[StorageAdapter] State loaded for:', name);
 			} catch (error) {
 				console.error('[StorageAdapter] Load failed:', error);
 			}

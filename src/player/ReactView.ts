@@ -7,6 +7,7 @@ import { StoreFactory, type StoreCollection } from './store/StoreFactory';
 import type TabFlowPlugin from '../main';
 import { VIEW_TYPE_ALPHATEX_EDITOR } from '../views/EditorView';
 import { VIEW_TYPE_PRINT_PREVIEW } from '../views/PrintPreviewView';
+import { debugLog } from '../utils/logger';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
@@ -47,11 +48,11 @@ export class ReactView extends FileView {
 	}
 
 	async onOpen(): Promise<void> {
-		console.debug('[ReactView] Opening view...');
+		debugLog('[ReactView] Opening view...');
 
 		// 1. 创建 stores（使用 StoreFactory）
 		this.stores = this.storeFactory.createStores(this);
-		console.debug('[ReactView] Stores created:', {
+		debugLog('[ReactView] Stores created:', {
 			globalConfig: !!this.stores.globalConfig,
 			workspaceConfig: !!this.stores.workspaceConfig,
 			runtime: !!this.stores.runtime,
@@ -79,12 +80,12 @@ export class ReactView extends FileView {
 		this.root = createRoot(this.reactContainer);
 		this.renderReactComponent();
 
-		console.debug('[ReactView] View opened successfully');
+		debugLog('[ReactView] View opened successfully');
 		await Promise.resolve();
 	}
 
 	async onClose(): Promise<void> {
-		console.debug('[ReactView] Closing view...');
+		debugLog('[ReactView] Closing view...');
 
 		// 注意: 不移除全局字体样式,因为可能有其他实例在使用
 		// 字体样式会在插件卸载时自动清理
@@ -97,21 +98,21 @@ export class ReactView extends FileView {
 		if (this.root) {
 			this.root.unmount();
 			this.root = null;
-			console.debug('[ReactView] React root unmounted');
+			debugLog('[ReactView] React root unmounted');
 		}
 
 		// 2. 清理 PlayerController
 		if (this.controller) {
 			this.controller.destroy();
 			this.controller = null;
-			console.debug('[ReactView] PlayerController destroyed');
+			debugLog('[ReactView] PlayerController destroyed');
 		}
 
 		// 3. 销毁 stores（清理回调）
 		if (this.stores) {
 			this.storeFactory.destroyStores(this.stores);
 			this.stores = null;
-			console.debug('[ReactView] Stores destroyed');
+			debugLog('[ReactView] Stores destroyed');
 		}
 
 		// 4. 清理容器
@@ -121,7 +122,7 @@ export class ReactView extends FileView {
 		}
 
 		this.currentFile = null;
-		console.debug('[ReactView] View closed');
+		debugLog('[ReactView] View closed');
 
 		// 注意：controller.destroy() 会清理实例状态，无需额外重置全局状态
 		await Promise.resolve();

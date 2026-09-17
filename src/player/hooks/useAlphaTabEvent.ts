@@ -10,12 +10,12 @@
  * ```tsx
  * // 基础用法
  * useAlphaTabEvent(api, 'renderFinished', () => {
- *     console.debug('渲染完成');
+ *     debugLog('渲染完成');
  * });
  *
  * // 带参数的事件
  * useAlphaTabEvent<Score>(api, 'scoreLoaded', (score) => {
- *     console.debug('曲谱加载完成', score.title);
+ *     debugLog('曲谱加载完成', score.title);
  * });
  *
  * // 带依赖的回调
@@ -28,6 +28,7 @@
 import { useEffect, useRef } from 'react';
 import type { DependencyList } from 'react';
 import type { AlphaTabApi } from '@coderline/alphatab';
+import { debugLog } from '../../utils/logger';
 
 /**
  * AlphaTab 事件处理器类型
@@ -125,7 +126,7 @@ export function useAlphaTabEvent<TEventArgs = void>(
 			return;
 		}
 
-		console.debug(`[useAlphaTabEvent] 注册事件: ${eventName}`);
+		debugLog(`[useAlphaTabEvent] 注册事件: ${eventName}`);
 
 		// 创建稳定的事件处理器（调用最新的 handler）
 		const eventHandler = (args?: TEventArgs) => {
@@ -137,7 +138,7 @@ export function useAlphaTabEvent<TEventArgs = void>(
 
 		// 清理函数：取消事件监听
 		return () => {
-			console.debug(`[useAlphaTabEvent] 清理事件: ${eventName}`);
+			debugLog(`[useAlphaTabEvent] 清理事件: ${eventName}`);
 			dispose();
 		};
 	}, [api, eventName, ...deps]);
@@ -164,7 +165,7 @@ export function useAlphaTabEvents(
 			return;
 		}
 
-		console.debug('[useAlphaTabEvents] 批量注册事件', Object.keys(events));
+		debugLog('[useAlphaTabEvents] 批量注册事件', Object.keys(events));
 
 		const cleanups: Array<() => void> = [];
 
@@ -182,7 +183,7 @@ export function useAlphaTabEvents(
 
 		// 清理所有事件
 		return () => {
-			console.debug('[useAlphaTabEvents] 批量清理事件', Object.keys(events));
+			debugLog('[useAlphaTabEvents] 批量清理事件', Object.keys(events));
 			for (const cleanup of cleanups) {
 				cleanup();
 			}
@@ -197,7 +198,7 @@ export function useAlphaTabEvents(
  * @example
  * ```tsx
  * useAlphaTabEventOnce(api, 'renderFinished', () => {
- *     console.debug('首次渲染完成，此事件不会再次触发');
+ *     debugLog('首次渲染完成，此事件不会再次触发');
  * });
  * ```
  */
@@ -219,14 +220,14 @@ export function useAlphaTabEventOnce<TEventArgs = void>(
 			return;
 		}
 
-		console.debug(`[useAlphaTabEventOnce] 注册一次性事件: ${eventName}`);
+		debugLog(`[useAlphaTabEventOnce] 注册一次性事件: ${eventName}`);
 
 		const eventHandler = (args?: TEventArgs) => {
 			if (!hasTriggered.current) {
 				hasTriggered.current = true;
 				handler(args as TEventArgs);
 				eventEmitter.off(eventHandler);
-				console.debug(`[useAlphaTabEventOnce] 事件已触发并清理: ${eventName}`);
+				debugLog(`[useAlphaTabEventOnce] 事件已触发并清理: ${eventName}`);
 			}
 		};
 
@@ -269,13 +270,13 @@ export function useAlphaTabEventConditional<TEventArgs = void>(
 			return;
 		}
 
-		console.debug(`[useAlphaTabEventConditional] 条件满足，注册事件: ${eventName}`);
+		debugLog(`[useAlphaTabEventConditional] 条件满足，注册事件: ${eventName}`);
 
 		const eventHandler = (args?: TEventArgs) => handler(args as TEventArgs);
 		const dispose = eventEmitter.on(eventHandler);
 
 		return () => {
-			console.debug(`[useAlphaTabEventConditional] 条件变化，清理事件: ${eventName}`);
+			debugLog(`[useAlphaTabEventConditional] 条件变化，清理事件: ${eventName}`);
 			dispose();
 		};
 	}, [api, eventName, handler, condition]);
@@ -314,7 +315,7 @@ export function useAlphaTabEventDebounced<TEventArgs = void>(
 			return;
 		}
 
-		console.debug(`[useAlphaTabEventDebounced] 注册防抖事件: ${eventName}, delay=${delay}ms`);
+		debugLog(`[useAlphaTabEventDebounced] 注册防抖事件: ${eventName}, delay=${delay}ms`);
 
 		const eventHandler = (args?: TEventArgs) => {
 			// 清除之前的定时器
@@ -373,9 +374,7 @@ export function useAlphaTabEventThrottled<TEventArgs = void>(
 			return;
 		}
 
-		console.debug(
-			`[useAlphaTabEventThrottled] 注册节流事件: ${eventName}, interval=${interval}ms`
-		);
+		debugLog(`[useAlphaTabEventThrottled] 注册节流事件: ${eventName}, interval=${interval}ms`);
 
 		const eventHandler = (args?: TEventArgs) => {
 			const now = Date.now();
