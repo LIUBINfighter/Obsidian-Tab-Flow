@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-tab-flow",
 	"version": "0.5.2",
-	"description": "Render, play and create guitar tabs. Write tabs in text. Modern music font and sound! (.alphatab, .gp, .gp3, .gp4, .gp5, .gpx) Powered by alphaTab.js.",
+	"description": "Render, play and write guitar tabs. Supports Guitar Pro files (.gp, .gp3, .gp4, .gp5, .gpx) and alphaTex scores (.atex).",
 	"main": "main.js",
 	"type": "module",
 	"scripts": {

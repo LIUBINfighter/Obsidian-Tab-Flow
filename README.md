@@ -3,169 +3,126 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/LIUBINfighter/Obsidian-Tab-Flow)](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/releases/latest)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/LIUBINfighter/obsidian-tab-flow)
 
+# Tab Flow
 
-# Tab Flow (Obsidian plugin)
-
-Play and create your guitar tabs in Obsidian!
+Render, play and write guitar tabs in Obsidian. Powered by [alphaTab](https://alphatab.net).
 
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/7334f1e9-cdc4-404e-81a7-89683ebfab7f" />
 
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/3cfde6e3-e775-4507-9a13-ef4be31b0941" />
 
-<!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/c0ce49f5-ef6a-4e4d-a3aa-20b38a4be788" /> -->
+## Features
 
+- Render and play Guitar Pro files (`.gp`, `.gp3`, `.gp4`, `.gp5`, `.gpx`).
+    - Tab rendering, play/pause/stop, playback cursor, auto-scroll, dark mode.
+    - Control components: tracks, layout, zoom, speed, count-in, metronome.
+- Write scores in `alphaTex` (`.atex` files, or `alphatex` code blocks in notes) and share them.
+    - Syntax highlighting (CodeMirror), Guitar Pro export, PNG share card, PDF export (work in progress).
+- Built-in interactive documentation to learn and enjoy alphaTex.
 
-## Feature
-
-- Render and play guitar pro files (.gp, .gp3, .gp4, .gp5, .gpx).
-  - Render tabs
-  - PlayPause/Stop
-  - cursor
-  - Darkmode
-  - auto-scroll
-  - Control components (tracks control, save settings, Layout, Zoom, Speed, CountIn, Metronome)
-- Write scores in `alphaTex` (.atex or `alphaTex` codeblock in .md) and share it.
-  - Highlight syntax (codemirror plugin)
-  - gp export
-  - pdf(wip)
-  - png card
-- Built-in doc for you to learn and enjoy alphaTex.
-
-### Customed Play experience
-
+### Custom playback experience
 
 ![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
 
+### Write guitar tabs like Markdown
 
-### Write Guitar Tabs like Markdown
-
-`.atex`
+`.atex` files:
 
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/e3a86a1a-3a85-469f-aa07-bda97faaf891" />
 
-`alphaTex` codeblock in `.md`
+`alphatex` code blocks in `.md` notes:
 
 ![alphatex-copy-and-paste-writing](https://github.com/user-attachments/assets/ef402b18-9c3f-4e10-8772-a3fd8e50c507)
 
-<!--![alphatex-copy-and-paste-writing-multiview](https://github.com/user-attachments/assets/30d1e922-d4d2-4edd-a68a-8b2f3bada705)-->
-
-
-### Share your riff (Beta)
+### Share your riff (beta)
 
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2f784059-4fef-4345-a6e4-d543ea7b2169" />
 
-
-### Learn alphaTex in built-in interactive playground
+### Learn alphaTex in the built-in playground
 
 <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/df7ba557-2c15-4db8-bfdf-d011e5362a16" />
 
-Enter the document view by command or click the robbin icon `guitar`.
+Open the documentation view from the command palette or the `guitar` ribbon icon:
 
 ![alphatex-and-doc](https://github.com/user-attachments/assets/92821b4a-739c-458b-a1f3-1df0d64421ef)
 
+## Requirements
 
-## Install & Enable Play Font
+- Obsidian 1.8.0 or later.
+- Desktop only. The plugin bundles a web worker and uses Node APIs to load its local assets.
 
-### 1 install by bart42 (recommended, provide detailed version control & beta access)
+## Install
 
-1. Install Brat plugin (if not yet)
-- search for BRAT
-- Install & enable BRAT
-2. Add Tab Flow plugin
-- Jump to Option
-- Add beta plugin
-```
-https://github.com/LIUBINfighter/Obsidian-Tab-Flow
-```
-- Select version & Add plugin
-3. Download missing assets
-- Open Tab Flow settingTab
-- Downding missing asset files
-- Reload Tab Flow plugin or Obsidian app
+### 1. Obsidian community plugins
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2a0052a2-d0a0-4d76-86ea-731d49d1902a" />
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/80d9a66c-2d29-4c12-b5b7-76f4fca243d6" />
-<!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6f89ad16-5206-4119-a42c-b5d35a19aa37" /> -->
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/6a4bc746-f292-4076-be1f-7c43192ba774" />
-<!-- <img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/76a27078-f711-4f35-a9d2-23bae403ad56" /> -->
+Once Tab Flow is available in the community directory: **Settings → Community plugins → Browse**, search for `Tab Flow`, then install and enable it.
 
-![download-assets](https://github.com/user-attachments/assets/b3ca9620-83df-4517-a005-fd0a3acba0c9)
+### 2. BRAT (recommended while in review)
 
+1. Install and enable the [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin.
+2. In BRAT, choose **Add beta plugin** and enter:
+    ```
+    https://github.com/LIUBINfighter/Obsidian-Tab-Flow
+    ```
+3. Select a version and add the plugin.
+4. Continue with **First run** below.
 
-For Security reason, obsidian community plugin can't request from web automatically to prevent potential malicious attack, so it's neccesarry for you to do manually comfirm. 
+### 3. Manual install
 
-<!-- If you do concern about the assets loading, please refer to this Chapter Security and package using
-(Draft)-->
+1. Download `tab-flow.zip` (or `main.js`, `manifest.json`, `styles.css`) from the [latest release](https://github.com/LIUBINfighter/Obsidian-Tab-Flow/releases/latest).
+2. Extract it into `<your vault>/.obsidian/plugins/tab-flow/`.
+3. Reload Obsidian and enable **Tab Flow** in **Settings → Community plugins**.
 
-Tab Flow plugin uses a npm package @coderline/alphatab [github repo](https://github.com/CoderLine/alphaTab), where the package content (font & sound font) comes from. We plan to provide other font resources when ready.
+## First run: download the playback assets
 
-Currently Tab Flow plugin downloads assets fromm github release(frozen and immutable release/tag, 0.0.5 for now). If you do concern about the code, please refer to the latest tag & release.
+For security reasons, community plugins can't download files automatically. Tab Flow ships without the music font, soundfont and web worker; download them once from **Settings → Tab Flow → Asset management**:
 
-### 2 download by github release & manual install
+1. Open **Settings → Tab Flow**.
+2. In the **Asset management** tab, click **Download missing asset files** and wait for the download to finish.
+3. Reload the plugin (or restart Obsidian).
 
-<!-- <img width="1946" height="1278" alt="image" src="https://github.com/user-attachments/assets/685965d9-9718-480d-adac-171f00f3c65c" /> -->
-<img width="1946" height="1278" alt="image" src="https://github.com/user-attachments/assets/f6798b91-73d7-4543-8c28-61af013a7e0d" />
+The assets are fetched from the plugin's GitHub release, are stored inside the plugin folder, and are only used locally. See [Security and assets](#security-and-assets) below.
 
-Release `tab-flow.zip` contains assets in right dictory position, so there is no need to download assets and reload again.
+## Usage
 
-### 3 (Unable, currently in review queue) Obsidian Community Plugin Market
+- **Play a Guitar Pro file**: open any `.gp` / `.gp3` / `.gp4` / `.gp5` / `.gpx` file. Tab Flow renders the score and opens the player view.
+- **Write a score**: create a `.atex` file, or add an `alphatex` code block to any note:
+    ````
+    ```alphatex
+    \title "My riff"
+    .
+    :4 0.6 2.5 2.4 2.3 | 3.2 2.2 0.1 3.1
+    ```
+    ````
+- **Learn alphaTex**: open the documentation view from the `guitar` ribbon icon (or the command palette) and edit the samples in the built-in playground.
+- **Editor**: open the alphaTex editor from the command palette to write and preview side by side.
+- **Print / PDF**: open the print preview from the player toolbar and use your system print dialog.
 
-[Click here](obsidian://show-plugin?id=tab-flow)  or search `Tab Flow` and enable it.
+## Roadmap
 
-## RoadMap
+- 0.5.x: player and editor polish (React + Zustand), alphaTab 1.8 support.
+- 1.0.0: multimodal OCR for alphaTex and deeper score tooling.
 
-- 0.3.x (we are here!) maintain
-- 0.4.x (work in progress) Refactor player and editor (React and Zustand), introduce alphaTex 2.0 when ready.
-- 0.?.x Not sure yet.
-- 1.0.0 Train a vlm for alphaTex ocr and integrate it in tab-flow.
-
-
-<!--
-
-![alphatex-and-doc](https://github.com/user-attachments/assets/92821b4a-739c-458b-a1f3-1df0d64421ef)
-
-![alphatex-copy-and-paste-writing](https://github.com/user-attachments/assets/ef402b18-9c3f-4e10-8772-a3fd8e50c507)
-
-![alphatex-copy-and-paste-writing-multiview](https://github.com/user-attachments/assets/30d1e922-d4d2-4edd-a68a-8b2f3bada705)
-
-![download-assets](https://github.com/user-attachments/assets/b3ca9620-83df-4517-a005-fd0a3acba0c9)
-
-![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
-
--->
-
+More experiments live at [alphatab-vue](https://github.com/LIUBINfighter/alphatab-vue).
 
 ## Contributing
 
-Thanks for downloading this plugin and I appreciate it if you can help contribute!
+Thanks for using Tab Flow! Contributions are welcome:
 
-If you have any feature requests / bugs to report, feel free to have an issue.
+- Feature requests and bugs: please open an issue.
+- Pull requests: start a discussion or issue first so we can align on the approach.
 
-If you have done something brilliant, then go for a pull request. Before you push something, better to start a discussion or issue, so we can discuss it together.
+## Inspired by
 
-<!-- If you want to add a new language to obsidian-tab-flow, see this guide first. -->
+[alphaTab.js](https://alphatab.net), Bocchi the Rock!, Girls' Band Cry.
 
-<!-- ## How to Build -->
+## Security and assets
 
-<!-- ## Star History -->
-
-<!-- Star History Chart -->
-
-## Inspired by ...
-
-[AlphaTab.js](https://alphatab.net)
-
-Bocchi the rock!
-
-Girls' Band Cry
+Tab Flow downloads its runtime assets (music font, soundfont, web worker) from the plugin's GitHub release only when you ask it to, and keeps them inside the plugin folder. No telemetry, no remote code execution, no network access at runtime beyond loading those local files.
 
 ## Disclaimer
 
-Please make a backup for your gp files. Currently Tab flow will not rewrite back to your guitar pro files but some tabs rendered with bad results because of the different encoding methods for Chinese/Japanese/... characters (CJK) or some other encoding reasons.
-
-This plugin can't automatically download `font`, `soundfont` and `worker.mjs` for you due to obsidian's policy about community plugins. However, we provide a bottom to complete the settings.
-
-<!-- This plugin doesn't have official relationships with AlphaTab.js and Obsidian Official Team. -->
+Please keep backups of your Guitar Pro files. Tab Flow doesn't rewrite your `.gp` files, but some scores render imperfectly because of CJK text encoding differences.
 
 ## Copyright & Credit
 
@@ -173,10 +130,8 @@ Copyright (c) 2025 Jay Bridge and other contributors. All rights reserved.
 
 Licensed under the MPL 2.0 License.
 
+![Alt](https://repobeats.axiom.co/api/embed/a6982277492396e03c0cae7308592c2be2d0feb2.svg 'Repobeats analytics image')
 
-![Alt](https://repobeats.axiom.co/api/embed/a6982277492396e03c0cae7308592c2be2d0feb2.svg "Repobeats analytics image")
-
-## Special Thanks to
+## Special thanks to
 
 ![alphaTab logo](assets/alphaTab.svg)
-

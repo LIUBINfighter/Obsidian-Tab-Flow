@@ -108,8 +108,8 @@
 		"audioStatusLoaded": "Audio: Loaded",
 		"tabs": {
 			"general": "Asset management",
-			"player": "Player settings",
-			"editor": "Editor settings",
+			"player": "Player",
+			"editor": "Editor",
 			"about": "About"
 		},
 		"about": {

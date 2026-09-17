@@ -3,7 +3,7 @@
 	"name": "Tab Flow",
 	"version": "0.5.2",
 	"minAppVersion": "1.8.0",
-	"description": "Render, play and write guitar tabs. Support guitar pro(gtp) files(.gp, .gp3, .gp4, .gp5, .gpx), write scores in alphaTex (.atex).",
+	"description": "Render, play and write guitar tabs. Supports Guitar Pro files (.gp, .gp3, .gp4, .gp5, .gpx) and alphaTex scores (.atex).",
 	"author": "Jay Bridge",
 	"authorUrl": "https://github.com/LIUBINfighter",
 	"isDesktopOnly": true
