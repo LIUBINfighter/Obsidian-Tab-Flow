@@ -3194,7 +3194,7 @@
  *
  * alphaTab 通过切换 `at-highlight` class 高亮当前节拍，并在其 SVG 元素上写入
  * 内联 `style="fill: none"` / `style="stroke: none"`。按 CSS 层叠顺序，普通内联
- * 声明只能被 CSS 动画或 `!important` 覆盖；这里用一次性动画代替 `!important`。
+ * 声明只能被 CSS 动画或强制优先级声明覆盖；这里用一次性动画代替强制声明。
  */
 @keyframes tabflow-highlight-glyph {
 	to {
