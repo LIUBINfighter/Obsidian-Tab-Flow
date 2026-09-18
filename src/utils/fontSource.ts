@@ -92,16 +92,11 @@ export async function verifyFontUri(uri: string, timeoutMs = 3000): Promise<bool
  */
 let injectedFontFace: FontFace | null = null;
 
-// FontFaceSet.add/delete are supported at runtime but missing from some DOM
-// lib versions, so go through `unknown` (keeps the assertion necessary for
-// every TypeScript lib version).
-interface MutableFontFaceSet {
-	add(face: FontFace): unknown;
-	delete(face: FontFace): unknown;
-}
-
-function asMutableFontFaceSet(fonts: FontFaceSet): MutableFontFaceSet {
-	return fonts as unknown as MutableFontFaceSet;
+// FontFaceSet.add/delete exist at runtime but are missing from some DOM lib
+// versions. Optional members keep the code assertion-free for every version.
+interface FontFaceSetLike extends FontFaceSet {
+	add?: (font: FontFace) => unknown;
+	delete?: (font: FontFace) => unknown;
 }
 
 export async function injectGlobalAlphaTabFontFace(
@@ -116,7 +111,8 @@ export async function injectGlobalAlphaTabFontFace(
 			display: 'block',
 		});
 		await face.load();
-		asMutableFontFaceSet(doc.fonts).add(face);
+		const fonts: FontFaceSetLike = doc.fonts;
+		fonts.add?.(face);
 		injectedFontFace = face;
 		return face;
 	} catch (error) {
@@ -129,6 +125,7 @@ export function removeGlobalAlphaTabFontFace(doc: Document = document): void {
 	if (!injectedFontFace) {
 		return;
 	}
-	asMutableFontFaceSet(doc.fonts).delete(injectedFontFace);
+	const fonts: FontFaceSetLike = doc.fonts;
+	fonts.delete?.(injectedFontFace);
 	injectedFontFace = null;
 }

@@ -414,7 +414,6 @@
 
 /* 针对滚动容器的优化 */
 .tabflow-doc-markdown {
-	scroll-behavior: smooth;
 	scroll-margin-top: 20px;
 	scroll-behavior: smooth !important;
 }
