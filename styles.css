@@ -3192,13 +3192,20 @@
  * 4. 音符高亮 - 正在播放的音符着色
  * 使用主题色填充和描边，SVG 元素着色
  *
- * `!important` is required here: alphaTab writes `fill`/`stroke` inline
- * (`style="fill: none"` / `style="stroke: none"`) on its SVG elements, and
- * inline styles can only be overridden with `!important`.
+ * alphaTab 通过切换 `at-highlight` class 高亮当前节拍，并在其 SVG 元素上写入
+ * 内联 `style="fill: none"` / `style="stroke: none"`。按 CSS 层叠顺序，普通内联
+ * 声明只能被 CSS 动画或 `!important` 覆盖；这里用一次性动画代替 `!important`。
  */
+@keyframes tabflow-highlight-glyph {
+	to {
+		fill: var(--tabflow-highlight-color);
+		stroke: var(--tabflow-highlight-color);
+	}
+}
+
 .at-highlight * {
-	fill: var(--interactive-accent, #7c3aed) !important;
-	stroke: var(--interactive-accent, #7c3aed) !important;
+	--tabflow-highlight-color: var(--interactive-accent, #7c3aed);
+	animation: tabflow-highlight-glyph 80ms ease-out forwards;
 	opacity: 0.9;
 	transition:
 		fill 0.1s ease,
@@ -3207,8 +3214,7 @@
 
 /* 深色模式下使用更亮的颜色 */
 .theme-dark .at-highlight * {
-	fill: var(--interactive-accent-hover, #8b5cf6) !important;
-	stroke: var(--interactive-accent-hover, #8b5cf6) !important;
+	--tabflow-highlight-color: var(--interactive-accent-hover, #8b5cf6);
 	opacity: 1;
 }
 
@@ -3263,6 +3269,10 @@
 	.at-selection div,
 	.at-highlight * {
 		transition: none;
+	}
+
+	.at-highlight * {
+		animation-duration: 1ms;
 	}
 }
 
