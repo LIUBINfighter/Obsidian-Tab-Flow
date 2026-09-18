@@ -221,6 +221,18 @@ async function probeRender(
 
 export function registerDebugCommands(plugin: ProbeHost) {
 	plugin.addCommand({
+		id: 'debug-open-settings',
+		name: 'Debug: open Tab Flow settings',
+		callback: () => {
+			const setting = (plugin.app as {
+				setting?: { open?: () => void; openTabById?: (id: string) => void };
+			}).setting;
+			setting?.open?.();
+			setting?.openTabById?.(plugin.manifest.id);
+		},
+	});
+
+	plugin.addCommand({
 		id: 'debug-toggle-logging',
 		name: 'Debug: toggle debug logging',
 		callback: () => {
@@ -356,6 +368,11 @@ export function registerDebugCommands(plugin: ProbeHost) {
 				alphatexErrors: Array.from(doc.querySelectorAll('.alphatex-error'))
 					.slice(0, 3)
 					.map((el) => (el.textContent ?? '').slice(0, 120)),
+				settingsPageContents: doc.querySelectorAll('.tabflow-settings-page-content').length,
+				legacySettingsTabs: doc.querySelectorAll('.itabs-settings-tabs').length,
+				settingRows: doc.querySelectorAll('.setting-item').length,
+				modalContainers: doc.querySelectorAll('.modal-container').length,
+				modals: doc.querySelectorAll('.modal').length,
 			};
 
 			if (uri && workerUri) {
