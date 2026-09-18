@@ -231,7 +231,9 @@ export default class TabFlowPlugin extends Plugin {
 					try {
 						const response = await requestUrl({ url, method: 'GET' });
 						if (response.status !== 200) {
-							console.warn(`[TabFlow] Asset source failed (${response.status}): ${url}`);
+							console.warn(
+								`[TabFlow] Asset source failed (${response.status}): ${url}`
+							);
 							continue;
 						}
 
