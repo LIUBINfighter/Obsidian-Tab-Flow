@@ -62,14 +62,14 @@
 	/* Force line numbers to extend to full document height */
 	min-height: 100%;
 	/* Ensure line numbers render for all lines, not just visible ones */
-	height: auto !important;
+	height: auto;
 }
 
 .alphatex-editor-wrapper .cm-lineNumbers .cm-gutterElement {
 	padding: 0 2px;
 	text-align: right;
 	color: var(--text-muted);
-	margin-top: 0 !important; /* Override CodeMirror's default margin-top for first element */
+	margin-top: 0; /* Override CodeMirror's default margin-top for first element */
 	display: block; /* Force line numbers to render for all lines */
 }
 

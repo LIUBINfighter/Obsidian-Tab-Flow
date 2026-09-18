@@ -201,16 +201,16 @@
 /* 确保 alphaTab 的光标可见 */
 .tablature-view .at-cursor-bar,
 .tablature-view .at-cursor-beat {
-	z-index: 2 !important; /* Stay above the score, below panels and overlays. */
+	z-index: 2; /* Stay above the score, below panels and overlays. */
 }
 
 .tablature-view .at-selection div {
-	z-index: 1 !important;
+	z-index: 1;
 }
 
 /* 打印时隐藏滚动条 */
 @media print {
 	.tablature-view .alphatab-viewport {
-		overflow: visible !important;
+		overflow: visible;
 	}
 }

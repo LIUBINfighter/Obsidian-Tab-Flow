@@ -402,8 +402,8 @@
 }
 
 /* 快速滚动动画设置 */
-.tabflow-doc-layout {
-	scroll-behavior: smooth !important;
+.tabflow-doc-layout.tabflow-doc-layout {
+	scroll-behavior: smooth;
 }
 
 /* 使用更快的滚动时长和缓动函数 */
@@ -413,9 +413,9 @@
 }
 
 /* 针对滚动容器的优化 */
-.tabflow-doc-markdown {
+.tabflow-doc-markdown.tabflow-doc-markdown {
 	scroll-margin-top: 20px;
-	scroll-behavior: smooth !important;
+	scroll-behavior: smooth;
 }
 
 /* 使用CSS变量控制滚动速度 */
@@ -426,18 +426,18 @@
 
 /* 确保滚动动画在不同浏览器中表现一致 */
 @media (prefers-reduced-motion: no-preference) {
-	.tabflow-doc-layout {
-		scroll-behavior: smooth !important;
+	.tabflow-doc-layout.tabflow-doc-layout {
+		scroll-behavior: smooth;
 	}
 
-	.tabflow-doc-layout * {
-		scroll-behavior: smooth !important;
+	.tabflow-doc-layout.tabflow-doc-layout * {
+		scroll-behavior: smooth;
 		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
 	}
 
 	/* 特别针对滚动容器的优化 */
-	.tabflow-doc-markdown {
-		scroll-behavior: smooth !important;
+	.tabflow-doc-markdown.tabflow-doc-markdown {
+		scroll-behavior: smooth;
 		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
 	}
 }
@@ -490,19 +490,19 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin: 0 !important;
+	margin: 0;
 }
 
 /* Ensure modal itself retains the intended size when the class is applied to
    the modal element instead of the container. */
 .modal.share-card-wide {
-	width: 96vw !important;
-	max-width: 96vw !important;
-	height: 88vh !important;
-	max-height: 88vh !important;
+	width: 96vw;
+	max-width: 96vw;
+	height: 88vh;
+	max-height: 88vh;
 	display: flex;
 	flex-direction: column;
-	margin: 0 !important;
+	margin: 0;
 }
 
 .modal-container.share-card-wide .modal,
@@ -510,10 +510,10 @@
 	/* When the container has the sizing class, target the inner .modal to
 	   adopt the intended modal dimensions; when the class is on the modal
 	   itself, the rule above already applies. */
-	width: 96vw !important;
-	max-width: 96vw !important;
-	height: 88vh !important;
-	max-height: 88vh !important;
+	width: 96vw;
+	max-width: 96vw;
+	height: 88vh;
+	max-height: 88vh;
 	display: flex;
 	flex-direction: column;
 }
@@ -747,10 +747,10 @@
    Keep this override scoped to the modal so other views are unaffected. */
 .modal-container.share-card-wide .share-card-modal .tabflow-doc-main-content,
 .modal.share-card-wide .share-card-modal .tabflow-doc-main-content {
-	border: none !important;
-	background: transparent !important; /* let .share-card-root provide the background */
-	padding: 0 !important; /* avoid double padding inside the card root */
-	border-radius: 0 !important;
+	border: none;
+	background: transparent; /* let .share-card-root provide the background */
+	padding: 0; /* avoid double padding inside the card root */
+	border-radius: 0;
 }
 
 .share-card-hint {
@@ -770,7 +770,7 @@
 .share-card-root .at-selection,
 .share-card-root .alphatex-controls,
 .share-card-root .nav-buttons-container {
-	display: none !important;
+	display: none;
 }
 
 /* 在文件末尾添加（隐藏滚动条，Chrome/Safari/Edge） */
@@ -786,8 +786,8 @@
 	width: 100%;
 }
 
-.is-hidden {
-	display: none !important;
+.is-hidden.is-hidden {
+	display: none;
 }
 
 .share-card-field-checkbox label {
@@ -1552,14 +1552,14 @@
 	/* Force line numbers to extend to full document height */
 	min-height: 100%;
 	/* Ensure line numbers render for all lines, not just visible ones */
-	height: auto !important;
+	height: auto;
 }
 
 .alphatex-editor-wrapper .cm-lineNumbers .cm-gutterElement {
 	padding: 0 2px;
 	text-align: right;
 	color: var(--text-muted);
-	margin-top: 0 !important; /* Override CodeMirror's default margin-top for first element */
+	margin-top: 0; /* Override CodeMirror's default margin-top for first element */
 	display: block; /* Force line numbers to render for all lines */
 }
 
@@ -2254,12 +2254,12 @@
 @media print {
 	/* 打印时移除阴影/背景，只保留纸张本身 */
 	.tabflow-print-preview-view .print-preview-body {
-		background: transparent !important;
+		background: transparent;
 		padding: 0;
 	}
 
 	.tabflow-print-preview-view .print-preview-iframe {
-		box-shadow: none !important;
+		box-shadow: none;
 		width: 100%;
 	}
 
@@ -3191,6 +3191,10 @@
 /* 
  * 4. 音符高亮 - 正在播放的音符着色
  * 使用主题色填充和描边，SVG 元素着色
+ *
+ * `!important` is required here: alphaTab writes `fill`/`stroke` inline
+ * (`style="fill: none"` / `style="stroke: none"`) on its SVG elements, and
+ * inline styles can only be overridden with `!important`.
  */
 .at-highlight * {
 	fill: var(--interactive-accent, #7c3aed) !important;
@@ -3245,7 +3249,7 @@
 	}
 
 	.at-highlight * {
-		opacity: 1 !important;
+		opacity: 1;
 	}
 }
 
@@ -3267,11 +3271,11 @@
  * 打印时不显示播放指示器
  */
 @media print {
-	.at-cursor-bar,
-	.at-cursor-beat,
-	.at-selection,
-	.at-highlight {
-		display: none !important;
+	.at-cursor-bar.at-cursor-bar,
+	.at-cursor-beat.at-cursor-beat,
+	.at-selection.at-selection,
+	.at-highlight.at-highlight {
+		display: none;
 	}
 }
 
@@ -4060,17 +4064,17 @@
 /* 确保 alphaTab 的光标可见 */
 .tablature-view .at-cursor-bar,
 .tablature-view .at-cursor-beat {
-	z-index: 2 !important; /* Stay above the score, below panels and overlays. */
+	z-index: 2; /* Stay above the score, below panels and overlays. */
 }
 
 .tablature-view .at-selection div {
-	z-index: 1 !important;
+	z-index: 1;
 }
 
 /* 打印时隐藏滚动条 */
 @media print {
 	.tablature-view .alphatab-viewport {
-		overflow: visible !important;
+		overflow: visible;
 	}
 }
 
@@ -4990,7 +4994,7 @@ ul.tabflow-setting-description li {
 
 /* Hide status bar when TabView is open */
 .tabflow-hide-statusbar .status-bar {
-	display: none !important;
+	display: none;
 }
 
 .tabflow-tabview-root .at-cursor-bar {

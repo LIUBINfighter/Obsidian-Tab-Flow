@@ -19,19 +19,19 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	margin: 0 !important;
+	margin: 0;
 }
 
 /* Ensure modal itself retains the intended size when the class is applied to
    the modal element instead of the container. */
 .modal.share-card-wide {
-	width: 96vw !important;
-	max-width: 96vw !important;
-	height: 88vh !important;
-	max-height: 88vh !important;
+	width: 96vw;
+	max-width: 96vw;
+	height: 88vh;
+	max-height: 88vh;
 	display: flex;
 	flex-direction: column;
-	margin: 0 !important;
+	margin: 0;
 }
 
 .modal-container.share-card-wide .modal,
@@ -39,10 +39,10 @@
 	/* When the container has the sizing class, target the inner .modal to
 	   adopt the intended modal dimensions; when the class is on the modal
 	   itself, the rule above already applies. */
-	width: 96vw !important;
-	max-width: 96vw !important;
-	height: 88vh !important;
-	max-height: 88vh !important;
+	width: 96vw;
+	max-width: 96vw;
+	height: 88vh;
+	max-height: 88vh;
 	display: flex;
 	flex-direction: column;
 }
@@ -276,10 +276,10 @@
    Keep this override scoped to the modal so other views are unaffected. */
 .modal-container.share-card-wide .share-card-modal .tabflow-doc-main-content,
 .modal.share-card-wide .share-card-modal .tabflow-doc-main-content {
-	border: none !important;
-	background: transparent !important; /* let .share-card-root provide the background */
-	padding: 0 !important; /* avoid double padding inside the card root */
-	border-radius: 0 !important;
+	border: none;
+	background: transparent; /* let .share-card-root provide the background */
+	padding: 0; /* avoid double padding inside the card root */
+	border-radius: 0;
 }
 
 .share-card-hint {
@@ -299,7 +299,7 @@
 .share-card-root .at-selection,
 .share-card-root .alphatex-controls,
 .share-card-root .nav-buttons-container {
-	display: none !important;
+	display: none;
 }
 
 /* 在文件末尾添加（隐藏滚动条，Chrome/Safari/Edge） */
@@ -315,8 +315,8 @@
 	width: 100%;
 }
 
-.is-hidden {
-	display: none !important;
+.is-hidden.is-hidden {
+	display: none;
 }
 
 .share-card-field-checkbox label {

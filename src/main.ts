@@ -183,82 +183,84 @@ export default class TabFlowPlugin extends Plugin {
 				debugLog('创建目录时出错（可能已存在）:', err);
 			}
 
-			const alphaTabVersion = '1.8.3';
-			const alphaTabPackageBaseUrl = `https://cdn.jsdelivr.net/npm/@coderline/alphatab@${alphaTabVersion}/dist`;
+			// Keep in sync with the `@coderline/alphatab` version in package.json:
+			// the worker script must match the bundled library.
+			const alphaTabVersion = '1.8.4';
+			const alphaTabMirrors = [
+				`https://fastly.jsdelivr.net/npm/@coderline/alphatab@${alphaTabVersion}/dist`,
+				`https://cdn.jsdelivr.net/npm/@coderline/alphatab@${alphaTabVersion}/dist`,
+				`https://unpkg.com/@coderline/alphatab@${alphaTabVersion}/dist`,
+			];
+			// Last resort: the plugin's own release, which also ships the assets.
+			const releaseBaseUrl = `https://github.com/LIUBINfighter/Obsidian-Tab-Flow/releases/download/${this.manifest.version}`;
 
-			// 定义要下载的资产
+			// 定义要下载的资产（多源，按顺序回退）
 			const assets = [
 				{
-					url: `${alphaTabPackageBaseUrl}/${ASSET_FILES.ALPHA_TAB}`,
+					file: ASSET_FILES.ALPHA_TAB,
+					subPath: ASSET_FILES.ALPHA_TAB,
 					path: joinPath(assetsDir, ASSET_FILES.ALPHA_TAB),
 				},
 				{
-					url: `${alphaTabPackageBaseUrl}/font/${ASSET_FILES.BRAVURA}`,
+					file: ASSET_FILES.BRAVURA,
+					subPath: `font/${ASSET_FILES.BRAVURA}`,
 					path: joinPath(assetsDir, ASSET_FILES.BRAVURA),
 				},
 				{
-					url: `${alphaTabPackageBaseUrl}/soundfont/${ASSET_FILES.SOUNDFONT}`,
+					file: ASSET_FILES.SOUNDFONT,
+					subPath: `soundfont/${ASSET_FILES.SOUNDFONT}`,
 					path: joinPath(assetsDir, ASSET_FILES.SOUNDFONT),
 				},
-			];
+			].map((asset) => ({
+				...asset,
+				urls: [
+					...alphaTabMirrors.map((base) => `${base}/${asset.subPath}`),
+					`${releaseBaseUrl}/${asset.file}`,
+				],
+			}));
 
 			// 获取plugins目录的完整路径
 			debugLog('插件目录:', this.actualPluginDir);
 
 			// 并行下载所有资产文件
 			const downloadPromises = assets.map(async (asset) => {
-				try {
-					new Notice(`正在下载 ${baseName(asset.path)}...`);
-					const response = await requestUrl({
-						url: asset.url,
-						method: 'GET',
-					});
+				const relativeToVault = this.getRelativePathToVault(asset.path);
+				new Notice(`正在下载 ${baseName(asset.path)}...`);
 
-					if (response.status !== 200) {
-						console.error(
-							`Failed to download ${asset.url}, status: ${response.status}`
-						);
-						return false;
-					}
-
-					// 文件路径处理，获取相对于vault的路径
-					// 从actualPluginDir计算相对路径 (.obsidian/plugins/obsidian-tab-flow/assets/...)
-					// 解析出相对于插件目录的路径
-					const relativeToVault = this.getRelativePathToVault(asset.path);
-
+				for (const url of asset.urls) {
 					try {
-						// 使用obsidian API创建目录
+						const response = await requestUrl({ url, method: 'GET' });
+						if (response.status !== 200) {
+							console.warn(`[TabFlow] Asset source failed (${response.status}): ${url}`);
+							continue;
+						}
+
 						const dirPath = dirName(relativeToVault);
 						if (dirPath && dirPath !== '.') {
 							await this.app.vault.adapter.mkdir(dirPath);
 						}
-
-						// 使用obsidian API写入文件
 						await this.app.vault.adapter.writeBinary(
 							relativeToVault,
 							response.arrayBuffer
 						);
 
-						debugLog(`Downloaded ${asset.url} to ${relativeToVault}`);
-
-						// 检查文件是否确实写入成功
 						const exists = await this.app.vault.adapter.exists(relativeToVault);
 						if (!exists) {
 							console.error(
-								`File appears to be written but doesn't exist: ${relativeToVault}`
+								`[TabFlow] File appears to be written but doesn't exist: ${relativeToVault}`
 							);
-							return false;
+							continue;
 						}
 
+						debugLog(`Downloaded ${url} to ${relativeToVault}`);
 						return true;
-					} catch (fsError) {
-						console.error(`文件系统错误 (${relativeToVault}):`, fsError);
-						return false;
+					} catch (error) {
+						console.warn(`[TabFlow] Asset download error from ${url}:`, error);
 					}
-				} catch (error) {
-					console.error(`Error downloading ${asset.url}:`, error);
-					return false;
 				}
+
+				console.error(`[TabFlow] All sources failed for ${asset.file}`);
+				return false;
 			});
 
 			const results = await Promise.all(downloadPromises);

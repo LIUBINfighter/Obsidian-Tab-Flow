@@ -113,7 +113,7 @@
 
 /* Hide status bar when TabView is open */
 .tabflow-hide-statusbar .status-bar {
-	display: none !important;
+	display: none;
 }
 
 .tabflow-tabview-root .at-cursor-bar {

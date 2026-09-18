@@ -65,6 +65,10 @@
 /* 
  * 4. 音符高亮 - 正在播放的音符着色
  * 使用主题色填充和描边，SVG 元素着色
+ *
+ * `!important` is required here: alphaTab writes `fill`/`stroke` inline
+ * (`style="fill: none"` / `style="stroke: none"`) on its SVG elements, and
+ * inline styles can only be overridden with `!important`.
  */
 .at-highlight * {
 	fill: var(--interactive-accent, #7c3aed) !important;
@@ -119,7 +123,7 @@
 	}
 
 	.at-highlight * {
-		opacity: 1 !important;
+		opacity: 1;
 	}
 }
 
@@ -141,11 +145,11 @@
  * 打印时不显示播放指示器
  */
 @media print {
-	.at-cursor-bar,
-	.at-cursor-beat,
-	.at-selection,
-	.at-highlight {
-		display: none !important;
+	.at-cursor-bar.at-cursor-bar,
+	.at-cursor-beat.at-cursor-beat,
+	.at-selection.at-selection,
+	.at-highlight.at-highlight {
+		display: none;
 	}
 }
 
