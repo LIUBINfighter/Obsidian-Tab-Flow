@@ -4612,9 +4612,9 @@ ul.tabflow-setting-description li {
 }
 
 /* Invalid input styling */
-.tabflow-invalid-input {
-	border-color: var(--text-error, #e74c3c) !important;
-	box-shadow: 0 0 0 1px var(--text-error, #e74c3c) !important;
+.tabflow-invalid-input.tabflow-invalid-input {
+	border-color: var(--text-error, #e74c3c);
+	box-shadow: 0 0 0 1px var(--text-error, #e74c3c);
 }
 
 /* Custom Highlight settings - Two column layout */
@@ -4636,7 +4636,7 @@ ul.tabflow-setting-description li {
 
 /* Ensure setting items in grid don't have unwanted borders */
 .tabflow-highlight-grid .setting-item {
-	border-top: none !important;
+	border-top: none;
 	padding: 8px 12px;
 	margin: 0;
 }
@@ -4820,10 +4820,6 @@ ul.tabflow-setting-description li {
 }
 
 /* --- tabview\debug.css --- */
-/* .debug-bar {
-	display: none !important;
-} */
-
 /* DebugBar 样式 */
 .debug-bar {
 	display: flex;
