@@ -34,6 +34,17 @@ updates:
           prefix: 'deps'
           prefix-development: 'deps-dev'
           include: 'scope'
+      # The `obsidian` package pins @codemirror/state and @codemirror/view to
+      # exact peer versions (6.5.0 / 6.38.6). Updating them (or packages that
+      # require a newer state, like @codemirror/commands >= 6.11) produces
+      # duplicate CodeMirror instances, so hold them until obsidian updates.
+      ignore:
+          - dependency-name: '@codemirror/state'
+          - dependency-name: '@codemirror/view'
+          - dependency-name: '@codemirror/commands'
+          - dependency-name: '@codemirror/lint'
+          - dependency-name: '@eslint/json'
+            update-types: ['version-update:semver-major']
       # Reviewers (optional - uncomment and add your team members)
       # reviewers:
       #   - "username"
