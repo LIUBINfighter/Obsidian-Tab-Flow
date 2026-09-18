@@ -1,8 +1,8 @@
 import { App } from 'obsidian';
-import * as path from 'path';
 import { fileExists } from '../utils';
 import { FontSourceStrategy, toFontDataUrl, verifyFontUri } from '../utils/fontSource';
 import { debugLog } from '../utils/logger';
+import { joinPath } from '../utils/pathUtils';
 
 export interface AlphaTabResources {
 	bravuraUri?: string; // 可直接用于 url() 的字体地址（app:// 资源路径或 data URL）
@@ -23,9 +23,9 @@ export class ResourceLoaderService {
 	constructor(private app: App) {}
 
 	public async load(pluginDir: string): Promise<AlphaTabResources> {
-		const bravuraPath = path.join(pluginDir, 'assets', ASSET_FILES.BRAVURA);
-		const alphaTabPath = path.join(pluginDir, 'assets', ASSET_FILES.ALPHA_TAB);
-		const soundFontPath = path.join(pluginDir, 'assets', ASSET_FILES.SOUNDFONT);
+		const bravuraPath = joinPath(pluginDir, 'assets', ASSET_FILES.BRAVURA);
+		const alphaTabPath = joinPath(pluginDir, 'assets', ASSET_FILES.ALPHA_TAB);
+		const soundFontPath = joinPath(pluginDir, 'assets', ASSET_FILES.SOUNDFONT);
 
 		// 初始化资源对象
 		const resources: AlphaTabResources = {

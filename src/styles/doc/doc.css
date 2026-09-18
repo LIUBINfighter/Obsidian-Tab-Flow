@@ -401,7 +401,6 @@
 
 /* 快速滚动动画设置 */
 .tabflow-doc-layout {
-	scroll-behavior: smooth;
 	scroll-behavior: smooth !important;
 }
 
@@ -427,19 +426,16 @@
 /* 确保滚动动画在不同浏览器中表现一致 */
 @media (prefers-reduced-motion: no-preference) {
 	.tabflow-doc-layout {
-		scroll-behavior: smooth;
 		scroll-behavior: smooth !important;
 	}
 
 	.tabflow-doc-layout * {
-		scroll-behavior: smooth;
 		scroll-behavior: smooth !important;
 		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
 	}
 
 	/* 特别针对滚动容器的优化 */
 	.tabflow-doc-markdown {
-		scroll-behavior: smooth;
 		scroll-behavior: smooth !important;
 		transition: scroll-behavior var(--scroll-duration) var(--scroll-easing);
 	}

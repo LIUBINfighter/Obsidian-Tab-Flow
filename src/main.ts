@@ -9,7 +9,6 @@ import {
 	ASSET_FILES,
 	type AlphaTabResources,
 } from './services/ResourceLoaderService';
-import * as path from 'path';
 import { SettingTab } from './settings/SettingTab';
 import { DEFAULT_SETTINGS, TabFlowSettings } from './settings/defaults';
 import ShareCardPresetService from './services/ShareCardPresetService';
@@ -26,6 +25,7 @@ type SettingManager = {
 
 import { registerCommands } from './commands';
 import { debugLog } from './utils/logger';
+import { joinPath, baseName, dirName } from './utils/pathUtils';
 
 // AssetStatus moved to src/types/assets.ts
 
@@ -80,8 +80,8 @@ export default class TabFlowPlugin extends Plugin {
 		}
 
 		// 如果路径不匹配预期格式，尝试直接使用文件名部分
-		const fileName = path.basename(absolutePath);
-		return path.join(normalizedPluginDir, 'assets', fileName);
+		const fileName = baseName(absolutePath);
+		return joinPath(normalizedPluginDir, 'assets', fileName);
 	}
 
 	/**
@@ -96,7 +96,7 @@ export default class TabFlowPlugin extends Plugin {
 			}
 
 			// 使用相对路径而非绝对路径
-			const assetsDirRelative = path.join(
+			const assetsDirRelative = joinPath(
 				this.app.vault.configDir,
 				'plugins',
 				this.manifest.id,
@@ -116,7 +116,7 @@ export default class TabFlowPlugin extends Plugin {
 			// 检查每个文件并返回详细状态
 			const assetStatuses: AssetStatus[] = await Promise.all(
 				assetFiles.map(async (file) => {
-					const filePath = path.join(assetsDirRelative, file);
+					const filePath = joinPath(assetsDirRelative, file);
 					const exists = await this.app.vault.adapter.exists(filePath);
 
 					if (!exists) {
@@ -162,8 +162,8 @@ export default class TabFlowPlugin extends Plugin {
 			);
 
 			// 使用Obsidian API创建资产目录
-			const assetsDir = path.join(this.actualPluginDir, 'assets');
-			const assetsDirRelative = path.join(
+			const assetsDir = joinPath(this.actualPluginDir, 'assets');
+			const assetsDirRelative = joinPath(
 				this.app.vault.configDir,
 				'plugins',
 				this.manifest.id,
@@ -190,15 +190,15 @@ export default class TabFlowPlugin extends Plugin {
 			const assets = [
 				{
 					url: `${alphaTabPackageBaseUrl}/${ASSET_FILES.ALPHA_TAB}`,
-					path: path.join(assetsDir, ASSET_FILES.ALPHA_TAB),
+					path: joinPath(assetsDir, ASSET_FILES.ALPHA_TAB),
 				},
 				{
 					url: `${alphaTabPackageBaseUrl}/font/${ASSET_FILES.BRAVURA}`,
-					path: path.join(assetsDir, ASSET_FILES.BRAVURA),
+					path: joinPath(assetsDir, ASSET_FILES.BRAVURA),
 				},
 				{
 					url: `${alphaTabPackageBaseUrl}/soundfont/${ASSET_FILES.SOUNDFONT}`,
-					path: path.join(assetsDir, ASSET_FILES.SOUNDFONT),
+					path: joinPath(assetsDir, ASSET_FILES.SOUNDFONT),
 				},
 			];
 
@@ -208,7 +208,7 @@ export default class TabFlowPlugin extends Plugin {
 			// 并行下载所有资产文件
 			const downloadPromises = assets.map(async (asset) => {
 				try {
-					new Notice(`正在下载 ${path.basename(asset.path)}...`);
+					new Notice(`正在下载 ${baseName(asset.path)}...`);
 					const response = await requestUrl({
 						url: asset.url,
 						method: 'GET',
@@ -228,7 +228,7 @@ export default class TabFlowPlugin extends Plugin {
 
 					try {
 						// 使用obsidian API创建目录
-						const dirPath = path.dirname(relativeToVault);
+						const dirPath = dirName(relativeToVault);
 						if (dirPath && dirPath !== '.') {
 							await this.app.vault.adapter.mkdir(dirPath);
 						}
@@ -526,9 +526,7 @@ export default class TabFlowPlugin extends Plugin {
 							void (async () => {
 								const parent =
 									file instanceof TFile
-										? this.app.vault.getAbstractFileByPath(
-												path.dirname(file.path)
-											)
+										? this.app.vault.getAbstractFileByPath(dirName(file.path))
 										: file;
 								const baseName = t(
 									'fileMenu.newFileBaseName',
@@ -543,13 +541,13 @@ export default class TabFlowPlugin extends Plugin {
 										: '';
 								while (
 									await this.app.vault.adapter.exists(
-										path.join(parentPath, filename)
+										joinPath(parentPath, filename)
 									)
 								) {
 									filename = `${baseName} ${i}.atex`;
 									i++;
 								}
-								const newFilePath = path.join(parentPath, filename);
+								const newFilePath = joinPath(parentPath, filename);
 								await this.app.vault.create(newFilePath, '');
 								const newFile = this.app.vault.getAbstractFileByPath(newFilePath);
 								if (newFile instanceof TFile) {

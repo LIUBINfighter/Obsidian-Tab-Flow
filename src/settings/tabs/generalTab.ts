@@ -5,9 +5,9 @@ import { vaultPath } from '../../utils';
 import { AssetStatus } from '../../types/assets';
 import { t } from '../../i18n';
 import { formatError } from '../../utils/errorUtils';
-import path from 'path';
 import { showConfirmDialog } from '../../utils/dialogs';
 import { toggleHidden } from '../../utils/styleUtils';
+import { joinPath } from '../../utils/pathUtils';
 
 type CommandManager = {
 	executeCommandById?: (id: string) => void;
@@ -181,13 +181,13 @@ export async function renderGeneralTab(
 			}
 			// TO FIX: Obsidian的配置目录不是固定的，应该使用 Vault#configDir
 			// 原因: 用户可以配置配置目录的位置，不能假设是 .obsidian
-			const pluginDir = path.join(
+			const pluginDir = joinPath(
 				basePath,
 				app.vault.configDir,
 				'plugins',
 				plugin.manifest.id
 			);
-			const mainJsPath = path.join(pluginDir, 'main.js');
+			const mainJsPath = joinPath(pluginDir, 'main.js');
 			const shellLike = getElectronShell();
 			if (!shellLike) {
 				new Notice(t('assetManagement.desktopOnly'));

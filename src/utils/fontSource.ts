@@ -92,11 +92,16 @@ export async function verifyFontUri(uri: string, timeoutMs = 3000): Promise<bool
  */
 let injectedFontFace: FontFace | null = null;
 
-// FontFaceSet.add/delete are supported at runtime but missing from the DOM lib
-// shipped with the current TypeScript version.
-interface MutableFontFaceSet extends FontFaceSet {
-	add(face: FontFace): FontFaceSet;
-	delete(face: FontFace): boolean;
+// FontFaceSet.add/delete are supported at runtime but missing from some DOM
+// lib versions, so go through `unknown` (keeps the assertion necessary for
+// every TypeScript lib version).
+interface MutableFontFaceSet {
+	add(face: FontFace): unknown;
+	delete(face: FontFace): unknown;
+}
+
+function asMutableFontFaceSet(fonts: FontFaceSet): MutableFontFaceSet {
+	return fonts as unknown as MutableFontFaceSet;
 }
 
 export async function injectGlobalAlphaTabFontFace(
@@ -111,7 +116,7 @@ export async function injectGlobalAlphaTabFontFace(
 			display: 'block',
 		});
 		await face.load();
-		(doc.fonts as MutableFontFaceSet).add(face);
+		asMutableFontFaceSet(doc.fonts).add(face);
 		injectedFontFace = face;
 		return face;
 	} catch (error) {
@@ -124,6 +129,6 @@ export function removeGlobalAlphaTabFontFace(doc: Document = document): void {
 	if (!injectedFontFace) {
 		return;
 	}
-	(doc.fonts as MutableFontFaceSet).delete(injectedFontFace);
+	asMutableFontFaceSet(doc.fonts).delete(injectedFontFace);
 	injectedFontFace = null;
 }

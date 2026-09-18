@@ -1,4 +1,3 @@
-import * as path from 'path';
 import { normalizePath } from 'obsidian';
 
 /**
@@ -6,6 +5,40 @@ import { normalizePath } from 'obsidian';
  */
 export function vaultPath(...segments: string[]): string {
 	return normalizePath(segments.join('/'));
+}
+
+/**
+ * Join path segments without relying on Node's `path` module.
+ *
+ * The plugin review environment doesn't resolve Node type definitions, so any
+ * use of `path.join`/`path.basename` shows up as an unsafe `any` access there.
+ */
+export function joinPath(...segments: string[]): string {
+	const joined = segments
+		.filter((segment) => typeof segment === 'string' && segment.length > 0)
+		.join('/')
+		.replace(/\\/g, '/')
+		.replace(/\/{2,}/g, '/');
+	return joined ? normalizePath(joined) : '';
+}
+
+/**
+ * Return the last segment of a path (the file or folder name).
+ */
+export function baseName(filePath: string): string {
+	const normalized = filePath.replace(/\\/g, '/').replace(/\/+$/, '');
+	const index = normalized.lastIndexOf('/');
+	return index >= 0 ? normalized.slice(index + 1) : normalized;
+}
+
+/**
+ * Return the parent path of a file or folder path.
+ */
+export function dirName(filePath: string): string {
+	const normalized = filePath.replace(/\\/g, '/').replace(/\/+$/, '');
+	const index = normalized.lastIndexOf('/');
+	if (index < 0) return '';
+	return normalized.slice(0, index);
 }
 
 /**
@@ -21,6 +54,6 @@ export function getRelativePathToVault(absolutePath: string, pluginDir: string):
 		// return the path as-is (should already be vault-relative)
 		return normalizePath(normalizedPath);
 	}
-	const fileName = path.basename(absolutePath);
-	return normalizePath(path.join(normalizedPluginDir, 'assets', fileName));
+	const fileName = baseName(absolutePath);
+	return joinPath(normalizedPluginDir, 'assets', fileName);
 }

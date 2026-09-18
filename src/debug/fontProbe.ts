@@ -3,7 +3,7 @@ import * as alphaTab from '@coderline/alphatab';
 import { AlphaTabResources, ASSET_FILES } from '../services/ResourceLoaderService';
 import { setCssProps } from '../utils/styleUtils';
 import { isDebugLoggingEnabled, setDebugLoggingEnabled } from '../utils/logger';
-import * as path from 'path';
+import { joinPath } from '../utils/pathUtils';
 
 type ProbeHost = Plugin & {
 	resources?: AlphaTabResources;
@@ -34,9 +34,7 @@ async function probeFontFaceFromUrl(uri: string): Promise<Record<string, unknown
 
 async function probeFontFaceFromBinary(host: ProbeHost): Promise<Record<string, unknown>> {
 	try {
-		const rel = path
-			.join(host.manifest.dir ?? '', 'assets', ASSET_FILES.BRAVURA)
-			.replace(/\\/g, '/');
+		const rel = joinPath(host.manifest.dir ?? '', 'assets', ASSET_FILES.BRAVURA);
 		const buf = await host.app.vault.adapter.readBinary(rel);
 		const face = new FontFace('tabflow-probe-bin', buf);
 		await face.load();
@@ -239,11 +237,6 @@ export function registerDebugCommands(plugin: ProbeHost) {
 			const doc = document;
 			const out: Record<string, unknown> = {
 				time: new Date().toISOString(),
-				runtime: {
-					electron: process.versions.electron,
-					chrome: process.versions.chrome,
-					node: process.versions.node,
-				},
 				platform: {
 					isDesktopApp: Platform.isDesktopApp,
 					isWin: Platform.isWin,
@@ -379,7 +372,7 @@ export function registerDebugCommands(plugin: ProbeHost) {
 			} catch {
 				// ignore: directory may already exist
 			}
-			const file = path.join(debugDir, `font-probe-${Date.now()}.json`).replace(/\\/g, '/');
+			const file = joinPath(debugDir, `font-probe-${Date.now()}.json`).replace(/\\/g, '/');
 			try {
 				await plugin.app.vault.adapter.write(file, JSON.stringify(out, null, 2));
 				new Notice(`Font probe written: ${file}`, 8000);
