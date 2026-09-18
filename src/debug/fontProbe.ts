@@ -222,11 +222,13 @@ async function probeRender(
 export function registerDebugCommands(plugin: ProbeHost) {
 	plugin.addCommand({
 		id: 'debug-open-settings',
-		name: 'Debug: open Tab Flow settings',
+		name: 'Debug: open settings',
 		callback: () => {
-			const setting = (plugin.app as {
-				setting?: { open?: () => void; openTabById?: (id: string) => void };
-			}).setting;
+			const setting = (
+				plugin.app as {
+					setting?: { open?: () => void; openTabById?: (id: string) => void };
+				}
+			).setting;
 			setting?.open?.();
 			setting?.openTabById?.(plugin.manifest.id);
 		},
