@@ -18,10 +18,11 @@
  * ```
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AlphaTabApi } from '@coderline/alphatab';
 import { LayoutMode, PlayerMode, ScrollMode, Settings, StaveProfile } from '@coderline/alphatab';
 import { debugLog } from '../../utils/logger';
+import { applyStaveProfile } from '../../utils/staveProfile';
 
 /**
  * AlphaTab 播放器配置选项
@@ -88,10 +89,6 @@ function createAlphaTabSettings(config: AlphaTabPlayerConfig): Settings {
 	// Display 配置
 	settings.display.layoutMode = config.layoutMode ?? LayoutMode.Page;
 
-	if (config.staveProfile !== undefined) {
-		settings.display.staveProfile = config.staveProfile;
-	}
-
 	// Player 配置
 	settings.player.playerMode = config.playerMode ?? PlayerMode.EnabledSynthesizer;
 
@@ -129,6 +126,7 @@ export function useAlphaTabPlayer(
 	config: AlphaTabPlayerConfig
 ): AlphaTabApi | null {
 	const [api, setApi] = useState<AlphaTabApi | null>(null);
+	const appliedStaveProfile = useRef<StaveProfile | null>(null);
 
 	// 初始化 AlphaTab API
 	useEffect(() => {
@@ -151,6 +149,14 @@ export function useAlphaTabPlayer(
 				.then(({ AlphaTabApi }) => {
 					currentApi = new AlphaTabApi(container, settings);
 					setApi(currentApi);
+
+					// 谱面加载后应用谱表模式（Default 时保持乐谱/插件的默认显示）
+					currentApi.scoreLoaded.on(() => {
+						const profile = config.staveProfile;
+						if (profile !== undefined && profile !== StaveProfile.Default) {
+							applyStaveProfile(currentApi!, profile, false);
+						}
+					});
 
 					debugLog('[useAlphaTabPlayer] AlphaTab API 创建成功', currentApi);
 				})
@@ -192,10 +198,10 @@ export function useAlphaTabPlayer(
 
 		if (
 			config.staveProfile !== undefined &&
-			api.settings.display.staveProfile !== config.staveProfile
+			appliedStaveProfile.current !== config.staveProfile
 		) {
-			api.settings.display.staveProfile = config.staveProfile;
-			needsUpdate = true;
+			appliedStaveProfile.current = config.staveProfile;
+			applyStaveProfile(api, config.staveProfile);
 		}
 
 		if (

@@ -6,11 +6,13 @@ import { EventBus, convertSamplesToWavBlobUrl, toFiniteClampedNumber } from '../
 import type { EventHandler } from '../utils/EventBus';
 import { ScrollEventManager } from '../events/scrollEvents';
 import { createSmuflFontSources } from '../utils/fontSource';
+import { applyStaveProfile } from '../utils/staveProfile';
 import * as convert from 'color-convert';
 
 export class AlphaTabService {
 	private api: alphaTab.AlphaTabApi;
 	private scrollManager: ScrollEventManager;
+	private staveProfile: alphaTab.StaveProfile = alphaTab.StaveProfile.Default;
 	private eventBus: EventBus;
 	private eventBusSubscriptions: Array<{ event: string; handler: EventHandler }> = [];
 	private app: App;
@@ -133,9 +135,8 @@ export class AlphaTabService {
 			this.api.playbackSpeed = toFiniteClampedNumber(speed, 1, 0.5, 2);
 		});
 		this.subscribe('命令:设置谱表', (profile: number) => {
-			this.api.settings.display.staveProfile = profile;
-			this.api.updateSettings();
-			this.api.render();
+			this.staveProfile = profile;
+			applyStaveProfile(this.api, this.staveProfile);
 		});
 		this.subscribe('命令:设置节拍器', (enabled: boolean) => {
 			this.api.metronomeVolume = enabled ? 1 : 0;
@@ -338,6 +339,7 @@ export class AlphaTabService {
 		if (maybePromise && typeof (maybePromise as PromiseLike<void>).then === 'function') {
 			await (maybePromise as PromiseLike<void>);
 		}
+		applyStaveProfile(this.api, this.staveProfile, false);
 	}
 
 	public async loadAlphaTexScore(textContent: string) {
@@ -375,6 +377,7 @@ export class AlphaTabService {
 					throw new Error('AlphaTexImporter not available');
 				}
 			}
+			applyStaveProfile(this.api, this.staveProfile, false);
 		} catch (error) {
 			console.error('[AlphaTabService] Failed to load AlphaTex content:', error);
 			throw error;

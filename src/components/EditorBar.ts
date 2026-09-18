@@ -5,6 +5,7 @@ import type { ProgressBarElement } from './ProgressBar.types';
 import { createAudioPlayer, AudioPlayerOptions } from './AudioPlayer';
 import * as alphaTab from '@coderline/alphatab';
 import { formatTime, toFiniteClampedNumber } from '../utils';
+import { applyStaveProfile } from '../utils/staveProfile';
 import { t } from '../i18n';
 import type { TabFlowSettings } from '../settings/defaults';
 
@@ -46,7 +47,6 @@ interface TabFlowPluginLike extends Plugin {
 
 // Type for alphaTab API settings with extended properties (using intersection types)
 type ExtendedDisplaySettings = alphaTab.DisplaySettings & {
-	staveProfile?: number;
 	layoutMode?: number;
 };
 
@@ -614,11 +614,7 @@ export function createEditorBar(options: EditorBarOptions): HTMLDivElement {
 			select.onchange = () => {
 				const api = options.getApi?.();
 				if (api) {
-					(api.settings.display as ExtendedDisplaySettings).staveProfile = parseInt(
-						select.value
-					);
-					api.updateSettings();
-					api.render();
+					applyStaveProfile(api, parseInt(select.value));
 				} else {
 					eventBus?.publish('命令:设置谱表', parseInt(select.value));
 				}

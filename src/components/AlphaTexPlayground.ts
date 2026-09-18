@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import * as alphaTab from '@coderline/alphatab';
 import type { AlphaTexMountHandle } from '../markdown/AlphaTexBlock';
 import { toFiniteClampedNumber } from '../utils';
+import { applyStaveProfile } from '../utils/staveProfile';
 
 interface EventBus {
 	subscribe(event: string, callback: (...args: unknown[]) => void): void;
@@ -24,10 +25,6 @@ declare global {
 }
 
 // Type for alphaTab API settings with extended properties (using intersection types)
-type ExtendedDisplaySettings = alphaTab.DisplaySettings & {
-	staveProfile?: number;
-};
-
 type ExtendedPlayerSettings = alphaTab.PlayerSettings & {
 	scrollMode?: string | alphaTab.ScrollMode;
 };
@@ -444,9 +441,7 @@ export function createAlphaTexPlayground(
 		eventBus.subscribe('命令:设置谱表', (profile: number) => {
 			const api = mounted?.api;
 			if (api) {
-				(api.settings.display as ExtendedDisplaySettings).staveProfile = profile;
-				api.updateSettings();
-				api.render();
+				applyStaveProfile(api, profile);
 			}
 		});
 

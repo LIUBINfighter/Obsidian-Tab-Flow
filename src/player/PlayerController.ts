@@ -16,6 +16,7 @@ import type { Plugin, TFile } from 'obsidian';
 import * as alphaTab from '@coderline/alphatab';
 import { toFiniteClampedNumber, toFiniteNumber } from '../utils';
 import { createSmuflFontSources } from '../utils/fontSource';
+import { applyStaveProfile } from '../utils/staveProfile';
 import { getAlphaTexDiagnosticMessages } from '../editor/alphaTexDiagnostics';
 import { debugLog } from '../utils/logger';
 
@@ -409,7 +410,6 @@ export class PlayerController {
 				layoutMode: globalConfig.alphaTabSettings.display.layoutMode,
 				barsPerRow: globalConfig.alphaTabSettings.display.barsPerRow,
 				stretchForce: globalConfig.alphaTabSettings.display.stretchForce,
-				staveProfile: globalConfig.alphaTabSettings.display.staveProfile,
 			},
 		};
 
@@ -632,6 +632,13 @@ export class PlayerController {
 				// ✅ 设置吉他音轨的默认显示选项（仅六线谱）
 				this.applyDefaultStaffDisplay(score);
 
+				// ✅ 应用用户选择的谱表模式（Default 时保持默认显示）
+				const staveProfile =
+					this.stores.globalConfig.getState().alphaTabSettings.display.staveProfile;
+				if (staveProfile !== alphaTab.StaveProfile.Default && this.api) {
+					applyStaveProfile(this.api, staveProfile, false);
+				}
+
 				// 注意：总时长从 playerPositionChanged 的 e.endTime 获取，
 				// 那才是考虑了速度等因素的实际播放时长
 
@@ -840,10 +847,7 @@ export class PlayerController {
 	 */
 	setStaveProfile(profile: alphaTab.StaveProfile): void {
 		if (!this.api) return;
-		// StaveProfile 需要通过 settings.display.staveProfile 设置
-		this.api.settings.display.staveProfile = profile;
-		this.api.updateSettings();
-		this.api.render();
+		applyStaveProfile(this.api, profile);
 	}
 
 	/**

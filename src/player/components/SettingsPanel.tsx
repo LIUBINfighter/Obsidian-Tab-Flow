@@ -386,9 +386,9 @@ function buildSettingsGroups(): SettingsGroupSchema[] {
 				{
 					label: 'Stave Profile',
 					getValue(context: SettingsContextProps) {
-						const api = context.controller.getRuntimeStore().getState().alphaTabApi;
 						return (
-							api?.settings?.display?.staveProfile ?? alphaTab.StaveProfile.Default
+							context.controller.getGlobalConfigStore().getState().alphaTabSettings
+								.display.staveProfile ?? alphaTab.StaveProfile.Default
 						);
 					},
 					setValue(context: SettingsContextProps, value: alphaTab.StaveProfile) {
