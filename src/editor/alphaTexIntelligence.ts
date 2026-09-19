@@ -357,7 +357,14 @@ function createHoverTooltip(entry: DefinitionEntry, from: number, to: number): T
 		arrow: true,
 		clip: false,
 		create() {
-			return { dom: completionInfo(entry, true) };
+			return {
+				dom: completionInfo(entry, true),
+				// CodeMirror 没有给 hover tooltip 宿主元素加 class 的钩子，
+				// 挂载时补一个类名，避免用父选择器反查宿主（性能不友好）。
+				mount(this: { dom: HTMLElement }) {
+					this.dom.parentElement?.classList.add('alphatex-intelligence-tooltip');
+				},
+			};
 		},
 	};
 }

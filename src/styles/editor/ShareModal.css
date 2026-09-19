@@ -209,8 +209,7 @@
 	display: grid;
 	grid-template-columns: 110px 1fr;
 	align-items: center;
-	row-gap: 6px;
-	column-gap: 8px;
+	gap: 6px 8px;
 	margin-top: 12px;
 	padding: 10px 10px 12px;
 	background: var(--background-secondary);
@@ -223,8 +222,7 @@
 	display: grid;
 	grid-template-columns: 110px 1fr;
 	align-items: center;
-	row-gap: 6px;
-	column-gap: 8px;
+	gap: 6px 8px;
 	margin-top: 4px;
 	padding: 10px 10px 12px;
 	background: var(--background-secondary);

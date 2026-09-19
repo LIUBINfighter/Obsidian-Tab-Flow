@@ -45,7 +45,7 @@ const cssFiles = collectCssFilesRecursive(stylesDir).sort();
 // const lifecycle = process.env.npm_lifecycle_event || '';
 // let merged = lifecycle ? `/* build: ${lifecycle} */\n` : '';
 let merged =
-	'/* This file is auto generated, to edit this please refer to ./src/styles/*.css  */ \n';
+	'/* This file is auto generated, to edit this please refer to the files in ./src/styles  */ \n';
 for (const filePath of cssFiles) {
 	// 计算相对路径用于注释
 	const relativePath = path.relative(stylesDir, filePath);

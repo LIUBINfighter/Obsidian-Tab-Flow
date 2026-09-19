@@ -213,12 +213,12 @@
 	/* 打印时每个 .tabflow-print-page 独立成页，禁止中间断开 */
 	.tabflow-print-preview-view .tabflow-print-page {
 		page-break-after: always;
-		break-inside: avoid;
+		page-break-inside: avoid;
 	}
 
 	/* 避免分页容器本身再被拆分 */
 	.tabflow-print-preview-view .tabflow-print-pages {
-		break-inside: avoid;
+		page-break-inside: avoid;
 	}
 }
 

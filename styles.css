@@ -1,4 +1,4 @@
-/* This file is auto generated, to edit this please refer to ./src/styles/*.css  */ 
+/* This file is auto generated, to edit this please refer to the files in ./src/styles  */ 
 /* --- doc\doc.css --- */
 /* Basic layout for TabFlow documentation view */
 .tabflow-doc-header {
@@ -680,8 +680,7 @@
 	display: grid;
 	grid-template-columns: 110px 1fr;
 	align-items: center;
-	row-gap: 6px;
-	column-gap: 8px;
+	gap: 6px 8px;
 	margin-top: 12px;
 	padding: 10px 10px 12px;
 	background: var(--background-secondary);
@@ -694,8 +693,7 @@
 	display: grid;
 	grid-template-columns: 110px 1fr;
 	align-items: center;
-	row-gap: 6px;
-	column-gap: 8px;
+	gap: 6px 8px;
 	margin-top: 4px;
 	padding: 10px 10px 12px;
 	background: var(--background-secondary);
@@ -1103,7 +1101,6 @@
 .inmarkdown-editor-cm .cm-tooltip-autocomplete,
 .inmarkdown-editor-cm .cm-tooltip.cm-tooltip-hover,
 .cm-tooltip.alphatex-intelligence-tooltip,
-.cm-tooltip:has(.alphatex-intelligence-info),
 .alphatex-intelligence-hover {
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
@@ -1865,7 +1862,6 @@
 .alphatex-editor-wrapper .cm-tooltip-autocomplete,
 .alphatex-editor-wrapper .cm-tooltip.cm-tooltip-hover,
 .cm-tooltip.alphatex-intelligence-tooltip,
-.cm-tooltip:has(.alphatex-intelligence-info),
 .alphatex-intelligence-hover {
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
@@ -2266,12 +2262,12 @@
 	/* 打印时每个 .tabflow-print-page 独立成页，禁止中间断开 */
 	.tabflow-print-preview-view .tabflow-print-page {
 		page-break-after: always;
-		break-inside: avoid;
+		page-break-inside: avoid;
 	}
 
 	/* 避免分页容器本身再被拆分 */
 	.tabflow-print-preview-view .tabflow-print-pages {
-		break-inside: avoid;
+		page-break-inside: avoid;
 	}
 }
 

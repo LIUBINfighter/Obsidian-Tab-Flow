@@ -306,7 +306,6 @@
 .inmarkdown-editor-cm .cm-tooltip-autocomplete,
 .inmarkdown-editor-cm .cm-tooltip.cm-tooltip-hover,
 .cm-tooltip.alphatex-intelligence-tooltip,
-.cm-tooltip:has(.alphatex-intelligence-info),
 .alphatex-intelligence-hover {
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
