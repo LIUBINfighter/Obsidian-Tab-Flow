@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-tab-flow",
-	"version": "0.5.5",
+	"version": "0.5.6",
 	"description": "Render, play and write guitar tabs. Supports Guitar Pro files (.gp, .gp3, .gp4, .gp5, .gpx) and alphaTex scores (.atex).",
 	"main": "main.js",
 	"type": "module",

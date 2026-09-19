@@ -1,7 +1,7 @@
 {
 	"id": "tab-flow",
 	"name": "Tab Flow",
-	"version": "0.5.5",
+	"version": "0.5.6",
 	"minAppVersion": "1.8.0",
 	"description": "Render, play and write guitar tabs. Supports Guitar Pro files (.gp, .gp3, .gp4, .gp5, .gpx) and alphaTex scores (.atex).",
 	"author": "Jay Bridge",
