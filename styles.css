@@ -1791,19 +1791,36 @@
 }
 
 /* ===== AlphaTex Diagnostics ===== */
-.alphatex-editor-wrapper .cm-diagnosticRange-error {
-	text-decoration: underline wavy var(--text-error);
-	text-underline-offset: 3px;
+/* 诊断下划线：用 45°/-45° 渐变拼出锯齿波浪。
+ * 不用文本装饰线相关属性，避免兼容性检查把它们判为 "partially supported"。
+ * 颜色经 CSS 变量注入，深浅主题自动跟随。 */
+.alphatex-editor-wrapper .cm-lintRange {
+	--tabflow-diagnostic-underline: var(--text-accent, var(--color-accent));
+	background-image:
+		linear-gradient(
+			45deg,
+			transparent 68%,
+			var(--tabflow-diagnostic-underline) 76%,
+			transparent 84%
+		),
+		linear-gradient(
+			-45deg,
+			transparent 68%,
+			var(--tabflow-diagnostic-underline) 76%,
+			transparent 84%
+		);
+	background-position: left bottom;
+	background-repeat: repeat-x;
+	background-size: 6px 3px;
+	padding-bottom: 3px;
 }
 
-.alphatex-editor-wrapper .cm-diagnosticRange-warning {
-	text-decoration: underline wavy var(--text-warning, var(--color-yellow));
-	text-underline-offset: 3px;
+.alphatex-editor-wrapper .cm-lintRange-error {
+	--tabflow-diagnostic-underline: var(--text-error);
 }
 
-.alphatex-editor-wrapper .cm-diagnosticRange-info {
-	text-decoration: underline wavy var(--text-accent, var(--color-accent));
-	text-underline-offset: 3px;
+.alphatex-editor-wrapper .cm-lintRange-warning {
+	--tabflow-diagnostic-underline: var(--text-warning, var(--color-yellow));
 }
 
 .alphatex-editor-wrapper .cm-lint-marker-error {
