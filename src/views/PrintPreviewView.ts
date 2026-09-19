@@ -17,6 +17,8 @@ export class PrintPreviewView extends FileView {
 	private sidebarEl: HTMLElement | null = null;
 	private tracksPanel: PrintTracksPanelDom | null = null;
 	private isSidebarCollapsed = false;
+	private lastIframeHeight = 0;
+	private heightAdjustHandle: number | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: TabFlowPlugin) {
 		super(leaf);
@@ -162,7 +164,10 @@ export class PrintPreviewView extends FileView {
   <title>Print preview</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { overflow: visible; height: auto; width: 100%; }
+    /* 屏幕预览时禁止 iframe 自身出现滚动条：滚动条会改变内部可用宽度，
+       触发 alphaTab 的 ResizeObserver 重排，高度变化后又反过来影响滚动条，
+       形成来回跳动的无限重排循环。高度统一由 PrintPreviewView 计算设置。 */
+    html, body { overflow: hidden; height: auto; width: 100%; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: white; color: black; }
     @page { size: A4; margin: 10mm; }
     @media print {
@@ -219,7 +224,7 @@ export class PrintPreviewView extends FileView {
 				api: this.api,
 				// 右侧渲染变化时，重新调整 iframe 高度
 				onConfigChanged: () => {
-					this.adjustIframeHeight();
+					this.scheduleIframeHeightAdjust();
 				},
 			});
 		} else if (this.api) {
@@ -231,7 +236,7 @@ export class PrintPreviewView extends FileView {
 		if (!this.sidebarEl) return;
 		this.isSidebarCollapsed = !this.isSidebarCollapsed;
 		toggleHidden(this.sidebarEl, this.isSidebarCollapsed);
-		this.adjustIframeHeight();
+		this.scheduleIframeHeightAdjust();
 	}
 
 	/**
@@ -239,19 +244,20 @@ export class PrintPreviewView extends FileView {
 	 */
 	private setupAutoResize(iframe: HTMLIFrameElement) {
 		// 初始调整
-		window.setTimeout(() => this.adjustIframeHeight(), 100);
+		window.setTimeout(() => this.scheduleIframeHeightAdjust(), 100);
 
 		// 监听内容变化（使用 MutationObserver）
 		const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
 		if (iframeDoc?.body) {
+			// 只监听结构变化：alphaTab 渲染时会大量改写 SVG 属性，
+			// 监听 attributes 会导致渲染期间频繁触发强制同步布局。
 			const observer = new MutationObserver(() => {
-				this.adjustIframeHeight();
+				this.scheduleIframeHeightAdjust();
 			});
 
 			observer.observe(iframeDoc.body, {
 				childList: true,
 				subtree: true,
-				attributes: true,
 			});
 
 			// 清理时断开观察
@@ -259,6 +265,17 @@ export class PrintPreviewView extends FileView {
 				observer.disconnect();
 			});
 		}
+	}
+
+	/**
+	 * 合并同一帧内的多次高度调整请求
+	 */
+	private scheduleIframeHeightAdjust() {
+		if (this.heightAdjustHandle !== null) return;
+		this.heightAdjustHandle = window.requestAnimationFrame(() => {
+			this.heightAdjustHandle = null;
+			this.adjustIframeHeight();
+		});
 	}
 
 	/**
@@ -270,8 +287,15 @@ export class PrintPreviewView extends FileView {
 		const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow?.document;
 		if (!iframeDoc?.body) return;
 
-		// 直接使用 body scrollHeight 作为 iframe 高度
-		const height = iframeDoc.body.scrollHeight;
+		// 取 body/documentElement 的较大值并向上取整，避免内容被裁掉
+		const height = Math.ceil(
+			Math.max(iframeDoc.body.scrollHeight, iframeDoc.documentElement.scrollHeight)
+		);
+
+		// 高度未变化时跳过，避免无谓的样式写入与重排
+		if (height === this.lastIframeHeight) return;
+		this.lastIframeHeight = height;
+
 		setCssProps(this.iframe, {
 			height: `${height}px`,
 		});
@@ -346,7 +370,7 @@ export class PrintPreviewView extends FileView {
 			// 监听渲染完成事件
 			this.api.renderFinished.on(() => {
 				debugLog('[PrintPreview] Render finished');
-				this.adjustIframeHeight();
+				this.scheduleIframeHeightAdjust();
 			});
 
 			// 监听错误事件
@@ -483,6 +507,13 @@ export class PrintPreviewView extends FileView {
 	}
 
 	async onClose(): Promise<void> {
+		// 取消待执行的高度调整
+		if (this.heightAdjustHandle !== null) {
+			window.cancelAnimationFrame(this.heightAdjustHandle);
+			this.heightAdjustHandle = null;
+		}
+		this.lastIframeHeight = 0;
+
 		// 销毁 AlphaTab API
 		if (this.api) {
 			try {
