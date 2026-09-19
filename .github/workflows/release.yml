@@ -9,6 +9,11 @@ jobs:
     build:
         runs-on: ubuntu-latest
 
+        permissions:
+            contents: write
+            id-token: write
+            attestations: write
+
         steps:
             - uses: actions/checkout@v7
 
@@ -50,6 +55,19 @@ jobs:
                   cd assets-package
                   zip -r ../assets.zip .
                   cd ..
+
+            - name: Attest build provenance
+              uses: actions/attest-build-provenance@v4
+              with:
+                  subject-path: |
+                      main.js
+                      manifest.json
+                      styles.css
+                      tab-flow.zip
+                      assets.zip
+                      assets/alphaTab.min.js
+                      assets/Bravura.woff2
+                      assets/sonivox.sf3
 
             - name: Create release
               env:
