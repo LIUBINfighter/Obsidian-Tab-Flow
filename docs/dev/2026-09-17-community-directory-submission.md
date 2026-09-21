@@ -94,3 +94,8 @@ gh release view 0.5.2 --json assets --jq '[.assets[].name]'
 2. `settings-tab/prefer-setting-definitions`：实现声明式设置 API，设置项才能出现在 1.13+ 的设置搜索里。
 3. 完整 `strict: true` 迁移（当前 `strictNullChecks` + `strictBindCallApply`）。
 4. README 中「社区插件市场」条目在正式上架后再改为直接可安装的表述。
+
+## 后续
+
+- 审核结果与合规修法（attestation、CSS lint、React 18 降级、发布标准动作）见 [2026-09-20-directory-review-compliance.md](./2026-09-20-directory-review-compliance.md)
+- 状态：**0.5.7 全量审核 `Completed`**（Errors 0，仅剩 3 条 Recommendation）
