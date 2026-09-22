@@ -7,7 +7,7 @@
 
 在 Obsidian 中演奏和创作你的吉他谱！基于 [alphaTab](https://alphatab.net)。
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/7334f1e9-cdc4-404e-81a7-89683ebfab7f" />
+![Tab Flow 播放器渲染 Guitar Pro 乐谱](assets/readme/player-view.png)
 
 ## 功能
 
@@ -20,29 +20,29 @@
 
 ### 自定义播放体验
 
-![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
+![visual-editor-playbar](assets/readme/visual-editor-playbar.gif)
 
 ### 像写 Markdown 一样写吉他谱
 
 `.atex` 文件：
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/e3a86a1a-3a85-469f-aa07-bda97faaf891" />
+![alphaTex 文件编辑器](assets/readme/atex-editor.png)
 
 笔记中的 `alphatex` 代码块：
 
-![alphatex-copy-and-paste-writing](https://github.com/user-attachments/assets/ef402b18-9c3f-4e10-8772-a3fd8e50c507)
+![alphatex-copy-and-paste-writing](assets/readme/alphatex-code-block.gif)
 
 ### 分享你的 riff（Beta）
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2f784059-4fef-4345-a6e4-d543ea7b2169" />
+![分享卡片预览](assets/readme/share-card.png)
 
 ### 在内置 Playground 里学习 alphaTex
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/df7ba557-2c15-4db8-bfdf-d011e5362a16" />
+![alphaTex Playground](assets/readme/playground.png)
 
 通过命令面板或左侧 `guitar` 图标打开文档视图：
 
-![alphatex-and-doc](https://github.com/user-attachments/assets/92821b4a-739c-458b-a1f3-1df0d64421ef)
+![alphatex-and-doc](assets/readme/alphatex-and-doc.gif)
 
 ## 系统要求
 

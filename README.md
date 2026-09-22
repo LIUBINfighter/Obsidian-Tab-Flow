@@ -7,9 +7,9 @@
 
 Render, play and write guitar tabs in Obsidian. Powered by [alphaTab](https://alphatab.net).
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/7334f1e9-cdc4-404e-81a7-89683ebfab7f" />
+![Tab Flow player rendering a Guitar Pro score](assets/readme/player-view.png)
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/3cfde6e3-e775-4507-9a13-ef4be31b0941" />
+![Tab Flow score view](assets/readme/score-view.png)
 
 ## Features
 
@@ -22,29 +22,29 @@ Render, play and write guitar tabs in Obsidian. Powered by [alphaTab](https://al
 
 ### Custom playback experience
 
-![visual-editor-playbar](https://github.com/user-attachments/assets/4fce8ba1-31fa-4ca5-ab78-d721374ce975)
+![visual-editor-playbar](assets/readme/visual-editor-playbar.gif)
 
 ### Write guitar tabs like Markdown
 
 `.atex` files:
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/e3a86a1a-3a85-469f-aa07-bda97faaf891" />
+![alphaTex file editor](assets/readme/atex-editor.png)
 
 `alphatex` code blocks in `.md` notes:
 
-![alphatex-copy-and-paste-writing](https://github.com/user-attachments/assets/ef402b18-9c3f-4e10-8772-a3fd8e50c507)
+![alphatex-copy-and-paste-writing](assets/readme/alphatex-code-block.gif)
 
 ### Share your riff (beta)
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/2f784059-4fef-4345-a6e4-d543ea7b2169" />
+![Share card preview](assets/readme/share-card.png)
 
 ### Learn alphaTex in the built-in playground
 
-<img width="2560" height="1504" alt="image" src="https://github.com/user-attachments/assets/df7ba557-2c15-4db8-bfdf-d011e5362a16" />
+![alphaTex playground](assets/readme/playground.png)
 
 Open the documentation view from the command palette or the `guitar` ribbon icon:
 
-![alphatex-and-doc](https://github.com/user-attachments/assets/92821b4a-739c-458b-a1f3-1df0d64421ef)
+![alphatex-and-doc](assets/readme/alphatex-and-doc.gif)
 
 ## Requirements
 
