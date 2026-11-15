@@ -1,5 +1,6 @@
 // StaveProfileButton.ts
 import * as alphaTab from '@coderline/alphatab';
+import { t } from '../../i18n';
 
 interface StaveProfileButtonOptions {
 	onClick?: (profile: alphaTab.StaveProfile) => void;
@@ -16,27 +17,27 @@ export class StaveProfileButton {
 	private readonly profiles = [
 		{
 			value: alphaTab.StaveProfile.Default,
-			label: '默认模式',
+			label: t('settings.staveProfileDefault'),
 			icon: 'settings',
 		},
 		{
 			value: alphaTab.StaveProfile.ScoreTab,
-			label: '五线谱+六线谱',
+			label: t('settings.scoreTab'),
 			icon: 'music',
 		},
 		{
 			value: alphaTab.StaveProfile.Score,
-			label: '仅五线谱',
+			label: t('settings.scoreOnly'),
 			icon: 'file-music',
 		},
 		{
 			value: alphaTab.StaveProfile.Tab,
-			label: '仅六线谱',
+			label: t('settings.tabOnly'),
 			icon: 'hash',
 		},
 		{
 			value: alphaTab.StaveProfile.TabMixed,
-			label: '混合六线谱',
+			label: t('settings.tabMixed'),
 			icon: 'layers',
 		},
 	];
@@ -59,7 +60,7 @@ export class StaveProfileButton {
 
 	private getCurrentProfileLabel(): string {
 		const profile = this.profiles.find((p) => p.value === this.currentProfile);
-		return profile ? profile.label : '谱表模式';
+		return profile ? profile.label : t('settings.staveProfileLabel');
 	}
 
 	private getCurrentProfileIcon(): string {

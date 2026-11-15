@@ -1,5 +1,6 @@
 import * as alphaTab from '@coderline/alphatab';
 import { debugLog } from '../utils/logger';
+import { t } from '../i18n';
 
 export function registerApiEventHandlers(
 	api: alphaTab.AlphaTabApi,
@@ -16,17 +17,17 @@ export function registerApiEventHandlers(
 		};
 
 		if (!api) {
-			applyStatus('音频：API未初始化', 'is-error');
+			applyStatus(t('status.apiNotInitialized'), 'is-error');
 			return;
 		}
 		if (!api.player) {
-			applyStatus('音频：播放器未初始化', 'is-error');
+			applyStatus(t('status.playerNotInitialized'), 'is-error');
 			return;
 		}
 		if (isAudioLoaded()) {
-			applyStatus('音频：已加载', 'is-success');
+			applyStatus(t('status.audioLoaded'), 'is-success');
 		} else {
-			applyStatus('音频：加载中...', 'is-warning');
+			applyStatus(t('status.audioLoading'), 'is-warning');
 		}
 	};
 

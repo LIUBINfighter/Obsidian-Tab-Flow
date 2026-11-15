@@ -1,8 +1,8 @@
-// 文档面板：Percussion（打击乐）
+// Docs panel: Percussion
 import type TabFlowPlugin from '../../../main';
 import { createAlphaTexPlayground } from '../../../components/AlphaTexPlayground';
 
-// 最初的简单打击乐示例
+// Minimal percussion example
 const SAMPLE_PERC_ORIGINAL = `\\title "Percussion Basics"
 \\instrument 25
 .
@@ -11,7 +11,7 @@ const SAMPLE_PERC_ORIGINAL = `\\title "Percussion Basics"
 c#5.4 d4.4 c#5.4 d4.4 |
 `;
 
-// 来自官方文档的综合打击乐示例
+// Comprehensive percussion example from the official docs
 const SAMPLE_PERC_OFFICIAL = `\\track "Drums"
 \\instrument percussion
 \\tempo 120
@@ -43,113 +43,113 @@ const SAMPLE_ARTICULATION_DEFAULTS = `\\track "Drums"
 `;
 
 const list = [
-	['Ride (choke)', 29, '镲边闷击'],
-	['Cymbal (hit)', 30, '镲击'],
-	['Snare (side stick)', 31, '军鼓侧边'],
-	['Snare (side stick) 2', 33, '军鼓侧边2'],
-	['Snare (hit)', 34, '军鼓击'],
-	['Kick (hit)', 35, '底鼓击'],
-	['Kick (hit) 2', 36, '底鼓击2'],
-	['Snare (side stick) 3', 37, '军鼓侧边3'],
-	['Snare (hit) 2', 38, '军鼓击2'],
-	['Hand Clap (hit)', 39, '拍手击'],
-	['Snare (hit) 3', 40, '军鼓击3'],
-	['Low Floor Tom (hit)', 41, '低音落地筒击'],
-	['Hi-Hat (closed)', 42, '踩镲闭合'],
-	['Very Low Tom (hit)', 43, '超低音筒击'],
-	['Pedal Hi-Hat (hit)', 44, '踩镲踏板击'],
-	['Low Tom (hit)', 45, '低音筒击'],
-	['Hi-Hat (open)', 46, '踩镲开放'],
-	['Mid Tom (hit)', 47, '中音筒击'],
-	['High Tom (hit)', 48, '高音筒击'],
-	['Crash high (hit)', 49, '高音碎音镲击'],
-	['High Floor Tom (hit)', 50, '高音落地筒击'],
-	['Ride (middle)', 51, '镲边中击'],
-	['China (hit)', 52, '中国镲击'],
-	['Ride (bell)', 53, '镲铃击'],
-	['Tambourine (hit)', 54, '铃鼓击'],
-	['Splash (hit)', 55, '水花镲击'],
-	['Cowbell medium (hit)', 56, '中音牛铃击'],
-	['Crash medium (hit)', 57, '中音碎音镲击'],
-	['Vibraslap (hit)', 58, '颤音器击'],
-	['Ride (edge)', 59, '镲边击'],
-	['Hand (hit)', 60, '手击'],
-	['Hand (hit)', 61, '手击'],
-	['Conga high (mute)', 62, '康加鼓高音闷击'],
-	['Conga high (hit)', 63, '康加鼓高音击'],
-	['Conga low (hit)', 64, '康加鼓低音击'],
-	['Timbale high (hit)', 65, '廷巴莱高音击'],
-	['Timbale low (hit)', 66, '廷巴莱低音击'],
-	['Agogo high (hit)', 67, '阿哥哥鼓高音击'],
-	['Agogo low (hit)', 68, '阿哥哥鼓低音击'],
-	['Cabasa (hit)', 69, '卡巴萨击'],
-	['Left Maraca (hit)', 70, '左沙锤击'],
-	['Whistle high (hit)', 71, '高音哨击'],
-	['Whistle low (hit)', 72, '低音哨击'],
-	['Guiro (hit)', 73, '刮瓜击'],
-	['Guiro (scrap-return)', 74, '刮瓜回刮'],
-	['Claves (hit)', 75, '双响筒击'],
-	['Woodblock high (hit)', 76, '高音木鱼击'],
-	['Woodblock low (hit)', 77, '低音木鱼击'],
-	['Cuica (mute)', 78, '库依卡鼓闷击'],
-	['Cuica (open)', 79, '库依卡鼓开放击'],
-	['Triangle (mute)', 80, '三角铁闷击'],
-	['Triangle (hit)', 81, '三角铁击'],
-	['Shaker (hit)', 82, '沙锤击'],
-	['Tinkle Bell (hit)', 83, '铃铛击'],
-	['Jingle Bell (hit)', 83, '铃铛击'],
-	['Bell Tree (hit)', 84, '铃树击'],
-	['Castanets (hit)', 85, '响板击'],
-	['Surdo (hit)', 86, '苏都鼓击'],
-	['Surdo (mute)', 87, '苏都鼓闷击'],
-	['Snare (rim shot)', 91, '军鼓边击'],
-	['Hi-Hat (half)', 92, '踩镲半开'],
-	['Ride (edge) 2', 93, '镲边击2'],
-	['Ride (choke) 2', 94, '镲边闷击2'],
-	['Splash (choke)', 95, '水花镲闷击'],
-	['China (choke)', 96, '中国镲闷击'],
-	['Crash high (choke)', 97, '高音碎音镲闷击'],
-	['Crash medium (choke)', 98, '中音碎音镲闷击'],
-	['Cowbell low (hit)', 99, '低音牛铃击'],
-	['Cowbell low (tip)', 100, '低音牛铃尖击'],
-	['Cowbell medium (tip)', 101, '中音牛铃尖击'],
-	['Cowbell high (hit)', 102, '高音牛铃击'],
-	['Cowbell high (tip)', 103, '高音牛铃尖击'],
-	['Hand (mute)', 104, '手闷击'],
-	['Hand (slap)', 105, '手拍击'],
-	['Hand (mute) 2', 106, '手闷击2'],
-	['Hand (slap) 2', 107, '手拍击2'],
-	['Conga low (slap)', 108, '康加鼓低音拍击'],
-	['Conga low (mute)', 109, '康加鼓低音闷击'],
-	['Conga high (slap)', 110, '康加鼓高音拍击'],
-	['Tambourine (return)', 111, '铃鼓回击'],
-	['Tambourine (roll)', 112, '铃鼓滚奏'],
-	['Tambourine (hand)', 113, '铃鼓手击'],
-	['Grancassa (hit)', 114, '格兰卡萨击'],
-	['Piatti (hit)', 115, '钹击'],
-	['Piatti (hand)', 116, '钹手击'],
-	['Cabasa (return)', 117, '卡巴萨回击'],
-	['Left Maraca (return)', 118, '左沙锤回击'],
-	['Right Maraca (hit)', 119, '右沙锤击'],
-	['Right Maraca (return)', 120, '右沙锤回击'],
-	['Shaker (return)', 122, '沙锤回击'],
-	['Bell Tree (return)', 123, '铃树回击'],
-	['Golpe (thumb)', 124, '戈尔佩拇指击'],
-	['Golpe (finger)', 125, '戈尔佩手指击'],
-	['Ride (middle) 2', 126, '镲边中击2'],
-	['Ride (bell) 2', 127, '镲铃击2'],
+	['Ride (choke)', 29, 'Ride choke hit'],
+	['Cymbal (hit)', 30, 'Cymbal hit'],
+	['Snare (side stick)', 31, 'Snare side stick'],
+	['Snare (side stick) 2', 33, 'Snare side stick 2'],
+	['Snare (hit)', 34, 'Snare hit'],
+	['Kick (hit)', 35, 'Kick hit'],
+	['Kick (hit) 2', 36, 'Kick hit 2'],
+	['Snare (side stick) 3', 37, 'Snare side stick 3'],
+	['Snare (hit) 2', 38, 'Snare hit 2'],
+	['Hand Clap (hit)', 39, 'Hand clap hit'],
+	['Snare (hit) 3', 40, 'Snare hit 3'],
+	['Low Floor Tom (hit)', 41, 'Low floor tom hit'],
+	['Hi-Hat (closed)', 42, 'Hi-hat closed'],
+	['Very Low Tom (hit)', 43, 'Very low tom hit'],
+	['Pedal Hi-Hat (hit)', 44, 'Pedal hi-hat hit'],
+	['Low Tom (hit)', 45, 'Low tom hit'],
+	['Hi-Hat (open)', 46, 'Hi-hat open'],
+	['Mid Tom (hit)', 47, 'Mid tom hit'],
+	['High Tom (hit)', 48, 'High tom hit'],
+	['Crash high (hit)', 49, 'Crash high hit'],
+	['High Floor Tom (hit)', 50, 'High floor tom hit'],
+	['Ride (middle)', 51, 'Ride middle hit'],
+	['China (hit)', 52, 'China hit'],
+	['Ride (bell)', 53, 'Ride bell hit'],
+	['Tambourine (hit)', 54, 'Tambourine hit'],
+	['Splash (hit)', 55, 'Splash hit'],
+	['Cowbell medium (hit)', 56, 'Cowbell medium hit'],
+	['Crash medium (hit)', 57, 'Crash medium hit'],
+	['Vibraslap (hit)', 58, 'Vibraslap hit'],
+	['Ride (edge)', 59, 'Ride edge hit'],
+	['Hand (hit)', 60, 'Hand hit'],
+	['Hand (hit)', 61, 'Hand hit'],
+	['Conga high (mute)', 62, 'Conga high mute'],
+	['Conga high (hit)', 63, 'Conga high hit'],
+	['Conga low (hit)', 64, 'Conga low hit'],
+	['Timbale high (hit)', 65, 'Timbale high hit'],
+	['Timbale low (hit)', 66, 'Timbale low hit'],
+	['Agogo high (hit)', 67, 'Agogo high hit'],
+	['Agogo low (hit)', 68, 'Agogo low hit'],
+	['Cabasa (hit)', 69, 'Cabasa hit'],
+	['Left Maraca (hit)', 70, 'Left maraca hit'],
+	['Whistle high (hit)', 71, 'Whistle high hit'],
+	['Whistle low (hit)', 72, 'Whistle low hit'],
+	['Guiro (hit)', 73, 'Guiro hit'],
+	['Guiro (scrap-return)', 74, 'Guiro scrap-return'],
+	['Claves (hit)', 75, 'Claves hit'],
+	['Woodblock high (hit)', 76, 'Woodblock high hit'],
+	['Woodblock low (hit)', 77, 'Woodblock low hit'],
+	['Cuica (mute)', 78, 'Cuica mute'],
+	['Cuica (open)', 79, 'Cuica open'],
+	['Triangle (mute)', 80, 'Triangle mute'],
+	['Triangle (hit)', 81, 'Triangle hit'],
+	['Shaker (hit)', 82, 'Shaker hit'],
+	['Tinkle Bell (hit)', 83, 'Tinkle bell hit'],
+	['Jingle Bell (hit)', 83, 'Jingle bell hit'],
+	['Bell Tree (hit)', 84, 'Bell tree hit'],
+	['Castanets (hit)', 85, 'Castanets hit'],
+	['Surdo (hit)', 86, 'Surdo hit'],
+	['Surdo (mute)', 87, 'Surdo mute'],
+	['Snare (rim shot)', 91, 'Snare rim shot'],
+	['Hi-Hat (half)', 92, 'Hi-hat half open'],
+	['Ride (edge) 2', 93, 'Ride edge hit 2'],
+	['Ride (choke) 2', 94, 'Ride choke hit 2'],
+	['Splash (choke)', 95, 'Splash choke'],
+	['China (choke)', 96, 'China choke'],
+	['Crash high (choke)', 97, 'Crash high choke'],
+	['Crash medium (choke)', 98, 'Crash medium choke'],
+	['Cowbell low (hit)', 99, 'Cowbell low hit'],
+	['Cowbell low (tip)', 100, 'Cowbell low tip'],
+	['Cowbell medium (tip)', 101, 'Cowbell medium tip'],
+	['Cowbell high (hit)', 102, 'Cowbell high hit'],
+	['Cowbell high (tip)', 103, 'Cowbell high tip'],
+	['Hand (mute)', 104, 'Hand mute'],
+	['Hand (slap)', 105, 'Hand slap'],
+	['Hand (mute) 2', 106, 'Hand mute 2'],
+	['Hand (slap) 2', 107, 'Hand slap 2'],
+	['Conga low (slap)', 108, 'Conga low slap'],
+	['Conga low (mute)', 109, 'Conga low mute'],
+	['Conga high (slap)', 110, 'Conga high slap'],
+	['Tambourine (return)', 111, 'Tambourine return'],
+	['Tambourine (roll)', 112, 'Tambourine roll'],
+	['Tambourine (hand)', 113, 'Tambourine hand'],
+	['Grancassa (hit)', 114, 'Grancassa hit'],
+	['Piatti (hit)', 115, 'Piatti hit'],
+	['Piatti (hand)', 116, 'Piatti hand'],
+	['Cabasa (return)', 117, 'Cabasa return'],
+	['Left Maraca (return)', 118, 'Left maraca return'],
+	['Right Maraca (hit)', 119, 'Right maraca hit'],
+	['Right Maraca (return)', 120, 'Right maraca return'],
+	['Shaker (return)', 122, 'Shaker return'],
+	['Bell Tree (return)', 123, 'Bell tree return'],
+	['Golpe (thumb)', 124, 'Golpe thumb'],
+	['Golpe (finger)', 125, 'Golpe finger'],
+	['Ride (middle) 2', 126, 'Ride middle hit 2'],
+	['Ride (bell) 2', 127, 'Ride bell hit 2'],
 ];
 
 export default {
 	id: 'percussion',
-	title: 'Percussion 打击乐',
+	title: 'Percussion',
 	render(container: HTMLElement, plugin?: TabFlowPlugin) {
 		container.empty();
-		container.createEl('h3', { text: 'Percussion（打击乐）' });
+		container.createEl('h3', { text: 'Percussion' });
 
-		// 最初的简单示例
+		// Minimal example
 		container.createEl('p', {
-			text: '演示最小打击乐谱例（示意）。',
+			text: 'A minimal percussion example.',
 		});
 
 		if (plugin) {
@@ -159,23 +159,23 @@ export default {
 
 		// Since badge
 		const sinceBadge = container.createDiv({ cls: 'since-badge' });
-		sinceBadge.createSpan({ text: '自 1.4.0 版本起' });
+		sinceBadge.createSpan({ text: 'Since version 1.4.0' });
 
-		// 介绍
+		// Introduction
 		container.createEl('p', {
-			text: '自 alphaTab 1.4 起，您也可以在 alphaTab 中编写打击乐（鼓）轨道。为此，轨道必须设置 \\instrument "percussion"，然后可以通过发音名称或数字添加音符。',
+			text: 'Since alphaTab 1.4, you can also write percussion (drum) tracks in alphaTab. To do so, the track must be set to \\instrument "percussion", after which notes can be added using articulation names or numbers.',
 		});
 
-		// 官方综合示例
+		// Comprehensive official example
 		if (plugin) {
 			const hostOfficial = container.createDiv({ cls: 'doc-playground-host' });
 			createAlphaTexPlayground(plugin, hostOfficial, SAMPLE_PERC_OFFICIAL, {});
 		}
 
-		// 乐器发音部分
-		container.createEl('h4', { text: '乐器发音' });
+		// Instrument articulations section
+		container.createEl('h4', { text: 'Instrument Articulations' });
 		container.createEl('p', {
-			text: 'Alphatab 附带了一套默认的乐器发音集，源自 guitar pro 7。每个发音都有一个内部数字，可以通过该数字引用它。为了使编写更人性化，您可以通过 \\articulation name number 定义自定义发音名称',
+			text: 'AlphaTab comes with a set of default instrument articulations, derived from Guitar Pro 7. Each articulation has an internal number that can be used to reference it. To make writing more human-friendly, you can define custom articulation names via \\articulation name number.',
 		});
 
 		if (plugin) {
@@ -184,7 +184,7 @@ export default {
 		}
 
 		container.createEl('p', {
-			text: '如果您只想使用所有发音，您可以指定 \\articulation defaults，这样就会提供带有一些默认名称的整个发音列表。',
+			text: 'If you want to use all articulations, you can specify \\articulation defaults, which provides the entire articulation list with some default names.',
 		});
 
 		if (plugin) {
@@ -192,29 +192,29 @@ export default {
 			createAlphaTexPlayground(plugin, host3, SAMPLE_ARTICULATION_DEFAULTS, {});
 		}
 
-		// 发音列表部分
-		container.createEl('h4', { text: '发音列表' });
+		// Articulation list section
+		container.createEl('h4', { text: 'Articulation List' });
 		container.createEl('p', {
-			text: '要实际开始使用，您需要知道内置发音的列表。请参考下面的列表和示例作为参考：',
+			text: 'To actually get started, you need to know the list of built-in articulations. Refer to the table and examples below as a reference:',
 		});
 
-		// 创建表格
+		// Create table
 		const table = container.createEl('table', { cls: 'articulation-table' });
 		const thead = table.createEl('thead');
 		const headerRow = thead.createEl('tr');
-		headerRow.createEl('th', { text: '数字' });
-		headerRow.createEl('th', { text: '全称' });
-		headerRow.createEl('th', { text: '简称' });
-		headerRow.createEl('th', { text: '含义' });
+		headerRow.createEl('th', { text: 'Number' });
+		headerRow.createEl('th', { text: 'Full Name' });
+		headerRow.createEl('th', { text: 'Short Name' });
+		headerRow.createEl('th', { text: 'Meaning' });
 
 		const tbody = table.createEl('tbody');
 		list.forEach((item) => {
 			const row = tbody.createEl('tr');
 
-			// 数字单元格为普通文本
+			// Number cell (plain text)
 			row.createEl('td', { text: item[1].toString() });
 
-			// 全称单元格带复制按钮
+			// Full name cell with copy button
 			const nameLongCell = row.createEl('td');
 			const nameLongBtn = nameLongCell.createEl('button', {
 				cls: 'copy-btn',
@@ -223,13 +223,13 @@ export default {
 			});
 			nameLongBtn.addEventListener('click', () => {
 				void navigator.clipboard.writeText(item[0] as string);
-				nameLongBtn.textContent = '已复制!';
+				nameLongBtn.textContent = 'Copied!';
 				window.setTimeout(() => {
 					nameLongBtn.textContent = item[0] as string;
 				}, 1000);
 			});
 
-			// 简称单元格带复制按钮
+			// Short name cell with copy button
 			const nameShortCell = row.createEl('td');
 			const shortName = (item[0] as string).replace(/[^a-zA-Z0-9]/g, '');
 			const nameShortBtn = nameShortCell.createEl('button', {
@@ -239,18 +239,18 @@ export default {
 			});
 			nameShortBtn.addEventListener('click', () => {
 				void navigator.clipboard.writeText(shortName);
-				nameShortBtn.textContent = '已复制!';
+				nameShortBtn.textContent = 'Copied!';
 				window.setTimeout(() => {
 					nameShortBtn.textContent = shortName;
 				}, 1000);
 			});
 
-			// 含义单元格为普通文本
+			// Meaning cell (plain text)
 			row.createEl('td', { text: item[2] as string });
 		});
 
 		if (!plugin) {
-			container.createDiv({ text: '缺少 plugin 上下文，无法渲染示例。' });
+			container.createDiv({ text: 'Missing plugin context, cannot render examples.' });
 		}
 	},
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Scroll } from 'lucide-react';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface ScrollModeControlProps {
 	controller: PlayerController;
@@ -15,9 +16,9 @@ export const ScrollModeControl: React.FC<ScrollModeControlProps> = ({ controller
 	const globalConfig = controller.getGlobalConfigStore();
 
 	const scrollModes = [
-		{ name: '连续滚动', value: alphaTab.ScrollMode.Continuous },
-		{ name: '超出时滚动', value: alphaTab.ScrollMode.OffScreen },
-		{ name: '关闭滚动', value: alphaTab.ScrollMode.Off },
+		{ name: t('settings.scrollModeOptions.continuous'), value: alphaTab.ScrollMode.Continuous },
+		{ name: t('settings.scrollModeOptions.offScreen'), value: alphaTab.ScrollMode.OffScreen },
+		{ name: t('settings.scrollModeOptions.off'), value: alphaTab.ScrollMode.Off },
 	];
 
 	// 从 globalConfig 读取初始滚动模式
@@ -45,7 +46,7 @@ export const ScrollModeControl: React.FC<ScrollModeControlProps> = ({ controller
 				value={currentMode}
 				onChange={handleModeChange}
 				aria-label="Scroll mode"
-				title="滚动模式"
+				title={t('settings.scrollModeTitle')}
 			>
 				{scrollModes.map(({ name, value }) => (
 					<option key={value} value={value}>

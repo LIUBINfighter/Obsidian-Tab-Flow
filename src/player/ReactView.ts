@@ -8,6 +8,7 @@ import type TabFlowPlugin from '../main';
 import { VIEW_TYPE_ALPHATEX_EDITOR } from '../views/EditorView';
 import { VIEW_TYPE_PRINT_PREVIEW } from '../views/PrintPreviewView';
 import { debugLog } from '../utils/logger';
+import { t } from '../i18n';
 
 export const VIEW_TYPE_REACT = 'react-tab-view';
 
@@ -44,7 +45,7 @@ export class ReactView extends FileView {
 		if (this.currentFile) {
 			return this.currentFile.basename;
 		}
-		return 'Tab player';
+		return t('viewActions.tabPlayer');
 	}
 
 	async onOpen(): Promise<void> {
@@ -182,7 +183,7 @@ export class ReactView extends FileView {
 
 		// 添加切换到编辑器视图的按钮
 		try {
-			this.switchToEditorAction = this.addAction('edit', '切换到编辑器视图', () => {
+			this.switchToEditorAction = this.addAction('edit', t('viewActions.switchToEditor'), () => {
 				if (!this.currentFile) return;
 				void this.leaf.setViewState({
 					type: VIEW_TYPE_ALPHATEX_EDITOR,
@@ -220,7 +221,7 @@ export class ReactView extends FileView {
 		if (!printable.includes(extension)) return;
 
 		try {
-			this.printPreviewAction = this.addAction('printer', '打开打印预览', () => {
+			this.printPreviewAction = this.addAction('printer', t('viewActions.openPrintPreview'), () => {
 				if (!this.currentFile) return;
 				// 在新 leaf 中打开当前文件的打印预览视图
 				const leaf = this.app.workspace.getLeaf('tab');

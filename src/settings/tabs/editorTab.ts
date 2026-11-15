@@ -26,7 +26,7 @@ export function renderEditorTab(
 ): Promise<void> {
 	// Editor View Settings
 	new Setting(tabContents)
-		.setName(t('settings.editor.viewTitle', undefined, '编辑器视图设置'))
+		.setName(t('settings.editor.viewTitle'))
 		.setHeading();
 
 	// Editor display preferences: font size and bottom gap (number input + unit dropdown)
@@ -60,14 +60,8 @@ export function renderEditorTab(
 		let fontValue = fontDefault.num;
 
 		const sFont = new Setting(tabContents)
-			.setName(t('settings.editor.fontSize', undefined, '编辑器字体大小'))
-			.setDesc(
-				t(
-					'settings.editor.fontSizeDesc',
-					undefined,
-					'数值 + 单位，例如 0.95 rem；仅接受数字并从下拉选择单位'
-				)
-			);
+			.setName(t('settings.editor.fontSize'))
+			.setDesc(t('settings.editor.fontSizeDesc'));
 
 		sFont
 			.addText((text) => {
@@ -121,7 +115,7 @@ export function renderEditorTab(
 			})
 			.addButton((btn) => {
 				btn.setIcon('rotate-ccw')
-					.setTooltip('重置为默认')
+					.setTooltip(t('settings.editor.resetToDefault'))
 					.onClick(async () => {
 						const defaultVal = DEFAULT_SETTINGS.editorFontSize || '0.95rem';
 						const parsed = parseCssValue(defaultVal, '0.95', 'rem');
@@ -134,9 +128,7 @@ export function renderEditorTab(
 						});
 						fontText.setValue(parsed.num);
 						fontDropdown.setValue(parsed.unit);
-						new Notice(
-							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
-						);
+						new Notice(t('settings.editor.resetToDefaultMessage'));
 					});
 			});
 
@@ -148,14 +140,8 @@ export function renderEditorTab(
 		);
 
 		const sGap = new Setting(tabContents)
-			.setName(t('settings.editor.bottomGap', undefined, '编辑器底部留白'))
-			.setDesc(
-				t(
-					'settings.editor.bottomGapDesc',
-					undefined,
-					'数值 + 单位，例如 40 vh；仅接受数字并从下拉选择单位'
-				)
-			);
+			.setName(t('settings.editor.bottomGap'))
+			.setDesc(t('settings.editor.bottomGapDesc'));
 
 		let gapText: TextComponent;
 		let gapDropdown: DropdownComponent;
@@ -213,7 +199,7 @@ export function renderEditorTab(
 			})
 			.addButton((btn) => {
 				btn.setIcon('rotate-ccw')
-					.setTooltip('重置为默认')
+					.setTooltip(t('settings.editor.resetToDefault'))
 					.onClick(async () => {
 						const defaultVal = DEFAULT_SETTINGS.editorBottomGap || '40vh';
 						const parsed = parseCssValue(defaultVal, '40', 'vh');
@@ -226,35 +212,21 @@ export function renderEditorTab(
 						});
 						gapText.setValue(parsed.num);
 						gapDropdown.setValue(parsed.unit);
-						new Notice(
-							t('settings.editor.resetToDefaultMessage', undefined, '已重置为默认')
-						);
+						new Notice(t('settings.editor.resetToDefaultMessage'));
 					});
 			});
 	}
 
 	new Setting(tabContents)
-		.setName(t('settings.editor.defaultLayout', undefined, '默认布局'))
-		.setDesc(t('settings.editor.defaultLayoutDesc', undefined, '编辑器视图的默认布局模式'))
+		.setName(t('settings.editor.defaultLayout'))
+		.setDesc(t('settings.editor.defaultLayoutDesc'))
 		.addDropdown((dropdown) => {
 			dropdown
-				.addOption(
-					'horizontal',
-					t('settings.editor.layoutHorizontal', undefined, '水平布局')
-				)
-				.addOption(
-					'single-bar',
-					t('settings.editor.layoutSingleBar', undefined, '单小节模式')
-				)
-				.addOption('vertical', t('settings.editor.layoutVertical', undefined, '垂直布局'))
-				.addOption(
-					'horizontal-swapped',
-					t('settings.editor.layoutHorizontalSwapped', undefined, '水平布局（交换）')
-				)
-				.addOption(
-					'vertical-swapped',
-					t('settings.editor.layoutVerticalSwapped', undefined, '垂直布局（交换）')
-				)
+				.addOption('horizontal', t('settings.editor.layoutHorizontal'))
+				.addOption('single-bar', t('settings.editor.layoutSingleBar'))
+				.addOption('vertical', t('settings.editor.layoutVertical'))
+				.addOption('horizontal-swapped', t('settings.editor.layoutHorizontalSwapped'))
+				.addOption('vertical-swapped', t('settings.editor.layoutVerticalSwapped'))
 				.setValue(plugin.settings.editorViewDefaultLayout || 'horizontal')
 				.onChange(
 					async (
@@ -267,7 +239,7 @@ export function renderEditorTab(
 					) => {
 						plugin.settings.editorViewDefaultLayout = value;
 						await plugin.saveSettings();
-						new Notice(t('settings.editor.layoutSaved', undefined, '布局设置已保存'));
+						new Notice(t('settings.editor.layoutSaved'));
 					}
 				);
 		});
@@ -403,48 +375,18 @@ export function renderEditorTab(
 			return frag;
 		};
 		const highlights = [
-			{ key: 'dot', label: t('settings.editor.highlights.dot', undefined, '点符号 (.)') },
-			{ key: 'bar', label: t('settings.editor.highlights.bar', undefined, '小节竖线 (|)') },
-			{
-				key: 'bracket',
-				label: t('settings.editor.highlights.bracket', undefined, '括号 ()/{}'),
-			},
-			{
-				key: 'meta',
-				label: t('settings.editor.highlights.meta', undefined, '元信息 (\\title, \\tempo)'),
-			},
-			{
-				key: 'comment',
-				label: t('settings.editor.highlights.comment', undefined, '行注释 (//)'),
-			},
-			{
-				key: 'debug',
-				label: t('settings.editor.highlights.debug', undefined, 'Debug 高亮（仅调试）'),
-			},
-			{
-				key: 'whitespace',
-				label: t('settings.editor.highlights.whitespace', undefined, '可见空白'),
-			},
-			{
-				key: 'surrounded',
-				label: t('settings.editor.highlights.surrounded', undefined, '被空白包围的序列'),
-			},
-			{
-				key: 'duration',
-				label: t('settings.editor.highlights.duration', undefined, '时长标记 (:4)'),
-			},
-			{
-				key: 'effect',
-				label: t('settings.editor.highlights.effect', undefined, '效果关键字'),
-			},
-			{
-				key: 'tuning',
-				label: t('settings.editor.highlights.tuning', undefined, '调弦文字 (A4)'),
-			},
-			{
-				key: 'boolean',
-				label: t('settings.editor.highlights.boolean', undefined, '布尔字面量'),
-			},
+			{ key: 'dot', label: t('settings.editor.highlights.dot') },
+			{ key: 'bar', label: t('settings.editor.highlights.bar') },
+			{ key: 'bracket', label: t('settings.editor.highlights.bracket') },
+			{ key: 'meta', label: t('settings.editor.highlights.meta') },
+			{ key: 'comment', label: t('settings.editor.highlights.comment') },
+			{ key: 'debug', label: t('settings.editor.highlights.debug') },
+			{ key: 'whitespace', label: t('settings.editor.highlights.whitespace') },
+			{ key: 'surrounded', label: t('settings.editor.highlights.surrounded') },
+			{ key: 'duration', label: t('settings.editor.highlights.duration') },
+			{ key: 'effect', label: t('settings.editor.highlights.effect') },
+			{ key: 'tuning', label: t('settings.editor.highlights.tuning') },
+			{ key: 'boolean', label: t('settings.editor.highlights.boolean') },
 		];
 
 		// Markdown editor preview for highlight settings (syntax highlighting only)
@@ -487,19 +429,13 @@ export function renderEditorTab(
 
 		// Reset to default button for Custom Highlight settings (visual matches other resets)
 		new Setting(details)
-			.setName(t('settings.editor.resetHighlightToDefault', undefined, '重置高亮为默认'))
-			.setDesc(
-				t(
-					'settings.editor.resetHighlightToDefaultDesc',
-					undefined,
-					'重置所有语法高亮设置到默认值'
-				)
-			)
+			.setName(t('settings.editor.resetHighlightToDefault'))
+			.setDesc(t('settings.editor.resetHighlightToDefaultDesc'))
 			.setClass('tabflow-no-border')
 			.addButton((btn) => {
-				btn.setButtonText(
-					t('settings.editor.resetHighlightToDefault', undefined, '重置高亮为默认')
-				).onClick(async () => {
+				btn
+					.setButtonText(t('settings.editor.resetHighlightToDefault'))
+					.onClick(async () => {
 					try {
 						plugin.settings.editorHighlights = structuredClone(
 							DEFAULT_SETTINGS.editorHighlights || {}
@@ -508,20 +444,10 @@ export function renderEditorTab(
 						// Refresh preview to show default highlight settings
 						renderPreview();
 						renderHighlightControls();
-						new Notice(
-							t(
-								'settings.editor.resetHighlightToDefaultSuccess',
-								undefined,
-								'高亮设置已重置'
-							)
-						);
+						new Notice(t('settings.editor.resetHighlightToDefaultSuccess'));
 					} catch (e) {
 						new Notice(
-							t(
-								'settings.editor.resetHighlightToDefaultFailed',
-								undefined,
-								'重置失败: '
-							) + formatError(e)
+							t('settings.editor.resetHighlightToDefaultFailed') + formatError(e)
 						);
 					}
 				});
@@ -563,16 +489,14 @@ export function renderEditorTab(
 
 	// Editor Bar Settings
 	new Setting(tabContents)
-		.setName(t('settings.editor.barTitle', undefined, '编辑器栏设置'))
+		.setName(t('settings.editor.barTitle'))
 		.setHeading();
 	new Setting(tabContents)
-		.setName(t('settings.editor.resetToDefault', undefined, '重置为默认'))
-		.setDesc(
-			t('settings.editor.resetToDefaultDesc', undefined, '重置编辑器栏的所有设置到默认值')
-		)
+		.setName(t('settings.editor.resetToDefault'))
+		.setDesc(t('settings.editor.resetToDefaultDesc'))
 		.setClass('tabflow-no-border')
 		.addButton((btn) => {
-			btn.setButtonText(t('settings.editor.resetToDefault', undefined, '重置为默认')).onClick(
+			btn.setButtonText(t('settings.editor.resetToDefault')).onClick(
 				async () => {
 					try {
 						plugin.settings.editorBar = {
@@ -588,18 +512,9 @@ export function renderEditorTab(
 							// Ignore workspace trigger errors
 						}
 						renderCards(); // 重新渲染设置界面
-						new Notice(
-							t(
-								'settings.editor.resetToDefaultSuccess',
-								undefined,
-								'编辑器栏设置已重置'
-							)
-						);
+						new Notice(t('settings.editor.resetToDefaultSuccess'));
 					} catch (e) {
-						new Notice(
-							t('settings.editor.resetToDefaultFailed', undefined, '重置失败: ') +
-								formatError(e)
-						);
+						new Notice(t('settings.editor.resetToDefaultFailed') + formatError(e));
 					}
 				}
 			);
@@ -618,99 +533,95 @@ export function renderEditorTab(
 	}> = [
 		{
 			key: 'playPause',
-			label: t('settings.editor.components.playPause', undefined, '播放/暂停'),
+			label: t('settings.editor.components.playPause'),
 			icon: 'play',
 		},
 		{
 			key: 'stop',
-			label: t('settings.editor.components.stop', undefined, '停止'),
+			label: t('settings.editor.components.stop'),
 			icon: 'square',
 		},
 		{
 			key: 'metronome',
-			label: t('settings.editor.components.metronome', undefined, '节拍器'),
+			label: t('settings.editor.components.metronome'),
 			icon: 'lucide-music-2',
 		},
 		{
 			key: 'countIn',
-			label: t('settings.editor.components.countIn', undefined, '倒计时'),
+			label: t('settings.editor.components.countIn'),
 			icon: 'lucide-timer',
 		},
 		{
 			key: 'tracks',
-			label: t('settings.editor.components.tracks', undefined, '音轨选择'),
+			label: t('settings.editor.components.tracks'),
 			icon: 'lucide-layers',
 		},
 		{
 			key: 'refresh',
-			label: t('settings.editor.components.refresh', undefined, '刷新'),
+			label: t('settings.editor.components.refresh'),
 			icon: 'lucide-refresh-ccw',
 		},
 		{
 			key: 'locateCursor',
-			label: t('settings.editor.components.locateCursor', undefined, '定位光标'),
+			label: t('settings.editor.components.locateCursor'),
 			icon: 'lucide-crosshair',
 		},
 		{
 			key: 'layoutToggle',
-			label: t('settings.editor.components.layoutToggle', undefined, '布局切换'),
+			label: t('settings.editor.components.layoutToggle'),
 			icon: 'lucide-layout',
 		},
 		{
 			key: 'exportMenu',
-			label: t('settings.editor.components.exportMenu', undefined, '导出菜单'),
+			label: t('settings.editor.components.exportMenu'),
 			icon: 'lucide-download',
 		},
 		{
 			key: 'toTop',
-			label: t('settings.editor.components.toTop', undefined, '到顶部'),
+			label: t('settings.editor.components.toTop'),
 			icon: 'lucide-chevrons-up',
 		},
 		{
 			key: 'toBottom',
-			label: t('settings.editor.components.toBottom', undefined, '到底部'),
+			label: t('settings.editor.components.toBottom'),
 			icon: 'lucide-chevrons-down',
 		},
 		{
 			key: 'openSettings',
-			label: t('settings.editor.components.openSettings', undefined, '打开设置'),
+			label: t('settings.editor.components.openSettings'),
 			icon: 'settings',
 		},
 		{
 			key: 'progressBar',
-			label: t('settings.editor.components.progressBar', undefined, '进度条'),
+			label: t('settings.editor.components.progressBar'),
 			icon: 'lucide-line-chart',
 		},
 		{
 			key: 'speed',
-			label: t('settings.editor.components.speed', undefined, '速度控制'),
+			label: t('settings.editor.components.speed'),
 			icon: 'lucide-gauge',
 		},
 		{
 			key: 'staveProfile',
-			label: t('settings.editor.components.staveProfile', undefined, '谱表配置'),
+			label: t('settings.editor.components.staveProfile'),
 			icon: 'lucide-list-music',
 		},
 		{
 			key: 'zoom',
-			label: t('settings.editor.components.zoom', undefined, '缩放'),
+			label: t('settings.editor.components.zoom'),
 			icon: 'lucide-zoom-in',
 		},
 		{
 			key: 'scrollMode',
-			label: t('settings.editor.components.scrollMode', undefined, '滚动模式'),
+			label: t('settings.editor.components.scrollMode'),
 			icon: 'lucide-scroll',
 		},
 		{
 			key: 'audioPlayer',
-			label: t('settings.editor.components.audioPlayer', undefined, '音频播放器'),
+			label: t('settings.editor.components.audioPlayer'),
 			icon: 'audio-file',
 			disabled: true,
-			desc: t(
-				'settings.editor.components.audioPlayerDesc',
-				undefined,
-				'编辑器视图中暂不支持音频播放器'
-			),
+			desc: t('settings.editor.components.audioPlayerDesc'),
 		},
 	];
 
@@ -799,7 +710,7 @@ export function renderEditorTab(
 			const upIcon = right.createSpan({
 				cls: 'icon-clickable',
 				attr: {
-					'aria-label': t('settings.editor.moveUp', undefined, '上移'),
+					'aria-label': t('settings.editor.moveUp'),
 					role: 'button',
 					tabindex: '0',
 				},
@@ -808,7 +719,7 @@ export function renderEditorTab(
 			const downIcon = right.createSpan({
 				cls: 'icon-clickable',
 				attr: {
-					'aria-label': t('settings.editor.moveDown', undefined, '下移'),
+					'aria-label': t('settings.editor.moveDown'),
 					role: 'button',
 					tabindex: '0',
 				},

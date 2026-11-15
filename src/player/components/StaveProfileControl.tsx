@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Music } from 'lucide-react';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface StaveProfileControlProps {
 	controller: PlayerController;
@@ -15,10 +16,10 @@ export const StaveProfileControl: React.FC<StaveProfileControlProps> = ({ contro
 	const globalConfig = controller.getGlobalConfigStore();
 
 	const profiles = [
-		{ name: '五线谱+六线谱', value: alphaTab.StaveProfile.ScoreTab },
-		{ name: '仅五线谱', value: alphaTab.StaveProfile.Score },
-		{ name: '仅六线谱', value: alphaTab.StaveProfile.Tab },
-		{ name: '混合模式', value: alphaTab.StaveProfile.TabMixed },
+		{ name: t('settings.scoreTab'), value: alphaTab.StaveProfile.ScoreTab },
+		{ name: t('settings.scoreOnly'), value: alphaTab.StaveProfile.Score },
+		{ name: t('settings.tabOnly'), value: alphaTab.StaveProfile.Tab },
+		{ name: t('settings.tabMixed'), value: alphaTab.StaveProfile.TabMixed },
 	];
 
 	// 从 globalConfig 读取初始谱表模式
@@ -49,7 +50,7 @@ export const StaveProfileControl: React.FC<StaveProfileControlProps> = ({ contro
 				value={profile}
 				onChange={handleChange}
 				aria-label="Stave profile"
-				title="谱表模式"
+				title={t('settings.staveTitle')}
 			>
 				{profiles.map(({ name, value }) => (
 					<option key={value} value={value}>

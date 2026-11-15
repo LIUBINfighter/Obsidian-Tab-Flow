@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ZoomIn } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 import { toFiniteClampedNumber } from '../../utils';
+import { t } from '../../i18n';
 
 interface ZoomControlProps {
 	controller: PlayerController;
@@ -48,7 +49,7 @@ export const ZoomControl: React.FC<ZoomControlProps> = ({ controller }) => {
 				value={currentZoom}
 				onChange={handleZoomChange}
 				aria-label="Zoom level"
-				title="缩放级别"
+				title={t('settings.zoomTitle')}
 			>
 				{zoomLevels.map(({ label, value }) => (
 					<option key={value} value={value}>
