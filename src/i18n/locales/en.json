@@ -38,7 +38,28 @@
 		"volume": "Volume",
 		"globalTranspose": "Global transpose",
 		"audioTranspose": "Audio transpose",
-		"trackNumber": "Track {{number}}"
+		"trackNumber": "Track {{number}}",
+		"audioTransposeTitle": "Audio transpose - Affects audio playback only, does not change score display",
+		"clearAll": "Clear",
+		"clearAllTitle": "Keep only first track",
+		"closeTitle": "Close track management",
+		"fullTranspose": "Full transpose",
+		"fullTransposeTitle": "Full transpose - Affects both audio playback and score display",
+		"guitarTabTitle": "Guitar tabs - Tablature",
+		"hideTrack": "Hide this track",
+		"muteTitle": "Mute - Mute this track",
+		"noTracksAvailable": "No tracks available in this score",
+		"numberedNotationTitle": "Numbered notation - Numbered",
+		"resetToDefaults": "Reset to defaults",
+		"selectAll": "All",
+		"selectAllTitle": "Select all tracks",
+		"selectedCount": "{{selected}} / {{total}} tracks selected",
+		"showTrack": "Show this track",
+		"slashNotationTitle": "Slash notation - Rhythm",
+		"soloTitle": "Solo - Solo this track",
+		"staffLabel": "Staff {{number}}",
+		"standardNotationTitle": "Standard notation - Staff",
+		"title": "Track Management"
 	},
 	"export": {
 		"export": "Export",
@@ -63,7 +84,36 @@
 		"gpExportFailed": "GP export failed",
 		"audioExportFailed": "Audio export failed",
 		"audioExportFailedWithError": "Audio export failed: {{error}}",
-		"openAudioPlayerFailed": "Failed to open audio player"
+		"openAudioPlayerFailed": "Failed to open audio player",
+		"title": "Export score",
+		"close": "Close",
+		"cancel": "Cancel",
+		"format": "Export format",
+		"formatDesc": "Select the file format to export",
+		"wav": "WAV audio",
+		"wavDesc": "Lossless high quality audio",
+		"mp3": "MP3 audio",
+		"mp3Desc": "Compressed audio (conversion required)",
+		"midi": "MIDI file",
+		"midiDesc": "Standard MIDI format",
+		"gp": "Guitar Pro",
+		"gpDesc": "GP7 format file",
+		"sampleRate": "Sample rate",
+		"sampleRateDesc": "Audio sample rate (Hz)",
+		"cdQuality": "CD quality",
+		"masterVolume": "Master volume",
+		"masterVolumeDesc": "Master volume for exported audio",
+		"metronomeVolume": "Metronome volume",
+		"metronomeVolumeDesc": "Include metronome sound in export",
+		"off": "Off",
+		"progress": "Export progress",
+		"success": "Export successful!",
+		"exporting": "Exporting...",
+		"startExport": "Start export",
+		"apiNotReady": "AlphaTab API not ready",
+		"failed": "Export failed",
+		"audioLoaded": "Audio loaded!",
+		"generatingAudio": "Generating audio, please wait..."
 	},
 	"settings": {
 		"openSettings": "Open settings",
@@ -217,11 +267,21 @@
 				"zoom": "Zoom selection",
 				"scrollMode": "Scroll mode selection",
 				"audioPlayer": "Native Audio Player (Experimental)",
-				"audioPlayerDesc": "Not available in editor view"
+				"audioPlayerDesc": "Audio player is not yet supported in the editor view"
 			},
 			"moveUp": "Move up",
 			"moveDown": "Move down"
-		}
+		},
+		"layoutToggleHorizontal": "Horizontal",
+		"layoutTogglePage": "Page",
+		"layoutToggleToHorizontal": "Switch to horizontal scroll",
+		"layoutToggleToPage": "Switch to page layout",
+		"scrollModeTitle": "Scroll mode",
+		"speedTitle": "Playback speed",
+		"staveProfileDefault": "Default",
+		"staveProfileLabel": "Stave profile",
+		"staveTitle": "Stave profile",
+		"zoomTitle": "Zoom level"
 	},
 	"navigation": {
 		"refreshPlayer": "Refresh player",
@@ -251,7 +311,9 @@
 		"notInstalled": "Not installed",
 		"expectedFileStructure": "Expected file structure:",
 		"scrollSettingUpdated": "Scroll setting updated",
-		"scrolledToCursor": "Scrolled to current cursor position"
+		"scrolledToCursor": "Scrolled to current cursor position",
+		"playerNotInitialized": "Audio: Player not initialized",
+		"trackStoreUnavailable": "Track state store unavailable"
 	},
 	"assetManagement": {
 		"assetFileManagement": "Asset file management",
@@ -292,12 +354,29 @@
 			"pluginDirNotFound": "Unable to determine plugin directory, download failed",
 			"success": "All asset files downloaded successfully!",
 			"partialFailure": "Some asset files failed to download, please check your network connection and try again",
-			"failed": "Failed to download asset files: {{error}}"
+			"failed": "Failed to download asset files: {{error}}",
+			"item": "Downloading {{name}}..."
 		}
 	},
 	"alphatex": {
 		"missingResources": "AlphaTab resources missing, unable to render this code block.",
-		"currentBar": "Current bar: {{number}}"
+		"currentBar": "Current bar: {{number}}",
+		"block": {
+			"copyErrorAndSource": "Copy error and source",
+			"layoutHorizontal": "Layout: Horizontal",
+			"layoutPage": "Layout: Page",
+			"locateCursor": "Scroll to cursor",
+			"metronome": "Metronome",
+			"playPause": "Play/Pause",
+			"stop": "Stop",
+			"toBottom": "Back to bottom",
+			"toTop": "Back to top"
+		},
+		"editor": {
+			"displayText": "AlphaTex editor",
+			"editorSuffix": " (editor)",
+			"placeholder": "Enter AlphaTex content..."
+		}
 	},
 	"fileMenu": {
 		"createNewAlphaTab": "Create a new AlphaTab file",
@@ -306,7 +385,11 @@
 		"newFileBaseName": "New guitar tab"
 	},
 	"commands": {
-		"openDocumentation": "Open TabFlow documentation"
+		"openDocumentation": "Open TabFlow documentation",
+		"migrateToAtex": "Migrate .alphatab files to .atex",
+		"migrationComplete": "Successfully migrated {{count}} files to .atex",
+		"noFilesToMigrate": "No .alphatab files found",
+		"renameFailed": "Failed to rename: {{path}}"
 	},
 	"docView": {
 		"displayText": "TabFlow documentation (example)",
@@ -379,6 +462,120 @@
 			"left": "Left",
 			"center": "Center",
 			"right": "Right"
-		}
+		},
+		"presetDefaultMarker": " (default)",
+		"cannotOpenPrintWindow": "Cannot open print window",
+		"presetCopySuffix": " Copy",
+		"presetDefaultName": "Default",
+		"presetUnnamed": "Unnamed",
+		"scoreNotFound": "Score render area not found",
+		"scoreNotLoaded": "Score not loaded",
+		"scorePrintTitle": "Score print"
+	},
+	"player": {
+		"metronome": "Metronome",
+		"countIn": "Count in",
+		"dismiss": "Dismiss",
+		"errorOccurred": "An error occurred in the player",
+		"initializeFailed": "Failed to initialize player",
+		"loadFailedAfterReady": "Failed to load score after player ready",
+		"loadingScore": "Loading score...",
+		"loop": "Loop",
+		"scoreLoadFailed": "Failed to load score",
+		"scoreLoaded": "Score loaded successfully",
+		"scoreReloadFailed": "Failed to reload score after rebuild",
+		"waitingForScore": "Waiting for score to load..."
+	},
+	"preview": {
+		"errorScoreLoad": "AlphaTex has errors, preview paused",
+		"errorApiInit": "Preview engine error",
+		"errorSoundfontLoad": "Soundfont load failed",
+		"errorMediaLoad": "Media load failed",
+		"errorDefault": "Preview error",
+		"hintScoreLoad": "Fix the red squiggles in the editor first; the preview will recover automatically.",
+		"hintApiInit": "If it still appears after fixing the score, reload the plugin.",
+		"hintDefault": "See details below."
+	},
+	"mediaType": {
+		"synth": "Synth",
+		"audioFile": "Audio file",
+		"youtube": "YouTube video",
+		"external": "External media",
+		"unknown": "Unknown"
+	},
+	"errors": {
+		"loadScoreFile": "Failed to load score file: {{error}}",
+		"audioLoadFailed": "Audio failed to load, cannot play.",
+		"pluginDirNotDefined": "Plugin directory not defined"
+	},
+	"fileLoader": {
+		"fileNotFound": "File not found: {{path}}"
+	},
+	"debug": {
+		"currentPluginPath": "Current plugin path: {{path}}",
+		"pluginPath": "Plugin path: {{path}}",
+		"targetPath": "Target path: {{path}}"
+	},
+	"media": {
+		"audio": "Audio",
+		"audioFileUrl": "Audio file URL:",
+		"basicSettings": "Basic settings",
+		"chooseFromVault": "Choose from Vault:",
+		"chooseMediaFile": "Select media file...",
+		"currentAudio": "Current: audio sync",
+		"currentSynth": "Current: built-in synth",
+		"currentVideo": "Current: video sync",
+		"currentYouTube": "Current: YouTube sync",
+		"duration": "Duration: {{duration}}s | Markers: {{count}}",
+		"fps10PowerSaving": "📱 10fps (100ms) power saving",
+		"fps20Recommended": "✅ 20fps (50ms) recommended",
+		"fps30": "⚡ 30fps (33ms)",
+		"fps60": "🚀 60fps (16ms)",
+		"load": "Load",
+		"modeBidirectional": "⇄ Bidirectional sync",
+		"modeMediaMaster": "▶ Media master",
+		"modeScoreMaster": "♪ Score master",
+		"playbackTime": "Playback time: {{current}}s / {{total}}s",
+		"searchPlaceholder": "Search audio/video files...",
+		"syncEditor": "Sync editor",
+		"synth": "Synth",
+		"titleAudio": "Load audio file",
+		"titleClosePanel": "Close media sync panel",
+		"titleMediaSync": "Media sync",
+		"titleSyncMode": "Select sync mode",
+		"titleSynth": "Use built-in synth",
+		"titleUpdateFreq": "Cursor update frequency (50ms recommended)",
+		"titleVideo": "Load video file",
+		"titleZoomIn": "Zoom in",
+		"titleZoomOut": "Zoom out",
+		"video": "Video",
+		"videoFileUrl": "Video file URL:",
+		"virtualWidth": "Virtual width: {{width}}px | Zoom: {{zoom}}x",
+		"youtubeUrlOrId": "YouTube video URL or ID:",
+		"zoomIn": "+ Zoom in",
+		"zoomOut": "- Zoom out"
+	},
+	"refresh": {
+		"button": "Refresh",
+		"failed": "Reload failed: {{error}}",
+		"rebuilding": "Reloading player...",
+		"reloaded": "Player reloaded",
+		"title": "Reload player"
+	},
+	"settingsPanel": {
+		"copiedToClipboard": "Configuration copied to clipboard!",
+		"copyFailed": "Failed to copy configuration",
+		"imported": "Configuration imported! Reloading...",
+		"resetConfirm": "Reset all settings to defaults? The page will reload."
+	},
+	"viewActions": {
+		"openPrintPreview": "Open print preview",
+		"printPreview": "Print preview",
+		"settings": "Settings",
+		"shareCard": "Share card",
+		"switchToEditor": "Switch to editor",
+		"switchToPlayer": "Switch to player",
+		"tabPlayer": "Tab player",
+		"toggleLayout": "Toggle layout"
 	}
 }

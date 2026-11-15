@@ -1,6 +1,7 @@
 import React from 'react';
 import { Crosshair } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface LocateCursorButtonProps {
 	controller: PlayerController;
@@ -24,10 +25,10 @@ export const LocateCursorButton: React.FC<LocateCursorButtonProps> = ({ controll
 			className="play-bar-button"
 			onClick={handleLocate}
 			aria-label="Locate cursor"
-			title="定位到播放光标"
+			title={t('navigation.locateCursor')}
 		>
 			<Crosshair size={16} />
-			<span className="play-bar-button-text">定位</span>
+			<span className="play-bar-button-text">{t('navigation.locateCursor')}</span>
 		</button>
 	);
 };

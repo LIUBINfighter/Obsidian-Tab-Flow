@@ -1,6 +1,7 @@
 import React from 'react';
 import { RefreshCcw } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface RefreshButtonProps {
 	controller: PlayerController;
@@ -15,17 +16,21 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ controller }) => {
 
 	const handleRefresh = async () => {
 		try {
-			uiStore.getState().showToast('info', '正在重新加载播放器...', 2000);
+			uiStore.getState().showToast('info', t('refresh.rebuilding'), 2000);
 
 			// 调用 PlayerController 的 public 方法
 			await controller.rebuildApi();
 
-			uiStore.getState().showToast('success', '播放器已重新加载', 2000);
+			uiStore.getState().showToast('success', t('refresh.reloaded'), 2000);
 		} catch (error) {
-			console.error('[RefreshButton] 重新加载失败:', error);
+			console.error('[RefreshButton] reload failed:', error);
 			uiStore
 				.getState()
-				.showToast('error', '重新加载失败: ' + (error as Error).message, 3000);
+				.showToast(
+					'error',
+					t('refresh.failed', { error: (error as Error).message }),
+					3000
+				);
 		}
 	};
 
@@ -36,11 +41,11 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ controller }) => {
 			onClick={() => {
 				void handleRefresh();
 			}}
-			aria-label="Refresh player"
-			title="重新加载播放器"
+			aria-label={t('navigation.refreshPlayer')}
+			title={t('refresh.title')}
 		>
 			<RefreshCcw size={16} />
-			<span className="play-bar-button-text">刷新</span>
+			<span className="play-bar-button-text">{t('refresh.button')}</span>
 		</button>
 	);
 };

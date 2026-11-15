@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 import { PlayControls } from './PlayControls';
 import { TracksToggle } from './TracksToggle';
 import { TimeDisplay } from './TimeDisplay';
@@ -62,7 +63,7 @@ export const PlayBar: React.FC<PlayBarProps> = ({ controller, onTracksClick }) =
 			{/* 状态指示器（当乐谱未加载时显示） */}
 			{!scoreLoaded && (
 				<div className="play-bar-status">
-					<span className="status-text">等待加载曲谱...</span>
+					<span className="status-text">{t('player.waitingForScore')}</span>
 				</div>
 			)}
 		</div>

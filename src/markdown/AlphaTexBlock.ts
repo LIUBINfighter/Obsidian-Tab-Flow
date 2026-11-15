@@ -4,6 +4,7 @@ import type { AlphaTabResources } from '../services/ResourceLoaderService';
 import { parseInlineInit, toScrollMode, scheduleInit } from '../utils';
 import { createSmuflFontSources } from '../utils/fontSource';
 import { getAlphaTexDiagnosticMessages } from '../editor/alphaTexDiagnostics';
+import { t } from '../i18n';
 
 export interface AlphaTexInitOptions {
 	// display
@@ -110,8 +111,8 @@ export function mountAlphaTexBlock(
 		const icon = createSpan();
 		setIcon(icon, 'copy');
 		btn.appendChild(icon);
-		btn.setAttribute('aria-label', '复制错误与原文');
-		btn.title = '复制错误与原文';
+		btn.setAttribute('aria-label', t('alphatex.block.copyErrorAndSource'));
+		btn.title = t('alphatex.block.copyErrorAndSource');
 		btn.addEventListener(
 			'click',
 			() =>
@@ -460,7 +461,7 @@ export function mountAlphaTexBlock(
 			const playIcon = createSpan();
 			setIcon(playIcon, 'play');
 			playPauseBtn.appendChild(playIcon);
-			playPauseBtn.setAttribute('aria-label', '播放/暂停');
+			playPauseBtn.setAttribute('aria-label', t('alphatex.block.playPause'));
 			playPauseBtn.addEventListener('click', () => api!.playPause());
 
 			const stopBtn = createEl('button');
@@ -469,7 +470,7 @@ export function mountAlphaTexBlock(
 			const stopIcon = createSpan();
 			setIcon(stopIcon, 'square');
 			stopBtn.appendChild(stopIcon);
-			stopBtn.setAttribute('aria-label', '停止');
+			stopBtn.setAttribute('aria-label', t('alphatex.block.stop'));
 			stopBtn.addEventListener('click', () => api!.stop());
 
 			// const speedIcon = document.createElement("span");
@@ -523,7 +524,7 @@ export function mountAlphaTexBlock(
 			const metroIcon = createSpan();
 			setIcon(metroIcon, 'lucide-music-2');
 			metroBtn.appendChild(metroIcon);
-			metroBtn.setAttribute('aria-label', '节拍器');
+			metroBtn.setAttribute('aria-label', t('alphatex.block.metronome'));
 			metroBtn.onclick = () => {
 				const enabled = (api!.metronomeVolume || 0) > 0 ? false : true;
 				api!.metronomeVolume = enabled ? 1 : 0;
@@ -553,7 +554,7 @@ export function mountAlphaTexBlock(
 					const icon = createSpan();
 					setIcon(icon, 'lucide-crosshair');
 					btn.appendChild(icon);
-					btn.setAttribute('aria-label', '滚动到光标');
+					btn.setAttribute('aria-label', t('alphatex.block.locateCursor'));
 					btn.onclick = () => {
 						try {
 							type AlphaTabApiWithScrollToCursor = alphaTab.AlphaTabApi & {
@@ -585,7 +586,10 @@ export function mountAlphaTexBlock(
 						(alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal;
 					setIcon(icon, isHorizontal ? 'lucide-panels-top-left' : 'lucide-layout');
 					btn.appendChild(icon);
-					btn.setAttribute('aria-label', isHorizontal ? '布局: 横向' : '布局: 页面');
+					btn.setAttribute(
+						'aria-label',
+						isHorizontal ? t('alphatex.block.layoutHorizontal') : t('alphatex.block.layoutPage')
+					);
 					btn.onclick = () => {
 						try {
 							const displaySettings = api!.settings
@@ -610,8 +614,8 @@ export function mountAlphaTexBlock(
 							btn.setAttribute(
 								'aria-label',
 								next === (alphaTab as AlphaTabWithLayoutMode).LayoutMode?.Horizontal
-									? '布局: 横向'
-									: '布局: 页面'
+									? t('alphatex.block.layoutHorizontal')
+									: t('alphatex.block.layoutPage')
 							);
 						} catch {
 							// Ignore layout toggle errors
@@ -626,7 +630,7 @@ export function mountAlphaTexBlock(
 					const icon = createSpan();
 					setIcon(icon, 'lucide-chevrons-up');
 					btn.appendChild(icon);
-					btn.setAttribute('aria-label', '回到顶部');
+					btn.setAttribute('aria-label', t('alphatex.block.toTop'));
 					btn.onclick = () => {
 						try {
 							type AlphaTabApiWithTickPosition = alphaTab.AlphaTabApi & {
@@ -649,7 +653,7 @@ export function mountAlphaTexBlock(
 					const icon = createSpan();
 					setIcon(icon, 'lucide-chevrons-down');
 					btn.appendChild(icon);
-					btn.setAttribute('aria-label', '回到底部');
+					btn.setAttribute('aria-label', t('alphatex.block.toBottom'));
 					btn.onclick = () => {
 						try {
 							type AlphaTabApiWithScore = alphaTab.AlphaTabApi & {

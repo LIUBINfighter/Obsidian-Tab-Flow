@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Gauge } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
 import { toFiniteClampedNumber } from '../../utils';
+import { t } from '../../i18n';
 
 interface SpeedControlProps {
 	controller: PlayerController;
@@ -51,7 +52,7 @@ export const SpeedControl: React.FC<SpeedControlProps> = ({ controller }) => {
 				value={speed}
 				onChange={handleChange}
 				aria-label="Playback speed"
-				title="播放速度"
+				title={t('settings.speedTitle')}
 			>
 				{speedOptions.map(({ label, value }) => (
 					<option key={value} value={value}>

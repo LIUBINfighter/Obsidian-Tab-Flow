@@ -8,6 +8,7 @@ import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
 import type { IFileLoaderAdapter, MediaFileInfo, FileLoadResult } from './IFileLoaderAdapter';
 import { isAudioFile, isVideoFile, isMediaFile } from './IFileLoaderAdapter';
+import { t } from '../../i18n';
 
 export class ObsidianFileLoaderAdapter implements IFileLoaderAdapter {
 	private blobUrls: Map<string, string> = new Map();
@@ -69,7 +70,7 @@ export class ObsidianFileLoaderAdapter implements IFileLoaderAdapter {
 			if (!(file instanceof TFile)) {
 				return {
 					success: false,
-					error: `文件不存在: ${fileInfo.path}`,
+					error: t('fileLoader.fileNotFound', { path: fileInfo.path }),
 				};
 			}
 

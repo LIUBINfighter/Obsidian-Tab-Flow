@@ -175,9 +175,9 @@ export class EditorView extends FileView {
 
 	getDisplayText(): string {
 		if (this.file) {
-			return `${this.file.basename} (编辑器)`;
+			return `${this.file.basename}${t('alphatex.editor.editorSuffix')}`;
 		}
-		return t('alphatex.editor.displayText', undefined, 'AlphaTex 编辑器');
+		return t('alphatex.editor.displayText');
 	}
 
 	getIcon(): string {
@@ -349,7 +349,7 @@ export class EditorView extends FileView {
 
 		this.editor = createAlphaTexEditor(editorWrapper, {
 			value: content,
-			placeholder: t('alphatex.editor.placeholder', undefined, '输入 AlphaTex 内容...'),
+			placeholder: t('alphatex.editor.placeholder'),
 			onChange: (update) => {
 				// 确保编辑器已完全初始化后再访问
 				if (!this.editor || !this.editor.loaded) return;
@@ -387,7 +387,7 @@ export class EditorView extends FileView {
 				this.switchToPlayerAction.remove();
 				this.switchToPlayerAction = null;
 			}
-			const switchToPlayerBtn = this.addAction('list-music', '切换到播放器视图', () => {
+			const switchToPlayerBtn = this.addAction('list-music', t('viewActions.switchToPlayer'), () => {
 				if (!this.file) return;
 				// 先保存当前编辑器的内容，确保切换到播放器视图时文件是最新的
 				const file = this.file; // 保存文件引用，避免在异步函数中 this.file 可能为 null
@@ -407,7 +407,7 @@ export class EditorView extends FileView {
 				this.newFileAction.remove();
 				this.newFileAction = null;
 			}
-			const newFileBtn = this.addAction('image-up', '分享卡片', () => {
+			const newFileBtn = this.addAction('image-up', t('viewActions.shareCard'), () => {
 				const modal = new ShareCardModal(this.plugin);
 				modal.open();
 			});
@@ -418,7 +418,7 @@ export class EditorView extends FileView {
 				this.documentAction.remove();
 				this.documentAction = null;
 			}
-			const docBtn = this.addAction('printer', '打印预览', async () => {
+			const docBtn = this.addAction('printer', t('viewActions.printPreview'), async () => {
 				if (!this.file) return;
 
 				// 确保当前编辑器内容已保存
@@ -442,7 +442,7 @@ export class EditorView extends FileView {
 			}
 			const settingsBtn = this.addAction(
 				'settings',
-				t('settings.tabs.editor', undefined, '设置'),
+				t('viewActions.settings'),
 				() => {
 					try {
 						this.openEditorSettingsTab();
@@ -474,7 +474,7 @@ export class EditorView extends FileView {
 				'vertical-swapped': 'sidebar',
 				'single-bar': 'music',
 			};
-			const btn = this.addAction(iconMap[nextLayout], '切换布局', () => {
+			const btn = this.addAction(iconMap[nextLayout], t('viewActions.toggleLayout'), () => {
 				this.layout = nextLayout;
 				void this.render();
 			});

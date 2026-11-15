@@ -7,6 +7,7 @@ import { SettingsPanel } from './SettingsPanel';
 import { TracksPanel } from './TracksPanel';
 import { MediaSync } from './MediaSync';
 import { debugLog } from '../../utils/logger';
+import { t } from '../../i18n';
 
 /**
  * TablatureView 配置选项
@@ -41,17 +42,17 @@ interface TablatureViewProps {
 }
 
 function getErrorTitle(type: string | null): string {
-	if (type === 'score-load') return 'AlphaTex 有错误，预览已暂停';
-	if (type === 'api-init') return '预览引擎出错';
-	if (type === 'soundfont-load') return '音色库加载失败';
-	if (type === 'media-load') return '媒体加载失败';
-	return '预览出错';
+	if (type === 'score-load') return t('preview.errorScoreLoad');
+	if (type === 'api-init') return t('preview.errorApiInit');
+	if (type === 'soundfont-load') return t('preview.errorSoundfontLoad');
+	if (type === 'media-load') return t('preview.errorMediaLoad');
+	return t('preview.errorDefault');
 }
 
 function getErrorHint(type: string | null): string {
-	if (type === 'score-load') return '先修复编辑器里的红色波浪线，预览会自动恢复。';
-	if (type === 'api-init') return '如果修正谱面后仍出现，请重载插件。';
-	return '查看下方详情。';
+	if (type === 'score-load') return t('preview.hintScoreLoad');
+	if (type === 'api-init') return t('preview.hintApiInit');
+	return t('preview.hintDefault');
 }
 
 export const TablatureView: React.FC<TablatureViewProps> = ({ controller, options = {} }) => {
@@ -286,7 +287,7 @@ export const TablatureView: React.FC<TablatureViewProps> = ({ controller, option
 							aria-label="Dismiss preview error"
 							onClick={() => runtimeStore.getState().clearError()}
 						>
-							隐藏
+							{t('player.dismiss')}
 						</button>
 					</div>
 					<div className="error-message">

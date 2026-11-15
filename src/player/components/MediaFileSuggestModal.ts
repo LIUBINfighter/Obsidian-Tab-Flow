@@ -1,4 +1,5 @@
 import { App, FuzzySuggestModal, TFile, FuzzyMatch } from 'obsidian';
+import { t } from '../../i18n';
 
 /**
  * 媒体文件选择 Modal
@@ -13,7 +14,7 @@ export class MediaFileSuggestModal extends FuzzySuggestModal<TFile> {
 	constructor(app: App, onSelect: (file: TFile) => void) {
 		super(app);
 		this.onSelectCallback = onSelect;
-		this.setPlaceholder('搜索音频/视频文件...');
+		this.setPlaceholder(t('media.searchPlaceholder'));
 	}
 
 	/**

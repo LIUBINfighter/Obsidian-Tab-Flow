@@ -1,6 +1,7 @@
 import { ShareCardPresetV1 } from '../settings/defaults';
 import type TabFlowPlugin from '../main';
 import { setCssProps } from '../utils/styleUtils';
+import { t } from '../i18n';
 
 /**
  * ShareCard 预设服务：封装增删改查、迁移、应用与收集逻辑。
@@ -74,7 +75,7 @@ export class ShareCardPresetService {
 			const now = Date.now();
 			const preset: ShareCardPresetV1 = {
 				id: this.genId(),
-				name: '默认',
+				name: t('shareCard.presetDefaultName'),
 				version: 1,
 				cardWidth: 800,
 				resolution: '2x',
@@ -159,7 +160,7 @@ export class ShareCardPresetService {
 			...base,
 			...overrides,
 			id: this.genId(),
-			name: overrides?.name || base.name + ' 副本',
+			name: overrides?.name || base.name + t('shareCard.presetCopySuffix'),
 			createdAt: now,
 			updatedAt: now,
 			isDefault: undefined,
@@ -272,7 +273,7 @@ export class ShareCardPresetService {
 		authorAlign?: 'left' | 'center' | 'right';
 	}): Omit<ShareCardPresetV1, 'id' | 'version' | 'createdAt' | 'updatedAt'> {
 		return {
-			name: '未命名',
+			name: t('shareCard.presetUnnamed'),
 			cardWidth: Number(modal?.cardRoot?.style?.width?.replace('px', '')) || 800,
 			resolution: modal.__shareCardCurrentResolution || '2x',
 			format: modal.__shareCardCurrentFormat || 'png',
