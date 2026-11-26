@@ -359,8 +359,12 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 								<option value={SyncMode.Bidirectional}>
 									{t('media.modeBidirectional')}
 								</option>
-								<option value={SyncMode.MediaMaster}>{t('media.modeMediaMaster')}</option>
-								<option value={SyncMode.ScoreMaster}>{t('media.modeScoreMaster')}</option>
+								<option value={SyncMode.MediaMaster}>
+									{t('media.modeMediaMaster')}
+								</option>
+								<option value={SyncMode.ScoreMaster}>
+									{t('media.modeScoreMaster')}
+								</option>
 							</select>
 
 							{/* 性能优化：更新频率控制 */}
@@ -447,7 +451,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.Audio) && (
 								<div className="media-sync-input-group">
-									<label htmlFor="media-sync-audio-url">{t('media.audioFileUrl')}</label>
+									<label htmlFor="media-sync-audio-url">
+										{t('media.audioFileUrl')}
+									</label>
 									<div className="media-sync-input-row">
 										<input
 											id="media-sync-audio-url"
@@ -477,7 +483,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.Video) && (
 								<div className="media-sync-input-group">
-									<label htmlFor="media-sync-video-url">{t('media.videoFileUrl')}</label>
+									<label htmlFor="media-sync-video-url">
+										{t('media.videoFileUrl')}
+									</label>
 									<div className="media-sync-input-row">
 										<input
 											id="media-sync-video-url"
@@ -516,7 +524,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											type="text"
 											value={youtubeInput}
 											onChange={(e) => setYoutubeInput(e.target.value)}
-											placeholder="https://www.youtube.com/watch?v=... 或 dQw4w9WgXcQ"
+											placeholder={t('media.youtubeUrlPlaceholder')}
 											className="media-sync-input"
 										/>
 										<button

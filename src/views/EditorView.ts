@@ -387,19 +387,23 @@ export class EditorView extends FileView {
 				this.switchToPlayerAction.remove();
 				this.switchToPlayerAction = null;
 			}
-			const switchToPlayerBtn = this.addAction('list-music', t('viewActions.switchToPlayer'), () => {
-				if (!this.file) return;
-				// 先保存当前编辑器的内容，确保切换到播放器视图时文件是最新的
-				const file = this.file; // 保存文件引用，避免在异步函数中 this.file 可能为 null
-				void (async () => {
-					await this.flushSave();
-					if (!file) return; // 再次检查，确保文件仍然存在
-					await this.leaf.setViewState({
-						type: VIEW_TYPE_REACT,
-						state: { file: file.path },
-					});
-				})();
-			});
+			const switchToPlayerBtn = this.addAction(
+				'list-music',
+				t('viewActions.switchToPlayer'),
+				() => {
+					if (!this.file) return;
+					// 先保存当前编辑器的内容，确保切换到播放器视图时文件是最新的
+					const file = this.file; // 保存文件引用，避免在异步函数中 this.file 可能为 null
+					void (async () => {
+						await this.flushSave();
+						if (!file) return; // 再次检查，确保文件仍然存在
+						await this.leaf.setViewState({
+							type: VIEW_TYPE_REACT,
+							state: { file: file.path },
+						});
+					})();
+				}
+			);
 			this.switchToPlayerAction = switchToPlayerBtn;
 
 			// 添加"新建文件"按钮
@@ -440,17 +444,13 @@ export class EditorView extends FileView {
 				this.settingsAction.remove();
 				this.settingsAction = null;
 			}
-			const settingsBtn = this.addAction(
-				'settings',
-				t('viewActions.settings'),
-				() => {
-					try {
-						this.openEditorSettingsTab();
-					} catch {
-						// 忽略触发错误，SettingTab 内会有降级逻辑
-					}
+			const settingsBtn = this.addAction('settings', t('viewActions.settings'), () => {
+				try {
+					this.openEditorSettingsTab();
+				} catch {
+					// 忽略触发错误，SettingTab 内会有降级逻辑
 				}
-			);
+			});
 			this.settingsAction = settingsBtn;
 		} catch {
 			// ignore

@@ -25,9 +25,7 @@ export function renderEditorTab(
 	app: App
 ): Promise<void> {
 	// Editor View Settings
-	new Setting(tabContents)
-		.setName(t('settings.editor.viewTitle'))
-		.setHeading();
+	new Setting(tabContents).setName(t('settings.editor.viewTitle')).setHeading();
 
 	// Editor display preferences: font size and bottom gap (number input + unit dropdown)
 	{
@@ -433,24 +431,26 @@ export function renderEditorTab(
 			.setDesc(t('settings.editor.resetHighlightToDefaultDesc'))
 			.setClass('tabflow-no-border')
 			.addButton((btn) => {
-				btn
-					.setButtonText(t('settings.editor.resetHighlightToDefault'))
-					.onClick(async () => {
-					try {
-						plugin.settings.editorHighlights = structuredClone(
-							DEFAULT_SETTINGS.editorHighlights || {}
-						);
-						await plugin.saveSettings();
-						// Refresh preview to show default highlight settings
-						renderPreview();
-						renderHighlightControls();
-						new Notice(t('settings.editor.resetHighlightToDefaultSuccess'));
-					} catch (e) {
-						new Notice(
-							t('settings.editor.resetHighlightToDefaultFailed') + formatError(e)
-						);
+				btn.setButtonText(t('settings.editor.resetHighlightToDefault')).onClick(
+					async () => {
+						try {
+							plugin.settings.editorHighlights = structuredClone(
+								DEFAULT_SETTINGS.editorHighlights || {}
+							);
+							await plugin.saveSettings();
+							// Refresh preview to show default highlight settings
+							renderPreview();
+							renderHighlightControls();
+							new Notice(t('settings.editor.resetHighlightToDefaultSuccess'));
+						} catch (e) {
+							new Notice(
+								t('settings.editor.resetHighlightToDefaultFailed') +
+									': ' +
+									formatError(e)
+							);
+						}
 					}
-				});
+				);
 			});
 
 		const highlightedGroup = details.createDiv({
@@ -488,36 +488,32 @@ export function renderEditorTab(
 	}
 
 	// Editor Bar Settings
-	new Setting(tabContents)
-		.setName(t('settings.editor.barTitle'))
-		.setHeading();
+	new Setting(tabContents).setName(t('settings.editor.barTitle')).setHeading();
 	new Setting(tabContents)
 		.setName(t('settings.editor.resetToDefault'))
 		.setDesc(t('settings.editor.resetToDefaultDesc'))
 		.setClass('tabflow-no-border')
 		.addButton((btn) => {
-			btn.setButtonText(t('settings.editor.resetToDefault')).onClick(
-				async () => {
+			btn.setButtonText(t('settings.editor.resetToDefault')).onClick(async () => {
+				try {
+					plugin.settings.editorBar = {
+						components: structuredClone(
+							DEFAULT_SETTINGS.editorBar?.components ?? {}
+						) as EditorBarComponentVisibility,
+						order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
+					};
+					await plugin.saveSettings();
 					try {
-						plugin.settings.editorBar = {
-							components: structuredClone(
-								DEFAULT_SETTINGS.editorBar?.components ?? {}
-							) as EditorBarComponentVisibility,
-							order: (DEFAULT_SETTINGS.editorBar?.order || []).slice(),
-						};
-						await plugin.saveSettings();
-						try {
-							triggerWorkspaceEvent(app, 'tabflow:editorbar-components-changed');
-						} catch {
-							// Ignore workspace trigger errors
-						}
-						renderCards(); // 重新渲染设置界面
-						new Notice(t('settings.editor.resetToDefaultSuccess'));
-					} catch (e) {
-						new Notice(t('settings.editor.resetToDefaultFailed') + formatError(e));
+						triggerWorkspaceEvent(app, 'tabflow:editorbar-components-changed');
+					} catch {
+						// Ignore workspace trigger errors
 					}
+					renderCards(); // 重新渲染设置界面
+					new Notice(t('settings.editor.resetToDefaultSuccess'));
+				} catch (e) {
+					new Notice(t('settings.editor.resetToDefaultFailed') + ': ' + formatError(e));
 				}
-			);
+			});
 		});
 
 	const cardsWrap = tabContents.createDiv({

@@ -298,9 +298,7 @@ export class PlayerController {
 							`[PlayerController #${this.instanceId}] Failed to reload last score:`,
 							error
 						);
-						this.stores.ui
-							.getState()
-							.showToast('error', t('player.scoreReloadFailed'));
+						this.stores.ui.getState().showToast('error', t('player.scoreReloadFailed'));
 					}
 				}
 			}

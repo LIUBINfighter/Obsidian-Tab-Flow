@@ -163,7 +163,7 @@ export default {
 
 		// Introduction
 		container.createEl('p', {
-			text: 'Since alphaTab 1.4, you can also write percussion (drum) tracks in alphaTab. To do so, the track must be set to \\instrument "percussion", after which notes can be added using articulation names or numbers.',
+			text: 'Percussion (drum) tracks have been supported since version 1.4. To use them, the track must be set to \\instrument "percussion", after which notes can be added using articulation names or numbers.',
 		});
 
 		// Comprehensive official example
@@ -173,9 +173,9 @@ export default {
 		}
 
 		// Instrument articulations section
-		container.createEl('h4', { text: 'Instrument Articulations' });
+		container.createEl('h4', { text: 'Instrument articulations' });
 		container.createEl('p', {
-			text: 'AlphaTab comes with a set of default instrument articulations, derived from Guitar Pro 7. Each articulation has an internal number that can be used to reference it. To make writing more human-friendly, you can define custom articulation names via \\articulation name number.',
+			text: 'A set of default instrument articulations is included, derived from the original instrument set of version 7. Each articulation has an internal number that can be used to reference it. To make writing more human-friendly, you can define custom articulation names via \\articulation name number.',
 		});
 
 		if (plugin) {
@@ -193,7 +193,7 @@ export default {
 		}
 
 		// Articulation list section
-		container.createEl('h4', { text: 'Articulation List' });
+		container.createEl('h4', { text: 'Articulation list' });
 		container.createEl('p', {
 			text: 'To actually get started, you need to know the list of built-in articulations. Refer to the table and examples below as a reference:',
 		});
@@ -203,8 +203,8 @@ export default {
 		const thead = table.createEl('thead');
 		const headerRow = thead.createEl('tr');
 		headerRow.createEl('th', { text: 'Number' });
-		headerRow.createEl('th', { text: 'Full Name' });
-		headerRow.createEl('th', { text: 'Short Name' });
+		headerRow.createEl('th', { text: 'Full name' });
+		headerRow.createEl('th', { text: 'Short name' });
 		headerRow.createEl('th', { text: 'Meaning' });
 
 		const tbody = table.createEl('tbody');

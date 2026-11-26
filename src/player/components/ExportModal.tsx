@@ -301,8 +301,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 						<>
 							<div className="setting-item">
 								<div className="setting-item-info">
-									<div className="setting-item-name">{t('export.sampleRate')}</div>
-									<div className="setting-item-description">{t('export.sampleRateDesc')}</div>
+									<div className="setting-item-name">
+										{t('export.sampleRate')}
+									</div>
+									<div className="setting-item-description">
+										{t('export.sampleRateDesc')}
+									</div>
 								</div>
 								<div className="setting-item-control">
 									<select
@@ -311,7 +315,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 										disabled={status === 'exporting'}
 									>
 										<option value={22050}>22050 Hz</option>
-										<option value={44100}>44100 Hz ({t('export.cdQuality')})</option>
+										<option value={44100}>
+											44100 Hz ({t('export.cdQuality')})
+										</option>
 										<option value={48000}>48000 Hz</option>
 									</select>
 								</div>
@@ -319,8 +325,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 							<div className="setting-item">
 								<div className="setting-item-info">
-									<div className="setting-item-name">{t('export.masterVolume')}</div>
-									<div className="setting-item-description">{t('export.masterVolumeDesc')}</div>
+									<div className="setting-item-name">
+										{t('export.masterVolume')}
+									</div>
+									<div className="setting-item-description">
+										{t('export.masterVolumeDesc')}
+									</div>
 								</div>
 								<div className="setting-item-control">
 									<input
@@ -340,7 +350,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 							<div className="setting-item">
 								<div className="setting-item-info">
-									<div className="setting-item-name">{t('export.metronomeVolume')}</div>
+									<div className="setting-item-name">
+										{t('export.metronomeVolume')}
+									</div>
 									<div className="setting-item-description">
 										{t('export.metronomeVolumeDesc')}
 									</div>

@@ -183,13 +183,17 @@ export class ReactView extends FileView {
 
 		// 添加切换到编辑器视图的按钮
 		try {
-			this.switchToEditorAction = this.addAction('edit', t('viewActions.switchToEditor'), () => {
-				if (!this.currentFile) return;
-				void this.leaf.setViewState({
-					type: VIEW_TYPE_ALPHATEX_EDITOR,
-					state: { file: this.currentFile.path },
-				});
-			});
+			this.switchToEditorAction = this.addAction(
+				'edit',
+				t('viewActions.switchToEditor'),
+				() => {
+					if (!this.currentFile) return;
+					void this.leaf.setViewState({
+						type: VIEW_TYPE_ALPHATEX_EDITOR,
+						state: { file: this.currentFile.path },
+					});
+				}
+			);
 		} catch (error) {
 			console.warn('[ReactView] Failed to add switch to editor button:', error);
 		}
@@ -221,17 +225,21 @@ export class ReactView extends FileView {
 		if (!printable.includes(extension)) return;
 
 		try {
-			this.printPreviewAction = this.addAction('printer', t('viewActions.openPrintPreview'), () => {
-				if (!this.currentFile) return;
-				// 在新 leaf 中打开当前文件的打印预览视图
-				const leaf = this.app.workspace.getLeaf('tab');
-				void leaf.openFile(this.currentFile).then(() => {
-					void leaf.setViewState({
-						type: VIEW_TYPE_PRINT_PREVIEW,
-						state: { file: this.currentFile!.path },
+			this.printPreviewAction = this.addAction(
+				'printer',
+				t('viewActions.openPrintPreview'),
+				() => {
+					if (!this.currentFile) return;
+					// 在新 leaf 中打开当前文件的打印预览视图
+					const leaf = this.app.workspace.getLeaf('tab');
+					void leaf.openFile(this.currentFile).then(() => {
+						void leaf.setViewState({
+							type: VIEW_TYPE_PRINT_PREVIEW,
+							state: { file: this.currentFile!.path },
+						});
 					});
-				});
-			});
+				}
+			);
 		} catch (error) {
 			console.warn('[ReactView] Failed to add print preview button:', error);
 		}

@@ -192,7 +192,9 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 	return (
 		<div className="tabflow-staff-item">
 			<div className="tabflow-staff-header">
-				<span className="tabflow-staff-label">{t('tracks.staffLabel', { number: staff.index + 1 })}</span>
+				<span className="tabflow-staff-label">
+					{t('tracks.staffLabel', { number: staff.index + 1 })}
+				</span>
 			</div>
 
 			<div className="tabflow-staff-controls">

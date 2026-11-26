@@ -619,7 +619,11 @@ export class TabView extends FileView {
 			// debugLog(`[TabView] File loaded successfully: ${file.name}`);
 		} catch (error) {
 			console.error('[TabView] Failed to load file:', error);
-			new Notice(t('errors.loadScoreFile', { error: error instanceof Error ? error.message : String(error) }));
+			new Notice(
+				t('errors.loadScoreFile', {
+					error: error instanceof Error ? error.message : String(error),
+				})
+			);
 		}
 	}
 

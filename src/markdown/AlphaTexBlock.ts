@@ -588,7 +588,9 @@ export function mountAlphaTexBlock(
 					btn.appendChild(icon);
 					btn.setAttribute(
 						'aria-label',
-						isHorizontal ? t('alphatex.block.layoutHorizontal') : t('alphatex.block.layoutPage')
+						isHorizontal
+							? t('alphatex.block.layoutHorizontal')
+							: t('alphatex.block.layoutPage')
 					);
 					btn.onclick = () => {
 						try {

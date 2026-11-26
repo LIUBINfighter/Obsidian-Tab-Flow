@@ -246,7 +246,9 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 							key={`staff-${track.index}-${staff.index}-${staffArrayIndex}`}
 							className="tabflow-staff-group"
 						>
-							<span className="tabflow-staff-label">{t('tracks.staffLabel', { number: staffArrayIndex + 1 })}</span>
+							<span className="tabflow-staff-label">
+								{t('tracks.staffLabel', { number: staffArrayIndex + 1 })}
+							</span>
 							<StaffItem api={api} staff={staff} isCompact={true} />
 						</div>
 					))}
@@ -275,10 +277,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 			{/* 完全移调 */}
 			<div className="tabflow-track-setting">
-				<label
-					className="tabflow-setting-label"
-					title={t('tracks.fullTransposeTitle')}
-				>
+				<label className="tabflow-setting-label" title={t('tracks.fullTransposeTitle')}>
 					{t('tracks.fullTranspose')}
 				</label>
 				<div className="tabflow-setting-control">
@@ -301,10 +300,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 			{/* 音频移调 */}
 			<div className="tabflow-track-setting">
-				<label
-					className="tabflow-setting-label"
-					title={t('tracks.audioTransposeTitle')}
-				>
+				<label className="tabflow-setting-label" title={t('tracks.audioTransposeTitle')}>
 					{t('tracks.audioTranspose')}
 				</label>
 				<div className="tabflow-setting-control">

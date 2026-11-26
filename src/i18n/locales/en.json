@@ -552,6 +552,7 @@
 		"videoFileUrl": "Video file URL:",
 		"virtualWidth": "Virtual width: {{width}}px | Zoom: {{zoom}}x",
 		"youtubeUrlOrId": "YouTube video URL or ID:",
+		"youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=... or dQw4w9WgXcQ",
 		"zoomIn": "+ Zoom in",
 		"zoomOut": "- Zoom out"
 	},

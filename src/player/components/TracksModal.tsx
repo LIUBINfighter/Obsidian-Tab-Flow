@@ -204,7 +204,10 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 				{/* 底部信息 */}
 				<div className="tabflow-tracks-footer">
 					<span className="tabflow-tracks-info">
-						{t('tracks.selectedCount', { selected: selectedTracks.size, total: score.tracks.length })}
+						{t('tracks.selectedCount', {
+							selected: selectedTracks.size,
+							total: score.tracks.length,
+						})}
 					</span>
 				</div>
 			</div>

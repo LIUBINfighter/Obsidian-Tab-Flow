@@ -373,7 +373,9 @@ export class ShareCardModal extends Modal {
 				const opt = presetSelect.createEl('option', {
 					text:
 						p.name +
-						(p.id === this.plugin.settings.shareCardDefaultPresetId ? t('shareCard.presetDefaultMarker') : '') +
+						(p.id === this.plugin.settings.shareCardDefaultPresetId
+							? t('shareCard.presetDefaultMarker')
+							: '') +
 						(this.stateManager?.getState().activePresetId === p.id &&
 						this.stateManager?.isDirty()
 							? ' *'
@@ -1002,7 +1004,9 @@ export class ShareCardModal extends Modal {
 					const isActive = st.activePresetId === p.id;
 					const isDirty = isActive && st.dirty;
 					opt.text =
-						p.name + (p.id === defaultId ? t('shareCard.presetDefaultMarker') : '') + (isDirty ? ' *' : '');
+						p.name +
+						(p.id === defaultId ? t('shareCard.presetDefaultMarker') : '') +
+						(isDirty ? ' *' : '');
 				}
 			} catch {
 				/* ignore */

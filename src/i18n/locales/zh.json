@@ -411,6 +411,7 @@
 		"audioFileUrl": "音频文件 URL：",
 		"videoFileUrl": "视频文件 URL：",
 		"youtubeUrlOrId": "YouTube 视频 URL 或 ID：",
+		"youtubeUrlPlaceholder": "https://www.youtube.com/watch?v=... 或 dQw4w9WgXcQ",
 		"load": "加载",
 		"titleZoomOut": "缩小",
 		"zoomOut": "− 缩小",

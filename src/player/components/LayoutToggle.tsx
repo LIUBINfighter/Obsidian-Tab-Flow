@@ -43,10 +43,18 @@ export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
 			className="play-bar-button"
 			onClick={handleToggle}
 			aria-label="Toggle Layout Mode"
-			title={isHorizontal ? t('settings.layoutToggleToPage') : t('settings.layoutToggleToHorizontal')}
+			title={
+				isHorizontal
+					? t('settings.layoutToggleToPage')
+					: t('settings.layoutToggleToHorizontal')
+			}
 		>
 			{isHorizontal ? <PanelsTopLeft size={16} /> : <Layout size={16} />}
-			<span className="play-bar-button-text">{isHorizontal ? t('settings.layoutToggleHorizontal') : t('settings.layoutTogglePage')}</span>
+			<span className="play-bar-button-text">
+				{isHorizontal
+					? t('settings.layoutToggleHorizontal')
+					: t('settings.layoutTogglePage')}
+			</span>
 		</button>
 	);
 };

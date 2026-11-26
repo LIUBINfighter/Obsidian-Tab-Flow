@@ -37,7 +37,11 @@ export const TracksToggle: React.FC<TracksToggleProps> = ({ controller, onClick 
 				className={`play-bar-button tracks-toggle-button ${isTracksOpen ? 'active' : ''} ${!scoreLoaded ? 'disabled' : ''}`}
 				onClick={onClick}
 				disabled={!scoreLoaded}
-				title={scoreLoaded ? `${t('tracks.title')} (${trackCount}/${totalTracks})` : t('player.waitingForScore')}
+				title={
+					scoreLoaded
+						? `${t('tracks.title')} (${trackCount}/${totalTracks})`
+						: t('player.waitingForScore')
+				}
 				aria-label={t('tracks.title')}
 			>
 				{/* 音轨图标 */}

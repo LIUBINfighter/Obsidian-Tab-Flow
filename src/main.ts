@@ -152,14 +152,10 @@ export default class TabFlowPlugin extends Plugin {
 	async downloadAssets(): Promise<boolean> {
 		try {
 			if (!this.actualPluginDir) {
-				new Notice(
-					t('assets.download.pluginDirNotFound')
-				);
+				new Notice(t('assets.download.pluginDirNotFound'));
 				return false;
 			}
-			debugLog(
-				t('debug.currentPluginPath', { path: this.actualPluginDir })
-			);
+			debugLog(t('debug.currentPluginPath', { path: this.actualPluginDir }));
 
 			// 使用Obsidian API创建资产目录
 			const assetsDir = joinPath(this.actualPluginDir, 'assets');
@@ -281,9 +277,7 @@ export default class TabFlowPlugin extends Plugin {
 		} catch (error) {
 			console.error('[TabFlowPlugin] Error downloading assets:', error);
 			const message = error instanceof Error ? error.message : String(error);
-			new Notice(
-				t('assets.download.failed', { error: message })
-			);
+			new Notice(t('assets.download.failed', { error: message }));
 			return false;
 		}
 	}
@@ -333,18 +327,14 @@ export default class TabFlowPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 
 		// 添加侧边栏 Robin 图标，调用打开 TabFlow 文档命令
-		this.addRibbonIcon(
-			'guitar',
-			t('ribbon.openDocumentation'),
-			async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_TABFLOW_DOC,
-					active: true,
-				});
-				await this.app.workspace.revealLeaf(leaf);
-			}
-		);
+		this.addRibbonIcon('guitar', t('ribbon.openDocumentation'), async () => {
+			const leaf = this.app.workspace.getLeaf(true);
+			await leaf.setViewState({
+				type: VIEW_TYPE_TABFLOW_DOC,
+				active: true,
+			});
+			await this.app.workspace.revealLeaf(leaf);
+		});
 
 		// 注册 AlphaTex 文档视图
 		this.registerView(VIEW_TYPE_TABFLOW_DOC, (leaf) => new DocView(leaf, this));
@@ -421,7 +411,11 @@ export default class TabFlowPlugin extends Plugin {
 									btn.setText(t('common.downloading'));
 									const ok = await this.downloadAssets();
 									btn.removeAttribute('disabled');
-									btn.setText(ok ? t('common.downloadComplete') : t('common.downloadFailed'));
+									btn.setText(
+										ok
+											? t('common.downloadComplete')
+											: t('common.downloadFailed')
+									);
 								})()
 						);
 						return;

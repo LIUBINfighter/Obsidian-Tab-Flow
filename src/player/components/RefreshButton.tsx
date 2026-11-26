@@ -26,11 +26,7 @@ export const RefreshButton: React.FC<RefreshButtonProps> = ({ controller }) => {
 			console.error('[RefreshButton] reload failed:', error);
 			uiStore
 				.getState()
-				.showToast(
-					'error',
-					t('refresh.failed', { error: (error as Error).message }),
-					3000
-				);
+				.showToast('error', t('refresh.failed', { error: (error as Error).message }), 3000);
 		}
 	};
 
