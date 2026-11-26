@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronsUp, ChevronsDown } from 'lucide-react';
+import { t } from '../../i18n';
 
 interface ScrollButtonsProps {
 	viewportRef: React.RefObject<HTMLDivElement | null>;
@@ -29,7 +30,7 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({ viewportRef }) => 
 				className="play-bar-button"
 				onClick={scrollToTop}
 				aria-label="Scroll to Top"
-				title="滚动到顶部"
+				title={t('navigation.toTop')}
 			>
 				<ChevronsUp size={16} />
 			</button>
@@ -37,7 +38,7 @@ export const ScrollButtons: React.FC<ScrollButtonsProps> = ({ viewportRef }) => 
 				className="play-bar-button"
 				onClick={scrollToBottom}
 				aria-label="Scroll to Bottom"
-				title="滚动到底部"
+				title={t('navigation.toBottom')}
 			>
 				<ChevronsDown size={16} />
 			</button>

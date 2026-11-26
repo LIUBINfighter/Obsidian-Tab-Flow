@@ -10,6 +10,7 @@
 
 import type * as AlphaTab from '@coderline/alphatab';
 import React, { useState, useEffect } from 'react';
+import { t } from '../../i18n';
 
 /**
  * 五线谱显示选项
@@ -143,7 +144,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleStandardNotation}
 					disabled={staff.isPercussion}
 					aria-label="Standard Notation"
-					title="标准记谱法 - 五线谱"
+					title={t('tracks.standardNotationTitle')}
 				>
 					<span className="tabflow-notation-icon">𝅘𝅥</span>
 				</button>
@@ -155,7 +156,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleTablature}
 					disabled={staff.isPercussion}
 					aria-label="Guitar Tabs"
-					title="六线谱 - 吉他谱"
+					title={t('tracks.guitarTabTitle')}
 				>
 					<span className="tabflow-notation-icon">TAB</span>
 				</button>
@@ -167,7 +168,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleSlash}
 					disabled={staff.isPercussion}
 					aria-label="Slash Notation"
-					title="斜线记谱法 - 节奏谱"
+					title={t('tracks.slashNotationTitle')}
 				>
 					<span className="tabflow-notation-icon">𝄍</span>
 				</button>
@@ -179,7 +180,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleNumbered}
 					disabled={staff.isPercussion}
 					aria-label="Numbered Notation"
-					title="简谱 - 数字谱"
+					title={t('tracks.numberedNotationTitle')}
 				>
 					<span className="tabflow-notation-icon">123</span>
 				</button>
@@ -191,7 +192,9 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 	return (
 		<div className="tabflow-staff-item">
 			<div className="tabflow-staff-header">
-				<span className="tabflow-staff-label">谱表 {staff.index + 1}</span>
+				<span className="tabflow-staff-label">
+					{t('tracks.staffLabel', { number: staff.index + 1 })}
+				</span>
 			</div>
 
 			<div className="tabflow-staff-controls">
@@ -202,7 +205,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleStandardNotation}
 					disabled={staff.isPercussion}
 					aria-label="Standard Notation"
-					title="标准记谱法 - 五线谱"
+					title={t('tracks.standardNotationTitle')}
 				>
 					<span className="tabflow-notation-icon">𝅘𝅥</span>
 				</button>
@@ -214,7 +217,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleTablature}
 					disabled={staff.isPercussion}
 					aria-label="Guitar Tabs"
-					title="六线谱 - 吉他谱"
+					title={t('tracks.guitarTabTitle')}
 				>
 					<span className="tabflow-notation-icon">TAB</span>
 				</button>
@@ -226,7 +229,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleSlash}
 					disabled={staff.isPercussion}
 					aria-label="Slash Notation"
-					title="斜线记谱法 - 节奏谱"
+					title={t('tracks.slashNotationTitle')}
 				>
 					<span className="tabflow-notation-icon">𝄍</span>
 				</button>
@@ -238,7 +241,7 @@ export const StaffItem: React.FC<StaffItemProps> = ({ api, staff, isCompact = fa
 					onClick={toggleNumbered}
 					disabled={staff.isPercussion}
 					aria-label="Numbered Notation"
-					title="简谱 - 数字谱"
+					title={t('tracks.numberedNotationTitle')}
 				>
 					<span className="tabflow-notation-icon">123</span>
 				</button>

@@ -203,7 +203,7 @@ export class DocView extends ItemView {
 				this.settingsAction.remove();
 				this.settingsAction = null;
 			}
-			const btn = this.addAction('settings', t('docView.settings', undefined, '设置'), () => {
+			const btn = this.addAction('settings', t('docView.settings'), () => {
 				try {
 					this.openPluginSettingsAbout();
 				} catch {

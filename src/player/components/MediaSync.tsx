@@ -16,6 +16,7 @@ import { SyncMode } from '../types/sync-mode';
 import { MediaSyncEditor } from './MediaSyncEditor';
 import type { SyncPointInfo } from '../types/sync-point';
 import { createDefaultSyncPointInfo } from '../types/sync-point';
+import { t } from '../../i18n';
 
 interface MediaSyncProps {
 	controller: PlayerController;
@@ -305,10 +306,10 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 						type="button"
 						className={`media-sync-btn ${mediaState.type === MediaType.Synth ? 'active' : ''}`}
 						onClick={switchToSynth}
-						title="使用内置合成器"
+						title={t('media.titleSynth')}
 					>
 						<Music size={16} />
-						<span>合成器</span>
+						<span>{t('media.synth')}</span>
 					</button>
 
 					<button
@@ -316,10 +317,10 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 						className={`media-sync-btn ${mediaState.type === MediaType.Audio ? 'active' : ''}`}
 						onClick={switchToAudio}
 						disabled={!audioUrl}
-						title="加载音频文件"
+						title={t('media.titleAudio')}
 					>
 						<Music size={16} />
-						<span>音频</span>
+						<span>{t('media.audio')}</span>
 					</button>
 
 					<button
@@ -327,10 +328,10 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 						className={`media-sync-btn ${mediaState.type === MediaType.Video ? 'active' : ''}`}
 						onClick={switchToVideo}
 						disabled={!videoUrl}
-						title="加载视频文件"
+						title={t('media.titleVideo')}
 					>
 						<Film size={16} />
-						<span>视频</span>
+						<span>{t('media.video')}</span>
 					</button>
 
 					<button
@@ -353,11 +354,17 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 								className="media-sync-mode-select"
 								value={syncMode}
 								onChange={(e) => setSyncMode(e.target.value as SyncMode)}
-								title="选择同步模式"
+								title={t('media.titleSyncMode')}
 							>
-								<option value={SyncMode.Bidirectional}>⇄ 双向同步</option>
-								<option value={SyncMode.MediaMaster}>▶ 媒体为主</option>
-								<option value={SyncMode.ScoreMaster}>♪ 曲谱为主</option>
+								<option value={SyncMode.Bidirectional}>
+									{t('media.modeBidirectional')}
+								</option>
+								<option value={SyncMode.MediaMaster}>
+									{t('media.modeMediaMaster')}
+								</option>
+								<option value={SyncMode.ScoreMaster}>
+									{t('media.modeScoreMaster')}
+								</option>
 							</select>
 
 							{/* 性能优化：更新频率控制 */}
@@ -365,21 +372,21 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 								className="media-sync-throttle-select"
 								value={updateInterval}
 								onChange={(e) => setUpdateInterval(Number(e.target.value))}
-								title="光标更新频率（官方推荐 50ms）"
+								title={t('media.titleUpdateFreq')}
 							>
-								<option value={16}>🚀 60fps (16ms)</option>
-								<option value={33}>⚡ 30fps (33ms)</option>
-								<option value={50}>✅ 20fps (50ms) 推荐</option>
-								<option value={100}>📱 10fps (100ms) 省电</option>
+								<option value={16}>{t('media.fps60')}</option>
+								<option value={33}>{t('media.fps30')}</option>
+								<option value={50}>{t('media.fps20Recommended')}</option>
+								<option value={100}>{t('media.fps10PowerSaving')}</option>
 							</select>
 						</>
 					)}
 
 					<span className="media-sync-status">
-						{mediaState.type === MediaType.Synth && '当前: 内置合成器'}
-						{mediaState.type === MediaType.Audio && '当前: 音频同步'}
-						{mediaState.type === MediaType.Video && '当前: 视频同步'}
-						{mediaState.type === MediaType.YouTube && '当前: YouTube 同步'}
+						{mediaState.type === MediaType.Synth && t('media.currentSynth')}
+						{mediaState.type === MediaType.Audio && t('media.currentAudio')}
+						{mediaState.type === MediaType.Video && t('media.currentVideo')}
+						{mediaState.type === MediaType.YouTube && t('media.currentYouTube')}
 					</span>
 
 					{/* 关闭按钮 */}
@@ -388,7 +395,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							type="button"
 							className="media-sync-close-btn"
 							onClick={onClose}
-							title="关闭媒体同步面板"
+							title={t('media.titleClosePanel')}
 							aria-label="Close media sync panel"
 						>
 							✕
@@ -406,7 +413,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 						className={`media-sync-tab ${activeTab === 'basic' ? 'active' : ''}`}
 						onClick={() => setActiveTab('basic')}
 					>
-						基础设置
+						{t('media.basicSettings')}
 					</button>
 					{mediaState.type !== MediaType.Synth && (
 						<button
@@ -414,7 +421,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							className={`media-sync-tab ${activeTab === 'editor' ? 'active' : ''}`}
 							onClick={() => setActiveTab('editor')}
 						>
-							同步编辑器
+							{t('media.syncEditor')}
 						</button>
 					)}
 				</div>
@@ -429,13 +436,13 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 								mediaState.type === MediaType.Audio ||
 								mediaState.type === MediaType.Video) && (
 								<div className="media-sync-input-group">
-									<span>从 Vault 中选择：</span>
+									<span>{t('media.chooseFromVault')}</span>
 									<button
 										type="button"
 										className="media-sync-load-btn"
 										onClick={openFileSelectModal}
 									>
-										选择媒体文件...
+										{t('media.chooseMediaFile')}
 									</button>
 								</div>
 							)}
@@ -444,7 +451,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.Audio) && (
 								<div className="media-sync-input-group">
-									<label htmlFor="media-sync-audio-url">音频文件 URL：</label>
+									<label htmlFor="media-sync-audio-url">
+										{t('media.audioFileUrl')}
+									</label>
 									<div className="media-sync-input-row">
 										<input
 											id="media-sync-audio-url"
@@ -464,7 +473,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											onClick={switchToAudio}
 											disabled={!audioUrl}
 										>
-											加载
+											{t('media.load')}
 										</button>
 									</div>
 								</div>
@@ -474,7 +483,9 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 							{(mediaState.type === MediaType.Synth ||
 								mediaState.type === MediaType.Video) && (
 								<div className="media-sync-input-group">
-									<label htmlFor="media-sync-video-url">视频文件 URL：</label>
+									<label htmlFor="media-sync-video-url">
+										{t('media.videoFileUrl')}
+									</label>
 									<div className="media-sync-input-row">
 										<input
 											id="media-sync-video-url"
@@ -494,7 +505,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											onClick={switchToVideo}
 											disabled={!videoUrl}
 										>
-											加载
+											{t('media.load')}
 										</button>
 									</div>
 								</div>
@@ -505,7 +516,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 								mediaState.type === MediaType.YouTube) && (
 								<div className="media-sync-input-group">
 									<label htmlFor="media-sync-youtube-url">
-										YouTube 视频 URL 或 ID：
+										{t('media.youtubeUrlOrId')}
 									</label>
 									<div className="media-sync-input-row">
 										<input
@@ -513,7 +524,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											type="text"
 											value={youtubeInput}
 											onChange={(e) => setYoutubeInput(e.target.value)}
-											placeholder="https://www.youtube.com/watch?v=... 或 dQw4w9WgXcQ"
+											placeholder={t('media.youtubeUrlPlaceholder')}
 											className="media-sync-input"
 										/>
 										<button
@@ -522,7 +533,7 @@ export const MediaSync: React.FC<MediaSyncProps> = ({ controller, app, isOpen, o
 											onClick={switchToYouTube}
 											disabled={!extractYouTubeVideoId(youtubeInput)}
 										>
-											加载
+											{t('media.load')}
 										</button>
 									</div>
 								</div>

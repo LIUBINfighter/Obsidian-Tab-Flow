@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Timer } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface CountInToggleProps {
 	controller: PlayerController;
@@ -37,7 +38,7 @@ export const CountInToggle: React.FC<CountInToggleProps> = ({ controller }) => {
 			title="Toggle count in"
 		>
 			<Timer size={16} />
-			<span className="play-bar-button-text">预备拍</span>
+			<span className="play-bar-button-text">{t('player.countIn')}</span>
 		</button>
 	);
 };

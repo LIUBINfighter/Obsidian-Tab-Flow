@@ -19,6 +19,7 @@ import { createSmuflFontSources } from '../utils/fontSource';
 import { applyStaveProfile } from '../utils/staveProfile';
 import { getAlphaTexDiagnosticMessages } from '../editor/alphaTexDiagnostics';
 import { debugLog } from '../utils/logger';
+import { t } from '../i18n';
 
 type AlphaTabSettingsInput = alphaTab.Settings;
 type AlphaTabSettingsJson = Parameters<alphaTab.Settings['fillFromJson']>[0];
@@ -241,7 +242,7 @@ export class PlayerController {
 		}
 
 		debugLog(`[PlayerController #${this.instanceId}] Rebuilding API...`);
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.ui.getState().setLoading(true, t('player.loadingScore'));
 		this.stores.runtime.getState().setApiReady(false);
 
 		try {
@@ -297,9 +298,7 @@ export class PlayerController {
 							`[PlayerController #${this.instanceId}] Failed to reload last score:`,
 							error
 						);
-						this.stores.ui
-							.getState()
-							.showToast('error', 'Failed to reload score after rebuild');
+						this.stores.ui.getState().showToast('error', t('player.scoreReloadFailed'));
 					}
 				}
 			}
@@ -308,7 +307,7 @@ export class PlayerController {
 			this.stores.runtime
 				.getState()
 				.setError('api-init', error instanceof Error ? error.message : String(error));
-			this.stores.ui.getState().showToast('error', 'Failed to initialize player');
+			this.stores.ui.getState().showToast('error', t('player.initializeFailed'));
 		} finally {
 			this.stores.ui.getState().setLoading(false);
 		}
@@ -681,7 +680,7 @@ export class PlayerController {
 							);
 						this.stores.ui
 							.getState()
-							.showToast('error', 'Failed to load score after player ready');
+							.showToast('error', t('player.loadFailedAfterReady'));
 					});
 				}
 			};
@@ -720,7 +719,7 @@ export class PlayerController {
 			const errorHandler = (error: Error) => {
 				console.error('[PlayerController] alphaTab error:', error);
 				this.stores.runtime.getState().setError('api-init', error.message ?? String(error));
-				this.stores.ui.getState().showToast('error', 'An error occurred in the player');
+				this.stores.ui.getState().showToast('error', t('player.errorOccurred'));
 			};
 			this.eventDisposers.push(this.api.error.on(errorHandler));
 		} catch (error) {
@@ -1056,7 +1055,7 @@ export class PlayerController {
 		}
 
 		debugLog(`[PlayerController #${this.instanceId}] Loading score from URL:`, url);
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.ui.getState().setLoading(true, t('player.loadingScore'));
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();
 
@@ -1064,13 +1063,13 @@ export class PlayerController {
 			this.api.load(url);
 			await Promise.resolve();
 			this.stores.workspaceConfig.getState().setScoreSource({ type: 'url', content: url });
-			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
+			this.stores.ui.getState().showToast('success', t('player.scoreLoaded'));
 		} catch (error) {
 			console.error(`[PlayerController #${this.instanceId}] Failed to load score:`, error);
 			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
-			this.stores.ui.getState().showToast('error', 'Failed to load score');
+			this.stores.ui.getState().showToast('error', t('player.scoreLoadFailed'));
 			throw error;
 		} finally {
 			this.stores.ui.getState().setLoading(false);
@@ -1082,7 +1081,7 @@ export class PlayerController {
 			throw new Error('API not initialized');
 		}
 
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.ui.getState().setLoading(true, t('player.loadingScore'));
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();
 
@@ -1097,13 +1096,13 @@ export class PlayerController {
 			this.stores.workspaceConfig
 				.getState()
 				.setScoreSource({ type: 'file', content: fileName || 'local-file' });
-			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
+			this.stores.ui.getState().showToast('success', t('player.scoreLoaded'));
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
 			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
-			this.stores.ui.getState().showToast('error', 'Failed to load score');
+			this.stores.ui.getState().showToast('error', t('player.scoreLoadFailed'));
 			throw error;
 		} finally {
 			this.stores.ui.getState().setLoading(false);
@@ -1115,7 +1114,7 @@ export class PlayerController {
 			return Promise.reject(new Error('API not initialized'));
 		}
 
-		this.stores.ui.getState().setLoading(true, 'Loading score...');
+		this.stores.ui.getState().setLoading(true, t('player.loadingScore'));
 		this.stores.runtime.getState().setScoreLoaded(false);
 		this.stores.runtime.getState().clearError();
 
@@ -1138,14 +1137,14 @@ export class PlayerController {
 			this.stores.workspaceConfig
 				.getState()
 				.setScoreSource({ type: 'alphatex', content: tex });
-			this.stores.ui.getState().showToast('success', 'Score loaded successfully');
+			this.stores.ui.getState().showToast('success', t('player.scoreLoaded'));
 			return Promise.resolve();
 		} catch (error) {
 			console.error('[PlayerController] Failed to load score:', error);
 			this.stores.runtime
 				.getState()
 				.setError('score-load', error instanceof Error ? error.message : String(error));
-			this.stores.ui.getState().showToast('error', 'Failed to load score');
+			this.stores.ui.getState().showToast('error', t('player.scoreLoadFailed'));
 			return Promise.reject(error instanceof Error ? error : new Error(String(error)));
 		} finally {
 			this.stores.ui.getState().setLoading(false);

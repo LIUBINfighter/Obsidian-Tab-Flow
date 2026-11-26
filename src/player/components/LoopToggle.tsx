@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Repeat } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface LoopToggleProps {
 	controller: PlayerController;
@@ -37,7 +38,7 @@ export const LoopToggle: React.FC<LoopToggleProps> = ({ controller }) => {
 			title="Toggle Loop"
 		>
 			<Repeat size={16} />
-			<span className="play-bar-button-text">循环</span>
+			<span className="play-bar-button-text">{t('player.loop')}</span>
 		</button>
 	);
 };

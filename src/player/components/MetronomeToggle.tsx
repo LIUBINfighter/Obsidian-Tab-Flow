@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Music2 } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface MetronomeToggleProps {
 	controller: PlayerController;
@@ -38,7 +39,7 @@ export const MetronomeToggle: React.FC<MetronomeToggleProps> = ({ controller }) 
 			title="Toggle Metronome"
 		>
 			<Music2 size={16} />
-			<span className="play-bar-button-text">节拍器</span>
+			<span className="play-bar-button-text">{t('player.metronome')}</span>
 		</button>
 	);
 };

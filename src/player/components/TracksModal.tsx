@@ -14,6 +14,7 @@ import { useAlphaTabEvent } from '../hooks';
 import { TrackItem } from './TrackItem';
 import type { PlayerController } from '../PlayerController';
 import { debugLog } from '../../utils/logger';
+import { t } from '../../i18n';
 
 /**
  * 音轨选择器属性
@@ -144,7 +145,7 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 			<div className="tabflow-tracks-panel">
 				{/* 头部 */}
 				<div className="tabflow-tracks-header">
-					<h3 className="tabflow-tracks-title">音轨管理</h3>
+					<h3 className="tabflow-tracks-title">{t('tracks.title')}</h3>
 
 					<div className="tabflow-tracks-actions">
 						{/* 全选按钮 */}
@@ -152,9 +153,9 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 							type="button"
 							className="tabflow-btn tabflow-btn-sm"
 							onClick={selectAllTracks}
-							title="选择所有音轨"
+							title={t('tracks.selectAllTitle')}
 						>
-							全选
+							{t('tracks.selectAll')}
 						</button>
 
 						{/* 取消全选按钮 */}
@@ -162,9 +163,9 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 							type="button"
 							className="tabflow-btn tabflow-btn-sm"
 							onClick={deselectAllTracks}
-							title="仅保留第一个音轨"
+							title={t('tracks.clearAllTitle')}
 						>
-							清空
+							{t('tracks.clearAll')}
 						</button>
 
 						{/* 关闭按钮 */}
@@ -172,8 +173,8 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 							type="button"
 							className="tabflow-btn tabflow-btn-icon"
 							onClick={onClose}
-							aria-label="关闭"
-							title="关闭音轨管理"
+							aria-label={t('tracks.closeTitle')}
+							title={t('tracks.closeTitle')}
 						>
 							<X size={16} />
 						</button>
@@ -184,7 +185,7 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 				<div className="tabflow-tracks-list">
 					{score.tracks.length === 0 ? (
 						<div className="tabflow-tracks-empty">
-							<p>当前曲谱没有可用音轨</p>
+							<p>{t('tracks.noTracksAvailable')}</p>
 						</div>
 					) : (
 						score.tracks.map((track) => (
@@ -203,7 +204,10 @@ export const TracksModal: React.FC<TracksModalProps> = ({ api, controller, isOpe
 				{/* 底部信息 */}
 				<div className="tabflow-tracks-footer">
 					<span className="tabflow-tracks-info">
-						已选中 {selectedTracks.size} / {score.tracks.length} 个音轨
+						{t('tracks.selectedCount', {
+							selected: selectedTracks.size,
+							total: score.tracks.length,
+						})}
 					</span>
 				</div>
 			</div>

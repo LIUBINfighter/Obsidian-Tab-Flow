@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PanelsTopLeft, Layout } from 'lucide-react';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface LayoutToggleProps {
 	controller: PlayerController;
@@ -42,10 +43,18 @@ export const LayoutToggle: React.FC<LayoutToggleProps> = ({ controller }) => {
 			className="play-bar-button"
 			onClick={handleToggle}
 			aria-label="Toggle Layout Mode"
-			title={isHorizontal ? '切换到页面布局' : '切换到横向滚动'}
+			title={
+				isHorizontal
+					? t('settings.layoutToggleToPage')
+					: t('settings.layoutToggleToHorizontal')
+			}
 		>
 			{isHorizontal ? <PanelsTopLeft size={16} /> : <Layout size={16} />}
-			<span className="play-bar-button-text">{isHorizontal ? '横向' : '页面'}</span>
+			<span className="play-bar-button-text">
+				{isHorizontal
+					? t('settings.layoutToggleHorizontal')
+					: t('settings.layoutTogglePage')}
+			</span>
 		</button>
 	);
 };

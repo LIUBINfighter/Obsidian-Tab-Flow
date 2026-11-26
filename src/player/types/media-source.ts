@@ -5,6 +5,8 @@
  * 借鉴官方 playground 示例的设计模式
  */
 
+import { t } from '../../i18n';
+
 /**
  * 媒体类型枚举
  */
@@ -111,15 +113,15 @@ export function needsExternalSync(source: MediaSource): boolean {
 export function getMediaTypeName(source: MediaSource): string {
 	switch (source.type) {
 		case MediaType.Synth:
-			return '合成器';
+			return t('mediaType.synth');
 		case MediaType.Audio:
-			return '音频文件';
+			return t('mediaType.audioFile');
 		case MediaType.YouTube:
-			return 'YouTube 视频';
+			return t('mediaType.youtube');
 		case MediaType.External:
-			return '外部媒体';
+			return t('mediaType.external');
 		default:
-			return '未知';
+			return t('mediaType.unknown');
 	}
 }
 

@@ -5,6 +5,7 @@
 import React from 'react';
 import { Music } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface MediaSyncToggleProps {
 	controller: PlayerController;
@@ -20,7 +21,7 @@ export const MediaSyncToggle: React.FC<MediaSyncToggleProps> = ({ controller, on
 			type="button"
 			className={`play-bar-button media-sync-toggle-button ${isOpen ? 'active' : ''}`}
 			onClick={onClick}
-			title="媒体同步"
+			title={t('media.titleMediaSync')}
 			aria-label="Media Sync"
 		>
 			<Music size={16} />

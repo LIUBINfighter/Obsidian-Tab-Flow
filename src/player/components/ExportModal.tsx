@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Notice } from 'obsidian';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface ExportModalProps {
 	controller: PlayerController;
@@ -39,7 +40,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 	const handleExport = async () => {
 		if (!api) {
-			setError('AlphaTab API 未就绪');
+			setError(t('export.apiNotReady'));
 			return;
 		}
 
@@ -64,8 +65,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 			}
 			setStatus('success');
 		} catch (err) {
-			console.error('[ExportModal] 导出失败:', err);
-			setError(err instanceof Error ? err.message : '导出失败');
+			console.error('[ExportModal] Export failed:', err);
+			setError(err instanceof Error ? err.message : t('export.failed'));
 			setStatus('error');
 		}
 	};
@@ -252,22 +253,22 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 	};
 
 	const formatOptions = [
-		{ value: 'wav' as ExportFormat, label: 'WAV 音频', desc: '无损高质量音频' },
-		{ value: 'mp3' as ExportFormat, label: 'MP3 音频', desc: '压缩音频（需转换）' },
-		{ value: 'midi' as ExportFormat, label: 'MIDI 文件', desc: '标准 MIDI 格式' },
-		{ value: 'gp' as ExportFormat, label: 'Guitar Pro', desc: 'GP7 格式文件' },
+		{ value: 'wav' as ExportFormat, label: t('export.wav'), desc: t('export.wavDesc') },
+		{ value: 'mp3' as ExportFormat, label: t('export.mp3'), desc: t('export.mp3Desc') },
+		{ value: 'midi' as ExportFormat, label: t('export.midi'), desc: t('export.midiDesc') },
+		{ value: 'gp' as ExportFormat, label: t('export.gp'), desc: t('export.gpDesc') },
 	];
 
 	return (
 		<div className="modal-container mod-dim">
 			<div className="modal mod-settings">
 				<div className="modal-header">
-					<div className="modal-title">导出乐谱</div>
+					<div className="modal-title">{t('export.title')}</div>
 					<button
 						type="button"
 						className="clickable-icon modal-close-button"
 						onClick={onClose}
-						aria-label="关闭"
+						aria-label={t('export.close')}
 					>
 						<X size={16} />
 					</button>
@@ -277,8 +278,8 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 					{/* 格式选择 */}
 					<div className="setting-item">
 						<div className="setting-item-info">
-							<div className="setting-item-name">导出格式</div>
-							<div className="setting-item-description">选择要导出的文件格式</div>
+							<div className="setting-item-name">{t('export.format')}</div>
+							<div className="setting-item-description">{t('export.formatDesc')}</div>
 						</div>
 						<div className="setting-item-control">
 							<select
@@ -300,8 +301,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 						<>
 							<div className="setting-item">
 								<div className="setting-item-info">
-									<div className="setting-item-name">采样率</div>
-									<div className="setting-item-description">音频采样率（Hz）</div>
+									<div className="setting-item-name">
+										{t('export.sampleRate')}
+									</div>
+									<div className="setting-item-description">
+										{t('export.sampleRateDesc')}
+									</div>
 								</div>
 								<div className="setting-item-control">
 									<select
@@ -310,7 +315,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 										disabled={status === 'exporting'}
 									>
 										<option value={22050}>22050 Hz</option>
-										<option value={44100}>44100 Hz (CD 质量)</option>
+										<option value={44100}>
+											44100 Hz ({t('export.cdQuality')})
+										</option>
 										<option value={48000}>48000 Hz</option>
 									</select>
 								</div>
@@ -318,8 +325,12 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 							<div className="setting-item">
 								<div className="setting-item-info">
-									<div className="setting-item-name">主音量</div>
-									<div className="setting-item-description">导出音频的主音量</div>
+									<div className="setting-item-name">
+										{t('export.masterVolume')}
+									</div>
+									<div className="setting-item-description">
+										{t('export.masterVolumeDesc')}
+									</div>
 								</div>
 								<div className="setting-item-control">
 									<input
@@ -339,9 +350,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 
 							<div className="setting-item">
 								<div className="setting-item-info">
-									<div className="setting-item-name">节拍器音量</div>
+									<div className="setting-item-name">
+										{t('export.metronomeVolume')}
+									</div>
 									<div className="setting-item-description">
-										导出时包含节拍器声音
+										{t('export.metronomeVolumeDesc')}
 									</div>
 								</div>
 								<div className="setting-item-control">
@@ -356,7 +369,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 									/>
 									<span style={{ marginLeft: '10px' }}>
 										{metronomeVolume === 0
-											? '关闭'
+											? t('export.off')
 											: `${Math.round(metronomeVolume * 100)}%`}
 									</span>
 								</div>
@@ -368,7 +381,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 					{status === 'exporting' && (
 						<div className="setting-item">
 							<div className="setting-item-info">
-								<div className="setting-item-name">导出进度</div>
+								<div className="setting-item-name">{t('export.progress')}</div>
 							</div>
 							<div className="setting-item-control" style={{ width: '100%' }}>
 								<div
@@ -406,7 +419,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 					{/* 状态消息 */}
 					{status === 'success' && (
 						<div className="setting-item" style={{ color: 'var(--text-success)' }}>
-							✓ 导出成功！
+							✓ {t('export.success')}
 						</div>
 					)}
 
@@ -426,10 +439,10 @@ export const ExportModal: React.FC<ExportModalProps> = ({ controller, isOpen, on
 						}}
 						disabled={status === 'exporting'}
 					>
-						{status === 'exporting' ? '导出中...' : '开始导出'}
+						{status === 'exporting' ? t('export.exporting') : t('export.startExport')}
 					</button>
 					<button type="button" onClick={onClose} disabled={status === 'exporting'}>
-						{status === 'success' ? '关闭' : '取消'}
+						{status === 'success' ? t('export.close') : t('export.cancel')}
 					</button>
 				</div>
 			</div>

@@ -13,7 +13,7 @@ import { createPlayBar } from '../components/PlayBar';
 import { TracksModal } from '../components/TracksModal';
 import { TrackStateStore } from '../state/TrackStateStore';
 import { createDebugBar } from '../components/DebugBar';
-import { t } from 'i18n';
+import { t } from '../i18n';
 import type TabFlowPlugin from '../main';
 import { debugLog } from '../utils/logger';
 
@@ -375,7 +375,7 @@ export class TabView extends FileView {
 		this.externalMediaService.connectMedia(this.audioEl);
 
 		try {
-			new Notice('正在生成音频，请稍候...');
+			new Notice(t('export.generatingAudio'));
 			if (this.audioObjectUrl && this.audioObjectUrl.startsWith('blob:')) {
 				URL.revokeObjectURL(this.audioObjectUrl);
 				this.audioObjectUrl = null;
@@ -388,7 +388,7 @@ export class TabView extends FileView {
 			this.audioObjectUrl = wavUrl;
 			this.audioEl.src = wavUrl;
 			this.audioEl.load();
-			new Notice('音频已加载！');
+			new Notice(t('export.audioLoaded'));
 		} catch (e) {
 			console.error('[TabView] 导出音频失败:', e);
 			throw e;
@@ -427,7 +427,7 @@ export class TabView extends FileView {
 				this.audioEl = audioEl;
 				this._setupAudioIntegrationInternal().catch((err) => {
 					console.error('[TabView] 外部音频集成失败:', err);
-					new Notice(t('errors.audioLoadFailed', undefined, '音频加载失败，无法播放。'));
+					new Notice(t('errors.audioLoadFailed'));
 				});
 			},
 		});
@@ -620,7 +620,9 @@ export class TabView extends FileView {
 		} catch (error) {
 			console.error('[TabView] Failed to load file:', error);
 			new Notice(
-				`加载乐谱文件失败: ${error instanceof Error ? error.message : String(error)}`
+				t('errors.loadScoreFile', {
+					error: error instanceof Error ? error.message : String(error),
+				})
 			);
 		}
 	}
@@ -775,7 +777,7 @@ export class TabView extends FileView {
 			return;
 		}
 		if (!this.trackStateStore) {
-			new Notice('Track state store unavailable');
+			new Notice(t('status.trackStoreUnavailable'));
 			return;
 		}
 		const filePath = this.currentFile?.path ?? '';

@@ -7,6 +7,7 @@
 import React from 'react';
 import { Music } from 'lucide-react';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 interface TracksToggleProps {
 	controller: PlayerController;
@@ -36,8 +37,12 @@ export const TracksToggle: React.FC<TracksToggleProps> = ({ controller, onClick 
 				className={`play-bar-button tracks-toggle-button ${isTracksOpen ? 'active' : ''} ${!scoreLoaded ? 'disabled' : ''}`}
 				onClick={onClick}
 				disabled={!scoreLoaded}
-				title={scoreLoaded ? `音轨管理 (${trackCount}/${totalTracks})` : '等待加载曲谱'}
-				aria-label="音轨管理"
+				title={
+					scoreLoaded
+						? `${t('tracks.title')} (${trackCount}/${totalTracks})`
+						: t('player.waitingForScore')
+				}
+				aria-label={t('tracks.title')}
 			>
 				{/* 音轨图标 */}
 				<Music size={16} />

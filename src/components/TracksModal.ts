@@ -358,7 +358,7 @@ export class TracksModal extends Modal {
 		footer.className = 'tracks-footer-actions';
 		const resetBtn = createEl('button');
 		resetBtn.className = 'mod-warning';
-		resetBtn.textContent = t('tracks.resetToDefaults', undefined, '恢复默认');
+		resetBtn.textContent = t('tracks.resetToDefaults');
 		resetBtn.onclick = () => {
 			try {
 				// 清除持久化，不改动 API；根据“无持久化”状态重新渲染 Modal 内容

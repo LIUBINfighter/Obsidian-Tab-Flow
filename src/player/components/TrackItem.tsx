@@ -14,6 +14,7 @@ import React, { useState } from 'react';
 import { Mic, VolumeX, Volume2, Eye, EyeOff } from 'lucide-react';
 import { StaffItem } from './StaffItem';
 import type { PlayerController } from '../PlayerController';
+import { t } from '../../i18n';
 
 /**
  * 音轨控制项属性
@@ -203,7 +204,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 							className={`tabflow-btn tabflow-btn-icon ${isSelected ? 'is-active' : ''}`}
 							onClick={() => handleTrackSelect(!isSelected)}
 							aria-label="Toggle track visibility"
-							title={isSelected ? '隐藏此音轨' : '显示此音轨'}
+							title={isSelected ? t('tracks.hideTrack') : t('tracks.showTrack')}
 						>
 							{isSelected ? <Eye size={16} /> : <EyeOff size={16} />}
 						</button>
@@ -220,7 +221,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 							className={`tabflow-btn tabflow-btn-icon ${isSolo ? 'is-active' : ''}`}
 							onClick={handleSoloToggle}
 							aria-label="Solo"
-							title="Solo - 独奏此音轨"
+							title={t('tracks.soloTitle')}
 						>
 							<Mic size={16} />
 						</button>
@@ -231,7 +232,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 							className={`tabflow-btn tabflow-btn-icon ${isMute ? 'is-muted' : ''}`}
 							onClick={handleMuteToggle}
 							aria-label="Mute"
-							title="Mute - 静音此音轨"
+							title={t('tracks.muteTitle')}
 						>
 							{isMute ? <VolumeX size={16} /> : <Volume2 size={16} />}
 						</button>
@@ -245,7 +246,9 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 							key={`staff-${track.index}-${staff.index}-${staffArrayIndex}`}
 							className="tabflow-staff-group"
 						>
-							<span className="tabflow-staff-label">谱表 {staffArrayIndex + 1}</span>
+							<span className="tabflow-staff-label">
+								{t('tracks.staffLabel', { number: staffArrayIndex + 1 })}
+							</span>
 							<StaffItem api={api} staff={staff} isCompact={true} />
 						</div>
 					))}
@@ -254,7 +257,7 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 			{/* 音量控制 */}
 			<div className="tabflow-track-setting">
-				<label className="tabflow-setting-label">音量</label>
+				<label className="tabflow-setting-label">{t('tracks.volume')}</label>
 				<div className="tabflow-setting-control">
 					<input
 						type="range"
@@ -274,11 +277,8 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 			{/* 完全移调 */}
 			<div className="tabflow-track-setting">
-				<label
-					className="tabflow-setting-label"
-					title="完全移调 - 同时影响音频播放和乐谱显示"
-				>
-					完全移调
+				<label className="tabflow-setting-label" title={t('tracks.fullTransposeTitle')}>
+					{t('tracks.fullTranspose')}
 				</label>
 				<div className="tabflow-setting-control">
 					<input
@@ -300,11 +300,8 @@ export const TrackItem: React.FC<TrackItemProps> = ({
 
 			{/* 音频移调 */}
 			<div className="tabflow-track-setting">
-				<label
-					className="tabflow-setting-label"
-					title="音频移调 - 仅影响音频播放，不改变乐谱显示"
-				>
-					音频移调
+				<label className="tabflow-setting-label" title={t('tracks.audioTransposeTitle')}>
+					{t('tracks.audioTranspose')}
 				</label>
 				<div className="tabflow-setting-control">
 					<input

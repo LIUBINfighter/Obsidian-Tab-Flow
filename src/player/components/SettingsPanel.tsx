@@ -7,6 +7,7 @@
 
 import React, { createContext, useContext, useEffect, useId, useState } from 'react';
 import { Notice } from 'obsidian';
+import { t } from '../../i18n';
 import * as alphaTab from '@coderline/alphatab';
 import type { PlayerController } from '../PlayerController';
 import {
@@ -839,9 +840,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 									};
 									const success = await copyConfigToClipboard(legacyConfig);
 									if (success) {
-										new Notice('Configuration copied to clipboard!');
+										new Notice(t('settingsPanel.copiedToClipboard'));
 									} else {
-										new Notice('Failed to copy configuration');
+										new Notice(t('settingsPanel.copyFailed'));
 									}
 								})();
 							}}
@@ -890,7 +891,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 										if (config.uiConfig) {
 											store.updateUIConfig(config.uiConfig);
 										}
-										new Notice('Configuration imported! Reloading...');
+										new Notice(t('settingsPanel.imported'));
 										window.location.reload();
 									}
 								})();
@@ -902,10 +903,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ controller, isOpen
 							type="button"
 							className="settings-tool-button settings-tool-button-danger"
 							onClick={() => {
-								new Notice(
-									'Reset all settings to defaults? This will reload the page.',
-									5000
-								);
+								new Notice(t('settingsPanel.resetConfirm'), 5000);
 								controller.getGlobalConfigStore().getState().resetToDefaults();
 								window.location.reload();
 							}}

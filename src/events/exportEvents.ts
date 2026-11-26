@@ -1,5 +1,6 @@
 import * as alphaTab from '@coderline/alphatab';
 import { convertSamplesToWavBlobUrl } from '../utils';
+import { t } from '../i18n';
 
 type GpExporterModule = {
 	Gp7Exporter?: new () => {
@@ -99,7 +100,7 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 	function exportGp() {
 		try {
 			onExportStart?.('gp');
-			if (!api.score) throw new Error('乐谱未加载');
+			if (!api.score) throw new Error(t('shareCard.scoreNotLoaded'));
 			// AlphaTab exporter types are not fully exported
 			const exporterModule = Reflect.get(alphaTab, 'exporter') as
 				GpExporterModule | undefined;
@@ -129,14 +130,14 @@ export function registerExportEventHandlers(options: ExportEventHandlersOptions)
 			// 假设 api.renderTarget 是渲染的 DOM 元素
 			const extendedApi = api as ExtendedAlphaTabApi;
 			const el = extendedApi.renderTarget || api.container;
-			if (!el) throw new Error('找不到乐谱渲染区域');
+			if (!el) throw new Error(t('shareCard.scoreNotFound'));
 			// 新建窗口打印
 			const win = window.open('', '_blank');
-			if (!win) throw new Error('无法打开打印窗口');
+			if (!win) throw new Error(t('shareCard.cannotOpenPrintWindow'));
 
 			const htmlEl = win.document.createEl('html');
 			const headEl = htmlEl.createEl('head');
-			headEl.createEl('title', { text: '乐谱打印' });
+			headEl.createEl('title', { text: t('shareCard.scorePrintTitle') });
 
 			// 复制样式
 			document.querySelectorAll('style,link[rel="stylesheet"]').forEach((style) => {

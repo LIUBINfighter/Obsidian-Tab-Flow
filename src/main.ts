@@ -61,7 +61,7 @@ export default class TabFlowPlugin extends Plugin {
 		// 获取插件目录相对于vault的路径
 		// 通常插件目录是 vault/.obsidian/plugins/plugin-id/
 		if (!this.actualPluginDir) {
-			throw new Error(t('errors.pluginDirNotDefined', undefined, '插件目录未定义'));
+			throw new Error(t('errors.pluginDirNotDefined'));
 		}
 
 		// 使用manifest.dir作为基础计算相对路径
@@ -70,8 +70,8 @@ export default class TabFlowPlugin extends Plugin {
 		const normalizedPath = absolutePath.replace(/\\/g, '/');
 
 		// 打印调试信息
-		debugLog(t('debug.pluginPath', { path: normalizedPluginDir }, '插件路径: {path}'));
-		debugLog(t('debug.targetPath', { path: normalizedPath }, '目标路径: {path}'));
+		debugLog(t('debug.pluginPath', { path: normalizedPluginDir }));
+		debugLog(t('debug.targetPath', { path: normalizedPath }));
 
 		// 预期的结果是：.obsidian/plugins/obsidian-tab-flow/assets/文件名
 		if (normalizedPath.startsWith(normalizedPluginDir)) {
@@ -152,14 +152,10 @@ export default class TabFlowPlugin extends Plugin {
 	async downloadAssets(): Promise<boolean> {
 		try {
 			if (!this.actualPluginDir) {
-				new Notice(
-					t('assets.download.pluginDirNotFound', undefined, '无法确定插件目录，下载失败')
-				);
+				new Notice(t('assets.download.pluginDirNotFound'));
 				return false;
 			}
-			debugLog(
-				t('debug.currentPluginPath', { path: this.actualPluginDir }, '当前插件路径: {path}')
-			);
+			debugLog(t('debug.currentPluginPath', { path: this.actualPluginDir }));
 
 			// 使用Obsidian API创建资产目录
 			const assetsDir = joinPath(this.actualPluginDir, 'assets');
@@ -225,7 +221,7 @@ export default class TabFlowPlugin extends Plugin {
 			// 并行下载所有资产文件
 			const downloadPromises = assets.map(async (asset) => {
 				const relativeToVault = this.getRelativePathToVault(asset.path);
-				new Notice(`正在下载 ${baseName(asset.path)}...`);
+				new Notice(t('assets.download.item', { name: baseName(asset.path) }));
 
 				for (const url of asset.urls) {
 					try {
@@ -272,24 +268,16 @@ export default class TabFlowPlugin extends Plugin {
 				this.settings.assetsDownloaded = true;
 				this.settings.lastAssetsCheck = Date.now();
 				await this.saveSettings();
-				new Notice(t('assets.download.success', undefined, '所有资产文件下载成功！'));
+				new Notice(t('assets.download.success'));
 			} else {
-				new Notice(
-					t(
-						'assets.download.partialFailure',
-						undefined,
-						'部分资产文件下载失败，请检查网络连接后重试'
-					)
-				);
+				new Notice(t('assets.download.partialFailure'));
 			}
 
 			return success;
 		} catch (error) {
 			console.error('[TabFlowPlugin] Error downloading assets:', error);
 			const message = error instanceof Error ? error.message : String(error);
-			new Notice(
-				t('assets.download.failed', { error: message }, `下载资产文件失败: ${message}`)
-			);
+			new Notice(t('assets.download.failed', { error: message }));
 			return false;
 		}
 	}
@@ -339,18 +327,14 @@ export default class TabFlowPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 
 		// 添加侧边栏 Robin 图标，调用打开 TabFlow 文档命令
-		this.addRibbonIcon(
-			'guitar',
-			t('ribbon.openDocumentation', undefined, '打开 TabFlow 文档'),
-			async () => {
-				const leaf = this.app.workspace.getLeaf(true);
-				await leaf.setViewState({
-					type: VIEW_TYPE_TABFLOW_DOC,
-					active: true,
-				});
-				await this.app.workspace.revealLeaf(leaf);
-			}
-		);
+		this.addRibbonIcon('guitar', t('ribbon.openDocumentation'), async () => {
+			const leaf = this.app.workspace.getLeaf(true);
+			await leaf.setViewState({
+				type: VIEW_TYPE_TABFLOW_DOC,
+				active: true,
+			});
+			await this.app.workspace.revealLeaf(leaf);
+		});
 
 		// 注册 AlphaTex 文档视图
 		this.registerView(VIEW_TYPE_TABFLOW_DOC, (leaf) => new DocView(leaf, this));
@@ -370,14 +354,7 @@ export default class TabFlowPlugin extends Plugin {
 
 		// 检查资源是否完整，如果不完整则显示通知
 		if (!this.resources.resourcesComplete) {
-			new Notice(
-				t(
-					'assets.incomplete',
-					undefined,
-					'AlphaTab 插件资源文件不完整，某些功能可能无法正常工作。请在插件设置中下载资源文件。'
-				),
-				10000
-			);
+			new Notice(t('assets.incomplete'), 10000);
 		}
 
 		// 注入全局 @font-face 作为 AlphaTab 字体样式的后备
@@ -421,35 +398,23 @@ export default class TabFlowPlugin extends Plugin {
 						const holder = el.createDiv();
 						holder.addClass('alphatex-block');
 						holder.createDiv({
-							text: t(
-								'alphatex.missingResources',
-								undefined,
-								'AlphaTab 资源缺失，无法渲染此代码块。'
-							),
+							text: t('alphatex.missingResources'),
 						});
 						const btn = holder.createEl('button', {
-							text: t('common.download', undefined, '下载资源'),
+							text: t('common.download'),
 						});
 						btn.addEventListener(
 							'click',
 							() =>
 								void (async () => {
 									btn.setAttr('disabled', 'true');
-									btn.setText(t('common.downloading', undefined, '下载中...'));
+									btn.setText(t('common.downloading'));
 									const ok = await this.downloadAssets();
 									btn.removeAttribute('disabled');
 									btn.setText(
 										ok
-											? t(
-													'common.downloadComplete',
-													undefined,
-													'下载完成，请刷新预览'
-												)
-											: t(
-													'common.downloadFailed',
-													undefined,
-													'下载失败，重试'
-												)
+											? t('common.downloadComplete')
+											: t('common.downloadFailed')
 									);
 								})()
 						);

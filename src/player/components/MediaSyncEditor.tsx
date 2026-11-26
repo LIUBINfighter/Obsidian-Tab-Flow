@@ -9,6 +9,7 @@ import { WaveformCanvas } from './WaveformCanvas';
 import { SyncPointMarkerPanel } from './SyncPointMarkerPanel';
 import type { SyncPointInfo } from '../types/sync-point';
 import { createDefaultSyncPointInfo } from '../types/sync-point';
+import { t } from '../../i18n';
 
 export interface MediaSyncEditorProps {
 	/** 同步点信息 */
@@ -134,9 +135,9 @@ export const MediaSyncEditor: React.FC<MediaSyncEditorProps> = ({
 						cursor: 'pointer',
 						fontSize: '12px',
 					}}
-					title="缩小"
+					title={t('media.titleZoomOut')}
 				>
-					− 缩小
+					{t('media.zoomOut')}
 				</button>
 
 				<button
@@ -166,16 +167,18 @@ export const MediaSyncEditor: React.FC<MediaSyncEditorProps> = ({
 						cursor: 'pointer',
 						fontSize: '12px',
 					}}
-					title="放大"
+					title={t('media.titleZoomIn')}
 				>
-					+ 放大
+					{t('media.zoomIn')}
 				</button>
 
 				<div style={{ flex: 1 }} />
 
 				<span style={{ fontSize: '12px', color: '#666' }}>
-					时长: {(syncPointInfo.endTime / 1000).toFixed(2)}s | 标记数:
-					{syncPointInfo.syncPointMarkers.length}
+					{t('media.duration', {
+						duration: (syncPointInfo.endTime / 1000).toFixed(2),
+						count: syncPointInfo.syncPointMarkers.length,
+					})}
 				</span>
 			</div>
 
@@ -296,11 +299,13 @@ export const MediaSyncEditor: React.FC<MediaSyncEditorProps> = ({
 				}}
 			>
 				<span>
-					播放时间: {(playbackTime / 1000).toFixed(2)}s /{' '}
-					{(syncPointInfo.endTime / 1000).toFixed(2)}s
+					{t('media.playbackTime', {
+						current: (playbackTime / 1000).toFixed(2),
+						total: (syncPointInfo.endTime / 1000).toFixed(2),
+					})}
 				</span>
 				<span>
-					虚拟宽度: {virtualWidth}px | 缩放: {zoom.toFixed(2)}x
+					{t('media.virtualWidth', { width: virtualWidth, zoom: zoom.toFixed(2) })}
 				</span>
 			</div>
 		</div>
